@@ -29,6 +29,7 @@ Do not claim a feature is production-complete until it has:
 | Convex deployment/codegen | Local Convex code is typechecked, but deployment/codegen has had analyzer fragility in past reviews. | Reproduce clean `npx convex codegen` and deployment smoke from a fresh checkout. | `npx convex codegen`, Convex typecheck, app typecheck, tests, and a live Convex smoke pass without manual edits. |
 | Environment docs | `.env.example` exists. | Document required provider keys, Convex env vars, safe demo defaults, and production-only secrets. | A fresh contributor can run demo mode and knows exactly what is needed for live mode. |
 | CI | Local checks have been run. | Add GitHub Actions for matrix validation, app typecheck, Convex typecheck, tests, ladder eval, and build. | CI passes on the first public branch from a clean clone. |
+| Dependency audit | `npm install --package-lock-only` reports 13 current audit findings: 6 low, 6 moderate, 1 critical. | Triage whether each finding reaches shipped code, then upgrade or replace affected packages without breaking Convex, Vite, parser, and provider paths. | `npm audit` is clean or documented with accepted risk and compensating controls. |
 
 ## P0: Long-Running `/free` Reliability
 

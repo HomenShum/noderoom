@@ -20,3 +20,5 @@ coverage/
 
 # Claude Design handoff bundle (reference only, not shipped)
 .design-ref/
+
+.vercel

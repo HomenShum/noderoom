@@ -1,0 +1,288 @@
+/**
+ * Durable free-auto job runner.
+ *
+ * One invocation is a bounded slice. It claims a lease, resumes from the stored
+ * cursor, runs the same agent/tool protocol as the live action, writes telemetry,
+ * checkpoints, then schedules the next slice if work remains.
+ */
+
+import { v } from "convex/values";
+import { makeFunctionReference } from "convex/server";
+import { internalAction } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import { ConvexRoomTools } from "./convexRoomTools";
+import { AgentRunError, runAgent } from "../src/agent/runtime";
+import { ROOM_TOOLS } from "../src/agent/tools";
+import { convexModel as agentModel, convexPriceRun as priceRun } from "../src/agent/convexModel";
+import { buildResearchContext } from "../src/agent/context";
+import { compactMessages } from "../src/agent/compaction";
+import type { AgentMessage, AgentResult, AgentTraceEvent, ToolCall } from "../src/agent/types";
+import type { Actor } from "../src/engine/types";
+
+const CONVEX_ACTION_LIMIT_MS = 10 * 60_000;
+const DEFAULT_SLICE_BUDGET_MS = 9 * 60_000;
+const DEFAULT_RESERVE_MS = 30_000;
+const DEFAULT_LEASE_EXTRA_MS = 60_000;
+const DEFAULT_RESUME_DELAY_MS = 5_000;
+const DEFAULT_CONTEXT_MAX_CHARS = 24_000;
+const DEFAULT_CONTEXT_KEEP_RECENT = 10;
+const agentJobsClaimSliceRef = makeFunctionReference<"mutation">("agentJobs:claimSlice") as any;
+const agentJobsFinishSliceRef = makeFunctionReference<"mutation">("agentJobs:finishSlice") as any;
+const agentRunsRecordRef = makeFunctionReference<"mutation">("agentRuns:record") as any;
+const agentStepsRecordRef = makeFunctionReference<"mutation">("agentSteps:record") as any;
+
+type ClaimedJob = {
+  jobId: Id<"agentJobs">;
+  roomId: Id<"rooms">;
+  artifactId: Id<"artifacts">;
+  requester: Actor;
+  goal: string;
+  mode?: "variance" | "research";
+  modelPolicy: string;
+  cursor?: unknown;
+  handoff?: unknown;
+  attempt: number;
+  maxAttempts: number;
+  sessionId: Id<"agentSessions">;
+  agentId: string;
+  agentName: string;
+};
+
+type RunTelemetry = {
+  ms: number;
+  costUsd: number;
+};
+
+type RunRecord = {
+  runId: Id<"agentRuns">;
+  telemetry: RunTelemetry;
+};
+
+function envNumber(name: string, fallback: number, min: number, max: number): number {
+  const raw = Number(process.env[name] ?? fallback);
+  if (!Number.isFinite(raw)) return fallback;
+  return Math.max(min, Math.min(max, raw));
+}
+
+function cap(s: string): string {
+  return s.length > 2_000 ? s.slice(0, 2_000) + "...[truncated]" : s;
+}
+
+function errorText(error: unknown): string {
+  if (error instanceof Error) return `${error.name}: ${error.message}`;
+  return typeof error === "string" ? error : JSON.stringify(error) ?? String(error);
+}
+
+function stepStatus(e: { tool: string; result: unknown }): "ok" | "conflict" | "locked" | "error" {
+  const r = (e.result ?? {}) as { ok?: boolean; conflict?: boolean; locked?: boolean; error?: unknown };
+  if (e.tool === "edit_cell") { if (r.conflict) return "conflict"; if (r.locked) return "locked"; }
+  if (r.error || r.ok === false) return "error";
+  return "ok";
+}
+
+function traceStep(e: AgentTraceEvent, i: number) {
+  return {
+    idx: i,
+    tool: e.tool,
+    args: cap(JSON.stringify(e.args)),
+    result: cap(JSON.stringify(e.result)),
+    status: stepStatus(e),
+    ms: e.ms,
+    elementId: e.tool === "edit_cell" ? (String((e.args as { elementId?: string }).elementId ?? "") || undefined) : undefined,
+  };
+}
+
+function messagesFromCursor(cursor: unknown): AgentMessage[] | undefined {
+  const value = cursor as { messages?: unknown } | undefined;
+  return Array.isArray(value?.messages) ? value.messages as AgentMessage[] : undefined;
+}
+
+function remainingToolCallsFromCursor(cursor: unknown): ToolCall[] | undefined {
+  const value = cursor as { remainingToolCalls?: unknown } | undefined;
+  return Array.isArray(value?.remainingToolCalls) ? value.remainingToolCalls as ToolCall[] : undefined;
+}
+
+function backoffMs(attempt: number): number {
+  return Math.min(5 * 60_000, Math.max(5_000, 2 ** Math.min(attempt, 8) * 1_000));
+}
+
+function clean<T extends Record<string, unknown>>(value: T): T {
+  const out: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(value)) if (val !== undefined) out[key] = val;
+  return out as T;
+}
+
+async function checkpoint(result: AgentResult, maxChars: number, keepRecent: number) {
+  const compacted = await compactMessages(result.messages, { maxChars, keepRecent });
+  return {
+    messages: compacted.messages,
+    remainingToolCalls: result.handoff?.remainingToolCalls ?? [],
+    stopReason: result.stopReason,
+    compacted: compacted.compacted,
+    elided: compacted.elided,
+    updatedAt: Date.now(),
+  };
+}
+
+export const runFreeAutoJobSlice = internalAction({
+  args: { jobId: v.id("agentJobs") },
+  handler: async (ctx, { jobId }) => {
+    const t0 = Date.now();
+    const sliceBudgetMs = envNumber("FREE_AUTO_JOB_SLICE_BUDGET_MS", DEFAULT_SLICE_BUDGET_MS, 30_000, CONVEX_ACTION_LIMIT_MS);
+    const reserveMs = envNumber("FREE_AUTO_JOB_RESERVE_MS", DEFAULT_RESERVE_MS, 1_000, 120_000);
+    const leaseId = crypto.randomUUID();
+    const claimed = await ctx.runMutation(agentJobsClaimSliceRef, {
+      jobId,
+      leaseId,
+      leaseMs: sliceBudgetMs + reserveMs + DEFAULT_LEASE_EXTRA_MS,
+    }) as ClaimedJob | null;
+    if (!claimed) return { ok: false as const, reason: "not_claimed" as const };
+
+    const actor: Actor = { kind: "agent", id: claimed.agentId, name: claimed.agentName, scope: "public" };
+    const rt = new ConvexRoomTools(ctx, claimed.roomId, claimed.artifactId, actor, String(claimed.sessionId));
+    const model = agentModel(process.env.FREE_AUTO_JOB_MODEL ?? "openrouter/free-auto");
+    const contextMaxChars = envNumber("FREE_AUTO_JOB_CONTEXT_MAX_CHARS", DEFAULT_CONTEXT_MAX_CHARS, 4_000, 120_000);
+    const contextKeepRecent = envNumber("FREE_AUTO_JOB_CONTEXT_KEEP_RECENT", DEFAULT_CONTEXT_KEEP_RECENT, 2, 40);
+    const maxSteps = envNumber("FREE_AUTO_JOB_MAX_STEPS_PER_SLICE", 3, 1, 12);
+    const deadlineAt = t0 + sliceBudgetMs;
+
+    const recordRun = async (result: AgentResult, extraStep?: { tool: string; result: string }): Promise<RunRecord> => {
+      const ms = Date.now() - t0;
+      const costUsd = priceRun(model.name, result.usage.inputTokens, result.usage.outputTokens);
+      const conflictsSurvived = result.trace.filter((t) => t.tool === "edit_cell" && (t.result as { conflict?: boolean })?.conflict).length;
+      const telemetry = {
+        roomId: claimed.roomId,
+        agentId: actor.id,
+        model: model.name,
+        goal: claimed.goal,
+        steps: result.steps,
+        toolCalls: result.trace.length,
+        conflictsSurvived,
+        inputTokens: result.usage.inputTokens,
+        outputTokens: result.usage.outputTokens,
+        costUsd,
+        ms,
+        exhausted: result.exhausted,
+        stopReason: result.stopReason,
+        remainingMs: result.budget.remainingMs,
+        deadlineAt,
+        handoff: result.handoff,
+      };
+      const runId = await ctx.runMutation(agentRunsRecordRef, telemetry);
+      const steps = result.trace.map(traceStep);
+      if (extraStep) {
+        steps.push({
+          idx: steps.length,
+          tool: extraStep.tool,
+          args: cap(JSON.stringify({ jobId: String(claimed.jobId), attempt: claimed.attempt })),
+          result: cap(extraStep.result),
+          status: "error" as const,
+          ms,
+          elementId: undefined,
+        });
+      }
+      await ctx.runMutation(agentStepsRecordRef, {
+        runId,
+        roomId: claimed.roomId,
+        agentId: actor.id,
+        steps,
+      });
+      return { runId, telemetry };
+    };
+
+    try {
+      const initialMessages = messagesFromCursor(claimed.cursor);
+      const resumeToolCalls = remainingToolCallsFromCursor(claimed.cursor);
+      const result = await runAgent({
+        rt,
+        goal: claimed.goal,
+        model,
+        tools: ROOM_TOOLS,
+        maxSteps,
+        initialMessages,
+        resumeToolCalls,
+        contextBuilder: initialMessages ? undefined : claimed.mode === "research" ? buildResearchContext : undefined,
+        compaction: { maxChars: contextMaxChars, keepRecent: contextKeepRecent },
+        deadlineAt,
+        reserveMs,
+        // Gateway spend ceiling — cap a single slice's token spend (a per-job cap aggregates across slices in telemetry).
+        spendLimits: { maxTokens: envNumber("AGENT_MAX_TOKENS_PER_SLICE", 250_000, 1_000, 4_000_000) },
+      });
+      const { runId, telemetry } = await recordRun(result);
+      const done = result.stopReason === "done" && !result.exhausted;
+      const canContinue = !done && claimed.attempt < claimed.maxAttempts;
+      const scheduledNextAt = canContinue ? Date.now() + DEFAULT_RESUME_DELAY_MS : undefined;
+      const cursor = done ? undefined : await checkpoint(result, contextMaxChars, contextKeepRecent);
+
+      await ctx.runMutation(agentJobsFinishSliceRef, clean({
+        jobId: claimed.jobId,
+        leaseId,
+        attempt: claimed.attempt,
+        status: done ? "completed" : canContinue ? "handoff" : "failed",
+        resolvedModel: model.name,
+        stopReason: result.stopReason,
+        ms: telemetry.ms,
+        inputTokens: result.usage.inputTokens,
+        outputTokens: result.usage.outputTokens,
+        costUsd: telemetry.costUsd,
+        runId,
+        handoff: result.handoff,
+        cursor,
+        finalText: result.finalText,
+        error: done || canContinue ? undefined : "max_attempts_exceeded",
+        scheduledNextAt,
+      }));
+
+      return { ok: true as const, done, stopReason: result.stopReason, runId };
+    } catch (error) {
+      const partial = error instanceof AgentRunError ? error.partial : undefined;
+      const rootError = error instanceof AgentRunError ? error.cause : error;
+      const fallback: AgentResult = partial ?? {
+        finalText: "",
+        steps: 0,
+        exhausted: false,
+        stopReason: "error",
+        budget: {
+          startedAt: t0,
+          now: Date.now(),
+          deadlineAt,
+          reserveMs,
+          elapsedMs: Date.now() - t0,
+          remainingMs: Math.max(0, deadlineAt - Date.now()),
+          usableMs: Math.max(0, deadlineAt - Date.now() - reserveMs),
+          maxSteps,
+          attemptedSteps: 0,
+        },
+        trace: [],
+        messages: [],
+        usage: { inputTokens: 0, outputTokens: 0, modelCalls: 0 },
+      };
+      const { runId, telemetry } = await recordRun(fallback, { tool: "job_error", result: errorText(rootError) });
+      const canRetry = claimed.attempt < claimed.maxAttempts;
+      const delayMs = canRetry ? backoffMs(claimed.attempt) : undefined;
+      const scheduledNextAt = delayMs ? Date.now() + delayMs : undefined;
+      const cursor = fallback.messages.length ? await checkpoint(fallback, contextMaxChars, contextKeepRecent) : undefined;
+
+      await ctx.runMutation(agentJobsFinishSliceRef, clean({
+        jobId: claimed.jobId,
+        leaseId,
+        attempt: claimed.attempt,
+        status: canRetry ? "retrying" : "failed",
+        resolvedModel: model.name,
+        stopReason: fallback.stopReason,
+        ms: telemetry.ms,
+        inputTokens: fallback.usage.inputTokens,
+        outputTokens: fallback.usage.outputTokens,
+        costUsd: telemetry.costUsd,
+        runId,
+        error: errorText(rootError),
+        handoff: fallback.handoff,
+        cursor,
+        scheduledNextAt,
+      }));
+
+      return { ok: false as const, retrying: canRetry, error: errorText(rootError), runId };
+    }
+  },
+});
+

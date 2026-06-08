@@ -1,0 +1,89 @@
+/**
+ * Privacy/gateway primitives (review domain 3) + exactly-once journal (durable-workflow semantics).
+ */
+import { describe, it, expect } from "vitest";
+import { checkSpendCeiling, redactPII } from "../src/agent/gateway";
+import { MapStepJournal } from "../src/agent/journal";
+import { runAgent } from "../src/agent/runtime";
+import { scriptedModel } from "../src/agent/scripted";
+import { recomputeVariancePlan } from "../src/agent/plans";
+import { RoomEngine } from "../src/engine/roomEngine";
+import { buildDemoRoom } from "../src/engine/demoRoom";
+import { InMemoryRoomTools } from "../src/agent/roomTools";
+import { ROOM_TOOLS } from "../src/agent/tools";
+import type { AgentModel } from "../src/agent/types";
+
+const CELL = "r_ni__variance";
+const VAL = "+22.4%";
+
+describe("LLM gateway — spend ceiling (per-run token/cost cap)", () => {
+  it("caps a run at the token ceiling and the cost ceiling", () => {
+    expect(checkSpendCeiling({ inputTokens: 500, outputTokens: 400, costUsd: 0.01 }, { maxTokens: 1000 }).ok).toBe(true);
+    expect(checkSpendCeiling({ inputTokens: 600, outputTokens: 500, costUsd: 0.01 }, { maxTokens: 1000 }).ok).toBe(false);
+    expect(checkSpendCeiling({ inputTokens: 10, outputTokens: 10, costUsd: 0.5 }, { maxCostUsd: 0.25 }).ok).toBe(false);
+    expect(checkSpendCeiling({ inputTokens: 10, outputTokens: 10, costUsd: 0.1 }, { maxCostUsd: 0.25, maxTokens: 100 }).ok).toBe(true);
+  });
+});
+
+describe("LLM gateway — outbound PII/secret firewall", () => {
+  it("redacts emails, SSNs, phones, and secret-shaped tokens before the prompt leaves", () => {
+    const r = redactPII("email a.user@b.com, SSN 123-45-6789, call 415-555-1234, key sk-abc1234567890abcdef1234ZZ");
+    expect(r.text).not.toContain("a.user@b.com");
+    expect(r.text).not.toContain("123-45-6789");
+    expect(r.text).not.toContain("sk-abc1234567890abcdef1234ZZ");
+    expect(r.text).toContain("[redacted-email]");
+    expect(r.text).toContain("[redacted-ssn]");
+    expect(r.text).toContain("[redacted-secret]");
+    expect(r.redactions).toBeGreaterThanOrEqual(4);
+  });
+  it("leaves clean business text untouched", () => {
+    expect(redactPII("Reconcile Q3 variance for Acme Robotics; +22.4%.").redactions).toBe(0);
+  });
+});
+
+describe("gateway spend ceiling wired into the runtime", () => {
+  it("stops a run before it blows the per-run token cap, with a resumable handoff", async () => {
+    const engine = new RoomEngine();
+    const d = buildDemoRoom(engine);
+    const rt = new InMemoryRoomTools(engine, d.roomId, d.sheetId, d.agents.room, d.sessions.room);
+    let calls = 0;
+    const spender: AgentModel = {
+      get name() { return "spender"; },
+      next: async () => { calls++; return { text: "", toolCalls: [{ id: "x" + calls, tool: "read_range", args: { elementIds: [CELL] } }], done: false, usage: { inputTokens: 100, outputTokens: 50 } }; },
+    };
+    const r = await runAgent({ rt, goal: "read repeatedly", model: spender, tools: ROOM_TOOLS, maxSteps: 20, spendLimits: { maxTokens: 200 } });
+    expect(r.stopReason).toBe("spend_budget");                              // stopped at the ceiling, not maxSteps
+    expect(r.handoff).toBeTruthy();                                         // resumable
+    expect(r.usage.inputTokens + r.usage.outputTokens).toBeLessThanOrEqual(300); // didn't run away past the cap
+    expect(calls).toBeLessThanOrEqual(2);                                   // only 2 billable calls before the cap fired
+  });
+});
+
+describe("exactly-once journal (no double-bill on slice retry)", () => {
+  it("a retried slice replays journaled model steps — zero new model calls, work still completes", async () => {
+    const journal = new MapStepJournal();
+    let modelCalls = 0;
+    const run = async (eng: RoomEngine) => {
+      const d = buildDemoRoom(eng);
+      const rt = new InMemoryRoomTools(eng, d.roomId, d.sheetId, d.agents.room, d.sessions.room);
+      const base = scriptedModel(recomputeVariancePlan({ [CELL]: VAL }, { lock: true }));
+      const counting: AgentModel = { get name() { return base.name; }, next: (i) => { modelCalls++; return base.next(i); } };
+      const r = await runAgent({ rt, goal: `Set ${CELL} to ${VAL}. Lock, read, edit with CAS, release.`, model: counting, tools: ROOM_TOOLS, maxSteps: 8, journal });
+      return { d, eng, r };
+    };
+
+    // Run 1: a fresh slice — every model step is journaled.
+    const first = await run(new RoomEngine());
+    expect(first.r.stopReason).toBe("done");
+    const callsRun1 = modelCalls;
+    expect(callsRun1).toBeGreaterThan(0);
+    expect(journal.size).toBe(callsRun1);
+
+    // Run 2: the crash-RETRY of the same slice (fresh engine, SAME journal) — replays every step.
+    modelCalls = 0;
+    const second = await run(new RoomEngine());
+    expect(second.r.stopReason).toBe("done");
+    expect(modelCalls).toBe(0);                                                              // ← exactly-once: NO re-call, NO re-bill
+    expect(String(second.eng.getArtifact(second.d.sheetId)!.elements[CELL]?.value)).toBe(VAL); // work still completed via replay
+  });
+});

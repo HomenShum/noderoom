@@ -1,0 +1,293 @@
+# NodeRoom agent runtime
+
+This is the doc you read before you explain NodeRoom's agent out loud — in an interview, a design review, or to a new teammate. The goal is that you can draw the whole thing on a whiteboard and defend every box.
+
+The hard problem NodeRoom solves: an LLM agent and a human are editing the same spreadsheet cell at the same time, and neither one is allowed to silently clobber the other. Everything below builds up to how that's guaranteed, and where the guarantee actually lives in the code.
+
+Everything here is real, typechecked code you can run:
+
+```
+npm run demo:agent          # the harness, scripted model (no keys), two scenarios
+npm run demo:agent -- --real  # the same harness on the real Anthropic model
+npm test                    # 17 scenarios incl. the agent runtime
+```
+
+---
+
+## 1. Start with the simplest mental model: one loop, three seams
+
+An agent is just a loop. You give a model some context, it asks to call a tool, you run the tool, you hand back the result, and you do it again until the model says it's done. That's it. If you can explain that loop, you can explain this system.
+
+NodeRoom's harness lives in `src/agent/` and is deliberately tiny. The only thing that makes it interesting is that it has **three swappable seams** — three places where you can yank out the implementation and plug in a different one without touching anything else. That's what makes it both testable (swap in fakes) and shippable (swap in the real thing).
+
+```
+                 ┌──────────── runAgent (src/agent/runtime.ts) ───────────┐
+   buildContext  │   ① ask model → ② run tools → ③ feed results → loop    │
+ (context.ts) ──▶│   bounded by a step budget; conflicts come back as     │
+                 │   DATA so the model re-reads and retries, never throws  │
+                 └───────┬───────────────┬───────────────────┬───────────┘
+                         │               │                   │
+                  seam ① the model   seam ③ the tools    seam ② the backend
+                  ───────────────    ───────────────     ────────────────
+                  scriptedModel      read_range          InMemoryRoomTools
+                  anthropicModel     propose_lock        (over RoomEngine)
+                  (model.ts)         edit_cell  …        ConvexRoomTools
+                                     (tools.ts)          (over Convex)
+```
+
+Here are the three seams, defined in the header of `src/agent/types.ts` (lines 4-10):
+
+- **Seam 1 — the model** (`AgentModel`, `src/agent/types.ts:43-46`). The brain. Two implementations: `scriptedModel` (deterministic, no network) and `anthropicModel` (the real LLM). The loop doesn't care which it's holding.
+- **Seam 2 — the tool backend** (`RoomTools`, `src/agent/types.ts:75-92`). The thing the tools actually call. Two implementations: `InMemoryRoomTools` over the in-process engine (`src/agent/roomTools.ts`) and `ConvexRoomTools` over Convex (`convex/convexRoomTools.ts`). Same interface, so the agent code is identical between the spike and production.
+- **Seam 3 — the tools** (`AgentTool[]`, `src/agent/types.ts:49-54`). The concrete array the model is allowed to call: `ROOM_TOOLS` in `src/agent/tools.ts:18-55`.
+
+The point to hammer: **the harness code — `context.ts`, `tools.ts`, `runtime.ts` — is identical across both backends.** Only the `RoomTools` implementation swaps. So when you say "we tested this end-to-end with no API keys," you mean the *real* runtime and the *real* tool layer ran; only the brain and the database were fakes.
+
+---
+
+## 2. The runtime loop (`src/agent/runtime.ts`)
+
+`runAgent` (`runtime.ts:25-75`) is about thirty lines. Walk it as five steps.
+
+1. **Assemble the context once.** `buildContext` (`runtime.ts:38`) builds the opening message from live room state. We do this once, up front — not per iteration.
+2. **Loop, bounded by a step budget.** `maxSteps` defaults to 8 (`runtime.ts:35`). The production action bumps it to 10. The budget is the safety rail that stops a confused agent from looping forever.
+3. **Each iteration, ask the model for one step.** `model.next({ system, messages, tools })` (`runtime.ts:43`) returns prose plus zero or more tool calls. If the model is done or asked for no tools, push its final text and return `exhausted: false` (`runtime.ts:47-50`).
+4. **Record the assistant turn carrying its tool calls** (`runtime.ts:53`). This keeps the message history well-formed — the real model needs to see its own prior tool calls to stay coherent.
+5. **Run each tool call, feed each result back as a `role: "tool"` message.** Find the tool, zod-`safeParse` the args (`runtime.ts:62`), run `execute` against `RoomTools`, or return an error object if the tool is unknown or the args are invalid (`runtime.ts:59-65`). Each result is pushed back via `JSON.stringify(result)` (`runtime.ts:70`), and a trace event with millisecond timing is recorded (`runtime.ts:67-69`).
+
+Here's the loop, lightly trimmed:
+
+```ts
+for (let step = 0; step < maxSteps; step++) {
+  const out = await model.next({ system: SYSTEM_PROMPT, messages, tools });
+  if (out.done || out.toolCalls.length === 0) {
+    if (out.text) messages.push({ role: "assistant", content: out.text });
+    return { finalText, steps: step + 1, exhausted: false, trace, messages };
+  }
+  messages.push({ role: "assistant", content: out.text ?? "", toolCalls: out.toolCalls });
+  for (const call of out.toolCalls) {
+    const tool = tools.find((x) => x.name === call.tool);
+    const parsed = tool.schema.safeParse(call.args);
+    const result = parsed.success ? await tool.execute(parsed.data, rt) : { error: "invalid arguments" };
+    messages.push({ role: "tool", toolCallId: call.id, toolName: call.tool, content: JSON.stringify(result) });
+  }
+}
+return { finalText, steps: maxSteps, exhausted: true, trace, messages }; // budget hit
+```
+
+The single most important design decision is hiding in step 5. **A conflict comes back as a tool result, not a thrown exception.** When the database rejects a stale write, that rejection is just JSON the model reads on its next turn — same as any other tool output. That's what turns a race condition into a re-read-and-retry instead of a crash.
+
+This is the same shape the AI SDK's `generateText({ tools, stopWhen })` runs internally. We keep it explicit so the contract — context in, tools out, conflict-as-data, bounded steps — is visible. To go from the demo to production, you swap the model. Nothing else in this file changes.
+
+> **Talking point.** The harness turns a race into a re-read because the *result*, not an exception, carries the conflict back into the model's context.
+
+---
+
+## 3. Context engineering — two halves
+
+The model only knows what you put in front of it. So "context engineering" here is just two concrete decisions: what rules do we state once, and what live facts do we surface on every call. One is static, one is just-in-time.
+
+### Half 1 — the system prompt is the protocol, not the data
+
+`SYSTEM_PROMPT` in `src/agent/systemPrompt.ts:8-23` is a static constant. It describes the concurrency protocol in order, and nothing else:
+
+1. **LOOK FIRST** — you're given a snapshot, never edit blind.
+2. **CLAIM before you commit** — call `propose_lock` on the exact cells you'll change.
+3. **EDIT with the version you read (CAS)** — `edit_cell` takes a `baseVersion`; a conflict means re-read and retry.
+4. **RELEASE when done.**
+5. **NARRATE** — one line when you start, one when you finish.
+
+Then a short list of hard rules: never edit without a `baseVersion` you actually read; never ignore a conflict; lock only the cells you need; locked cells are still readable.
+
+Notice what's *not* in here: any spreadsheet data. The prompt is deliberately pure protocol. It makes the model cooperate with the exact same invariant the engine enforces, instead of fighting it. The engine guarantees no-clobber whether or not the model behaves; the prompt just makes the model behave so it doesn't waste turns getting rejected.
+
+### Half 2 — the live state is just-in-time, rendered as a table
+
+`buildContext` in `src/agent/context.ts:15-47` is the other half. Each run, before the model sees anything, it pulls a fresh snapshot and awareness **in parallel** (`context.ts:16`) and renders them into one compact, aligned text message — not a JSON blob:
+
+```
+YOUR TASK: Set r_rev=+24%, r_cogs=+27.5%
+SPREADSHEET (artifact "...", v41). Editable cells are `{rowId}__variance` / `{rowId}__note`:
+  r_rev    Revenue       Q2=$10,000  Q3=$12,400  variance=(empty)  [v1]
+  r_cogs   COGS          Q2=$4,000   Q3=$5,100   variance=(empty)  [v1]
+  ...
+ACTIVE LOCKS (held read-only by others — you can still read them):
+  - Priya·Agent holds [r_gp__variance] — drafting GP (lockId ...)
+AGENTS IN THE ROOM:
+  - Room NodeAgent [public] · working
+```
+
+Two reasons we render it ourselves instead of dumping JSON. First, the model reasons better over a small aligned table than over a blob. Second, and more important, we choose exactly what it sees. The table carries a per-cell **version** (the `[v1]` tag, `context.ts:19`) and a `<LOCKED>` flag, plus the active locks held by others (`context.ts:22-24`) and who's in the room.
+
+That version tag is load-bearing. **The versions in this table are what make CAS possible** — without them the model has no `baseVersion` to pass to `edit_cell`. The whole anti-clobber mechanism in section 5 is impossible if this table doesn't surface versions. The prompt tells the model to use the version it read; the context is where it reads it.
+
+> **Talking point.** Context engineering here is two decisions: what rules to state once (the prompt) and what live facts to surface per call (versions + lock flags). The versions are the hook CAS hangs on.
+
+---
+
+## 4. The tools (`src/agent/tools.ts`)
+
+Each tool is `{ name, description, schema (zod), execute }` — the shape from `src/agent/types.ts:49-54`. `ROOM_TOOLS` (`tools.ts:18-55`) has six tools, and they map 1:1 to the five protocol steps plus chat:
+
+`read_range`, `propose_lock`, `edit_cell`, `create_draft`, `release_lock`, `say`.
+
+Three things matter about how these are built:
+
+- **The descriptions encode the protocol.** `edit_cell`'s description (`tools.ts:33`) literally tells the model the `baseVersion` MUST be the version it last read, and to re-read and retry on a conflict. The tool teaches the model how to use it correctly — the prompt and the description reinforce the same rule.
+- **The zod schema is the validation boundary.** The runtime `safeParse`s the args before `execute` ever runs (`runtime.ts:62`). A malformed call becomes a tool error the model can recover from, not a thrown exception that kills the run.
+- **`execute` never touches a database.** Every tool just forwards to a `RoomTools` method. For example: `execute: (a, rt) => rt.editCell(a.elementId, a.value, a.baseVersion)` (`tools.ts:35`).
+
+That last point is why the tool layer is pure and portable. The tools don't know whether they're talking to the in-memory engine or Convex — they call a method on the `RoomTools` port and let the seam decide. Swap the backend, the tools don't change.
+
+---
+
+## 5. The backend: `applyCellEdit` is the whole ballgame
+
+`RoomTools` is the port; `applyCellEdit` (`convex/artifacts.ts:56-87`) is the production implementation of its most important method. If you only memorize one function for the interview, memorize this one. It's a Convex mutation that runs a four-step gated write, and the order of the gates is the design.
+
+```ts
+// 1. LOCK gate — a held range is read-only for non-holders.
+const lock = await activeLockOn(ctx, a.artifactId, a.elementId);
+if (lock && lock.holder.id !== a.actor.id)
+  return { ok: false, reason: "locked", by: lock.holder.name };          // no write happens
+
+// 2. CAS gate — reject a stale baseline (the anti-clobber check).
+const actual = el?.version ?? 0;
+if (actual !== a.baseVersion)
+  return { ok: false, reason: "conflict", expected: a.baseVersion, actual }; // returned as DATA
+
+// 3. APPLY — bump the per-element version + the artifact clock.
+await ctx.db.patch(el._id, { value: a.value, version: actual + 1, ... });
+
+// 4. TRACE — every applied edit is auditable.
+```
+
+Step by step:
+
+- **Step 1, the lock gate** (`artifacts.ts:67-70`). `activeLockOn` looks for an active lock. If one exists and the holder isn't the actor, return `{ ok: false, reason: "locked", by }` — **without writing anything.**
+- **Step 2, the CAS gate** (`artifacts.ts:72-76`). Read the element's current version (`actual = el?.version ?? 0`). If `actual !== baseVersion`, return `{ ok: false, reason: "conflict", expected, actual }` as **data, never thrown.**
+- **Step 3, apply** (`artifacts.ts:78-82`). Patch the value, bump the per-element version to `actual + 1`, bump the artifact clock.
+- **Step 4, trace** (`artifacts.ts:84`). Insert an audit row.
+
+The lock gate runs **before** the CAS gate. And the same function backs hand-edits from the UI, so humans and agents share exactly one write path. There is no second door into the spreadsheet.
+
+### The subtlety that earns the interview: Convex's own OCC is not enough
+
+This is the sharp part, and it's worth getting exactly right — it's written into the file header (`convex/artifacts.ts:5-10`).
+
+Convex has its own optimistic concurrency control. If two transactions touch the same document and race, Convex detects the conflict and **retries** the losing transaction. So you might think: the database already prevents clobbers, why do I need a `version` field?
+
+Because OCC protects the *transaction*, not your *intent*. Picture the sequence:
+
+```
+agent reads r_gp at version 1
+human commits r_gp → version 2     (a separate, fully-committed transaction)
+agent's edit_cell fires, based on version 1
+```
+
+The agent's write is a brand-new transaction. It doesn't race anyone — the human's transaction already committed and is gone. Convex's OCC has nothing to retry. It will **happily commit the agent's write**, overwriting the human's version-2 value with a value computed against the stale version-1 baseline. That's the clobber. Convex never knew the agent's write was *conditional on version 1* — that condition lives in your application logic, not in the database's transaction model.
+
+The per-element `version` check in `applyCellEdit` (step 2) is that application-level condition. It's the CAS that says "only apply if the baseline I read is still current," rejects the stale write, and returns the conflict as data. **App-level CAS does the anti-clobber work; the database's OCC alone is not sufficient.**
+
+`ConvexRoomTools` then maps the mutation's native result shape to the harness's `RoomTools` shape — `{ reason: 'conflict', ... }` becomes `{ conflict: true, ... }` (`convex/convexRoomTools.ts:56`) — so the model sees one stable contract no matter the transport.
+
+---
+
+## 6. Lock PREVENTS the race; CAS CATCHES the race
+
+These are two different safety mechanisms, and conflating them is the common mistake. The demo (`demo/runAgent.ts:4-13`) runs both, back to back, so you can see the difference.
+
+```
+              concurrent human write
+                       │
+        ┌──────────────┴───────────────┐
+   WITH LOCK                       NO LOCK (CAS only)
+   agent claims the range first    agent does read → edit
+   human's write hits the          human's write lands between
+   lock gate → BLOCKED             the read and the edit
+   ⇒ zero conflicts                ⇒ stale write hits the CAS
+   the LOCK PREVENTS the race      gate → REJECTED → re-read → retry
+                                   the CAS CATCHES the race
+```
+
+**Scenario A — with a lock.** The agent calls `propose_lock` to claim the range first. Now the concurrent human write hits step 1 of `applyCellEdit` and is rejected with `reason: 'locked'` before it can touch anything. The demo logs Priya's edit as `BLOCKED` (`demo/runAgent.ts:42-43`). Zero CAS conflicts occur — the lock prevented the race from ever happening.
+
+**Scenario B — no lock, CAS only.** The agent does a plain read-then-edit. With no lock, the human's write lands in the gap between the agent's read and its write. The agent's now-stale write hits the CAS gate, gets rejected, the agent re-reads and retries. Here's the actual demo output (`npm run demo:agent`, scenario B):
+
+```
+▸ read_range    {"elementIds":["r_gp__variance"]}
+      → [{"id":"r_gp__variance","value":"","version":1,"locked":null}]
+⚡ Priya edits r_gp__variance → "+19%" (v2) — no lock to stop her; the agent's next write will be STALE
+▸ edit_cell     {"elementId":"r_gp__variance","value":"+21.7%","baseVersion":1}
+      → {"ok":false,"conflict":true,"expected":1,"actual":2}        ← stale write REJECTED
+▸ read_range    {"elementIds":["r_gp__variance"]}
+      → [{"id":"r_gp__variance","value":"+19% (Priya)","version":2,"locked":null}]
+▸ edit_cell     {"elementId":"r_gp__variance","value":"+21.7%","baseVersion":2}
+      → {"ok":true,"version":3}                                     ← retried on the fresh version
+── 7 steps · 6 tool calls · 1 CAS conflict(s) survived · exhausted=false
+```
+
+The scripted planner `recomputeVariancePlan` (`src/agent/plans.ts:63-96`) drives both scenarios off a single `opts.lock` flag (`plans.ts:64, 72-95`).
+
+The key insight: the agent **saw Priya's value before overwriting it.** That's the whole point. CAS doesn't forbid all overwrites — it forbids *blind* ones. After an informed re-read, the agent is allowed to overwrite; that's a decision. What it can never do is clobber a value it never read. CAS catches the blind write and forces the read.
+
+> **What happens when the cell is locked and you can't wait?** The agent reads it anyway (locked means read-only, not invisible) and calls `create_draft`. When the lock releases, `mergeBlockedDrafts` (`convex/drafts.ts:36-67`) deterministically clean-applies each op if the element is still at the drafted baseline, no-ops it if the value already matches, and flags-without-applying if it diverged (`drafts.ts:49-57`). The release and the merge happen in one transaction (`convex/locks.ts:36`). Note: the file header calls this "the LLM-resolver seam," but the current implementation is purely deterministic baseline comparison — there's no LLM in the merge path today. An LLM resolver is a future extension point, not current behavior.
+
+---
+
+## 7. The injectable model: scripted vs real Anthropic (seam 1)
+
+Both implementations live in `src/agent/model.ts`, behind the same `AgentModel` interface.
+
+**`anthropicModel`** (`model.ts:21-41`) is the real model — a thin adapter over the Vercel AI SDK's `generateText` (`model.ts:26`) with `anthropic(modelId)`, defaulting to `'claude-haiku-4-5'` (`model.ts:21`). The critical detail: the SDK tools are defined **without an `execute` function** (`model.ts:25`). So the SDK only *returns* the tool calls — it doesn't run them. NodeRoom's runtime runs them against `RoomTools`. It also deliberately omits `maxSteps` (`model.ts:31`) so each call is exactly one model turn. The division of labor: the AI SDK owns provider plumbing, streaming, and retries; the harness owns the loop, the context, and the backend.
+
+**`scriptedModel`** (`model.ts:63-73`) is a deterministic model for demos and tests. It takes a `Planner` that reads the running message history — so it can see prior tool results, including versions and conflicts — and returns the next step. No network, no keys. The `lastVersions` helper (`model.ts:76-86`) lets planners pull versions out of prior `read_range` results.
+
+Why this seam earns its keep: the demo and tests use the scripted model so they exercise the **real runtime, the real tool backend, and the real engine** — only the brain is fixed. When the tests pass, you've verified the loop, the gates, the conflict-as-data contract, and the smart-merge. You've just held the LLM constant so the test is deterministic.
+
+---
+
+## 8. Production wiring: `convex/agent.ts` runs the same loop
+
+`convex/agent.ts` is the production entry point. It's a `"use node"` action (`agent.ts:18`) — it needs Node so the AI SDK can run, and it needs `ANTHROPIC_API_KEY` in the Convex env. `runRoomAgent` (`agent.ts:29-50`) is intentionally tiny:
+
+```ts
+const roomState = await ctx.runQuery(api.rooms.full, { roomId: a.roomId, requester: a.requester });
+const session = roomState.sessions.find((s) => s.scope === "public");
+const actor = { kind: "agent", id: session.agentId, name: session.agentName, scope: "public" };
+const rt = new ConvexRoomTools(ctx, a.roomId, a.artifactId, actor, String(session.id)); // the Convex backend
+const model = anthropicModel(process.env.AGENT_MODEL ?? "claude-haiku-4-5");        // the real model
+return runAgent({ rt, goal: a.goal, model, tools: ROOM_TOOLS, maxSteps: a.maxSteps ?? 10 }); // the SAME loop
+```
+
+It first verifies the caller's member proof through `rooms.full`, derives the public room agent/session on the server, constructs a `ConvexRoomTools`, picks the real model, and calls the **identical `runAgent`** from `src/agent/runtime.ts` with `ROOM_TOOLS`. That's the seam paying off: nothing in the harness changed between the demo and production — only the two implementations behind seams 1 and 2 got swapped for the real ones.
+
+> **Step budgets, for precision.** Three different defaults in play: the runtime's own default is 8 (`src/agent/runtime.ts:35`), the production action uses 10 (`agent.ts:41`), and the demo uses 16 (`demo/runAgent.ts:48`). Same loop, different rails for different contexts.
+
+The action returns a summary — `{ finalText, steps, exhausted, toolCalls, conflictsSurvived }` (`agent.ts:42-49`), where `conflictsSurvived` counts the `edit_cell` trace results that came back with `conflict: true`. The live effects — locks, edits, traces, chat — are written through the mutations and stream to every client via reactive `useQuery` subscriptions. That's how "multiple users and agents see updates while editing concurrently" actually becomes true on the screen.
+
+**The user entry point.** Typing `/ask <goal>` in the public chat calls `store.askAgent({ goal, references })` (`src/app/store.tsx`): the chat composer keeps dragged file chips as structured artifact references, and the store converts those references into scoped artifact context before invoking the agent. On Convex that invokes this `runRoomAgent` action with the user's goal; with no keys it runs the *same* `runAgent` loop in the browser against the in-memory engine (scripted model). Same loop, same tools, same contract — only the brain and the backend differ.
+
+`ConvexRoomTools` (`convex/convexRoomTools.ts:20-73`) is the only thing that differs between the spike and production. It implements the same `RoomTools` interface, each method running an internal Convex query or mutation: `snapshot → internal.artifacts.getSheet`, `readRange → internal.artifacts.readRange`, `proposeLock → internal.locks.proposeLock`, `editCell → internal.artifacts.applyAgentCellEdit`, `createDraft → internal.drafts.createDraft`, `say → internal.messages.sendAgent`, and so on.
+
+---
+
+## 9. File map
+
+| Concern | File |
+|---|---|
+| The seams (types + the `RoomTools` port) | `src/agent/types.ts` |
+| The loop (harness) | `src/agent/runtime.ts` |
+| Context — the protocol (system prompt) | `src/agent/systemPrompt.ts` |
+| Context — the live JIT table | `src/agent/context.ts` |
+| The six tools | `src/agent/tools.ts` |
+| Seam 1 — model adapters (scripted + Anthropic) | `src/agent/model.ts` |
+| Scripted planners (drive the demo/tests) | `src/agent/plans.ts` |
+| Seam 2 — in-memory backend | `src/agent/roomTools.ts` (over `src/engine/roomEngine.ts`) |
+| Seam 2 — Convex backend | `convex/convexRoomTools.ts` |
+| The CAS write — `applyCellEdit` | `convex/artifacts.ts` |
+| Lock gate backend | `convex/locks.ts` |
+| Draft + smart-merge backend | `convex/drafts.ts` |
+| Production action (same loop) | `convex/agent.ts` |
+| Runnable demo (both scenarios) | `demo/runAgent.ts` |
+| Scenario tests | `tests/agentRuntime.test.ts`, `tests/roomEngine.test.ts` |

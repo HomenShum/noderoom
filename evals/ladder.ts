@@ -1,0 +1,472 @@
+/**
+ * Agent task ladder. This is the differentiating eval: each rung raises the bar
+ * from "completed" to "right tool, right context, no clobber, no leak, in budget".
+ *
+ *   npm run ladder
+ *   npm run ladder:real -- gpt-5.4-nano,gemini-3.1-flash-lite
+ */
+import "../scripts/benchmark/loadEnv";
+import { z } from "zod";
+import { RoomEngine } from "../src/engine/roomEngine";
+import { buildDemoRoom } from "../src/engine/demoRoom";
+import type { Actor } from "../src/engine/types";
+import { InMemoryRoomTools } from "../src/agent/roomTools";
+import { ROOM_TOOLS } from "../src/agent/tools";
+import { runAgent } from "../src/agent/runtime";
+import type { AgentMessage, AgentModel, AgentResult, AgentTool, AgentTraceEvent, RoomTools } from "../src/agent/types";
+import { scriptedModel, type Planner } from "../src/agent/scripted";
+import { recomputeVariancePlan } from "../src/agent/plans";
+import { model as realModel, priceRun } from "../src/agent/model";
+
+const CELL = "r_ni__variance";
+const VAL = "+22.4%";
+const L6_TARGETS: Record<string, string> = {
+  r_rev__variance: "+24%",
+  r_cogs__variance: "+27.5%",
+  r_gp__variance: "+21.7%",
+  r_opex__variance: "+20.5%",
+  r_ni__variance: "+22.4%",
+};
+
+interface Stats {
+  contextChars: number;
+  snapshotCalls: number;
+  injected: Set<string>;
+}
+
+interface Env {
+  engine: RoomEngine;
+  roomId: string;
+  artifactId: string;
+  actor: Actor;
+  sessionId: string;
+  human: Actor;
+  blocker?: { actor: Actor; sessionId: string };
+  stats: Stats;
+}
+
+interface Rung {
+  id: string;
+  level: number;
+  label: string;
+  goal: string;
+  maxSteps?: number;
+  makeEnv?: () => Env;
+  setup?: (env: Env) => void;
+  contextBuilder?: (rt: RoomTools, goal: string, env: Env) => Promise<AgentMessage[]>;
+  tools?: AgentTool[];
+  compaction?: { maxChars: number; keepRecent: number };
+  onTrace?: (event: AgentTraceEvent, env: Env) => void;
+  scripted: () => AgentModel;
+  check: (result: AgentResult, env: Env) => boolean;
+  diagnose?: (result: AgentResult, env: Env) => string;
+}
+
+interface RuntimeBudget {
+  rungTimeoutMs?: number;
+  reserveMs: number;
+}
+
+class CountingRoomTools extends InMemoryRoomTools {
+  constructor(
+    engine: RoomEngine,
+    roomId: string,
+    artifactId: string,
+    actor: Actor,
+    sessionId: string,
+    private stats: Stats,
+  ) {
+    super(engine, roomId, artifactId, actor, sessionId);
+  }
+
+  async snapshot() {
+    this.stats.snapshotCalls++;
+    return super.snapshot();
+  }
+}
+
+const FULL_SHEET_TRAP_TOOL: AgentTool = {
+  name: "read_full_sheet",
+  description: "Load the entire sheet snapshot. This is expensive and should be avoided when a narrow range is enough.",
+  schema: z.object({}),
+  execute: (_a, rt) => rt.snapshot(),
+};
+
+function stats(): Stats {
+  return { contextChars: 0, snapshotCalls: 0, injected: new Set() };
+}
+
+function demoEnv(): Env {
+  const engine = new RoomEngine();
+  const d = buildDemoRoom(engine);
+  return {
+    engine,
+    roomId: d.roomId,
+    artifactId: d.sheetId,
+    actor: d.agents.room,
+    sessionId: d.sessions.room,
+    human: d.members.priya,
+    blocker: { actor: d.agents.priv, sessionId: d.sessions.priv },
+    stats: stats(),
+  };
+}
+
+function largeSheetEnv(): Env {
+  const engine = new RoomEngine();
+  const { room, host } = engine.createRoom({ title: "Large sheet range", hostName: "Homen", autoAllow: true });
+  const me: Actor = { kind: "user", id: host.id, name: "Homen" };
+  const humanMember = engine.joinRoom({ code: room.code, name: "Priya", anon: false })!.member;
+  const human: Actor = { kind: "user", id: humanMember.id, name: "Priya" };
+  const agent: Actor = { kind: "agent", id: "agent_room", name: "Room NodeAgent", scope: "public" };
+  const session = engine.startSession({ roomId: room.id, agentId: agent.id, agentName: agent.name, scope: "public" });
+  const seed: Array<{ id: string; value: unknown }> = [];
+  for (let i = 0; i < 600; i++) {
+    const rid = `lr_${String(i).padStart(4, "0")}`;
+    seed.push(
+      { id: `${rid}__label`, value: `Line ${i}` },
+      { id: `${rid}__q2`, value: String(1000 + i) },
+      { id: `${rid}__q3`, value: String(1100 + i) },
+      { id: `${rid}__variance`, value: "" },
+      { id: `${rid}__note`, value: "" },
+    );
+  }
+  const artifactId = engine.createArtifact({ roomId: room.id, kind: "sheet", title: "600-row operating model", by: me, seed }).id;
+  return { engine, roomId: room.id, artifactId, actor: agent, sessionId: session.id, human, stats: stats() };
+}
+
+function hasToolResult(messages: AgentMessage[], toolName: string): boolean {
+  return messages.some((m) => m.role === "tool" && m.toolName === toolName);
+}
+
+function readOnlyPlan(elementIds: string[]): Planner {
+  return ({ messages }) =>
+    hasToolResult(messages, "read_range")
+      ? { say: "Read-only check complete.", done: true }
+      : { toolCalls: [{ tool: "read_range", args: { elementIds } }] };
+}
+
+/** The agent writes cells via edit_cell (scalar) OR write_cell_result (CellPayload) — both are CAS edits. */
+const EDIT_TOOLS = new Set(["edit_cell", "write_cell_result"]);
+const isEditTool = (tool: string) => EDIT_TOOLS.has(tool);
+/** write_cell_result stores a CellPayload {value,...}; unwrap it for scalar comparison. */
+function scalarOf(value: unknown): unknown {
+  return value && typeof value === "object" && "value" in value ? (value as { value: unknown }).value : value;
+}
+
+function successfulEdits(result: AgentResult) {
+  return result.trace.filter((t) => isEditTool(t.tool) && (t.result as { ok?: boolean })?.ok);
+}
+
+function conflicts(result: AgentResult): number {
+  return result.trace.filter((t) => isEditTool(t.tool) && (t.result as { conflict?: boolean })?.conflict).length;
+}
+
+function used(result: AgentResult, tool: string): boolean {
+  return result.trace.some((t) => t.tool === tool);
+}
+
+/** Read the SPECIFIC cell (not just any read) — closes the "wrong-cell read passes L1" gap. */
+function readRangeIncludes(result: AgentResult, cell: string): boolean {
+  return result.trace.some((t) => t.tool === "read_range" && ((t.args as { elementIds?: string[] }).elementIds ?? []).includes(cell));
+}
+/** Draft must actually contain the target op — closes the "empty draft passes L4" gap. */
+function draftIncludes(result: AgentResult, cell: string, value: string): boolean {
+  return result.trace.some((t) => t.tool === "create_draft" && ((t.args as { ops?: Array<{ elementId: string; value: unknown }> }).ops ?? []).some((op) => op.elementId === cell && String(op.value) === value));
+}
+
+function cellValue(env: Env, elementId: string): string {
+  return String(scalarOf(env.engine.getArtifact(env.artifactId)!.elements[elementId]?.value) ?? "");
+}
+
+function allTargetsSet(env: Env, targets: Record<string, string>): boolean {
+  return Object.entries(targets).every(([id, value]) => cellValue(env, id) === value);
+}
+
+function editReadProvenance(result: AgentResult): boolean {
+  const readVersions = new Map<string, number>();
+  for (const event of result.trace) {
+    if (event.tool === "read_range" && Array.isArray(event.result)) {
+      for (const cell of event.result as Array<{ id: string; version: number }>) {
+        readVersions.set(cell.id, cell.version);
+      }
+    }
+    if (isEditTool(event.tool) && (event.result as { ok?: boolean })?.ok) {
+      const args = event.args as { elementId?: string; baseVersion?: number };
+      if (!args.elementId || readVersions.get(args.elementId) !== args.baseVersion) return false;
+    }
+  }
+  return true;
+}
+
+function readImmediatelyBeforeEdits(result: AgentResult): boolean {
+  for (let i = 0; i < result.trace.length; i++) {
+    const event = result.trace[i];
+    if (!isEditTool(event.tool)) continue;
+    const args = event.args as { elementId?: string; baseVersion?: number };
+    if (!args.elementId || args.baseVersion === undefined) return false;
+    let prevIndex = i - 1;
+    while (prevIndex >= 0 && result.trace[prevIndex].tool === "compaction") prevIndex--;
+    const prev = result.trace[prevIndex];
+    if (!prev || prev.tool !== "read_range") return false;
+    const ids = (prev.args as { elementIds?: string[] }).elementIds ?? [];
+    if (ids.length !== 1 || ids[0] !== args.elementId) return false;
+    const cells = Array.isArray(prev.result) ? prev.result as Array<{ id: string; version: number }> : [];
+    const cell = cells.find((c) => c.id === args.elementId);
+    if (!cell || cell.version !== args.baseVersion) return false;
+  }
+  return true;
+}
+
+function onlyTouched(result: AgentResult, allowed: Set<string>): boolean {
+  return result.trace.every((event) => {
+    if (isEditTool(event.tool)) {
+      return allowed.has(String((event.args as { elementId?: string }).elementId ?? ""));
+    }
+    if (event.tool === "propose_lock") {
+      return ((event.args as { elementIds?: string[] }).elementIds ?? []).every((id) => allowed.has(id));
+    }
+    if (event.tool === "create_draft") {
+      return ((event.args as { ops?: Array<{ elementId: string }> }).ops ?? []).every((op) => allowed.has(op.elementId));
+    }
+    return true;
+  });
+}
+
+function injectHumanEdit(env: Env, elementId: string, value: string): void {
+  if (env.stats.injected.has(elementId)) return;
+  env.stats.injected.add(elementId);
+  const current = env.engine.getArtifact(env.artifactId)!.elements[elementId].version;
+  env.engine.applyEdit({
+    roomId: env.roomId,
+    actor: env.human,
+    op: { opId: `human_${elementId}_${env.stats.injected.size}`, artifactId: env.artifactId, elementId, kind: "set", value, baseVersion: current },
+  });
+}
+
+async function rangeContext(rt: RoomTools, goal: string, env: Env): Promise<AgentMessage[]> {
+  const targetRow = 420;
+  const rowIds = [418, 419, 420, 421, 422].map((i) => `lr_${String(i).padStart(4, "0")}`);
+  const elementIds = rowIds.flatMap((rid) => [`${rid}__label`, `${rid}__q2`, `${rid}__q3`, `${rid}__variance`]);
+  const cells = await rt.readRange(elementIds);
+  const byId = new Map(cells.map((c) => [c.id, c]));
+  const rows = rowIds.map((rid) => {
+    const label = byId.get(`${rid}__label`)?.value ?? "";
+    const q2 = byId.get(`${rid}__q2`)?.value ?? "";
+    const q3 = byId.get(`${rid}__q3`)?.value ?? "";
+    const variance = byId.get(`${rid}__variance`);
+    return `  ${rid} ${String(label).padEnd(9)} Q2=${q2} Q3=${q3} variance=${String(variance?.value ?? "(empty)")} [v${variance?.version ?? 0}]`;
+  });
+  const content = [
+    `YOUR TASK: ${goal}`,
+    "",
+    "SPARSE RANGE CONTEXT: the sheet has 600 rows. Only the 5-row window around lr_0420 was loaded.",
+    ...rows,
+    "",
+    "Use only lr_0420__variance. Do not request, lock, or edit rows outside this window.",
+  ].join("\n");
+  env.stats.contextChars = content.length;
+  return [{ role: "user", content }];
+}
+
+const RUNGS: Rung[] = [
+  {
+    id: "L1_read",
+    level: 1,
+    label: "READ (no mutation)",
+    goal: `Report the current Q3 variance value for Net income (${CELL}). Do not change anything.`,
+    scripted: () => scriptedModel(readOnlyPlan([CELL]), "scripted-read"),
+    check: (r) => readRangeIncludes(r, CELL) && successfulEdits(r).length === 0 && !r.exhausted,
+    diagnose: (r) => `readTarget=${readRangeIncludes(r, CELL)} edits=${successfulEdits(r).length} exhausted=${r.exhausted}`,
+  },
+  {
+    id: "L2_edit",
+    level: 2,
+    label: "EDIT (single CAS)",
+    goal: `Set Net income variance (${CELL}) to ${VAL}. Claim the exact cell, read it, edit with CAS, then release.`,
+    scripted: () => scriptedModel(recomputeVariancePlan({ [CELL]: VAL }, { lock: true })),
+    check: (r, env) => cellValue(env, CELL) === VAL && editReadProvenance(r) && !r.exhausted,
+    diagnose: (r, env) => `value=${cellValue(env, CELL)} provenance=${editReadProvenance(r)} exhausted=${r.exhausted}`,
+  },
+  {
+    id: "L3_conflict",
+    level: 3,
+    label: "CONFLICT (no clobber)",
+    goal: `Set Net income variance (${CELL}) to ${VAL}. Do not lock; handle a concurrent human edit by re-reading and retrying CAS.`,
+    onTrace: (event, env) => {
+      const ids = (event.args as { elementIds?: string[] }).elementIds ?? [];
+      if (event.tool === "read_range" && ids.includes(CELL)) injectHumanEdit(env, CELL, "+19%");
+    },
+    scripted: () => scriptedModel(recomputeVariancePlan({ [CELL]: VAL }, { lock: false })),
+    check: (r, env) => cellValue(env, CELL) === VAL && conflicts(r) >= 1 && editReadProvenance(r) && !r.exhausted,
+    diagnose: (r, env) => `value=${cellValue(env, CELL)} conflicts=${conflicts(r)} provenance=${editReadProvenance(r)} exhausted=${r.exhausted}`,
+  },
+  {
+    id: "L4_blocked",
+    level: 4,
+    label: "BLOCKED (must draft)",
+    goal: `Set Net income variance (${CELL}) to ${VAL}. First call propose_lock for that exact cell. If another agent already holds the lock and propose_lock is denied, call read_range, then call create_draft with blockedByLockId from the denied lock. Do not stop without drafting.`,
+    setup: (env) => {
+      if (!env.blocker) throw new Error("L4 requires a blocking agent");
+      env.engine.proposeLock({
+        roomId: env.roomId,
+        artifactId: env.artifactId,
+        elementIds: [CELL],
+        holder: env.blocker.actor,
+        sessionId: env.blocker.sessionId,
+        reason: "private agent editing",
+      });
+    },
+    scripted: () => scriptedModel(recomputeVariancePlan({ [CELL]: VAL }, { lock: true })),
+    check: (r) => draftIncludes(r, CELL, VAL) && !successfulEdits(r).some((t) => (t.args as { elementId?: string }).elementId === CELL) && !r.exhausted,
+    diagnose: (r) => `draftHasTarget=${draftIncludes(r, CELL, VAL)} successfulTargetEdits=${successfulEdits(r).filter((t) => (t.args as { elementId?: string }).elementId === CELL).length} exhausted=${r.exhausted}`,
+  },
+  {
+    id: "L5_large_range",
+    level: 5,
+    label: "LARGE RANGE (no full snapshot)",
+    goal: "In the 600-row operating model, set lr_0420__variance to +8.2%. Load only the narrow range needed.",
+    makeEnv: largeSheetEnv,
+    contextBuilder: rangeContext,
+    tools: [...ROOM_TOOLS, FULL_SHEET_TRAP_TOOL],
+    scripted: () => scriptedModel(recomputeVariancePlan({ lr_0420__variance: "+8.2%" }, { lock: true })),
+    check: (r, env) =>
+      cellValue(env, "lr_0420__variance") === "+8.2%" &&
+      env.stats.snapshotCalls === 0 &&
+      env.stats.contextChars > 0 &&
+      env.stats.contextChars < 4_000 &&
+      !used(r, "read_full_sheet") &&
+      onlyTouched(r, new Set(["lr_0420__variance"])) &&
+      editReadProvenance(r) &&
+      !r.exhausted,
+    diagnose: (r, env) => `value=${cellValue(env, "lr_0420__variance")} snapshotCalls=${env.stats.snapshotCalls} fullRead=${used(r, "read_full_sheet")} contextChars=${env.stats.contextChars} touchedOnly=${onlyTouched(r, new Set(["lr_0420__variance"]))} provenance=${editReadProvenance(r)} exhausted=${r.exhausted}`,
+  },
+  {
+    id: "L6_long_horizon",
+    level: 6,
+    label: "LONG HORIZON (compaction + recovery)",
+    goal: "Set these exact Q3 variance values without locking: r_rev__variance=+24%, r_cogs__variance=+27.5%, r_gp__variance=+21.7%, r_opex__variance=+20.5%, r_ni__variance=+22.4%. Do not call propose_lock. Do not compute alternate values. Before every edit_cell call, call read_range for that exact cell and use the version returned by that read; do not use initial snapshot versions as edit baselines. Expect repeated concurrent edits; re-read after each conflict and finish inside budget.",
+    maxSteps: 40,
+    compaction: { maxChars: 700, keepRecent: 4 },
+    onTrace: (event, env) => {
+      const ids = (event.args as { elementIds?: string[] }).elementIds ?? [];
+      for (const id of ids) if (id in L6_TARGETS && env.stats.injected.size < 3) injectHumanEdit(env, id, "+19%");
+    },
+    scripted: () => scriptedModel(recomputeVariancePlan(L6_TARGETS, { lock: false })),
+    check: (r, env) =>
+      allTargetsSet(env, L6_TARGETS) &&
+      conflicts(r) >= 3 &&
+      used(r, "compaction") &&
+      !used(r, "propose_lock") &&
+      editReadProvenance(r) &&
+      readImmediatelyBeforeEdits(r) &&
+      onlyTouched(r, new Set(Object.keys(L6_TARGETS))) &&
+      !r.exhausted,
+    diagnose: (r, env) => {
+      const missing = Object.entries(L6_TARGETS).filter(([id, value]) => cellValue(env, id) !== value).map(([id]) => `${id}=${cellValue(env, id) || "(empty)"}`);
+      return `missing=[${missing.join(", ")}] conflicts=${conflicts(r)} compaction=${used(r, "compaction")} locked=${used(r, "propose_lock")} provenance=${editReadProvenance(r)} immediateRead=${readImmediatelyBeforeEdits(r)} touchedOnly=${onlyTouched(r, new Set(Object.keys(L6_TARGETS)))} exhausted=${r.exhausted}`;
+    },
+  },
+];
+
+async function runRung(rung: Rung, maker: (rung: Rung) => AgentModel, modelName: string, budget: RuntimeBudget) {
+  const env = (rung.makeEnv ?? demoEnv)();
+  rung.setup?.(env);
+  const rt = new CountingRoomTools(env.engine, env.roomId, env.artifactId, env.actor, env.sessionId, env.stats);
+  const contextBuilder = rung.contextBuilder ? (tools: RoomTools, goal: string) => rung.contextBuilder!(tools, goal, env) : undefined;
+  const t0 = Date.now();
+  const deadlineAt = budget.rungTimeoutMs ? t0 + budget.rungTimeoutMs : undefined;
+  try {
+    const result = await runAgent({
+      rt,
+      goal: rung.goal,
+      model: maker(rung),
+      tools: rung.tools ?? ROOM_TOOLS,
+      maxSteps: rung.maxSteps ?? 18,
+      contextBuilder,
+      compaction: rung.compaction,
+      deadlineAt,
+      reserveMs: budget.reserveMs,
+      onTrace: (event) => rung.onTrace?.(event, env),
+    });
+    const pass = rung.check(result, env);
+    return {
+      pass,
+      ms: Date.now() - t0,
+      tools: result.trace.filter((t) => t.tool !== "compaction").length,
+      cost: result.usage ? priceRun(modelName, result.usage.inputTokens, result.usage.outputTokens) : 0,
+      stopReason: result.stopReason,
+      handoff: result.handoff?.summary,
+      reason: pass ? "" : rung.diagnose?.(result, env) ?? result.handoff?.summary ?? "failed",
+    };
+  } catch (error) {
+    return { pass: false, ms: Date.now() - t0, tools: 0, cost: 0, error: error instanceof Error ? error.message : String(error) };
+  }
+}
+
+function parseRealModels(): string[] {
+  const idx = process.argv.indexOf("--real");
+  if (idx === -1) return [];
+  const next = process.argv[idx + 1];
+  if (!next || next.startsWith("--")) return ["gpt-5.4-nano", "gemini-3.1-flash-lite"];
+  return next.split(",").map((s) => s.trim()).filter(Boolean);
+}
+
+function optionValue(name: string): string | undefined {
+  const prefix = `${name}=`;
+  const inline = process.argv.find((a) => a.startsWith(prefix));
+  if (inline) return inline.slice(prefix.length);
+  const idx = process.argv.indexOf(name);
+  const next = process.argv[idx + 1];
+  return idx !== -1 && next && !next.startsWith("--") ? next : undefined;
+}
+
+function optionNumber(name: string, envName: string): number | undefined {
+  const raw = optionValue(name) ?? process.env[envName];
+  if (!raw) return undefined;
+  const value = Number(raw);
+  return Number.isFinite(value) && value > 0 ? value : undefined;
+}
+
+function parseRuntimeBudget(): RuntimeBudget {
+  return {
+    rungTimeoutMs: optionNumber("--rung-timeout-ms", "LADDER_RUNG_TIMEOUT_MS"),
+    reserveMs: optionNumber("--reserve-ms", "LADDER_RESERVE_MS") ?? 5_000,
+  };
+}
+
+async function main() {
+  const realModels = parseRealModels();
+  const budget = parseRuntimeBudget();
+  const models: { name: string; maker: (rung: Rung) => AgentModel }[] = realModels.length
+    ? realModels.map((id) => ({ name: id, maker: () => realModel(id) }))
+    : [{ name: "scripted", maker: (rung) => rung.scripted() }];
+
+  const grid: Record<string, Record<string, boolean>> = {};
+  for (const model of models) {
+    grid[model.name] = {};
+    for (const rung of RUNGS) {
+      process.stdout.write(`  ${model.name} · ${rung.id} ... `);
+      const res = await runRung(rung, model.maker, model.name, budget);
+      grid[model.name][rung.id] = res.pass;
+      const stop = "stopReason" in res && res.stopReason !== "done" ? `, ${res.stopReason}` : "";
+      console.log(`${res.pass ? "PASS" : "FAIL"} (${res.tools} tools, ${(res.ms / 1000).toFixed(1)}s, $${res.cost.toFixed(4)}${stop}${"error" in res && res.error ? `, ${res.error.slice(0, 80)}` : ""})`);
+      if (!res.pass && "reason" in res && res.reason) console.log(`        ${res.reason}`);
+      if (!res.pass && "handoff" in res && res.handoff) console.log(`        handoff: ${res.handoff}`);
+    }
+  }
+
+  console.log("\nFAILURE HEATMAP (model x level)\n" + "-".repeat(72));
+  console.log("model".padEnd(30) + RUNGS.map((r) => `L${r.level}`).join("  "));
+  for (const model of models) {
+    console.log(model.name.padEnd(30) + RUNGS.map((r) => (grid[model.name][r.id] ? "OK" : "--")).join("  "));
+  }
+  console.log("-".repeat(72));
+  console.log("legend: " + RUNGS.map((r) => `L${r.level}=${r.label}`).join(" | "));
+
+  if (Object.values(grid).some((row) => Object.values(row).some((ok) => !ok))) process.exitCode = 1;
+}
+
+main().catch((error) => {
+  console.error(error);
+  process.exit(1);
+});

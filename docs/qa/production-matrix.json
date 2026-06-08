@@ -1,0 +1,280 @@
+{
+  "schema": 1,
+  "updatedAt": "2026-06-08",
+  "sourceOfTruth": "Append new product or runtime guarantees to features[] and rerun npm run qa:matrix.",
+  "releaseRule": "A feature is production-ready only when deterministic tests, live/backend smoke where applicable, traceability, privacy boundaries, and documented failure behavior are all present.",
+  "features": [
+    {
+      "id": "files_and_spreadsheets",
+      "area": "Files + spreadsheet",
+      "claim": "Users can upload/view files and work with parsed spreadsheets in the same room.",
+      "status": "yellow",
+      "productionGate": "Parser fixtures, provider parser adapter tests, live file preview smoke, and Convex raw-file canonicalization.",
+      "deterministicChecks": [
+        "tests/spreadsheetParser.test.ts",
+        "tests/providerParserAdapter.test.ts",
+        "tests/artifactRefs.test.ts"
+      ],
+      "liveChecks": [
+        "npm run provider-parser:smoke",
+        "manual browser: click file in left rail and return to Spreadsheet tab"
+      ],
+      "evidence": [
+        { "type": "test", "ref": "tests/spreadsheetParser.test.ts" },
+        { "type": "test", "ref": "tests/providerParserAdapter.test.ts" },
+        { "type": "doc", "ref": "docs/PROFESSIONAL_SPREADSHEET_WORKFLOWS.md" }
+      ],
+      "nextReview": "Add live Convex File Storage upload/download E2E once deployment auth is finalized."
+    },
+    {
+      "id": "public_private_chat_agent",
+      "area": "Public/private chat + agent",
+      "claim": "Public chat, private chat, public room agent, and private agent route messages to the right scope.",
+      "status": "green",
+      "productionGate": "Scope separation tests, room member proof, and browser smoke for public/private panels.",
+      "deterministicChecks": [
+        "tests/roomEngine.test.ts",
+        "tests/agentRuntime.test.ts",
+        "tests/workflowEvals.test.ts"
+      ],
+      "liveChecks": [
+        "manual browser: public chat and private NodeAgent panels visible and usable"
+      ],
+      "evidence": [
+        { "type": "test", "ref": "tests/roomEngine.test.ts" },
+        { "type": "test", "ref": "tests/agentRuntime.test.ts" },
+        { "type": "doc", "ref": "docs/AGENT_RUNTIME.md" }
+      ],
+      "nextReview": "Add browser E2E for message routing once a Playwright harness is committed."
+    },
+    {
+      "id": "trace_proposals_auto_accept",
+      "area": "Trace + proposals",
+      "claim": "Room trace supports approve/reject, host accept-all, and host-gated auto-accept with remembered consent.",
+      "status": "green",
+      "productionGate": "Host-only controls, proposal resolution tests, UI consent modal, and no silent direct-write bypass.",
+      "deterministicChecks": [
+        "tests/roomEngine.test.ts"
+      ],
+      "liveChecks": [
+        "manual browser: turn auto-allow on, confirm modal, run collaboration, accept all proposals"
+      ],
+      "evidence": [
+        { "type": "test", "ref": "tests/roomEngine.test.ts" },
+        { "type": "code", "ref": "src/ui/RoomShell.tsx" },
+        { "type": "code", "ref": "src/ui/panels/Artifact.tsx" }
+      ],
+      "nextReview": "Add audit assertion that accept-all records every accepted proposal id."
+    },
+    {
+      "id": "research_operation_workflows",
+      "area": "Research + ops workflows",
+      "claim": "GTM, finance, parser, wiki, and cross-file operation workflows are covered by deterministic professional evals and live provider smoke.",
+      "status": "yellow",
+      "productionGate": "Deterministic workflow evals pass, provider parser smoke is green, and model routes are ladder-gated before interactive promotion.",
+      "deterministicChecks": [
+        "tests/researchHarness.test.ts",
+        "tests/workflowEvals.test.ts",
+        "tests/professionalWorkflows.test.ts"
+      ],
+      "liveChecks": [
+        "npm run provider-parser:smoke",
+        "npm run ladder:real -- <model-id>"
+      ],
+      "evidence": [
+        { "type": "test", "ref": "tests/professionalWorkflows.test.ts" },
+        { "type": "eval", "ref": "evals/professionalWorkflows.ts" },
+        { "type": "doc", "ref": "docs/eval/live-provider-agent-ladder-2026-06-08.md" }
+      ],
+      "nextReview": "Add dedicated live GTM and finance provider jobs with row-level trace assertions."
+    },
+    {
+      "id": "notes_spreadsheet_agent",
+      "area": "Notes + spreadsheet agent",
+      "claim": "The agent can read spreadsheets, write notes/wiki updates, reconcile cells, and keep cross-artifact evidence links.",
+      "status": "green",
+      "productionGate": "Cross-file RoomTools test, grounded wiki write test, and CAS conflict checks.",
+      "deterministicChecks": [
+        "tests/workflowEvals.test.ts",
+        "tests/spreadsheetIndex.test.ts",
+        "tests/wikiSkill.test.ts"
+      ],
+      "liveChecks": [
+        "manual browser: run collaboration and inspect note/wiki/spreadsheet trace"
+      ],
+      "evidence": [
+        { "type": "test", "ref": "tests/workflowEvals.test.ts" },
+        { "type": "test", "ref": "tests/wikiSkill.test.ts" },
+        { "type": "doc", "ref": "docs/AGENT_WIKI.md" }
+      ],
+      "nextReview": "Add LLM-generated wiki update eval with private-data leakage checks."
+    },
+    {
+      "id": "wall_postits",
+      "area": "Wall",
+      "claim": "Users can create and delete post-its through versioned room operations.",
+      "status": "green",
+      "productionGate": "Create/delete operation tests and browser smoke for Wall tab.",
+      "deterministicChecks": [
+        "tests/roomEngine.test.ts"
+      ],
+      "liveChecks": [
+        "manual browser: Wall tab Post-it add/delete"
+      ],
+      "evidence": [
+        { "type": "test", "ref": "tests/roomEngine.test.ts" },
+        { "type": "code", "ref": "src/ui/panels/Artifact.tsx" }
+      ],
+      "nextReview": "Add multi-user wall edit conflict browser test."
+    },
+    {
+      "id": "multi_user_online",
+      "area": "Multi-user production paths",
+      "claim": "Multiple users can join, see reactive state, use public/private scopes, and avoid clobbering through locks/CAS/proposals/drafts.",
+      "status": "yellow",
+      "productionGate": "Room auth proof, Convex codegen/typecheck, duplicate-operation idempotency, load/concurrency smoke, and deployment observability.",
+      "deterministicChecks": [
+        "tests/roomEngine.test.ts",
+        "tests/agentReliability.test.ts",
+        "tests/idempotencyRuntime.test.ts",
+        "tests/lockTtl.test.ts"
+      ],
+      "liveChecks": [
+        "npx convex codegen --typecheck disable",
+        "npx convex dev --once"
+      ],
+      "evidence": [
+        { "type": "test", "ref": "tests/idempotencyRuntime.test.ts" },
+        { "type": "test", "ref": "tests/lockTtl.test.ts" },
+        { "type": "doc", "ref": "docs/ARCHITECTURE.md" }
+      ],
+      "nextReview": "Add concurrent browser/session load test and production SLO dashboard."
+    },
+    {
+      "id": "long_running_free_auto",
+      "area": "Long-running /free jobs",
+      "claim": "Free-auto provider work can run as sliced jobs that checkpoint before platform limits and resume from durable state.",
+      "status": "yellow",
+      "productionGate": "Forced multi-slice test, crash-after-checkpoint resume, duplicate stale lease rejection, and live /free smoke.",
+      "deterministicChecks": [
+        "tests/agentJobsSource.test.ts",
+        "tests/agentReliability.test.ts"
+      ],
+      "liveChecks": [
+        "npm run free-job:smoke",
+        "npm run ladder:real -- openrouter/free-auto --rung-timeout-ms=540000 --reserve-ms=30000"
+      ],
+      "evidence": [
+        { "type": "test", "ref": "tests/agentJobsSource.test.ts" },
+        { "type": "doc", "ref": "docs/LONG_RUNNING_AGENTS.md" },
+        { "type": "doc", "ref": "docs/eval/free-auto-ladder.md" }
+      ],
+      "nextReview": "Add duplicate enqueue idempotency, stricter budget clamps, per-tool abort propagation, durable provider-step journaling, model health/quarantine, and real forced multi-slice Convex job-runner tests."
+    },
+    {
+      "id": "provider_parser",
+      "area": "Provider parser",
+      "claim": "Provider file/cache ids stay separate from Convex raw file ids while extraction writes evidence-bearing CellPayloads.",
+      "status": "green",
+      "productionGate": "Adapter separation tests, live provider smoke, redacted errors, and artifact evidence checks.",
+      "deterministicChecks": [
+        "tests/providerParserAdapter.test.ts",
+        "tests/providerParserLive.test.ts",
+        "tests/documentParserPlan.test.ts"
+      ],
+      "liveChecks": [
+        "npm run provider-parser:smoke"
+      ],
+      "evidence": [
+        { "type": "test", "ref": "tests/providerParserAdapter.test.ts" },
+        { "type": "test", "ref": "tests/providerParserLive.test.ts" },
+        { "type": "doc", "ref": "docs/STACK.md" }
+      ],
+      "nextReview": "Add production provider Files API binary upload actions for PDFs/images/decks."
+    },
+    {
+      "id": "qa_matrix_continuity",
+      "area": "QA system",
+      "claim": "The QA matrix, README cockpit, and visual graphs are generated from one appendable source of truth.",
+      "status": "green",
+      "productionGate": "Matrix schema tests and qa:matrix --check drift detection.",
+      "deterministicChecks": [
+        "npm run qa:matrix:check",
+        "tests/qaMatrix.test.ts"
+      ],
+      "liveChecks": [
+        "not applicable"
+      ],
+      "evidence": [
+        { "type": "data", "ref": "docs/qa/production-matrix.json" },
+        { "type": "script", "ref": "scripts/qa-matrix.ts" },
+        { "type": "test", "ref": "tests/qaMatrix.test.ts" }
+      ],
+      "nextReview": "Require each new user-facing feature PR to append or update one matrix row."
+    }
+  ],
+  "modelLadder": {
+    "source": "docs/eval/live-provider-agent-ladder-2026-06-08.md",
+    "gate": "Interactive collaboration routes must pass L1-L4 for lock/CAS/draft safety.",
+    "routes": [
+      {
+        "modelRoute": "gemini-3.5-flash",
+        "provider": "Gemini",
+        "l1": "PASS",
+        "l2": "PASS",
+        "l3": "PASS",
+        "l4": "PASS",
+        "recommendedUse": "eligible for interactive collaboration promotion after repeated runs"
+      },
+      {
+        "modelRoute": "gpt-5.4-mini",
+        "provider": "OpenAI",
+        "l1": "PASS",
+        "l2": "PASS",
+        "l3": "FAIL",
+        "l4": "PASS",
+        "recommendedUse": "parser/read-only/background until conflict rung passes"
+      },
+      {
+        "modelRoute": "claude-haiku-4-5",
+        "provider": "Anthropic",
+        "l1": "PASS",
+        "l2": "PASS",
+        "l3": "PASS",
+        "l4": "FAIL",
+        "recommendedUse": "parser/read-only/background until blocked-range rung passes"
+      },
+      {
+        "modelRoute": "openai/gpt-4o-mini",
+        "provider": "OpenRouter",
+        "l1": "PASS",
+        "l2": "PASS",
+        "l3": "PASS",
+        "l4": "FAIL",
+        "recommendedUse": "parser/read-only/background until blocked-range rung passes"
+      },
+      {
+        "modelRoute": "gpt-5.4-nano",
+        "provider": "OpenAI",
+        "l1": "PASS",
+        "l2": "FAIL",
+        "l3": "FAIL",
+        "l4": "FAIL",
+        "recommendedUse": "research benchmark winner candidate only when collaboration safety is not required"
+      },
+      {
+        "modelRoute": "gpt-5.4",
+        "provider": "OpenAI",
+        "l1": "PASS",
+        "l2": "FAIL",
+        "l3": "PASS",
+        "l4": "PASS",
+        "recommendedUse": "requires rerun because L2 time-budget failure blocks promotion"
+      }
+    ]
+  },
+  "readme": {
+    "maxFeatureRows": 10,
+    "summaryTitle": "Production QA cockpit"
+  }
+}

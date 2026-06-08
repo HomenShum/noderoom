@@ -1,0 +1,828 @@
+/**
+ * ArtifactPanel — tabs + Shared tag · collab bar · spreadsheet (CAS) · TipTap note
+ * · dnd-kit wall · Room trace. Reads + writes through `useStore()`, so the same
+ * component renders the in-memory engine OR live Convex (optimistic edits).
+ */
+
+import { Fragment, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { DndContext, useDraggable, type DragEndEvent } from "@dnd-kit/core";
+import { restrictToParentElement } from "@dnd-kit/modifiers";
+import { useEditor, EditorContent } from "@tiptap/react";
+import StarterKit from "@tiptap/starter-kit";
+import {
+  Table2, FileText, StickyNote, Users, GitMerge, Play, RotateCcw, History, Search, BookOpen,
+  Lock, Unlock, Ban, Pencil, Plus, Check, AlertTriangle, Eye, Circle, ChevronRight, Download, Trash2, type LucideIcon,
+} from "lucide-react";
+import { useStore, type RoomStore, type EditFeedback } from "../../app/store";
+import type { Actor, Artifact as Art, CellPayload, DataframeColumn, DocumentParseMeta, TraceEvent, ResearchRowInput } from "../../engine/types";
+
+const WIKI_TITLE = "Agent wiki";
+const RESEARCH_TITLE = "Company research";
+const GENERIC_SHEET_CELL_WINDOW = 5_000;
+type TabId = "wiki" | "sheet" | "research" | "note" | "wall";
+const TABS: { id: TabId; label: string; Icon: LucideIcon }[] = [
+  { id: "wiki", label: "Wiki", Icon: BookOpen },
+  { id: "sheet", label: "Spreadsheet", Icon: Table2 },
+  { id: "research", label: "Research", Icon: Search },
+  { id: "note", label: "Note", Icon: FileText },
+  { id: "wall", label: "Wall", Icon: StickyNote },
+];
+
+export function Artifact({ roomId, me, artId, onArt, collab, style }: {
+  roomId: string; me: Actor; artId: string; onArt: (id: string) => void;
+  collab?: { running: boolean; done: boolean; onRun: () => void };
+  style?: CSSProperties;
+}) {
+  const store = useStore();
+  const arts = store.listArtifacts(roomId);
+  const selected = arts.find((a) => a.id === artId);
+  const wiki = arts.find((a) => a.title === WIKI_TITLE);
+  const research = arts.find((a) => a.title === RESEARCH_TITLE);
+  const varianceSheet = arts.find((a) => a.kind === "sheet" && a.title === "Q3 variance") ?? arts.find((a) => a.kind === "sheet" && a.title !== RESEARCH_TITLE);
+  const sheet = selected?.kind === "sheet" && selected.title !== RESEARCH_TITLE ? selected : varianceSheet;
+  const note = selected?.kind === "note" && selected.title !== WIKI_TITLE ? selected : arts.find((a) => a.kind === "note" && a.title !== WIKI_TITLE);
+  const wall = arts.find((a) => a.kind === "wall");
+  const artFor = (t: TabId) => (t === "wiki" ? wiki : t === "sheet" ? sheet : t === "research" ? research : t === "note" ? note : wall);
+  const fallbackTab: TabId = sheet ? "sheet" : wiki ? "wiki" : research ? "research" : note ? "note" : wall ? "wall" : "sheet";
+  const tabForArt = (id: string): TabId => {
+    if (wiki?.id === id) return "wiki";
+    if (arts.some((a) => a.id === id && a.kind === "sheet" && a.title !== RESEARCH_TITLE)) return "sheet";
+    if (research?.id === id) return "research";
+    if (arts.some((a) => a.id === id && a.kind === "note" && a.title !== WIKI_TITLE)) return "note";
+    if (wall?.id === id) return "wall";
+    return fallbackTab;
+  };
+  const [tab, setTab] = useState<TabId>(() => tabForArt(artId));
+  const [editErr, setEditErr] = useState<string | null>(null);
+  useEffect(() => { if (!editErr) return; const t = setTimeout(() => setEditErr(null), 4000); return () => clearTimeout(t); }, [editErr]);
+  useEffect(() => { setTab(tabForArt(artId)); }, [artId, wiki?.id, sheet?.id, research?.id, note?.id, wall?.id, arts.length]);
+  if (arts.length === 0) return <div className="r-panel artifact"><div className="r-art-body" /></div>;
+  const activeTab: TabId = artFor(tab) ? tab : fallbackTab;
+  const pick = (t: TabId) => { const a = artFor(t); if (a) { onArt(a.id); setTab(t); } };
+  const openArtifact = (a: Art) => { onArt(a.id); setTab(tabForArt(a.id)); };
+
+  return (
+    <div className="r-panel artifact" style={style}>
+      <div className="r-panel-head">
+        <div className="r-tabs">
+          {TABS.filter((t) => artFor(t.id)).map((t) => (
+            <button key={t.id} className="r-tab" data-active={String(activeTab === t.id)} onClick={() => pick(t.id)}>
+              <t.Icon size={13} /> {t.label}
+            </button>
+          ))}
+        </div>
+        <span className="grow" />
+        <span className="r-tag public"><Users size={11} /> Shared</span>
+      </div>
+
+      {collab && activeTab === "sheet" && sheet?.title === "Q3 variance" && <CollabBar collab={collab} />}
+      {editErr && <div className="r-art-error" role="alert"><AlertTriangle size={13} /> {editErr}</div>}
+      {activeTab === "wiki" && wiki && <Wiki roomId={roomId} art={wiki} onOpenArtifact={openArtifact} />}
+      {activeTab === "sheet" && sheet && (sheet.title === "Q3 variance"
+        ? <Sheet roomId={roomId} me={me} art={sheet} onError={(f) => setEditErr(editErrorMsg(f))} />
+        : <GenericSheet art={sheet} />)}
+      {activeTab === "research" && research && <Research roomId={roomId} me={me} art={research} />}
+      {activeTab === "note" && note && <Note roomId={roomId} me={me} art={note} />}
+      {activeTab === "wall" && wall && <Wall roomId={roomId} me={me} art={wall} />}
+
+      <TraceStrip roomId={roomId} me={me} />
+    </div>
+  );
+}
+
+/* ── agent-managed room wiki: live TOC + current room state ── */
+function Wiki({ roomId, art, onOpenArtifact }: { roomId: string; art: Art; onOpenArtifact: (art: Art) => void }) {
+  const store = useStore();
+  const artifacts = store.listArtifacts(roomId);
+  const members = store.listMembers(roomId);
+  const sessions = store.listSessions(roomId);
+  const traces = store.listTraces(roomId).slice(-8).reverse();
+  const run = store.lastRun();
+  const toc = [
+    ["wiki-overview", "Overview"],
+    ["wiki-files", "Files"],
+    ["wiki-agents", "Agents"],
+    ["wiki-workflows", "Workflows"],
+    ["wiki-rules", "Rules"],
+    ["wiki-backend", "Backend"],
+    ["wiki-trace", "Recent trace"],
+  ] as const;
+  const summary = String(art.elements.doc?.value ?? "Room state, collaboration policy, and agent evidence.");
+  return (
+    <div className="r-art-body r-wiki-body">
+      <aside className="r-wiki-toc" aria-label="Wiki table of contents">
+        <div className="kicker">On this page</div>
+        {toc.map(([id, label]) => <a key={id} href={`#${id}`}>{label}</a>)}
+      </aside>
+      <article className="r-wiki-doc">
+        <section id="wiki-overview">
+          <p className="kicker">Agent-managed wiki</p>
+          <h1>NodeRoom system of record</h1>
+          <p>{summary}</p>
+          <div className="r-wiki-metrics" aria-label="Room state">
+            <span><b>{artifacts.length}</b> files</span>
+            <span><b>{members.length}</b> people</span>
+            <span><b>{sessions.length}</b> agents</span>
+            <span><b>{store.listTraces(roomId).length}</b> trace events</span>
+          </div>
+        </section>
+
+        <section id="wiki-files">
+          <h2>Files</h2>
+          <div className="r-wiki-files">
+            {artifacts.map((a) => (
+              <button key={a.id} className="r-wiki-file" data-current={String(a.id === art.id)} onClick={() => onOpenArtifact(a)}>
+                <span className="r-wiki-file-title">{a.title}</span>
+                <span className="r-wiki-file-meta">{artifactWikiMeta(a)}</span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section id="wiki-agents">
+          <h2>Agents</h2>
+          <div className="r-wiki-list">
+            {sessions.map((s) => (
+              <div key={s.id} className="r-wiki-list-row">
+                <span>{s.agentName}</span>
+                <code>{s.scope}</code>
+                <span>{s.status}</span>
+                <span className="faint">{s.lastAction}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        <section id="wiki-workflows">
+          <h2>Workflows</h2>
+          <ol className="r-wiki-steps">
+            <li><b>Variance collaboration:</b> lock the affected spreadsheet range, read current context, edit with CAS, release, then smart-merge pending drafts.</li>
+            <li><b>ParselyFi research:</b> add or requeue accounts, enrich only pending rows, write sources and freshness, export CRM-ready fields.</li>
+            <li><b>Sales GTM:</b> preserve tier, intent, owner, CRM status, summary, signal, and citations per account row.</li>
+          </ol>
+        </section>
+
+        <section id="wiki-rules">
+          <h2>Rules</h2>
+          <ol className="r-wiki-steps">
+            <li><b>Ground claims:</b> summarize only artifacts, traces, runs, sessions, messages, and cited research sources already present in the room.</li>
+            <li><b>Keep private data private:</b> never expose private channel content or private drafts in the shared wiki unless a user promotes it.</li>
+            <li><b>Preserve workflow fields:</b> keep finance rows, GTM account fields, citations, freshness, owners, and CRM status visible as first-class wiki facts.</li>
+            <li><b>Update after state changes:</b> refresh file inventory, active agents, workflow state, and recent trace evidence after uploads, research runs, approvals, and merges.</li>
+          </ol>
+        </section>
+
+        <section id="wiki-backend">
+          <h2>Backend</h2>
+          <div className="r-wiki-list">
+            <div className="r-wiki-list-row"><span>UI</span><code>src/ui</code><span>renders artifacts, chat, trace, and wiki</span></div>
+            <div className="r-wiki-list-row"><span>Store</span><code>src/app/store.tsx</code><span>switches between memory and Convex</span></div>
+            <div className="r-wiki-list-row"><span>Engine</span><code>src/engine</code><span>CAS, locks, drafts, smart-merge, traces</span></div>
+            <div className="r-wiki-list-row"><span>Agent</span><code>src/agent</code><span>runtime, tools, model seam, compaction</span></div>
+            <div className="r-wiki-list-row"><span>Live</span><code>convex</code><span>schema, mutations, optimistic queries, server agent action</span></div>
+          </div>
+          {run && <p className="r-wiki-run"><code>{run.model}</code> last run: {run.toolCalls} tool calls, {run.steps} steps, ${run.costUsd.toFixed(3)}, {run.ms}ms.</p>}
+        </section>
+
+        <section id="wiki-trace">
+          <h2>Recent trace</h2>
+          <div className="r-wiki-timeline">
+            {traces.length === 0 ? <span className="faint">No trace events yet.</span> : traces.map((t) => (
+              <div key={t.id} className="r-wiki-timeline-row">
+                <time>{new Date(t.ts).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}</time>
+                <span>{t.summary}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      </article>
+    </div>
+  );
+}
+
+function artifactWikiMeta(art: Art): string {
+  if (art.title === WIKI_TITLE) return `live TOC; v${art.version}`;
+  if (art.kind === "sheet") return `${rowIdsOf(art).length} rows; v${art.version}`;
+  if (art.kind === "wall") return `${Object.keys(art.elements).length} notes; v${art.version}`;
+  return `doc; v${art.version}`;
+}
+
+/* ── company-research surface (ParselyFi loop): status-gated, sourced enrichment ── */
+function Research({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) {
+  const store = useStore();
+  const [running, setRunning] = useState(false);
+  const [pasteOpen, setPasteOpen] = useState(false);
+  const [pasteText, setPasteText] = useState("");
+  const [busy, setBusy] = useState(false);
+  const [expanded, setExpanded] = useState<string | null>(null);
+  const rowIds = [...new Set(art.order.map((e) => e.split("__")[0]))];
+  const cell = (rid: string, c: string) => displayCellValue(art.elements[`${rid}__${c}`]?.value);
+  const pending = rowIds.filter((rid) => (cell(rid, "status") || "pending") === "pending").length;
+  const complete = rowIds.filter((rid) => cell(rid, "status") === "complete").length;
+  const run = async () => { setRunning(true); try { await store.askResearch(); } finally { setRunning(false); } };
+  const addRows = async () => {
+    const rows = parseResearchRows(pasteText);
+    if (!rows.length) return;
+    setBusy(true);
+    try {
+      const added = await store.addResearchRows({ roomId, artifactId: art.id, rows, actor: me });
+      if (added) { setPasteText(""); setPasteOpen(false); }
+    } finally { setBusy(false); }
+  };
+  const refreshComplete = async () => {
+    setBusy(true);
+    try {
+      for (const rid of rowIds.filter((id) => cell(id, "status") === "complete")) {
+        await commit(store, roomId, me, art.id, `${rid}__status`, "pending");
+      }
+    } finally { setBusy(false); }
+  };
+  const srcLink = (src: string) => {
+    const u = src.match(/https?:\/\/[^\s]+/)?.[0];
+    return u ? <a href={u} target="_blank" rel="noreferrer">{src}</a> : <span>{src}</span>;
+  };
+  const srcChip = (src: string) => {
+    const u = src.match(/https?:\/\/[^\s]+/)?.[0];
+    let host = src.slice(0, 16);
+    if (u) { try { host = new URL(u).hostname.replace(/^www\./, ""); } catch { /* keep slice */ } }
+    return u
+      ? <a key={u} className="r-srcchip" href={u} target="_blank" rel="noreferrer" title={src}>{host}</a>
+      : <span key={src} className="r-srcchip" title={src}>{host}</span>;
+  };
+  return (
+    <div className="r-art-body r-research-body">
+      <div className="r-research-bar">
+        <span className="tiny faint">{rowIds.length} accounts · {pending} pending · {complete} complete · multi-source research</span>
+        <span className="grow" />
+        <button className="r-btn ghost" disabled={busy} onClick={() => setPasteOpen((v) => !v)}><Plus size={13} /> Add accounts</button>
+        <button className="r-btn ghost" disabled={busy || complete === 0} onClick={() => void refreshComplete()}><RotateCcw size={13} /> Requeue complete</button>
+        <button className="r-btn ghost" onClick={() => downloadResearchCsv(art, rowIds, cell)}><Download size={13} /> CRM CSV</button>
+        <button className="r-btn" disabled={running || pending === 0} onClick={run}>{running ? "Researching..." : pending ? `Enrich ${pending} pending` : "All complete"}</button>
+      </div>
+      {pasteOpen && (
+        <div className="r-research-import">
+          <textarea value={pasteText} onChange={(e) => setPasteText(e.target.value)} rows={3} placeholder="Company, website, tier, intent, owner, CRM status" />
+          <button className="r-btn primary" disabled={busy || parseResearchRows(pasteText).length === 0} onClick={() => void addRows()}>Add pending rows</button>
+        </div>
+      )}
+      <div className="r-research-scroll">
+        <table className="r-research">
+          <colgroup>
+            <col style={{ width: 148 }} /><col style={{ width: 92 }} /><col style={{ width: 150 }} />
+            <col style={{ width: 248 }} /><col style={{ width: 188 }} /><col style={{ width: 150 }} /><col style={{ width: 96 }} />
+          </colgroup>
+          <thead><tr>
+            <th className="frozen">Account</th><th>Status</th><th>GTM</th><th>Research</th><th>Signals</th><th>Sources</th><th>Freshness</th>
+          </tr></thead>
+          <tbody>
+            {rowIds.map((rid) => {
+              const status = cell(rid, "status") || "pending";
+              const src = cell(rid, "source"), src2 = cell(rid, "source2"), last = cell(rid, "last_researched");
+              const gtm = `${cell(rid, "tier") || "B"} · ${cell(rid, "intent") || "research"}`;
+              const gtmFull = `${gtm} · ${cell(rid, "owner") || me.name} · ${cell(rid, "crm_status") || "Research"}`;
+              const signals = [cell(rid, "funding"), cell(rid, "headcount"), cell(rid, "recent_signal")].filter(Boolean).join(" · ");
+              const open = expanded === rid;
+              const detail: Array<[string, ReactNode]> = [
+                ["Website", cell(rid, "website") || "—"],
+                ["Tier", cell(rid, "tier") || "—"], ["Intent", cell(rid, "intent") || "—"],
+                ["Owner", cell(rid, "owner") || me.name], ["CRM status", cell(rid, "crm_status") || "—"],
+                ["Summary", cell(rid, "summary") || "—"],
+                ["Funding", cell(rid, "funding") || "—"], ["Headcount", cell(rid, "headcount") || "—"],
+                ["Recent signal", cell(rid, "recent_signal") || "—"],
+                ["Source", src ? srcLink(src) : "—"], ["Source 2", src2 ? srcLink(src2) : "—"],
+                ["Last researched", last || "never"],
+              ];
+              return (
+                <Fragment key={rid}>
+                  <tr className="r-research-row" data-open={String(open)} aria-selected={open} onClick={() => setExpanded(open ? null : rid)}>
+                    <td className="r-research-co frozen" title={cell(rid, "company")}>{cell(rid, "company") || rid}</td>
+                    <td><span className={"r-status r-status-" + status}>{status}</span></td>
+                    <td className="r-research-gtm" title={gtmFull}>{gtm}</td>
+                    <td className="r-research-sum" title={cell(rid, "summary")}>{cell(rid, "summary") || <span className="nullcell">—</span>}</td>
+                    <td className="r-research-signals" title={signals}>{signals || <span className="nullcell">—</span>}</td>
+                    <td className="r-research-src" onClick={(e) => e.stopPropagation()}>{src ? srcChip(src) : <span className="nullcell">—</span>}{src2 ? srcChip(src2) : null}</td>
+                    <td><span className={"r-fresh " + freshnessClass(last)}>{freshnessLabel(last)}</span></td>
+                  </tr>
+                  {open && (
+                    <tr className="r-research-detail-row">
+                      <td colSpan={7}>
+                        <div className="r-research-detail">
+                          {detail.map(([k, v]) => (
+                            <div key={k} className="r-detail-field"><span className="r-detail-k">{k}</span><span className="r-detail-v">{v}</span></div>
+                          ))}
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </Fragment>
+              );
+            })}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+function parseResearchRows(text: string): ResearchRowInput[] {
+  return text.split(/\r?\n/).map((line) => line.trim()).filter(Boolean).flatMap((line, idx) => {
+    const cols = line.split(/\t|,/).map((c) => c.trim()).filter(Boolean);
+    if (!cols.length || (idx === 0 && /^company$/i.test(cols[0]))) return [];
+    return [{ company: cols[0], website: cols[1], tier: cols[2], intent: cols[3], owner: cols[4], crmStatus: cols[5] }];
+  });
+}
+function freshnessLabel(last: string) {
+  if (!last) return "never";
+  const days = Math.floor((Date.now() - Date.parse(last)) / 86_400_000);
+  if (!Number.isFinite(days)) return "unknown";
+  return days > 30 ? `${days}d stale` : "fresh";
+}
+function freshnessClass(last: string) {
+  if (!last) return "stale";
+  const days = Math.floor((Date.now() - Date.parse(last)) / 86_400_000);
+  return Number.isFinite(days) && days <= 30 ? "fresh" : "stale";
+}
+function csvEscape(value: string) {
+  const safe = /^[\s]*[=+\-@]/.test(value) ? `'${value}` : value;
+  return /[",\n]/.test(safe) ? `"${safe.replace(/"/g, '""')}"` : safe;
+}
+function downloadResearchCsv(art: Art, rowIds: string[], cell: (rid: string, c: string) => string) {
+  const cols = ["company", "website", "tier", "intent", "owner", "crm_status", "summary", "funding", "headcount", "recent_signal", "source", "source2", "last_researched"];
+  const lines = [cols.join(","), ...rowIds.map((rid) => cols.map((c) => csvEscape(cell(rid, c))).join(","))];
+  const blob = new Blob([lines.join("\n")], { type: "text/csv;charset=utf-8" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = `${art.title.toLowerCase().replace(/[^a-z0-9]+/g, "-") || "research"}-crm.csv`;
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+export function ResearchLegacy({ art }: { art: Art }) {
+  const store = useStore();
+  const [running, setRunning] = useState(false);
+  const rowIds = [...new Set(art.order.map((e) => e.split("__")[0]))];
+  const cell = (rid: string, c: string) => displayCellValue(art.elements[`${rid}__${c}`]?.value);
+  const pending = rowIds.filter((rid) => (cell(rid, "status") || "pending") === "pending").length;
+  const run = async () => { setRunning(true); try { await store.askResearch(); } finally { setRunning(false); } };
+  const srcLink = (src: string) => { const u = src.match(/https?:\/\/\S+/)?.[0]; return u ? <a href={u} target="_blank" rel="noreferrer">{src}</a> : <span>{src}</span>; };
+  return (
+    <div className="r-art-body">
+      <div className="r-research-bar">
+        <span className="tiny faint">{rowIds.length} companies · {pending} pending · agent enriches pending rows only</span>
+        <span className="grow" />
+        <button className="r-btn" disabled={running || pending === 0} onClick={run}>{running ? "Researching…" : pending ? `Enrich ${pending} pending` : "All complete"}</button>
+      </div>
+      <table className="r-research">
+        <thead><tr><th>Company</th><th>Status</th><th>Sourced summary</th><th>Source</th></tr></thead>
+        <tbody>
+          {rowIds.map((rid) => {
+            const status = cell(rid, "status") || "pending";
+            const src = cell(rid, "source");
+            return (
+              <tr key={rid}>
+                <td className="r-research-co">{cell(rid, "company") || rid}</td>
+                <td><span className={"r-status r-status-" + status}>{status}</span></td>
+                <td className="r-research-sum">{cell(rid, "summary") || <span className="nullcell">—</span>}</td>
+                <td className="r-research-src">{src ? srcLink(src) : <span className="nullcell">—</span>}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+/* ── helpers (take the store) ── */
+async function commit(store: RoomStore, roomId: string, me: Actor, artId: string, elementId: string, value: unknown): Promise<EditFeedback | null> {
+  const el = store.getArtifact(artId)?.elements[elementId];
+  if (!el || Object.is(el.value, value)) return null;
+  return store.applyEdit({ roomId, op: { opId: crypto.randomUUID(), artifactId: artId, elementId, kind: "set", value, baseVersion: el.version }, actor: me });
+}
+async function createElement(store: RoomStore, roomId: string, me: Actor, artId: string, elementId: string, value: unknown): Promise<EditFeedback> {
+  return store.applyEdit({ roomId, op: { opId: crypto.randomUUID(), artifactId: artId, elementId, kind: "create", value, baseVersion: 0 }, actor: me });
+}
+async function deleteElement(store: RoomStore, roomId: string, me: Actor, artId: string, elementId: string): Promise<EditFeedback | null> {
+  const el = store.getArtifact(artId)?.elements[elementId];
+  if (!el) return null;
+  return store.applyEdit({ roomId, op: { opId: crypto.randomUUID(), artifactId: artId, elementId, kind: "delete", value: null, baseVersion: el.version }, actor: me });
+}
+const editErrorMsg = (f: EditFeedback) =>
+  f.reason === "conflict" ? "That cell changed since you opened it — your edit was reverted. Re-open it to see the new value."
+    : f.reason === "locked" ? "That cell is locked by an agent right now."
+      : "Edit could not be applied.";
+function lockedByOther(store: RoomStore, artId: string, elementId: string, me: Actor) {
+  const lk = store.lockFor(artId, elementId);
+  return lk && lk.holder.id !== me.id ? lk : null;
+}
+function draftedFor(store: RoomStore, roomId: string, artId: string, elementId: string): boolean {
+  return store.listDrafts(roomId).some((d) => d.status === "pending" && d.artifactId === artId && d.ops.some((o) => o.elementId === elementId));
+}
+
+function EditableCell({ value, disabled, align, onCommit, addLabel }: { value: string; disabled?: boolean; align?: "right"; onCommit: (s: string) => void; addLabel?: string }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value);
+  useEffect(() => setDraft(value), [value]);
+  if (disabled) return value ? <span className="r-val-pos">{value}</span> : <span className="nullcell">null</span>;
+  if (editing) {
+    return (
+      <input className="r-cell-input" autoFocus value={draft} style={align === "right" ? { textAlign: "right" } : undefined}
+        onChange={(e) => setDraft(e.target.value)}
+        onBlur={() => { setEditing(false); if (draft.trim() !== value) onCommit(draft.trim()); }}
+        onKeyDown={(e) => { if (e.key === "Enter") (e.target as HTMLInputElement).blur(); if (e.key === "Escape") { setDraft(value); setEditing(false); } }} />
+    );
+  }
+  return (
+    <button className="r-cell-edit" onClick={() => setEditing(true)}>
+      {value ? <span className="r-val-pos">{value}</span> : <span className="add-hint"><Plus size={11} /> {addLabel ?? "add"}</span>}
+    </button>
+  );
+}
+
+function rowIdsOf(art: Art): string[] {
+  const ids: string[] = [];
+  for (const eid of art.order) { const r = eid.split("__")[0]; if (!ids.includes(r)) ids.push(r); }
+  return ids;
+}
+const cellVal = (art: Art, rowId: string, col: string) => displayCellValue(art.elements[`${rowId}__${col}`]?.value);
+
+function colsOf(art: Art): string[] {
+  const cols: string[] = [];
+  for (const eid of art.order) {
+    const col = eid.split("__").slice(1).join("__");
+    if (col && !cols.includes(col)) cols.push(col);
+  }
+  return cols;
+}
+
+function GenericSheet({ art }: { art: Art }) {
+  const [pages, setPages] = useState(1);
+  const rows = rowIdsOf(art);
+  const columns = columnsOf(art);
+  const cols = columns.map((col) => col.id);
+  const pageSize = Math.max(25, Math.min(250, Math.floor(GENERIC_SHEET_CELL_WINDOW / Math.max(cols.length, 1))));
+  const visibleRows = rows.slice(0, pageSize * pages);
+  return (
+    <>
+      <div className="r-art-body">
+        <div className="r-sheet-wrap">
+          <table className="r-sheet r-generic-sheet">
+            <thead><tr><th style={{ width: 72 }}>row</th>{columns.map((c) => <th key={c.id}>{c.label}</th>)}</tr></thead>
+            <tbody>
+              {visibleRows.map((rid) => (
+                <tr key={rid}>
+                  <td className="rid">{rid}</td>
+                  {cols.map((col) => {
+                    const raw = art.elements[`${rid}__${col}`]?.value;
+                    const payload = asCellPayload(raw);
+                    const value = displayCellValue(raw);
+                    return (
+                      <td key={col} title={payload?.evidence?.[0]?.label}>
+                        {value || <span className="nullcell">null</span>}
+                        {payload && <span className={"r-cell-meta " + (payload.status ?? "complete")}>{payload.evidence?.length ? `${payload.evidence.length} src` : payload.status}</span>}
+                      </td>
+                    );
+                  })}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div className="r-sheet-foot">
+        <span className="kicker">uploadedSpreadsheet</span>
+        <span className="r-vpill next">v{art.version}</span>
+        {visibleRows.length < rows.length && <button className="r-mini-btn" onClick={() => setPages((n) => n + 1)}>Show next {pageSize}</button>}
+        <span className="grow" />
+        <span className="mono tiny faint">{rows.length} rows · {cols.length} columns</span>
+      </div>
+    </>
+  );
+}
+
+function columnsOf(art: Art): DataframeColumn[] {
+  const metaCols = art.meta?.dataframe?.columns;
+  if (metaCols?.length) return [...metaCols].sort((a, b) => a.order - b.order);
+  return colsOf(art).map((id, order) => ({ id, label: prettyCol(id), order }));
+}
+
+function asCellPayload(value: unknown): CellPayload | null {
+  if (!value || typeof value !== "object" || !("value" in value)) return null;
+  return value as CellPayload;
+}
+
+function displayCellValue(value: unknown): string {
+  const payload = asCellPayload(value);
+  const raw = payload ? payload.value : value;
+  if (raw === null || raw === undefined) return "";
+  if (typeof raw === "string") return raw;
+  if (typeof raw === "number" || typeof raw === "boolean") return String(raw);
+  return JSON.stringify(raw);
+}
+
+function prettyCol(col: string) {
+  return col.replace(/_/g, " ");
+}
+
+function Sheet({ roomId, me, art, onError }: { roomId: string; me: Actor; art: Art; onError: (f: EditFeedback) => void }) {
+  const store = useStore();
+  const rows = rowIdsOf(art);
+  const now = Date.now();
+  const doCommit = (id: string, s: string) => { void commit(store, roomId, me, art.id, id, s).then((f) => { if (f && !f.ok) onError(f); }); };
+  return (
+    <>
+      <div className="r-art-body">
+        <div className="r-sheet-wrap">
+          <table className="r-sheet">
+            <thead><tr><th style={{ width: 70 }}>row</th><th>Account</th><th className="num">Q2</th><th className="num">Q3</th><th className="num">Variance</th><th>Note</th></tr></thead>
+            <tbody>
+              {rows.map((rid) => {
+                const vId = `${rid}__variance`, nId = `${rid}__note`;
+                const vEl = art.elements[vId], nEl = art.elements[nId];
+                const lk = lockedByOther(store, art.id, vId, me);
+                const drafting = draftedFor(store, roomId, art.id, vId);
+                const committed = !lk && vEl && vEl.version > 1 && now - vEl.updatedAt < 1500;
+                const vCls = "r-cell num" + (lk ? " locked" : "") + (drafting ? " draft" : "") + (committed ? " committed" : "");
+                return (
+                  <tr key={rid}>
+                    <td className="rid">{rid}</td>
+                    <td className="label">{cellVal(art, rid, "label")}</td>
+                    <td className="num"><span className="r-val-num">{cellVal(art, rid, "q2")}</span></td>
+                    <td className="num"><span className="r-val-num">{cellVal(art, rid, "q3")}</span></td>
+                    <td className={vCls}>
+                      <EditableCell key={vId + ":" + (vEl?.version ?? 0)} value={String(vEl?.value ?? "")} disabled={!!lk || drafting} align="right" onCommit={(s) => doCommit(vId, s)} />
+                      {lk && <span className="lockbadge"><Lock size={9} /> NA</span>}
+                      {drafting && <span className="lockbadge"><Pencil size={9} /> draft</span>}
+                    </td>
+                    <td className="r-cell">
+                      <EditableCell key={nId + ":" + (nEl?.version ?? 0)} value={String(nEl?.value ?? "")} disabled={!!lk} addLabel="note" onCommit={(s) => doCommit(nId, s)} />
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <div className="r-sheet-foot">
+        <span className="kicker">versionedSpreadsheetSync</span>
+        <span className="r-vpill next">v{art.version}</span>
+        <span className="grow" />
+        <span className="mono tiny faint">click a Variance or Note cell to edit by hand</span>
+      </div>
+    </>
+  );
+}
+
+function Note({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) {
+  const store = useStore();
+  const docValue = art.elements["doc"]?.value;
+  if (isUploadedFileDoc(docValue)) return <FileViewer doc={docValue} />;
+  const locked = !!lockedByOther(store, art.id, "doc", me);
+  const editor = useEditor({
+    extensions: [StarterKit],
+    content: String(art.elements["doc"]?.value ?? ""),
+    editable: !locked,
+    immediatelyRender: false,
+    onBlur: ({ editor }) => commit(store, roomId, me, art.id, "doc", editor.getHTML()),
+  });
+  if (!editor) return <div className="r-art-body" />;
+  return <div className="r-art-body"><div className="r-note"><EditorContent editor={editor} /></div></div>;
+}
+
+type UploadedFileDoc = {
+  upload: true;
+  fileName: string;
+  mimeType: string;
+  size: number;
+  text?: string;
+  dataUrl?: string;
+  parse?: DocumentParseMeta;
+};
+
+function isUploadedFileDoc(value: unknown): value is UploadedFileDoc {
+  return !!value && typeof value === "object" && (value as { upload?: unknown }).upload === true;
+}
+
+function FileViewer({ doc }: { doc: UploadedFileDoc }) {
+  const isImage = doc.mimeType.startsWith("image/") && doc.dataUrl;
+  const isPdf = doc.mimeType === "application/pdf" && doc.dataUrl;
+  return (
+    <div className="r-art-body r-file-viewer">
+      <div className="r-file-viewer-head">
+        <div>
+          <div className="r-file-viewer-title">{doc.fileName}</div>
+          {doc.parse && <div className="r-file-viewer-meta">{doc.parse.parser} + {doc.parse.fallbackParser ?? "none"} {doc.parse.lane.replace("_", " ")} | {doc.parse.status.replace(/_/g, " ")}</div>}
+          <div className="r-file-viewer-meta">{doc.mimeType || "file"} · {formatBytes(doc.size)}</div>
+        </div>
+        {doc.dataUrl && <a className="r-btn ghost" href={doc.dataUrl} download={doc.fileName}>Download</a>}
+      </div>
+      {isImage ? <img className="r-file-image" src={doc.dataUrl} alt={doc.fileName} />
+        : isPdf ? <iframe className="r-file-pdf" title={doc.fileName} src={doc.dataUrl} />
+          : doc.text !== undefined ? <pre className="r-file-text">{doc.text}</pre>
+            : <div className="r-file-empty">Preview is not available for this file type.</div>}
+    </div>
+  );
+}
+
+function formatBytes(bytes: number) {
+  if (bytes < 1024) return `${bytes} B`;
+  if (bytes < 1024 * 1024) return `${Math.round(bytes / 102.4) / 10} KB`;
+  return `${Math.round(bytes / 104_857.6) / 10} MB`;
+}
+
+function Wall({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) {
+  const store = useStore();
+  const [err, setErr] = useState<string | null>(null);
+  useEffect(() => { if (!err) return; const t = setTimeout(() => setErr(null), 3500); return () => clearTimeout(t); }, [err]);
+  const onDragEnd = (e: DragEndEvent) => {
+    const id = String(e.active.id);
+    const v = art.elements[id]?.value as { text: string; x: number; y: number; color: string } | undefined;
+    if (v) void commit(store, roomId, me, art.id, id, { ...v, x: Math.max(0, v.x + e.delta.x), y: Math.max(0, v.y + e.delta.y) }).then((f) => { if (f && !f.ok) setErr(editErrorMsg(f)); });
+  };
+  const addSticky = async () => {
+    const colors = ["#E8C9B8", "#F2DE9B", "#BFD8D5", "#CFC7E8", "#D7E7B5"];
+    const i = art.order.length;
+    const id = `s_${Date.now().toString(36)}_${Math.random().toString(36).slice(2, 6)}`;
+    const res = await createElement(store, roomId, me, art.id, id, {
+      text: "New note",
+      x: 28 + ((i * 34) % 360),
+      y: 28 + ((i * 26) % 220),
+      color: colors[i % colors.length],
+    });
+    if (!res.ok) setErr(editErrorMsg(res));
+  };
+  const removeSticky = async (id: string) => {
+    const res = await deleteElement(store, roomId, me, art.id, id);
+    if (res && !res.ok) setErr(editErrorMsg(res));
+  };
+  return (
+    <div className="r-art-body">
+      <div className="r-wall-toolbar">
+        <button className="r-mini-btn primary" onClick={() => void addSticky()}><Plus size={12} /> Post-it</button>
+        {err && <span className="r-wall-error" role="alert">{err}</span>}
+      </div>
+      <div className="r-wall-toolbar"><span className="muted tiny">drag to move · click text to edit</span></div>
+      <DndContext onDragEnd={onDragEnd} modifiers={[restrictToParentElement]}>
+        <div className="r-wall">
+          {art.order.map((id, i) => {
+            const el = art.elements[id]; if (!el) return null;
+            const v = el.value as { text: string; x: number; y: number; color: string };
+            return <Sticky key={id} roomId={roomId} me={me} artId={art.id} id={id} v={v} locked={!!lockedByOther(store, art.id, id, me)} author={el.updatedBy.name} rot={i % 2 ? 1.3 : -1.5} onDelete={removeSticky} />;
+          })}
+        </div>
+      </DndContext>
+    </div>
+  );
+}
+
+function Sticky({ roomId, me, artId, id, v, locked, author, rot, onDelete }: { roomId: string; me: Actor; artId: string; id: string; v: { text: string; x: number; y: number; color: string }; locked: boolean; author: string; rot: number; onDelete: (id: string) => void }) {
+  const store = useStore();
+  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id, disabled: locked });
+  return (
+    <div ref={setNodeRef} className={"r-postit" + (locked ? " locked" : "")} {...attributes} {...listeners}
+      style={{ left: v.x, top: v.y, background: v.color, transform: `translate3d(${transform?.x ?? 0}px, ${transform?.y ?? 0}px, 0) rotate(${rot}deg)`, zIndex: isDragging ? 9 : undefined, boxShadow: isDragging ? "var(--shadow-lg)" : undefined }}>
+      <button className="r-postit-delete" disabled={locked} aria-label="Delete post-it" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onDelete(id); }}><Trash2 size={12} /></button>
+      <div className="pt-text" contentEditable={!locked} suppressContentEditableWarning onPointerDown={(e) => e.stopPropagation()}
+        onBlur={(e) => { const t = e.currentTarget.textContent ?? ""; if (t && t !== v.text) commit(store, roomId, me, artId, id, { ...v, text: t }); }}>{v.text}</div>
+      <div className="pby">— {author}</div>
+    </div>
+  );
+}
+
+function CollabBar({ collab }: { collab: { running: boolean; done: boolean; onRun: () => void } }) {
+  const desc = collab.done
+    ? "Both agents finished, aware of each other the whole time. The full run is preserved in the room trace."
+    : collab.running ? "Agent is locking the variance, committing, and releasing — drafting around any lock and smart-merging."
+      : "Run the collaboration: lock → read → draft → commit → smart-merge.";
+  return (
+    <div className="r-collab-bar">
+      <span className="r-tag" style={{ background: "var(--accent-tint)", color: "var(--accent-ink)" }}><GitMerge size={12} /> Live collab</span>
+      <span className="r-beat-desc grow">{desc}</span>
+      <button className={"r-btn " + (collab.done ? "ghost" : "primary")} disabled={collab.running} onClick={collab.onRun} style={{ padding: "6px 12px", fontSize: 12 }}>
+        {collab.done ? <><RotateCcw size={14} /> Replay</> : collab.running ? "Running…" : <><Play size={14} /> Run collaboration</>}
+      </button>
+    </div>
+  );
+}
+
+function TraceStrip({ roomId, me }: { roomId: string; me: Actor }) {
+  const store = useStore();
+  const ref = useRef<HTMLDivElement>(null);
+  const nearBottom = useRef(true);
+  const [acceptingAll, setAcceptingAll] = useState(false);
+  const log = store.listTraces(roomId);
+  const run = store.lastRun();
+  const proposals = store.listProposals(roomId);
+  const host = store.listMembers(roomId).some((m) => m.id === me.id && m.role === "host");
+  const acceptAll = async () => {
+    setAcceptingAll(true);
+    try {
+      for (const p of proposals) await store.resolveProposal(p.id, true, me);
+    } finally {
+      setAcceptingAll(false);
+    }
+  };
+  // Only auto-scroll if the user hasn't scrolled up to read an earlier step.
+  useEffect(() => { const el = ref.current; if (el && nearBottom.current) el.scrollTop = el.scrollHeight; }, [log.length]);
+  const onScroll = () => { const el = ref.current; if (el) nearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60; };
+  const shown = log.slice(-40);
+  return (
+    <div className="r-trace">
+      <div className="r-trace-head">
+        <History size={14} style={{ color: "var(--text-muted)" }} />
+        <span className="h-title" style={{ fontSize: 11.5 }}>Room trace</span>
+        <span className="grow" />
+        {run && <span className="r-trace-tele" title={`${run.steps} steps · ${run.inputTokens.toLocaleString()} in + ${run.outputTokens.toLocaleString()} out tokens · ${run.ms}ms`}>{run.model} · {run.toolCalls} tools · ${run.costUsd.toFixed(3)}</span>}
+        {host && proposals.length > 1 && <button className="r-mini-btn primary" disabled={acceptingAll} onClick={() => void acceptAll()}><Check size={12} /> Accept all</button>}
+        <span className="mono tiny faint">{log.length} events</span>
+      </div>
+      <div className="r-trace-list" ref={ref} onScroll={onScroll} aria-live="polite" aria-label="Room activity log">
+        {proposals.map((p) => <ProposalRow key={p.id} roomId={roomId} me={me} proposal={p} />)}
+        {shown.length === 0 && <div className="tiny faint" style={{ padding: "2px 4px" }}>Edit a cell, move a sticky, or run the collaboration — every change is recorded here.</div>}
+        {shown.map((t) => <TraceRow key={t.id} t={t} />)}
+      </div>
+    </div>
+  );
+}
+
+/** A collapsible trace row (assistant-ui ToolFallback style): tool + status collapsed,
+ *  the structured `tool · args → result` detail on expand. */
+function ProposalRow({ roomId, me, proposal }: { roomId: string; me: Actor; proposal: { id: string; author: Actor; op: { elementId?: string; value?: unknown } } }) {
+  const store = useStore();
+  const [busy, setBusy] = useState(false);
+  const host = store.listMembers(roomId).some((m) => m.id === me.id && m.role === "host");
+  const decide = async (approve: boolean) => {
+    setBusy(true);
+    try { await store.resolveProposal(proposal.id, approve, me); }
+    finally { setBusy(false); }
+  };
+  return (
+    <div className="r-proposal">
+      <span className="r-trace-ico commit"><Pencil size={12} /></span>
+      <div className="r-proposal-main">
+        <div className="tt">{proposal.author.name} proposed {proposal.op.elementId ?? "an edit"} = {String(proposal.op.value ?? "")}</div>
+        {host ? (
+          <div className="r-proposal-actions">
+            <button className="r-mini-btn primary" disabled={busy} onClick={() => void decide(true)}><Check size={12} /> Approve</button>
+            <button className="r-mini-btn" disabled={busy} onClick={() => void decide(false)}><Ban size={12} /> Reject</button>
+          </div>
+        ) : <div className="td">awaiting host review</div>}
+      </div>
+    </div>
+  );
+}
+
+function TraceRow({ t }: { t: TraceEvent }) {
+  const [open, setOpen] = useState(false);
+  const { cls, Icon } = traceIcon(t.type);
+  const status = statusFor(t.type);
+  const expandable = !!t.detail;
+  return (
+    <div className="r-trace-item">
+      <button className="r-trace-row" data-open={String(open)} aria-expanded={open} disabled={!expandable} onClick={() => setOpen((o) => !o)}>
+        <span className={"r-trace-ico " + cls}><Icon size={12} /></span>
+        <span className="tt grow">{t.summary}</span>
+        {status === "error" && <span className="r-trace-status err">error</span>}
+        {expandable && <ChevronRight size={12} className="r-trace-chev" />}
+      </button>
+      {open && t.detail && (
+        <div className="r-trace-detail">
+          <div><span className="k">tool</span><span className="v">{toolFor(t.type)}</span></div>
+          <div><span className="k">{status === "error" ? "result" : "call"}</span><span className="v">{t.detail}</span></div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function toolFor(type: string): string {
+  switch (type) {
+    case "lock_acquired": case "lock_denied": return "propose_lock";
+    case "lock_released": return "release_lock";
+    case "edit_applied": case "edit_blocked": case "edit_proposed": return "edit_cell";
+    case "draft_created": return "create_draft";
+    case "draft_merged": case "draft_conflict": case "proposal_resolved": return "smart_merge";
+    default: return type;
+  }
+}
+function statusFor(type: string): "ok" | "error" | "info" {
+  if (type === "lock_denied" || type === "edit_blocked" || type === "draft_conflict") return "error";
+  if (type === "agent_session_started" || type === "agent_status" || type === "message") return "info";
+  return "ok";
+}
+
+function traceIcon(type: string): { cls: string; Icon: LucideIcon } {
+  switch (type) {
+    case "lock_acquired": return { cls: "lock", Icon: Lock };
+    case "lock_released": return { cls: "lock", Icon: Unlock };
+    case "lock_denied": case "edit_blocked": return { cls: "read", Icon: Ban };
+    case "edit_applied": case "edit_proposed": return { cls: "commit", Icon: Pencil };
+    case "draft_created": return { cls: "draft", Icon: FileText };
+    case "draft_merged": case "proposal_resolved": return { cls: "merge", Icon: Check };
+    case "draft_conflict": return { cls: "read", Icon: AlertTriangle };
+    case "agent_session_started": case "agent_status": return { cls: "read", Icon: Eye };
+    default: return { cls: "other", Icon: Circle };
+  }
+}

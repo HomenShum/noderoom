@@ -1,0 +1,114 @@
+[
+ {
+  "id": "P1",
+  "workflow": "parselyfi",
+  "verdict": "shown",
+  "evidence": "Visible in live-research-before.png and live-research-after.png. The 'Enrich 4 pending' button was clicked once; the room trace in live-research-after.png shows locks being proposed, cells (summary, status, sources) being updated, and statuses turning to COMPLETE with human-free execution.",
+  "note": "The entire flow runs autonomously once triggered, as shown by the before/after frames and the detailed room trace."
+ },
+ {
+  "id": "P2",
+  "workflow": "parselyfi",
+  "verdict": "shown",
+  "evidence": "In live-research-byo-row.png, adding a new row (Databricks) results in 1 pending row while the other 4 remain COMPLETE. The stats at the top show '5 accounts • 1 pending • 4 complete', and the agent only claims the pending row.",
+  "note": "Completed rows are durable and preserved on reload while only pending rows are selected for enrichment."
+ },
+ {
+  "id": "P3",
+  "workflow": "parselyfi",
+  "verdict": "partial",
+  "evidence": "In live-research-sources-freshness.png, the 'SOURCES' column displays multiple clickable URLs for each company extracted from the fetch_source tool.",
+  "note": "Provenance is restricted to the source-level (URL link) and does not provide claim-level sentence mappings to the exact fetched content."
+ },
+ {
+  "id": "P4",
+  "workflow": "parselyfi",
+  "verdict": "shown",
+  "evidence": "Confirmed by L3 and L4 passing in the L1-L6 ladder trace. Additionally, qa-room.png shows the spreadsheet 'Live collab' banner detailing drafting around locks and smart-merging, while lib-note.png confirms clean merges with no clobbering.",
+  "note": "The system enforces a locking and drafting mechanism to prevent concurrent overwrites and handle conflicts cleanly."
+ },
+ {
+  "id": "P5",
+  "workflow": "parselyfi",
+  "verdict": "shown",
+  "evidence": "In qa-telemetry.png, the Room trace displays concrete run metadata: 'claude-haiku-4-5 · 9 tools · $0.025' with expandable details.",
+  "note": "Run details, tokens, and financial costs are persisted directly inside the Room trace UI."
+ },
+ {
+  "id": "P6",
+  "workflow": "parselyfi",
+  "verdict": "shown",
+  "evidence": "In live-research-after.png and live-research-sources-freshness.png, the spreadsheet contains multiple independent columns (summary, funding, headcount, recent_signal) and two distinct clickable sources per company.",
+  "note": "The database successfully supports structured multi-field enrichment sourced from multiple distinct URLs."
+ },
+ {
+  "id": "P7",
+  "workflow": "parselyfi",
+  "verdict": "shown",
+  "evidence": "In live-research-requeue.png, clicking 'Requeue complete' updates the status of all rows back to PENDING and enables the 'Enrich 5 pending' button.",
+  "note": "Users can selectively re-trigger research on existing completed rows to update their freshness status."
+ },
+ {
+  "id": "P8",
+  "workflow": "parselyfi",
+  "verdict": "shown",
+  "evidence": "In live-research-byo-row.png, 'Databricks' has been added as a custom pending row. The trace confirms 'Homen added 1 research row(s)' via the '+ Add accounts' paste control.",
+  "note": "The interface allows users to paste or import custom lists directly into the workspace."
+ },
+ {
+  "id": "P1",
+  "workflow": "sales_gtm",
+  "verdict": "shown",
+  "evidence": "Seen in live-research-before.png ('Enrich 4 pending') transitioning to live-research-after.png, where all 4 rows are set to COMPLETE. The Room trace records the exact locks, fetches, and writes.",
+  "note": "Repetitive research is fully automated, moving statuses from pending to complete with a single click."
+ },
+ {
+  "id": "P2",
+  "workflow": "sales_gtm",
+  "verdict": "partial",
+  "evidence": "In live-research-sources-freshness.png, every row contains clickable URLs next to their summaries under the SOURCES column.",
+  "note": "Source links are provided, but lack fine-grained claim-level highlighted verification within the cell itself."
+ },
+ {
+  "id": "P3",
+  "workflow": "sales_gtm",
+  "verdict": "shown",
+  "evidence": "The scripted L3 conflict trace passes, proving conflict recovery under concurrent edits, and the collaboration engine ensures that stale writes are rejected or re-routed safely.",
+  "note": "The L1-L6 ladder trace and the underlying CAS engine ensure robust recovery when two users edit simultaneously."
+ },
+ {
+  "id": "P4",
+  "workflow": "sales_gtm",
+  "verdict": "shown",
+  "evidence": "The ladder trace passes L4 (blocked must draft), and lib-note.png shows the trace: 'Smart-merge: 2 op(s) merged cleanly — the draft targeted elements the lock-holder never touched.'",
+  "note": "The agent safely drafts changes to untouched cells and invokes smart-merge instead of overwriting a locked human range."
+ },
+ {
+  "id": "P5",
+  "workflow": "sales_gtm",
+  "verdict": "shown",
+  "evidence": "In live-proposals-buttons.png, with 'Auto-allow' toggled OFF, agent edits appear as proposals with prominent 'Approve' and 'Reject' buttons in the Room trace.",
+  "note": "Turning off auto-allow introduces a direct human-in-the-loop review step for all agent contributions."
+ },
+ {
+  "id": "P6",
+  "workflow": "sales_gtm",
+  "verdict": "partial",
+  "evidence": "The system limits research actions exclusively to PENDING status rows, and active cell edits lock ranges visually (as seen in qa-room.png).",
+  "note": "While the agent prevents duplicate runs via status gating and locks, there is no direct human-to-human row assignment column."
+ },
+ {
+  "id": "P7",
+  "workflow": "sales_gtm",
+  "verdict": "shown",
+  "evidence": "In live-research-freshness.png, rows display clear green 'fresh' badges under the freshness column, with a 'Requeue complete' control to age/re-run old items.",
+  "note": "Visual freshness signals and re-run prompts help distinguish stale data from active, up-to-date research."
+ },
+ {
+  "id": "P8",
+  "workflow": "sales_gtm",
+  "verdict": "shown",
+  "evidence": "The company research sheet displays GTM tiers, intent, owners, multiple custom research columns, two distinct source slots, and a 'CRM CSV' export button.",
+  "note": "A structured tabular model supports deep, domain-specific CRM fields and multi-source enrichment."
+ }
+]

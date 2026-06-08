@@ -1,0 +1,130 @@
+[
+ {
+  "workflow": "parselyfi",
+  "id": "P1",
+  "name": "Manual per-row enrichment grind (find -> read -> summarize -> paste, repeated per company)",
+  "addressedIfShown": "On the Research tab, with N companies showing status=pending, the analyst clicks 'Enrich N pending' once and types nothing else; the agent then, per row, posts a trace (propose_lock -> read_range -> fetch_source -> edit_cell summary -> edit_cell source -> edit_cell status=complete -> release_lock), and each previously-empty summary cell fills with a one-line summary while the analyst's hands stay off the keyboard.",
+  "isGap": false,
+  "mapping": "Research tab 'Enrich N pending' button (Artifact.tsx:Research) -> store.askResearch -> companyResearchPlan (plans.ts) / live runRoomAgent; same runAgent loop + ROOM_TOOLS. Proven by tests/researchHarness.test.ts (4 enriched) and the live Haiku run (24 steps / 31 tool calls)."
+ },
+ {
+  "workflow": "parselyfi",
+  "id": "P2",
+  "name": "Re-doing already-finished rows (no durable, gating status)",
+  "addressedIfShown": "Run the enrich button once so several rows flip to 'complete'; then click it again -- the trace shows the agent claiming ONLY the still-pending rows and skipping the complete ones (no propose_lock/edit on completed companies), and the button label/count reflects only the remaining pending rows. Refresh the page and the completed statuses persist (live Convex).",
+  "isGap": false,
+  "mapping": "Per-row status state machine pending->running->complete, each transition CAS'd+locked+traced (PARSELYFI.md wedge 2); buildResearchContext 'Process ONLY rows whose status is pending'; companyResearchPlan claims next not-done company; UI computes `pending` and disables when 0. Durable in Convex elements (seed.ts seedResearch). Test asserts status-gated (complete rows skipped)."
+ },
+ {
+  "workflow": "parselyfi",
+  "id": "P3",
+  "name": "No provenance -- a summary cell has no link back to where the fact came from",
+  "addressedIfShown": "After enrichment, each row's Source column shows a clickable link rendered from a real fetched page (e.g. title text like 'Home \\ Anthropic' or 'Brex: The Modern Finance Softw...'), and clicking it opens that exact URL in a new tab. The trace shows a fetch_source call returning {title,url} for that company BEFORE the summary was written, and the source cell value equals that fetched title + URL -- not an invented citation.",
+  "isGap": false,
+  "mapping": "Bounded fetch_source tool (tools.ts) -> fetchSourceReal (SSRF-guarded, 5s, 200KB); source cell set to `${title} \u2014 ${url}` (plans.ts:lastFetch); Artifact.tsx srcLink extracts the URL into an <a target=_blank>. LLM-judge NO_FABRICATION + 'cite only fetched' gate (README benchmark). PARTIAL: provenance is source-level (one title+URL per row), NOT claim-level -- the 280-char fetched snippet is captured by fetchSourceReal but never persisted into a cell, so a reviewer can't see WHICH sentence backs the summary."
+ },
+ {
+  "workflow": "parselyfi",
+  "id": "P4",
+  "name": "Clobbering the shared model -- two people (or a script) overwrite the same cells",
+  "addressedIfShown": "While the agent is enriching a row, a human edits a cell in the same model; the human's edit is preserved (the agent's stale write returns a conflict and the agent re-reads + retries rather than overwriting), and when the agent holds a lock the human cell shows a lock/draft badge instead of being silently stomped. The Room trace records the conflict-and-retry, and no committed human value is lost.",
+  "isGap": false,
+  "mapping": "lock -> CAS -> release + draft/smart-merge engine (engine/, README collaboration model); applyCellEdit returns conflict as data not a throw; locked != invisible. Proven by ladder.ts L3 (conflict, no clobber), L4 (blocked must draft), L6 (repeated conflict recovery); live research run reported 0 conflicts/0 clobber. CAVEAT: gemini-3.1-flash-lite fails L4 (forces instead of drafting), so safe collaboration is model-dependent."
+ },
+ {
+  "workflow": "parselyfi",
+  "id": "P5",
+  "name": "Cost / history / run state evaporated (session_state, not auditable)",
+  "addressedIfShown": "After an enrichment run, the Room trace footer shows the model name, tool-call count, and a concrete $ cost (e.g. '$0.129'), and the per-step trace rows are expandable to tool -> call -> result; reload the page and the run telemetry + completed rows are still there (persisted), demonstrating the run is durable and replayable rather than lost on refresh.",
+  "isGap": false,
+  "mapping": "Durable hash-chained agentRuns / agentSteps + per-room traces (PARSELYFI.md 'Verified end-to-end'); TraceStrip renders run.model/run.toolCalls/run.costUsd and expandable TraceRow detail (Artifact.tsx). benchmark writes real $/latency/tokens to docs/eval/results.json from agentRuns."
+ },
+ {
+  "workflow": "parselyfi",
+  "id": "P6",
+  "name": "Shallow tabular model -- one summary + one source per entity, no structured multi-field columns or multi-source merge",
+  "addressedIfShown": "The Research sheet would show MULTIPLE researched columns per company (e.g. summary, funding, headcount, recent-signal), each independently filled by the agent, and at least one row would carry TWO or more distinct fetched sources (different URLs feeding different columns) visible in the trace and the cells.",
+  "isGap": false,
+  "mapping": "Research sheet now renders structured account columns: summary, funding, headcount, recent_signal, source, source2, last_researched plus tier/intent/owner/crm_status. companyResearchPlan reads/locks the expanded cells, fetches two sources, writes multi-field enrichment, and tests assert source2 + structured fields + freshness."
+ },
+ {
+  "workflow": "parselyfi",
+  "id": "P7",
+  "name": "No freshness / re-research -- completed rows are skipped forever, no staleness or re-run trigger",
+  "addressedIfShown": "A previously 'complete' row could be flagged stale / re-queued (e.g. a 'last researched' timestamp or a 're-research' control), and triggering it would flip that row back to pending/running and the agent would re-fetch and update the summary + source with a fresh citation -- proving the model can be kept current, not just filled once.",
+  "isGap": false,
+  "mapping": "Research rows carry last_researched; the UI shows fresh/stale/never badges and a Requeue complete control that flips completed rows back to pending. buildResearchContext instructs live agents to process pending or stale rows and write last_researched after each run."
+ },
+ {
+  "workflow": "parselyfi",
+  "id": "P8",
+  "name": "No bring-your-own list -- the analyst can't upload their own companies/accounts to research",
+  "addressedIfShown": "The analyst uploads (or pastes) a CSV/list of companies, those rows appear as new pending entries in the Research sheet, and the same 'Enrich pending' flow then sources them -- proving the workflow works on the analyst's own data, not just the four seeded rows.",
+  "isGap": false,
+  "mapping": "Research tab includes Add accounts paste input for company/website/tier/intent/owner/CRM status. RoomStore.addResearchRows writes versioned pending rows in memory and Convex (artifacts.addResearchRows), and the same Enrich pending flow researches pasted rows."
+ },
+ {
+  "workflow": "sales_gtm",
+  "id": "P1",
+  "name": "Manual multi-source account research is slow and never finished",
+  "addressedIfShown": "In a screen recording: a rep clicks the 'Enrich N pending' button on the Company research tab; the agent claims only the pending rows (status flips pending -> running -> complete), writes a one-line summary into each empty 'Sourced summary' cell, and writes a clickable URL into the 'Source' column \u2014 while already-complete rows are skipped and untouched. The Room trace shows the fetch_source + edit_cell tool calls with cost/latency telemetry.",
+  "isGap": false,
+  "mapping": "Company research surface (Artifact.tsx Research(), status-gated 'agent enriches pending rows only'); live runRoomAgent path in store.tsx line 214 ('fetch_source a real page ... Cite only sources you fetched'); deterministic checks ALL_COMPLETE / SOURCES_FETCHED / COMPLETED_IN_BUDGET (README); L2/L6 ladder rungs (single + bulk CAS edits in budget)."
+ },
+ {
+  "workflow": "sales_gtm",
+  "id": "P2",
+  "name": "No provenance \u2014 you can't tell where a claim came from or trust it",
+  "addressedIfShown": "In a recording: every enriched row shows a clickable Source link next to the summary that opens the real page the claim came from; and when an over-eager model invents a specific not in its sources, the NO_FABRICATION LLM-judge / benchmark visibly flags that model (5/6) versus the grounded model (6/6). Bonus if hovering a cell shows updatedBy + version (who last touched it).",
+  "isGap": false,
+  "mapping": "Research 'Source' column with srcLink() clickable citation (Artifact.tsx); live agent 'Cite only sources you fetched' (store.tsx 214); EVERY_ROW_SOURCED + NO_FABRICATION checks judged by gemini-3.1-flash-lite (README, grounded_eval). PARTIAL: Element.updatedBy/updatedAt/version give who+when per cell, but there is NO claim-level source field on arbitrary account-plan cells \u2014 only the dedicated research sheet carries __source, and no cell links to the URL that justified it."
+ },
+ {
+  "workflow": "sales_gtm",
+  "id": "P3",
+  "name": "Reps clobber each other's edits on the shared list",
+  "addressedIfShown": "In a recording: two participants (or a human + the agent) target the same cell; the second writer gets an in-UI message 'That cell changed since you opened it \u2014 your edit was reverted. Re-open it to see the new value' instead of overwriting, and the original value survives. The Room trace shows a conflict event followed by a re-read + retry, and the no-silent-clobber guarantee holds.",
+  "isGap": false,
+  "mapping": "Per-element CAS (Element.version; applyCellEdit returns {conflict, expected, actual} as DATA not a throw \u2014 README collaboration model + types.ts EditResult); EditableCell remounts on version change + editErrorMsg (Artifact.tsx); L3 ladder rung 'CONFLICT (no clobber)' with injected concurrent human edit; no-silent-clobber rate = 1.0 is the headline CI-gated metric (AGENT_EVAL.md)."
+ },
+ {
+  "workflow": "sales_gtm",
+  "id": "P4",
+  "name": "The AI enrichment pass overwrites a rep's hand-typed work",
+  "addressedIfShown": "In a recording: while a rep is editing a cell (or holds it), the agent that wants the same range does NOT force \u2014 it shows the cell as read-only/locked context, drafts its change AROUND the held range, and on release smart-merges only onto untouched cells, flagging genuine divergence for review instead of applying it ('Smart-merge needs review'). The Room trace shows propose_lock -> read_locked -> create_draft -> smart_merge, never an overwrite of the human's value.",
+  "isGap": false,
+  "mapping": "Lock -> draft -> smart-merge (README; demoRoom.ts playCollab; merge.ts deterministicResolver: clean-apply on unchanged base, no-op if equal, value_diverged -> needs_review never clobber); L4 ladder 'BLOCKED (must draft)'. The benchmark's real finding \u2014 gemini-3.1-flash-lite wins on cost but FAILS L4 (forces instead of drafts) \u2014 is the exact 'AI corrupted the shared list' risk made measurable, and routes GTM to a collaboration-safe model when edits contend."
+ },
+ {
+  "workflow": "sales_gtm",
+  "id": "P5",
+  "name": "No safe human + AI co-editing with a human-in-the-loop gate",
+  "addressedIfShown": "In a recording: with auto-allow turned OFF, the agent's edits land as proposals in the Room trace ('<agent> proposed <cell> = <value>'); the host (AE/RevOps) sees Approve / Reject buttons and clicks through each; approved edits apply to the shared cell, rejected ones don't; non-host members see 'awaiting host review'. Humans still edit directly; only the agent is gated.",
+  "isGap": false,
+  "mapping": "Auto-allow toggle -> proposals (Room.autoAllow, EditResult 'pending_approval', Proposal type in types.ts; ProposalRow Approve/Reject host-gated in Artifact.tsx; resolveProposal in store). README: 'when OFF, agent edits become proposals for host approve/reject; humans always apply directly.'"
+ },
+ {
+  "workflow": "sales_gtm",
+  "id": "P6",
+  "name": "Duplicated research \u2014 the same account gets enriched twice",
+  "addressedIfShown": "In a recording: the research surface shows a per-row Status (pending / running / complete) and a live count ('N companies, M pending'); the agent enriches ONLY pending rows and skips complete ones; when one participant claims a range it shows as locked/read-only to others (a visible 'someone is on this' signal), so a second person can see it's taken rather than re-doing it.",
+  "isGap": false,
+  "mapping": "Status-gated research (pending count + 'enriches pending rows only', Artifact.tsx Research()); affected-range lock makes a claimed row visibly read-only to others (locked != invisible, README); session awareness (engine.awareness, AgentSession.status idle/working/blocked). PARTIAL: status gating prevents the AGENT from redoing rows, but there is no explicit per-human 'claimed by Priya' assignment/ownership column \u2014 coordination between two humans relies on the lock signal, not a dedicated assignment primitive."
+ },
+ {
+  "workflow": "sales_gtm",
+  "id": "P7",
+  "name": "No freshness signal \u2014 stale rows look identical to fresh ones",
+  "addressedIfShown": "In a recording: each row shows a last-enriched timestamp or an explicit stale/fresh badge that visibly ages, and a 'refresh stale rows' action re-runs only rows older than a threshold \u2014 analogous to the status gate but driven by age, not emptiness.",
+  "isGap": false,
+  "mapping": "Research rows show last_researched-derived freshness badges (never/fresh/stale) and a Requeue complete control. Agents are prompted to refresh pending or stale rows and update last_researched, so stale rows no longer look identical to fresh ones."
+ },
+ {
+  "workflow": "sales_gtm",
+  "id": "P8",
+  "name": "Single-source research + no CRM/intent integration (the GTM domain gap)",
+  "addressedIfShown": "The recording shows account-tier/intent/owner/CRM-status fields, the agent using two sources per account, structured GTM fields being populated, and a CRM CSV export action that packages the enriched account plan for CRM import. A credentialed Salesforce/HubSpot push is not required for this evidence item.",
+  "isGap": false,
+  "mapping": "Research UI now includes tier, intent, owner, crm_status, two source columns, structured fields, and CRM CSV export. Store/Convex row creation accepts pasted account lists with CRM fields; benchmark checks EVERY_ROW_MULTI_SOURCE, STRUCTURED_FIELDS, and FRESHNESS_WRITTEN."
+ }
+]

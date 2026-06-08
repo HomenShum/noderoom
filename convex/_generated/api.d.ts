@@ -1,0 +1,82 @@
+/* eslint-disable */
+/**
+ * Generated `api` utility.
+ *
+ * THIS CODE IS AUTOMATICALLY GENERATED.
+ *
+ * To regenerate, run `npx convex dev`.
+ * @module
+ */
+
+import type * as agent from "../agent.js";
+import type * as agentJobRunner from "../agentJobRunner.js";
+import type * as agentJobs from "../agentJobs.js";
+import type * as agentRuns from "../agentRuns.js";
+import type * as agentSteps from "../agentSteps.js";
+import type * as agentWorkflows from "../agentWorkflows.js";
+import type * as artifacts from "../artifacts.js";
+import type * as collab from "../collab.js";
+import type * as convexRoomTools from "../convexRoomTools.js";
+import type * as drafts from "../drafts.js";
+import type * as lib from "../lib.js";
+import type * as locks from "../locks.js";
+import type * as messages from "../messages.js";
+import type * as rooms from "../rooms.js";
+import type * as seed from "../seed.js";
+import type * as spreadsheetIndexLib from "../spreadsheetIndexLib.js";
+
+import type {
+  ApiFromModules,
+  FilterApi,
+  FunctionReference,
+} from "convex/server";
+
+declare const fullApi: ApiFromModules<{
+  agent: typeof agent;
+  agentJobRunner: typeof agentJobRunner;
+  agentJobs: typeof agentJobs;
+  agentRuns: typeof agentRuns;
+  agentSteps: typeof agentSteps;
+  agentWorkflows: typeof agentWorkflows;
+  artifacts: typeof artifacts;
+  collab: typeof collab;
+  convexRoomTools: typeof convexRoomTools;
+  drafts: typeof drafts;
+  lib: typeof lib;
+  locks: typeof locks;
+  messages: typeof messages;
+  rooms: typeof rooms;
+  seed: typeof seed;
+  spreadsheetIndexLib: typeof spreadsheetIndexLib;
+}>;
+
+/**
+ * A utility for referencing Convex functions in your app's public API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = api.myModule.myFunction;
+ * ```
+ */
+export declare const api: FilterApi<
+  typeof fullApi,
+  FunctionReference<any, "public">
+>;
+
+/**
+ * A utility for referencing Convex functions in your app's internal API.
+ *
+ * Usage:
+ * ```js
+ * const myFunctionReference = internal.myModule.myFunction;
+ * ```
+ */
+export declare const internal: FilterApi<
+  typeof fullApi,
+  FunctionReference<any, "internal">
+>;
+
+export declare const components: {
+  workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
+  agentWorkpool: import("@convex-dev/workpool/_generated/component.js").ComponentApi<"agentWorkpool">;
+};

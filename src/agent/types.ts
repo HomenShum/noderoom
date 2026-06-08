@@ -1,0 +1,143 @@
+/**
+ * Agent harness — types.
+ *
+ * The harness has three seams so it's explainable and testable:
+ *   1. AgentModel — the LLM. Two impls: `anthropicModel` (real, AI SDK) and
+ *      `scriptedModel` (deterministic, no network — for demos/tests).
+ *   2. RoomTools — the backend the tools call. Two impls: `InMemoryRoomTools`
+ *      (over RoomEngine) and the Convex action's impl. SAME interface, so the
+ *      agent code never changes between the spike and production.
+ *   3. AgentTool[] — the tools the model may call, each backed by RoomTools.
+ *
+ * The runtime loop owns: context assembly, the call→execute→feed-back cycle, a
+ * step budget, and the rule that a CAS conflict comes back as a tool RESULT
+ * (data), not a thrown error — so the model can re-read and retry.
+ */
+
+import type { ZodTypeAny } from "zod";
+
+/* ── conversation ── */
+export type Role = "user" | "assistant" | "tool";
+export interface AgentMessage {
+  role: Role;
+  content: string;
+  /** On an assistant turn: the tool calls it made (kept so the real-model path can rebuild a well-formed history). */
+  toolCalls?: ToolCall[];
+  /** On a tool-result turn: which call it answers. */
+  toolCallId?: string;
+  toolName?: string;
+}
+export interface ToolCall {
+  id: string;
+  tool: string;
+  args: Record<string, unknown>;
+  /** Provider-specific metadata to round-trip (e.g. Gemini 3.x thought_signature, required for multi-turn tools). */
+  providerMetadata?: Record<string, unknown>;
+}
+export interface TokenUsage { inputTokens: number; outputTokens: number; }
+/** One turn of the model: optional prose + zero or more tool calls + token usage. */
+export interface AgentStep {
+  text?: string;
+  toolCalls: ToolCall[];
+  done: boolean;
+  usage?: TokenUsage;
+}
+
+/* ── seam 1: the injectable model ── */
+export interface AgentModel {
+  readonly name: string;
+  next(input: { system: string; messages: AgentMessage[]; tools: AgentTool[]; signal?: AbortSignal }): Promise<AgentStep>;
+}
+
+/* ── seam 3: tools ── */
+export interface AgentTool {
+  name: string;
+  description: string;
+  schema: ZodTypeAny;
+  execute(args: any, rt: RoomTools): Promise<unknown>;
+}
+
+export interface AgentTraceEvent { step: number; tool: string; args: unknown; result: unknown; ms: number; }
+export type AgentStopReason = "done" | "step_budget" | "time_budget" | "spend_budget" | "error";
+export interface AgentBudgetSnapshot {
+  startedAt: number;
+  now: number;
+  deadlineAt?: number;
+  reserveMs: number;
+  elapsedMs: number;
+  remainingMs?: number;
+  usableMs?: number;
+  maxSteps: number;
+  attemptedSteps: number;
+}
+export interface AgentHandoff {
+  reason: Exclude<AgentStopReason, "done">;
+  summary: string;
+  nextGoal: string;
+  remainingToolCalls: ToolCall[];
+  messageCount: number;
+  traceCount: number;
+  latestAssistantText?: string;
+}
+export interface AgentResult {
+  finalText: string;
+  steps: number;
+  exhausted: boolean;
+  stopReason: AgentStopReason;
+  handoff?: AgentHandoff;
+  budget: AgentBudgetSnapshot;
+  trace: AgentTraceEvent[];
+  messages: AgentMessage[];
+  usage: TokenUsage & { modelCalls: number };
+}
+
+/* ── seam 2: the room-tools port (in-memory now, Convex later — SAME shape) ── */
+export interface CellView { id: string; value: unknown; version: number; locked: { by: string; reason: string } | null; }
+export interface CellMeta { value: string; version: number; locked: boolean; }
+/** Variance fields are kept for the financial demo; `cells` is the generic per-column map
+ *  any tabular artifact (e.g. the company-research sheet) renders + edits through. */
+export interface RoomSnapshotRow { rowId: string; label: string; q2: string; q3: string; variance: string; note: string; varianceVersion: number; locked: boolean; cells: Record<string, CellMeta>; }
+export interface RoomSnapshot { artifactId: string; version: number; kind: string; rows: RoomSnapshotRow[]; }
+export type SourceResult = { ok: true; title: string; snippet: string; url: string } | { ok: false; error: string };
+export type SpreadsheetContextHit =
+  | { kind: "cell"; elementId: string; coordinate: string; rowHeader: string; columnHeader: string; rawValue: string; semanticSummary: string; score: number }
+  | { kind: "chunk"; chunkId: string; elementIds: string[]; text: string; score: number };
+export interface AwarenessView {
+  activeLocks: { lockId: string; elementIds: string[]; holder: string; reason: string }[];
+  agents: { name: string; scope: string; status: string }[];
+  recentTrace: string[];
+}
+export type EditOutcome =
+  | { ok: true; version: number }
+  | { ok: false; conflict: true; expected: number; actual: number }
+  | { ok: false; locked: true; holder: string }
+  | { ok: false; error: string };
+export interface MergeView { draftId: string; verdict: string; note: string; applied: number; conflicts: number; }
+
+/** A file the agent can reach within the room (the polymorphic node: sheet/note/wiki/wall). */
+export type ArtifactRef = { id: string; title: string; kind: string };
+
+export interface RoomTools {
+  /** Whole-sheet snapshot for the agent's context. Defaults to the primary artifact; pass artifactId for another file. */
+  snapshot(artifactId?: string): Promise<RoomSnapshot>;
+  /** Who else holds locks, which agents are active, recent activity. */
+  awareness(): Promise<AwarenessView>;
+  /** Discover the room's other files (sheet/note/wiki/wall) — so one run can read one file and write another. */
+  listArtifacts(): Promise<ArtifactRef[]>;
+  /** Read specific cells — WORKS on locked cells (locked != invisible). Defaults to the primary artifact; pass artifactId for another file. */
+  readRange(elementIds: string[], artifactId?: string): Promise<CellView[]>;
+  /** Search header-prepended cell summaries and structural sub-grid chunks for large sheets. */
+  searchSheetContext(query: string, artifactId?: string, limit?: number): Promise<SpreadsheetContextHit[]>;
+  /** Claim an affected range read-only for others. On denial, returns the blocking lockId. Defaults to the primary artifact. */
+  proposeLock(elementIds: string[], reason: string, artifactId?: string): Promise<{ ok: true; lockId: string } | { ok: false; reason: string; lockId?: string }>;
+  /** Release a held lock; any waiting drafts smart-merge now. */
+  releaseLock(lockId: string): Promise<{ ok?: boolean; reason?: string; merged: MergeView[] }>;
+  /** CAS write — conflict returns as DATA, never throws. Defaults to the primary artifact; pass artifactId for another file. */
+  editCell(elementId: string, value: unknown, baseVersion: number, artifactId?: string): Promise<EditOutcome>;
+  /** Queue ops to merge when a blocking lock releases (no clobber). Defaults to the primary artifact. */
+  createDraft(ops: { elementId: string; value: unknown; baseVersion: number }[], blockedByLockId: string, note: string, artifactId?: string): Promise<{ draftId: string }>;
+  /** Post a status line to the agent's chat channel. */
+  say(text: string): Promise<void>;
+  /** Fetch a source URL for sourced enrichment — bounded (SSRF-guarded, timeout, size cap). */
+  fetchSource(url: string): Promise<SourceResult>;
+}

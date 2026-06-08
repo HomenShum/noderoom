@@ -1,0 +1,22 @@
+node_modules/
+dist/
+build/
+*.tsbuildinfo
+.env
+.env.*
+!.env.example
+*.local
+.convex/
+.vscode/*
+!.vscode/extensions.json
+.idea/
+.claude/
+.serena/
+.DS_Store
+Thumbs.db
+*.log
+.vite/
+coverage/
+
+# Claude Design handoff bundle (reference only, not shipped)
+.design-ref/

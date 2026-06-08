@@ -1,0 +1,136 @@
+{
+  "generatedAt": "2026-06-07T06:27:24.441Z",
+  "task": "company-research",
+  "companies": 3,
+  "judge": "gemini-3.1-flash-lite",
+  "checks": [
+    "ALL_COMPLETE",
+    "EVERY_ROW_SOURCED",
+    "SOURCES_FETCHED",
+    "COMPLETED_IN_BUDGET",
+    "NO_FABRICATION",
+    "RIGHT_ENTITY"
+  ],
+  "models": [
+    {
+      "model": "gpt-5.4-nano",
+      "ok": true,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "SOURCES_FETCHED": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 6,
+      "total": 6,
+      "inputTokens": 57045,
+      "outputTokens": 1288,
+      "costUsd": 0.013019,
+      "ms": 60143,
+      "steps": 23,
+      "toolCalls": 31
+    },
+    {
+      "model": "gpt-5.4-mini",
+      "ok": true,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "SOURCES_FETCHED": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 6,
+      "total": 6,
+      "inputTokens": 13849,
+      "outputTokens": 1046,
+      "costUsd": 0.01509375,
+      "ms": 15434,
+      "steps": 7,
+      "toolCalls": 29
+    },
+    {
+      "model": "gemini-3.1-flash-lite",
+      "ok": true,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "SOURCES_FETCHED": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 6,
+      "total": 6,
+      "inputTokens": 23949,
+      "outputTokens": 1070,
+      "costUsd": 0.00759225,
+      "ms": 9945,
+      "steps": 9,
+      "toolCalls": 25
+    },
+    {
+      "model": "claude-haiku-4-5",
+      "ok": true,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "SOURCES_FETCHED": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 6,
+      "total": 6,
+      "inputTokens": 105732,
+      "outputTokens": 2874,
+      "costUsd": 0.120102,
+      "ms": 34337,
+      "steps": 23,
+      "toolCalls": 30
+    },
+    {
+      "model": "gemini-3.5-flash",
+      "ok": false,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "SOURCES_FETCHED": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": false,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 5,
+      "total": 6,
+      "inputTokens": 147940,
+      "outputTokens": 1336,
+      "costUsd": 0.233934,
+      "ms": 57653,
+      "steps": 33,
+      "toolCalls": 32
+    },
+    {
+      "model": "claude-sonnet-4-6",
+      "ok": true,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "SOURCES_FETCHED": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 6,
+      "total": 6,
+      "inputTokens": 45352,
+      "outputTokens": 2859,
+      "costUsd": 0.178941,
+      "ms": 43673,
+      "steps": 10,
+      "toolCalls": 31
+    }
+  ]
+}

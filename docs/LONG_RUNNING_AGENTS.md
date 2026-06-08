@@ -1,0 +1,264 @@
+# Long-Running Agent Jobs
+
+This is the interview-ready story for long-running NodeRoom jobs in a Convex environment.
+
+## Constraint
+
+Convex actions are the right place for provider calls because they can make network calls, but they have a hard action execution limit of 10 minutes. Actions also have side effects, so Convex cannot automatically retry them safely after errors. Official references:
+
+- Actions: https://docs.convex.dev/functions/actions
+- Limits: https://docs.convex.dev/production/state/limits
+- Workflows: https://docs.convex.dev/agents/workflows
+
+## What NodeRoom Does Now
+
+The live agent action (`convex/agent.ts`) runs inside that 10-minute window with an explicit reserve:
+
+```text
+deadlineAt = action start + AGENT_ACTION_BUDGET_MS
+reserveMs  = AGENT_ACTION_RESERVE_MS
+```
+
+The runtime (`src/agent/runtime.ts`) checks the deadline before each model turn and before tool execution. If there is not enough usable time left, it returns a resumable `handoff` instead of pushing the action into Convex's hard timeout.
+
+Deployment note:
+
+```text
+Convex action module -> standard action runtime
+  -> src/agent/convexModel.ts direct provider HTTP adapter
+  -> same AgentModel interface as local evals
+```
+
+The local eval/provider-parser path can still use the Vercel AI SDK. Convex function modules avoid that dependency boundary so `npx convex codegen` exercises the same deploy analyzer path that production uses.
+
+Persisted run telemetry now records:
+
+```text
+stopReason: done | step_budget | time_budget | error
+remainingMs
+deadlineAt
+handoff
+```
+
+The handoff is also written as a trace event (`tool: "handoff"`), so it participates in the same append-only, hash-chained `agentSteps` audit path as normal tool calls.
+
+## Featured Free-Auto Job Path
+
+NodeRoom also has a dedicated async free-auto path for slow/free models:
+
+```text
+/free <goal>
+  -> agentJobs.startFreeAuto mutation
+  -> durable agentJobs row
+  -> @convex-dev/workflow freeAutoWorkflow
+  -> Workpool-limited internal action agentJobRunner.runFreeAutoJobSlice
+  -> runAgent with model=openrouter/free-auto
+  -> checkpoint or complete
+  -> workflow sleep/resume when work remains
+```
+
+This path is deliberately separate from `/ask`. `/ask` remains the fast live collaboration path. `/free` is a background job path that can run beyond 10 minutes because each action slice voluntarily stops before the platform limit and persists progress.
+
+Durable tables:
+
+```text
+agentJobs
+  roomId, artifactId, goal, status
+  modelPolicy = openrouter/free-auto
+  runtime = workflow
+  workflowId, workId
+  cursor, handoff
+  attempts, maxAttempts
+  leaseId, leaseUntil
+  nextRunAt, latestRunId
+
+agentJobAttempts
+  jobId, runId, attempt
+  resolvedModel, stopReason
+  ms, tokens, cost
+  error, scheduledNextAt
+```
+
+Runtime knobs:
+
+```text
+FREE_AUTO_JOB_MODEL=openrouter/free-auto
+FREE_AUTO_JOB_SLICE_BUDGET_MS=540000
+FREE_AUTO_JOB_RESERVE_MS=30000
+FREE_AUTO_JOB_MAX_STEPS_PER_SLICE=3
+FREE_AUTO_JOB_CONTEXT_MAX_CHARS=24000
+FREE_AUTO_JOB_CONTEXT_KEEP_RECENT=10
+```
+
+Default cap math:
+
+```text
+Convex hard action cap       = 10 minutes
+default slice budget         = 9 minutes
+default reserve              = 30 seconds
+default lease extra          = 60 seconds
+default model-call handoff   = before usable time reaches zero
+```
+
+At the defaults, a slice voluntarily hands off around 8.5 minutes and has a
+full persistence margin before Convex's hard cap. That is the correct product
+claim: NodeRoom does not beat the 10-minute limit; it leaves margin, writes a
+checkpoint, and lets Workflow sleep/resume the next slice. The remaining
+hardening is to clamp misconfigured budgets so they cannot erase that margin.
+
+Lease behavior:
+
+```text
+claimSlice(jobId, leaseId)
+  - refuses terminal jobs
+  - refuses currently leased running jobs
+  - increments attempt
+  - records leaseUntil
+
+finishSlice(...)
+  - records agentJobAttempts
+  - updates job status
+  - stores cursor/handoff
+  - releases lease
+  - stores nextRunAt for workflow-runtime jobs
+  - only schedules a next slice directly for legacy scheduler-runtime jobs
+```
+
+The cursor stores compacted `AgentMessage[]` plus any `remainingToolCalls` from a mid-turn handoff. On the next slice, `runAgent` resumes from those messages instead of rebuilding the task from scratch.
+
+Job controls:
+
+```text
+cancel(jobId)
+  - terminal state = cancelled
+  - clears lease so a still-running slice cannot overwrite the user's cancel
+
+retry(jobId)
+  - moves failed/blocked/cancelled/paused jobs back to queued
+  - extends maxAttempts without erasing prior attempt history
+  - starts a fresh workflow id
+```
+
+Workflow/Workpool behavior:
+
+```text
+freeAutoWorkflow
+  - polls agentJobs.workflowState
+  - sleeps until nextRunAt without consuming action runtime
+  - runs one bounded action slice per workflow step
+  - disables provider-call retries at the Workpool layer because each slice owns
+    its own retry/attempt accounting and provider calls must not double-bill
+```
+
+## Remaining `/free` Hardening
+
+The durable shape is built: `agentJobs`, `agentJobAttempts`,
+`freeAutoWorkflow`, Workpool-limited slices, leases, cursor/handoff resume,
+cancel/retry, and resolved-model attempt telemetry. What remains is the
+reliability layer that turns it from a demo-compatible background path into a
+production worker:
+
+| Gap | Why it matters | Direction |
+|---|---|---|
+| Duplicate enqueue idempotency | A lease prevents two workers from running the same job; it does not prevent a double-click from creating two jobs. | Add `agentJobs.idempotencyKey` and claim-or-reuse by room, artifact, actor, and normalized goal. |
+| Stricter budget clamps | Defaults leave margin, but env overrides can shrink the reserve too far. | Cap slice budgets below the platform limit and enforce a larger reserve floor. |
+| Per-tool abort propagation | The runtime checks time before each tool, and model calls are abortable, but a slow tool started near the deadline can still run to completion. | Thread a deadline `AbortSignal` into tools and long I/O helpers. |
+| Durable provider-step journal | `runAgent` supports a `StepJournal`, and tests prove replay avoids re-billing, but the Convex `/free` runner does not yet pass a durable journal. | Add a Convex journal table keyed by `(jobId, attempt, step)` or a stable slice-step id. |
+| Model health and quarantine | Static free-model ranking plus fallback is not the same as production routing. | Track latency, timeouts, failures, rate limits, fallback count, and quarantine windows. |
+| Failure-path model provenance | A successful call records the concrete resolved model, but an all-candidates-failed path can still report the alias. | Store attempted models and final attempted model on each attempt. |
+| Real job-runner tests | Current deterministic coverage proves the shape, but the live smoke completed in one slice. | Add forced multi-slice Convex tests for resume, stale leases, crash-after-provider-call replay, retry backoff, and duplicate enqueue. |
+
+## Context Management
+
+Long runs do not keep appending full stale reads forever. The runtime accepts compaction options, and the Convex action enables them by default:
+
+```text
+AGENT_CONTEXT_MAX_CHARS=24000
+AGENT_CONTEXT_KEEP_RECENT=10
+```
+
+Compaction keeps the task, recent turns, and message envelopes intact while eliding old bulky `read_range` results. That preserves provider tool-call history without letting context size drift.
+
+## Evaluation Pattern
+
+The ladder runner supports per-rung runtime budgets:
+
+```bash
+npm run ladder:real -- openrouter/free-auto --rung-timeout-ms=540000 --reserve-ms=30000
+```
+
+That makes "does the model finish safely inside the operational budget?" part of the eval, not a subjective demo judgment. The `openrouter/free-auto` result is recorded in `docs/eval/free-auto-ladder.md`: L1-L3 were functionally correct but slow; L4 did not finish in the run budget. That is why free-auto remains opt-in and the live collaboration default is a faster ladder-proven model.
+
+Verification commands:
+
+```bash
+npm run typecheck -- --pretty false
+npx tsc --noEmit --project convex\tsconfig.json --pretty false
+npx convex codegen --dry-run --typecheck disable
+npm test
+npm run ladder
+npm run free-job:smoke
+npm run liteparse:smoke
+```
+
+`npm run free-job:smoke` is optional because it needs real deployment env:
+
+```text
+CONVEX_URL or VITE_CONVEX_URL
+FREE_JOB_ROOM_ID
+FREE_JOB_ARTIFACT_ID
+FREE_JOB_ACTOR_ID
+FREE_JOB_ACTOR_TOKEN
+```
+
+Live deployment smoke (2026-06-08):
+
+```text
+dev deployment: zealous-goshawk-766
+goal: say "free job smoke complete" and stop
+result: completed
+attempts: 1/1
+resolvedModel: nvidia/nemotron-3-super-120b-a12b:free
+stopReason: done
+latency: 10055ms
+```
+
+This proves the deployed Workflow/Workpool path can run with a real provider.
+It does not prove live multi-slice resume because this smoke completed in one
+attempt. The next live proof should force tiny slice budgets and assert resume,
+lease, attempt, resolved-model, and final artifact state across multiple slices.
+
+The first run failed with a provider 401 because `OPENROUTER_API_KEY` was not set in
+the Convex dev environment. After setting that env var, the same live path completed.
+
+The regression test `resumes a long-running job across multiple step-budget slices` in `tests/agentRuntime.test.ts` forces a read -> checkpoint -> edit -> checkpoint -> final answer sequence with a fresh model instance per slice.
+
+## Production Pattern
+
+For short interactive collaboration, one action can use the full 10-minute envelope with a reserve and handoff. For durable production jobs such as multi-document parsing, bulk enrichment, or ERP reconciliation, split the work:
+
+```text
+user intent mutation
+  -> durable job row / artifact cursor
+  -> workflow/workpool step
+  -> idempotent unit of work
+  -> checkpoint result + trace
+  -> schedule next unit or complete
+```
+
+Convex Workflows / Workpool are the production direction when the job must survive server restarts, retry individual steps, limit concurrency, and resume from recorded state. NodeRoom's handoff object is intentionally shaped like a workflow checkpoint: it carries the original goal, pending tool calls, message count, trace count, latest assistant text, and budget reason.
+
+## LiveFlow Carryover
+
+The same pattern applies to Flow ERP-style agents:
+
+- Do not make one giant unrecoverable agent call.
+- Persist user intent before side effects.
+- Chunk work into idempotent steps with cursors.
+- Record model, cost, latency, stop reason, and evidence.
+- Leave enough runtime reserve to write the audit trail.
+- Evaluate with both outcome checks and trajectory checks.
+
+The soundbite:
+
+> We do not try to beat the 10-minute serverless limit. We engineer around it: budget-aware runs, compacted context, durable checkpoints, idempotent steps, and evals that measure whether the agent finishes safely inside the envelope.

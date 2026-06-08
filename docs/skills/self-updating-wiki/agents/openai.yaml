@@ -1,0 +1,4 @@
+interface:
+  display_name: "Self Updating Wiki"
+  short_description: "Sync NodeRoom wiki from traces."
+  default_prompt: "Update the NodeRoom wiki from the current room artifacts, traces, chat references, and public evidence."

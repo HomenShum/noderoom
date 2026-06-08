@@ -1,0 +1,274 @@
+/**
+ * The harness loop: context in, bounded model/tool loop, trace out.
+ * Conflicts are returned to the model as normal tool data, so a stale write
+ * becomes a re-read-and-retry instead of a silent overwrite.
+ */
+
+import type { AgentModel, AgentTool, RoomTools, AgentResult, AgentMessage, AgentTraceEvent, AgentStopReason, AgentHandoff, ToolCall, AgentStep } from "./types";
+import type { StepJournal } from "./journal";
+import { checkSpendCeiling, type SpendLimits } from "./gateway";
+import { SYSTEM_PROMPT } from "./systemPrompt";
+import { buildContext } from "./context";
+import { compactMessages, type CompactionOpts } from "./compaction";
+
+function describeError(error: unknown): string {
+  if (error instanceof Error) return `${error.name}: ${error.message}`;
+  return typeof error === "string" ? error : JSON.stringify(error) ?? String(error);
+}
+
+export class AgentRunError extends Error {
+  constructor(
+    public readonly cause: unknown,
+    public readonly partial: AgentResult,
+  ) {
+    super(describeError(cause));
+    this.name = "AgentRunError";
+  }
+}
+
+const DEFAULT_RESERVE_MS = 15_000;
+
+function isAbortLike(error: unknown): boolean {
+  return error instanceof Error && (error.name === "AbortError" || /aborted|abort/i.test(error.message));
+}
+
+export async function runAgent(opts: {
+  rt: RoomTools;
+  goal: string;
+  model: AgentModel;
+  tools: AgentTool[];
+  maxSteps?: number;
+  /** Wall-clock stop point. Used by Convex actions to leave room for trace persistence before the 10-minute cap. */
+  deadlineAt?: number;
+  /** Time reserved for persistence/cleanup before deadlineAt. Defaults to 15s. */
+  reserveMs?: number;
+  /** Resume a prior slice from persisted message history instead of rebuilding opening context. */
+  initialMessages?: AgentMessage[];
+  /** Tool calls returned by the previous slice after it ran out of budget mid-turn. */
+  resumeToolCalls?: ToolCall[];
+  /** Exactly-once journal: on a slice retry, replay a completed step's model output instead of re-calling (re-billing) the model. */
+  journal?: StepJournal;
+  /** LLM gateway spend ceiling — stop (with a resumable handoff) before a model call once the per-run token cap is hit. */
+  spendLimits?: SpendLimits;
+  /** Keep the model's context bounded on long runs. */
+  compaction?: CompactionOpts;
+  /** Override the JIT context assembly. Defaults to buildContext. */
+  contextBuilder?: (rt: RoomTools, goal: string) => Promise<AgentMessage[]>;
+  onTrace?: (e: AgentTraceEvent) => void;
+  onHandoff?: (handoff: AgentHandoff) => void;
+  now?: () => number;
+}): Promise<AgentResult> {
+  const { rt, goal, model, tools } = opts;
+  const maxSteps = opts.maxSteps ?? 8;
+  const now = opts.now ?? (() => Date.now());
+  const startedAt = now();
+  const reserveMs = Math.max(0, opts.reserveMs ?? DEFAULT_RESERVE_MS);
+  const deadlineAt = opts.deadlineAt;
+
+  const messages: AgentMessage[] = [];
+  const trace: AgentTraceEvent[] = [];
+  let finalText = "";
+  let inputTokens = 0, outputTokens = 0, modelCalls = 0;
+  let attemptedSteps = 0;
+
+  const budget = (attempted: number) => {
+    const t = now();
+    const remainingMs = deadlineAt === undefined ? undefined : Math.max(0, deadlineAt - t);
+    return {
+      startedAt,
+      now: t,
+      deadlineAt,
+      reserveMs,
+      elapsedMs: Math.max(0, t - startedAt),
+      remainingMs,
+      usableMs: remainingMs === undefined ? undefined : Math.max(0, remainingMs - reserveMs),
+      maxSteps,
+      attemptedSteps: attempted,
+    };
+  };
+  const shouldHandoffForTime = () => deadlineAt !== undefined && now() + reserveMs >= deadlineAt;
+  const latestAssistantText = () => {
+    for (let i = messages.length - 1; i >= 0; i--) {
+      const m = messages[i];
+      if (m.role === "assistant" && m.content) return m.content;
+    }
+    return finalText || undefined;
+  };
+  const makeHandoff = (
+    reason: Exclude<AgentStopReason, "done">,
+    attempted: number,
+    remainingToolCalls: ToolCall[] = [],
+  ): AgentHandoff => ({
+    reason,
+    summary: reason === "time_budget"
+      ? `Paused before the action deadline with ${budget(attempted).usableMs ?? 0}ms usable budget remaining.`
+      : reason === "step_budget"
+        ? `Paused after reaching the ${maxSteps}-step budget.`
+        : reason === "spend_budget"
+          ? "Paused at the spend ceiling (per-run token/cost cap)."
+          : "Paused after an agent runtime error.",
+    nextGoal: goal,
+    remainingToolCalls,
+    messageCount: messages.length,
+    traceCount: trace.length,
+    latestAssistantText: latestAssistantText(),
+  });
+  const finish = (
+    stopReason: AgentStopReason,
+    attempted: number,
+    exhausted: boolean,
+    handoff?: AgentHandoff,
+  ): AgentResult => ({
+    finalText: finalText || handoff?.summary || "",
+    steps: attempted,
+    exhausted,
+    stopReason,
+    handoff,
+    budget: budget(attempted),
+    trace,
+    messages,
+    usage: { inputTokens, outputTokens, modelCalls },
+  });
+  const emitHandoff = (
+    step: number,
+    reason: Exclude<AgentStopReason, "done">,
+    attempted: number,
+    remainingToolCalls: ToolCall[] = [],
+  ) => {
+    const handoff = makeHandoff(reason, attempted, remainingToolCalls);
+    const ev: AgentTraceEvent = { step, tool: "handoff", args: { reason, deadlineAt, reserveMs }, result: handoff, ms: 0 };
+    trace.push(ev);
+    opts.onTrace?.(ev);
+    opts.onHandoff?.(handoff);
+    return handoff;
+  };
+  const modelSignal = () => {
+    if (deadlineAt === undefined) return { signal: undefined, cancel: () => undefined };
+    const controller = new AbortController();
+    const timeoutMs = Math.max(0, deadlineAt - reserveMs - now());
+    const timer: ReturnType<typeof setTimeout> = setTimeout(() => controller.abort(), timeoutMs);
+    return {
+      signal: controller.signal,
+      cancel: () => clearTimeout(timer),
+    };
+  };
+  const executeCall = async (call: ToolCall, step: number) => {
+    const t0 = now();
+    const tool = tools.find((x) => x.name === call.tool);
+    let result: unknown;
+
+    if (!tool) {
+      result = { error: `unknown tool: ${call.tool}` };
+    } else {
+      const parsed = tool.schema.safeParse(call.args);
+      try {
+        result = parsed.success
+          ? await tool.execute(parsed.data, rt)
+          : { error: "invalid arguments", issues: parsed.error.issues };
+      } catch (error) {
+        result = { error: describeError(error) };
+        const ev: AgentTraceEvent = { step, tool: call.tool, args: call.args, result, ms: now() - t0 };
+        trace.push(ev);
+        opts.onTrace?.(ev);
+        messages.push({ role: "tool", toolCallId: call.id, toolName: call.tool, content: JSON.stringify(result) });
+        throw error;
+      }
+    }
+
+    const ev: AgentTraceEvent = { step, tool: call.tool, args: call.args, result, ms: now() - t0 };
+    trace.push(ev);
+    opts.onTrace?.(ev);
+    messages.push({ role: "tool", toolCallId: call.id, toolName: call.tool, content: JSON.stringify(result) });
+  };
+
+  try {
+    if (opts.initialMessages?.length) messages.push(...opts.initialMessages);
+    else messages.push(...await (opts.contextBuilder ?? buildContext)(rt, goal));
+
+    if (opts.resumeToolCalls?.length) {
+      attemptedSteps = 1;
+      for (const call of opts.resumeToolCalls) {
+        if (shouldHandoffForTime()) {
+          const handoff = emitHandoff(0, "time_budget", attemptedSteps, opts.resumeToolCalls.slice(opts.resumeToolCalls.indexOf(call)));
+          return finish("time_budget", attemptedSteps, true, handoff);
+        }
+        await executeCall(call, 0);
+      }
+    }
+
+    for (let step = 0; step < maxSteps; step++) {
+      if (shouldHandoffForTime()) {
+        const handoff = emitHandoff(step, "time_budget", attemptedSteps);
+        return finish("time_budget", attemptedSteps, true, handoff);
+      }
+      attemptedSteps = step + 1;
+      let modelInput = messages;
+      if (opts.compaction) {
+        const c = await compactMessages(messages, opts.compaction);
+        modelInput = c.messages;
+        if (c.compacted) {
+          const ev: AgentTraceEvent = { step, tool: "compaction", args: { elided: c.elided }, result: { before: c.before, after: c.after }, ms: 0 };
+          trace.push(ev);
+          opts.onTrace?.(ev);
+        }
+      }
+
+      // Exactly-once journal: a retried slice REPLAYS a completed step's recorded output instead of
+      // re-calling (and re-billing) the model. Tools still re-execute — safe because writes are CAS-idempotent.
+      const cached = await opts.journal?.get(step);
+      let out: AgentStep;
+      if (cached) {
+        out = cached;
+      } else {
+        // Gateway spend ceiling — stop before a billable call once the per-run token cap is hit (resumable).
+        if (opts.spendLimits) {
+          const gate = checkSpendCeiling({ inputTokens, outputTokens, costUsd: 0 }, opts.spendLimits);
+          if (!gate.ok) {
+            const handoff = emitHandoff(step, "spend_budget", attemptedSteps);
+            return finish("spend_budget", attemptedSteps, true, handoff);
+          }
+        }
+        const signal = modelSignal();
+        let fresh: AgentStep;
+        try {
+          fresh = await model.next({ system: SYSTEM_PROMPT, messages: modelInput, tools, signal: signal.signal });
+        } catch (error) {
+          if (signal.signal?.aborted || (shouldHandoffForTime() && isAbortLike(error))) {
+            const handoff = emitHandoff(step, "time_budget", attemptedSteps);
+            return finish("time_budget", attemptedSteps, true, handoff);
+          }
+          throw error;
+        } finally {
+          signal.cancel();
+        }
+        await opts.journal?.record(step, fresh);
+        modelCalls++; // count + bill ONLY a real model call (a replayed step was already billed)
+        if (fresh.usage) { inputTokens += fresh.usage.inputTokens; outputTokens += fresh.usage.outputTokens; }
+        out = fresh;
+      }
+      if (out.text) finalText = out.text;
+
+      if (out.done || out.toolCalls.length === 0) {
+        if (out.text) messages.push({ role: "assistant", content: out.text });
+        return finish("done", step + 1, false);
+      }
+
+      messages.push({ role: "assistant", content: out.text ?? "", toolCalls: out.toolCalls });
+
+      for (const call of out.toolCalls) {
+        if (shouldHandoffForTime()) {
+          const handoff = emitHandoff(step, "time_budget", attemptedSteps, out.toolCalls.slice(out.toolCalls.indexOf(call)));
+          return finish("time_budget", attemptedSteps, true, handoff);
+        }
+        await executeCall(call, step);
+      }
+    }
+
+    const handoff = emitHandoff(maxSteps, "step_budget", maxSteps);
+    return finish("step_budget", maxSteps, true, handoff);
+  } catch (error) {
+    if (error instanceof AgentRunError) throw error;
+    const handoff = makeHandoff("error", attemptedSteps);
+    throw new AgentRunError(error, finish("error", attemptedSteps, false, handoff));
+  }
+}

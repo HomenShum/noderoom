@@ -1,0 +1,72 @@
+{
+  "source": "assistant-ui.com/examples (13 examples) + assistant-ui docs Jun 2026 (Thread, Composer, ActionBar, BranchPicker, tools/tool-ui, ui/reasoning, ui/sources, guides/attachments, guides/editing); compared vs NodeRoom src/ui/Chat.tsx + src/app/styles.css",
+  "summary": "assistant-ui ships the primitive set NodeRoom hand-rolls; P0 gaps are streaming composer, tool-call/trace part rendering, and scroll-anchor correctness.",
+  "practices": [
+    {
+      "name": "Streaming Composer",
+      "what": "Send/Cancel, Enter+Shift+Enter, disabled-while-running, textarea",
+      "adoptForNodeRoom": "swap bare input for textarea; Stop button while agent replies",
+      "priority": "P0"
+    },
+    {
+      "name": "Part-stream rendering",
+      "what": "MessagePrimitive.Parts: text+tool-call+reasoning parts",
+      "adoptForNodeRoom": "unify agent bubble and .r-trace as one part stream",
+      "priority": "P0"
+    },
+    {
+      "name": "Tool-call status lifecycle",
+      "what": "running/requires-action/error/complete, honest failure",
+      "adoptForNodeRoom": "4-state render; promote=requires-action interrupt",
+      "priority": "P0"
+    },
+    {
+      "name": "Viewport ScrollToBottom",
+      "what": "turn-anchor bottom-stickiness + jump button",
+      "adoptForNodeRoom": "replace scrollTop-on-length effect; follow streaming",
+      "priority": "P0"
+    },
+    {
+      "name": "Empty/Welcome + Suggestions",
+      "what": "welcome screen with suggestion pills",
+      "adoptForNodeRoom": "private agent empty state needs scoped pills",
+      "priority": "P1"
+    },
+    {
+      "name": "Per-message ActionBar",
+      "what": "copy/reload/edit hover actions",
+      "adoptForNodeRoom": "Copy/Retry/Promote on agent bubbles",
+      "priority": "P1"
+    },
+    {
+      "name": "Edit-creates-branch + BranchPicker",
+      "what": "edit forks a new branch",
+      "adoptForNodeRoom": "private draft as branch of public truth",
+      "priority": "P2"
+    },
+    {
+      "name": "Reasoning part",
+      "what": "collapsible thinking, auto-open streaming",
+      "adoptForNodeRoom": "reading-locked-ranges as collapsible block",
+      "priority": "P2"
+    },
+    {
+      "name": "Sources/citations",
+      "what": "source chips per claim",
+      "adoptForNodeRoom": "chips linking to artifact cells/ranges",
+      "priority": "P2"
+    },
+    {
+      "name": "Attachments dropzone",
+      "what": "drag-drop file preview/send",
+      "adoptForNodeRoom": "drop CSV/screenshot to reconcile",
+      "priority": "P2"
+    },
+    {
+      "name": "Modal/Sidebar shells",
+      "what": "AssistantSidebar/AssistantModal",
+      "adoptForNodeRoom": "private panel = sidebar; modal on mobile",
+      "priority": "P2"
+    }
+  ]
+}

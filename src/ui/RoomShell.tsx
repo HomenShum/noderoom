@@ -5,7 +5,7 @@
  * demo in-memory, the real `runRoomAgent` Convex action when live.
  */
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { PanelLeft, Table2, PanelRight, Moon, Sun, LogOut, Link2, ShieldCheck, X, HelpCircle } from "lucide-react";
 import { useStore } from "../app/store";
 import { Chat } from "./Chat";
@@ -33,14 +33,19 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
   const [autoAcceptModal, setAutoAcceptModal] = useState(false);
   const [rememberAutoAccept, setRememberAutoAccept] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
-  // First-run: auto-start the walkthrough once in the seeded demo room. Persists a "seen" flag so a
-  // returning visitor is never nagged; the header "?" button replays it on demand.
+  const tourAutoStarted = useRef(false);
+  // First-run: auto-start the walkthrough once in the seeded demo room — in BOTH memory mode AND the
+  // live shared Q3DEMO room, so the stage / second-device live build greets every visitor, not just the
+  // host. Keyed on the seeded demo content (the "Q3 variance" sheet) so it never fires in a blank room.
+  // Persists a "seen" flag so a returning visitor is never nagged; the header "?" button replays it.
+  const isDemoRoom = live || arts.some((a) => a.title === "Q3 variance");
   useEffect(() => {
-    if (!live) return;
+    if (tourAutoStarted.current || !isDemoRoom) return;
     let seen = false;
     try { seen = localStorage.getItem(TOUR_KEY) === "done"; } catch { /* ignore */ }
+    tourAutoStarted.current = true;
     if (!seen) { setShow({ left: true, artifact: true, priv: true }); setTourOpen(true); }
-  }, [live]);
+  }, [isDemoRoom]);
   if (!room) return <div className="r-app"><div className="r-screen"><div style={{ margin: "auto" }} className="muted">Loading room…</div></div></div>;
 
   const members = store.listMembers(roomId);

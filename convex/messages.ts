@@ -33,6 +33,25 @@ export const sendAgent = internalMutation({
   handler: sendCore,
 });
 
+/** Trusted (server-only) post of a PRIVATE NodeAgent reply to a member's own private channel.
+ * Ensures the member's private agent session exists (joiners don't get one at join time), then posts
+ * as the private agent. Idempotent on clientMsgId. Never callable from the client. */
+export const postPrivateAgentReply = internalMutation({
+  args: { roomId: v.id("rooms"), ownerId: v.string(), text: v.string(), clientMsgId: v.string() },
+  handler: async (ctx, a) => {
+    const sessions = await ctx.db.query("agentSessions").withIndex("by_room", (q) => q.eq("roomId", a.roomId)).collect();
+    const has = sessions.some((s) => s.agentId === "agent_priv" && s.scope === "private" && s.ownerId === a.ownerId);
+    if (!has) {
+      await ctx.db.insert("agentSessions", { roomId: a.roomId, agentId: "agent_priv", agentName: "Your NodeAgent", scope: "private", ownerId: a.ownerId, status: "idle", lastAction: "started", updatedAt: Date.now() });
+    }
+    const existing = await ctx.db.query("messages").withIndex("by_clientMsgId", (q) => q.eq("roomId", a.roomId).eq("clientMsgId", a.clientMsgId)).unique();
+    if (existing) return existing._id;
+    const author: ActorValue = { kind: "agent", id: "agent_priv", name: "Your NodeAgent", scope: "private", ownerId: a.ownerId };
+    // channel for a private message is the owning member id; only that member's client subscribes to it.
+    return ctx.db.insert("messages", { roomId: a.roomId, channel: a.ownerId, author, text: a.text, clientMsgId: a.clientMsgId, kind: "agent", createdAt: Date.now() });
+  },
+});
+
 export const list = query({
   args: { roomId: v.id("rooms"), channel: v.string(), requester: actorProofV },
   handler: async (ctx, { roomId, channel, requester }) => {

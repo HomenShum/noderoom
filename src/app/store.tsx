@@ -111,6 +111,8 @@ export interface RoomStore {
   runCollab(): Promise<void>;
   /** Drive the public Room NodeAgent on a free-form goal — the `/ask` path. */
   askAgent(input: AgentAskInput): Promise<void>;
+  /** Drive the per-user PRIVATE NodeAgent — reads the room, replies in the user's own private channel only. */
+  askPrivateAgent(goal: string): Promise<void>;
   startLongFreeAgent(input: AgentAskInput): Promise<void>;
   /** Enrich every PENDING company on the research sheet (ParselyFi loop) — status-gated, sourced. */
   askResearch(): Promise<void>;
@@ -242,6 +244,7 @@ export function EngineStoreProvider({ roomId, children }: { roomId: string; me: 
       // (the live path narrates through the real say tool inside the action).
       if (result.finalText) engine.postMessage({ roomId, channel: "public", author: actor, text: result.finalText, clientMsgId: crypto.randomUUID(), kind: "agent" });
     },
+    askPrivateAgent: async () => { /* memory mode replies inline in Chat.tsx */ },
     startLongFreeAgent: async (input) => {
       const artifacts = engine.listArtifacts(roomId);
       const references = canonicalRefs(artifacts, input.references);
@@ -345,6 +348,7 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
   const addResearchRowsMutation = useMutation(api.artifacts.addResearchRows);
   const createArtifactMutation = useMutation(api.artifacts.createArtifact);
   const runAgent = useAction(api.agent.runRoomAgent);
+  const runPrivateAgent = useAction(api.agent.runPrivateAgent);
   const startFreeAutoJob = useMutation(api.agentJobs.startFreeAuto);
   const cancelFreeAutoJob = useMutation(api.agentJobs.cancel);
   const retryFreeAutoJob = useMutation(api.agentJobs.retry);
@@ -423,6 +427,7 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
         }
         await runAgent({ roomId: rid, artifactId: sheet.id as never, requester: proof, goal: withReferenceContext(input.goal, references) });
       },
+      askPrivateAgent: async (goal) => { await runPrivateAgent({ roomId: rid, requester: proof, goal }); },
       startLongFreeAgent: async (input) => {
         const references = canonicalRefs(artifacts, input.references);
         const sheet = targetSheet(artifacts, references);

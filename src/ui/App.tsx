@@ -7,7 +7,28 @@ import { EngineStoreProvider, ConvexStoreProvider, HAS_CONVEX } from "../app/sto
 import type { Actor } from "../engine/types";
 
 const LIVE_DEMO_CODE = "Q3DEMO";
-const LIVE_SESSION_KEY = "noderoom:live:Q3DEMO";
+const liveSessionKey = (code: string) => `noderoom:live:${code.toUpperCase()}`;
+
+// Starter spreadsheet seeded into a freshly-created live room — matches the demo's "Q3 variance"
+// shape so the existing /ask agent (which fills r_gp__variance / r_ni__variance) works unchanged.
+const STARTER_SHEET_ROWS = [
+  { id: "r_rev", label: "Revenue", q2: "$10,000", q3: "$12,400" },
+  { id: "r_cogs", label: "COGS", q2: "$4,000", q3: "$5,100" },
+  { id: "r_gp", label: "Gross profit", q2: "$6,000", q3: "$7,300" },
+  { id: "r_opex", label: "OpEx", q2: "$2,200", q3: "$2,650" },
+  { id: "r_ni", label: "Net income", q2: "$3,800", q3: "$4,650" },
+];
+function starterSheetSeed(): Array<{ id: string; value: unknown }> {
+  const seed: Array<{ id: string; value: unknown }> = [];
+  for (const r of STARTER_SHEET_ROWS) {
+    seed.push({ id: `${r.id}__label`, value: r.label });
+    seed.push({ id: `${r.id}__q2`, value: r.q2 });
+    seed.push({ id: `${r.id}__q3`, value: r.q3 });
+    seed.push({ id: `${r.id}__variance`, value: "" });
+    seed.push({ id: `${r.id}__note`, value: "" });
+  }
+  return seed;
+}
 
 export interface Session {
   roomId: string;
@@ -36,40 +57,62 @@ function MemoryApp() {
   );
 }
 
-/* Live: connect to Convex and join the seeded Q3 room with a local member token. */
+/* Live: connect to Convex. Default joins the seeded Q3DEMO room; `?room=CODE` joins any room;
+   `?create=1` (or `?create=CODE`) creates a fresh room + a shared Q3 variance sheet; `?name=NAME` sets the display name. */
 function ConvexApp() {
-  const demoRoom = useQuery(api.rooms.byCode, { code: LIVE_DEMO_CODE });
+  const params = typeof window !== "undefined" ? new URLSearchParams(window.location.search) : new URLSearchParams();
+  const createParam = params.get("create");
+  const joinParam = params.get("room");
+  const nameParam = params.get("name") || undefined;
+  const wantCreate = createParam !== null;
+  const explicit = (createParam && createParam !== "1" ? createParam : joinParam) || "";
+  const code = (explicit || LIVE_DEMO_CODE).toUpperCase();
+
+  const byCode = useQuery(api.rooms.byCode, { code });
   const join = useMutation(api.rooms.joinAnonymous);
-  const [session, setSession] = useState<LiveSession | null>(() => loadLiveSession());
-  const [joining, setJoining] = useState(false);
+  const createRoom = useMutation(api.rooms.create);
+  const createArtifact = useMutation(api.artifacts.createArtifact);
+  const [session, setSession] = useState<LiveSession | null>(() => loadLiveSession(liveSessionKey(code)));
+  const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!demoRoom || session || joining) return;
+    if (session || busy || byCode === undefined) return;
+    setBusy(true);
     const token = randomToken();
-    const name = `Guest ${token.slice(0, 4)}`;
-    setJoining(true);
-    void join({ code: LIVE_DEMO_CODE, name, authToken: token }).then((joined) => {
-      if (!joined) {
-        setError("Could not join the live room.");
-        return;
+    const name = nameParam || `Guest ${token.slice(0, 4)}`;
+    void (async () => {
+      let joined: { roomId: string; memberId: string } | null = null;
+      if (byCode) {
+        const r = await join({ code, name, authToken: token, anon: !wantCreate });
+        joined = r ? { roomId: String(r.roomId), memberId: String(r.memberId) } : null;
+      } else if (wantCreate) {
+        try {
+          const r = await createRoom({ code, title: "Team Q3 Review", hostName: name, authToken: token, autoAllow: true });
+          joined = { roomId: String(r.roomId), memberId: String(r.memberId) };
+          const proof = { actor: { kind: "user" as const, id: joined.memberId, name }, token };
+          await createArtifact({ roomId: r.roomId, kind: "sheet", title: "Q3 variance", seed: starterSheetSeed(), proof });
+        } catch {
+          const r = await join({ code, name, authToken: token });
+          joined = r ? { roomId: String(r.roomId), memberId: String(r.memberId) } : null;
+        }
       }
-      const next = { roomId: String(joined.roomId), memberId: String(joined.memberId), name, token };
-      localStorage.setItem(LIVE_SESSION_KEY, JSON.stringify(next));
+      if (!joined) { setError(`Room "${code}" not found — create it with ?create=${code}`); setBusy(false); return; }
+      const next = { roomId: joined.roomId, memberId: joined.memberId, name, token };
+      try { localStorage.setItem(liveSessionKey(code), JSON.stringify(next)); } catch { /* ignore */ }
       setSession(next);
-    }).catch((e) => setError(e instanceof Error ? e.message : String(e))).finally(() => setJoining(false));
-  }, [demoRoom, join, joining, session]);
+      setBusy(false);
+    })().catch((e) => { setError(e instanceof Error ? e.message : String(e)); setBusy(false); });
+  }, [byCode, session, busy, code, wantCreate, nameParam, join, createRoom, createArtifact]);
 
-  if (demoRoom === undefined) return <Splash text="Connecting to Convex..." />;
-  if (demoRoom === null) return <Splash text="No live room yet. Run the seed command from README." />;
   if (error) return <Splash text={error} />;
-  if (!session || session.roomId !== String(demoRoom.roomId)) return <Splash text="Joining live room..." />;
+  if (!session) return <Splash text={byCode === undefined ? `Connecting to ${code}…` : wantCreate ? `Creating ${code}…` : `Joining ${code}…`} />;
 
   const me: Actor = { kind: "user", id: session.memberId, name: session.name };
   const proof = { actor: me, token: session.token };
   return (
-    <ConvexStoreProvider roomId={demoRoom.roomId} me={me} proof={proof}>
-      <RoomShell roomId={demoRoom.roomId} me={me} onLeave={() => undefined} />
+    <ConvexStoreProvider roomId={session.roomId} me={me} proof={proof}>
+      <RoomShell roomId={session.roomId} me={me} onLeave={() => undefined} />
     </ConvexStoreProvider>
   );
 }
@@ -80,9 +123,9 @@ function randomToken(): string {
   return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-function loadLiveSession(): LiveSession | null {
+function loadLiveSession(key: string): LiveSession | null {
   try {
-    const raw = localStorage.getItem(LIVE_SESSION_KEY);
+    const raw = localStorage.getItem(key);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<LiveSession>;
     return parsed.roomId && parsed.memberId && parsed.name && parsed.token

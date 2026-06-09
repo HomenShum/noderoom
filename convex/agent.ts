@@ -49,6 +49,7 @@ const agentJobsFinishInteractiveRef = makeFunctionReference<"mutation">("agentJo
 const agentRunsClaimOrReuseRef = makeFunctionReference<"mutation">("agentRuns:claimOrReuse") as any;
 const agentRunsFinishRef = makeFunctionReference<"mutation">("agentRuns:finish") as any;
 const agentStepsRecordRef = makeFunctionReference<"mutation">("agentSteps:record") as any;
+const postPrivateReplyRef = makeFunctionReference<"mutation">("messages:postPrivateAgentReply") as any;
 
 function envNumber(name: string, fallback: number, min: number, max: number): number {
   const raw = Number(process.env[name] ?? fallback);
@@ -311,5 +312,59 @@ export const runRoomAgent = action({
       modelCalls: result.usage.modelCalls,
       runId,
     };
+  },
+});
+
+/** Summarize the room (artifacts + sheet state) as bounded, read-only context for a private consult. */
+function summarizeRoomForPrivate(roomState: {
+  room: { title: string };
+  members: unknown[];
+  artifacts: Array<{ kind: string; title: string; version: number; order: string[]; elements: Record<string, { value?: unknown }> }>;
+}): string {
+  const lines: string[] = [`Room "${roomState.room.title}" · ${roomState.members.length} members`];
+  for (const art of roomState.artifacts.slice(0, 4)) {
+    lines.push(`Artifact "${art.title}" [${art.kind}] v${art.version}`);
+    if (art.kind === "sheet") {
+      const rows: string[] = [];
+      for (const k of art.order) { const r = String(k).split("__")[0]; if (!rows.includes(r)) rows.push(r); }
+      for (const rid of rows.slice(0, 8)) {
+        const label = art.elements[`${rid}__label`]?.value ?? rid;
+        const q3 = art.elements[`${rid}__q3`]?.value ?? "";
+        const variance = art.elements[`${rid}__variance`]?.value ?? "";
+        lines.push(`  - ${String(label)}: Q3=${String(q3)} variance=${variance ? String(variance) : "(empty)"}`);
+      }
+    }
+  }
+  const text = lines.join("\n");
+  return text.length > 1800 ? text.slice(0, 1800) + "…" : text;
+}
+
+/**
+ * Private NodeAgent — a per-user consult. Reads the room as context, makes ONE model call (no tools, so
+ * it never mutates canonical state), and posts a reply to the requester's OWN private channel. Output is
+ * private until the user promotes it. Distinct from runRoomAgent (which edits the shared sheet publicly).
+ */
+export const runPrivateAgent = action({
+  args: { roomId: v.id("rooms"), requester: actorProofV, goal: v.string() },
+  handler: async (ctx, a): Promise<{ ok: boolean; answer: string; model: string }> => {
+    if (a.goal.length > 2_000) throw new Error("goal_too_long");
+    const roomState = await ctx.runQuery(roomsFullRef, { roomId: a.roomId, requester: a.requester });
+    if (!roomState) throw new Error("room_not_found");
+    const requester = roomState.members.find((m: { id: unknown }) => String(m.id) === a.requester.actor.id) as { id: unknown; name: string } | undefined;
+    if (!requester) throw new Error("member_required");
+    const model = agentModel(process.env.AGENT_MODEL ?? "gemini-3.5-flash");
+    const system = `You are ${requester.name}'s PRIVATE NodeAgent inside a live collaborative room (a shared spreadsheet, notes, and chat). You may READ the room as context, but your reply is PRIVATE to ${requester.name} until they choose to promote it to the public chat. Be concise (2-4 sentences), concrete, and grounded in the room context. You only advise — never claim to have edited shared data.`;
+    const userMsg = `ROOM CONTEXT\n${summarizeRoomForPrivate(roomState)}\n\n${requester.name} asks: ${a.goal}`;
+    let answer = "";
+    try {
+      const step = await model.next({ system, messages: [{ role: "user", content: userMsg }], tools: [] });
+      answer = (step.text ?? "").trim();
+    } catch (error) {
+      answer = `(private agent error: ${error instanceof Error ? error.message : "model call failed"})`;
+    }
+    if (!answer) answer = "I read the room but have nothing to add yet — ask me something specific about the data.";
+    const clientMsgId = `priv-${String(requester.id)}-${Date.now()}-${Math.floor(Math.random() * 1e6)}`;
+    await ctx.runMutation(postPrivateReplyRef, { roomId: a.roomId, ownerId: String(requester.id), text: answer, clientMsgId });
+    return { ok: true, answer, model: model.name };
   },
 });

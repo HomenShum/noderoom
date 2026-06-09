@@ -90,19 +90,22 @@ cells, versions, formula dependency records, locks, drafts, and append-only
 operation traces. Cache ranges, not entire private workbooks, and key every
 range by artifact id, visibility, version, row range, and column range.
 
-## Long-running `/free` lifecycle
+## Long-running job lifecycle
 
-`/free` is the production-shaped path for slow/free models and bulk background
-work. It is not the interactive `/ask` path.
+Long-running execution is a property of `agentJobs`, not a separate agent
+runtime. `/ask` creates the same durable job root as `/free`; it runs an
+immediate first slice for interactive UX, then checkpoints into Workflow if the
+slice exhausts budget. `/free` only starts the job with the free-auto model
+policy.
 
 ```text
-startFreeAuto mutation
+agentJobs create/handoff mutation
   -> insert agentJobs row
-  -> start freeAutoWorkflow
+  -> run first slice inline or start freeAutoWorkflow
   -> workflow sleeps until nextRunAt
   -> Workpool runs one runFreeAutoJobSlice action
   -> claimSlice(jobId, leaseId)
-  -> runAgent with openrouter/free-auto
+  -> runAgent with the job modelPolicy
   -> finishSlice records agentJobAttempts + cursor/handoff + nextRunAt
   -> workflow polls state and resumes, or terminal status stops it
 ```
@@ -128,6 +131,17 @@ Important production distinction:
   execution, but stricter production cap-safety should thread deadline signals
   through tool implementations too.
 
+## NodeAgent job contract
+
+The `/ask` and `/free` split has converged on one durable NodeAgent contract:
+every agent request first creates or reuses an `agentJobs` row, then the first
+action slice either completes quickly or checkpoints into the same
+Workflow/Workpool continuation path. The detailed target
+design, including `NodeAgentRequest`, `NodeAgentResult`, notebook graph tables,
+the action/query/mutation operation ledger, leases, tool permissions, mutation
+receipts, and embedding sync, lives in
+[`docs/NODEAGENT_ARCHITECTURE.md`](NODEAGENT_ARCHITECTURE.md).
+
 ## UI layer
 
 - **Runtime mirror:** `src/app/roomStore.ts` exposes the engine via `useEngineRev()` (a
@@ -138,13 +152,18 @@ Important production distinction:
   a multi-author room is off-label). The **private `/ask` thread** is where `@assistant-ui/react`'s
   `ExternalStoreRuntime` + tool UIs fit — already built in the sibling **NodeAgent** repo.
 
-## Latency posture (verified)
+## Latency posture (mechanism verified; numbers unmeasured)
 
 For the live (Convex-wired) version, grounded in current sources:
 
 - **Human-driven actions** (type, send, optimistic cell edit) → **~0ms, sub-frame** via optimistic
   local patch — Linear-grade *felt* responsiveness (Linear publishes no numeric SLA; its goal is "a
   synchronous experience with asynchronous data", and its mechanism is local-first).
+  - *Validity bound (unmeasured):* the ~0ms is a **mechanism** claim (no server round-trip on local
+    apply), not a measured number. It holds at small room size. Today the optimistic cell/note/post-it
+    edit `setQuery`s the whole `rooms.full` object (O(room) work per commit), so the felt latency
+    degrades as a room grows — revisit with the granular-subscription split. See
+    [docs/audit/QA_FINDINGS.md](audit/QA_FINDINGS.md) (P1-8) for the measurement + refactor trigger.
 - **Collaboration echo** (your edit visible to others) → **~30–150ms** same-region (estimate, not a
   Convex-published number) — "live", not "instant".
 - **Agent `/ask`** → first token **~0.7–1.5s** (non-reasoning models; *never* a reasoning/thinking SKU,

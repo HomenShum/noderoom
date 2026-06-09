@@ -62,9 +62,9 @@ export function Artifact({ roomId, me, artId, onArt, collab, style }: {
   const openArtifact = (a: Art) => { onArt(a.id); setTab(tabForArt(a.id)); };
 
   return (
-    <div className="r-panel artifact" style={style}>
+    <div className="r-panel artifact" style={style} data-testid="artifact-panel">
       <div className="r-panel-head">
-        <div className="r-tabs">
+        <div className="r-tabs" data-testid="artifact-tabs">
           {TABS.filter((t) => artFor(t.id)).map((t) => (
             <button key={t.id} className="r-tab" data-active={String(activeTab === t.id)} onClick={() => pick(t.id)}>
               <t.Icon size={13} /> {t.label}
@@ -214,6 +214,7 @@ function Research({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) 
   const [pasteOpen, setPasteOpen] = useState(false);
   const [pasteText, setPasteText] = useState("");
   const [busy, setBusy] = useState(false);
+  const [pasteError, setPasteError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
   const rowIds = [...new Set(art.order.map((e) => e.split("__")[0]))];
   const cell = (rid: string, c: string) => displayCellValue(art.elements[`${rid}__${c}`]?.value);
@@ -223,10 +224,13 @@ function Research({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) 
   const addRows = async () => {
     const rows = parseResearchRows(pasteText);
     if (!rows.length) return;
-    setBusy(true);
+    setBusy(true); setPasteError(null);
     try {
       const added = await store.addResearchRows({ roomId, artifactId: art.id, rows, actor: me });
       if (added) { setPasteText(""); setPasteOpen(false); }
+    } catch (e) {
+      // Keep the panel open with the typed text so a retry does not re-paste and double-insert.
+      setPasteError("Couldn't add rows — " + (e instanceof Error ? e.message : "try again") + ". Your text is preserved.");
     } finally { setBusy(false); }
   };
   const refreshComplete = async () => {
@@ -257,12 +261,13 @@ function Research({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) 
         <button className="r-btn ghost" disabled={busy} onClick={() => setPasteOpen((v) => !v)}><Plus size={13} /> Add accounts</button>
         <button className="r-btn ghost" disabled={busy || complete === 0} onClick={() => void refreshComplete()}><RotateCcw size={13} /> Requeue complete</button>
         <button className="r-btn ghost" onClick={() => downloadResearchCsv(art, rowIds, cell)}><Download size={13} /> CRM CSV</button>
-        <button className="r-btn" disabled={running || pending === 0} onClick={run}>{running ? "Researching..." : pending ? `Enrich ${pending} pending` : "All complete"}</button>
+        <button className="r-btn" data-testid="research-enrich" disabled={running || pending === 0} onClick={run}>{running ? "Researching..." : pending ? `Enrich ${pending} pending` : "All complete"}</button>
       </div>
       {pasteOpen && (
         <div className="r-research-import">
           <textarea value={pasteText} onChange={(e) => setPasteText(e.target.value)} rows={3} placeholder="Company, website, tier, intent, owner, CRM status" />
-          <button className="r-btn primary" disabled={busy || parseResearchRows(pasteText).length === 0} onClick={() => void addRows()}>Add pending rows</button>
+          {pasteError && <span className="r-wall-error" role="alert" data-testid="research-add-error">{pasteError}</span>}
+          <button className="r-btn primary" disabled={busy || parseResearchRows(pasteText).length === 0} onClick={() => void addRows()}>{busy ? "Adding…" : "Add pending rows"}</button>
         </div>
       )}
       <div className="r-research-scroll">
@@ -580,15 +585,30 @@ function Note({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) {
   const docValue = art.elements["doc"]?.value;
   if (isUploadedFileDoc(docValue)) return <FileViewer doc={docValue} />;
   const locked = !!lockedByOther(store, art.id, "doc", me);
+  const docStr = String(art.elements["doc"]?.value ?? "");
+  const [noteErr, setNoteErr] = useState<string | null>(null);
   const editor = useEditor({
     extensions: [StarterKit],
-    content: String(art.elements["doc"]?.value ?? ""),
+    content: docStr,
     editable: !locked,
     immediatelyRender: false,
-    onBlur: ({ editor }) => commit(store, roomId, me, art.id, "doc", editor.getHTML()),
+    // Consume the CAS feedback so a lost/conflicted note write surfaces instead of silently reverting.
+    onBlur: ({ editor }) => { void commit(store, roomId, me, art.id, "doc", editor.getHTML()).then((f) => setNoteErr(f && !f.ok ? editErrorMsg(f) : null)); },
   });
+  // Re-sync the editor when a remote/agent write changes the doc while we're not editing, so the next local
+  // edit commits against the current version instead of a guaranteed stale-baseVersion conflict.
+  useEffect(() => {
+    if (!editor || editor.isFocused) return;
+    if (editor.getHTML() !== docStr) editor.commands.setContent(docStr);
+  }, [editor, docStr]);
+  useEffect(() => { editor?.setEditable(!locked); }, [editor, locked]);
   if (!editor) return <div className="r-art-body" />;
-  return <div className="r-art-body"><div className="r-note"><EditorContent editor={editor} /></div></div>;
+  return (
+    <div className="r-art-body">
+      {noteErr && <div className="r-wall-error" role="alert" data-testid="note-error">{noteErr}</div>}
+      <div className="r-note" data-testid="note-editor"><EditorContent editor={editor} /></div>
+    </div>
+  );
 }
 
 type UploadedFileDoc = {
@@ -665,7 +685,7 @@ function Wall({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) {
       </div>
       <div className="r-wall-toolbar"><span className="muted tiny">drag to move · click text to edit</span></div>
       <DndContext onDragEnd={onDragEnd} modifiers={[restrictToParentElement]}>
-        <div className="r-wall">
+        <div className="r-wall" data-testid="wall-canvas">
           {art.order.map((id, i) => {
             const el = art.elements[id]; if (!el) return null;
             const v = el.value as { text: string; x: number; y: number; color: string };
@@ -700,7 +720,7 @@ function CollabBar({ collab }: { collab: { running: boolean; done: boolean; onRu
     <div className="r-collab-bar">
       <span className="r-tag" style={{ background: "var(--accent-tint)", color: "var(--accent-ink)" }}><GitMerge size={12} /> Live collab</span>
       <span className="r-beat-desc grow">{desc}</span>
-      <button className={"r-btn " + (collab.done ? "ghost" : "primary")} disabled={collab.running} onClick={collab.onRun} style={{ padding: "6px 12px", fontSize: 12 }}>
+      <button className={"r-btn " + (collab.done ? "ghost" : "primary")} data-testid="collab-run" disabled={collab.running} onClick={collab.onRun} style={{ padding: "6px 12px", fontSize: 12 }}>
         {collab.done ? <><RotateCcw size={14} /> Replay</> : collab.running ? "Running…" : <><Play size={14} /> Run collaboration</>}
       </button>
     </div>
@@ -712,24 +732,32 @@ function TraceStrip({ roomId, me }: { roomId: string; me: Actor }) {
   const ref = useRef<HTMLDivElement>(null);
   const nearBottom = useRef(true);
   const [acceptingAll, setAcceptingAll] = useState(false);
+  const [resolveMsg, setResolveMsg] = useState<string | null>(null);
   const log = store.listTraces(roomId);
   const run = store.lastRun();
   const proposals = store.listProposals(roomId);
   const host = store.listMembers(roomId).some((m) => m.id === me.id && m.role === "host");
   const acceptAll = async () => {
     setAcceptingAll(true);
+    let ok = 0, conflict = 0, other = 0;
     try {
-      for (const p of proposals) await store.resolveProposal(p.id, true, me);
-    } finally {
-      setAcceptingAll(false);
-    }
+      // Aggregate outcomes: an approved-but-CAS-conflicted proposal drops from the pending list,
+      // so report the conflict count here (persistent) rather than on the vanishing card.
+      for (const p of proposals) {
+        const fb = await store.resolveProposal(p.id, true, me);
+        if (fb.ok) ok++; else if (fb.reason === "conflict") conflict++; else other++;
+      }
+    } finally { setAcceptingAll(false); }
+    setResolveMsg(conflict || other
+      ? `Approved ${ok}, ${conflict} conflict${conflict === 1 ? "" : "s"}${other ? `, ${other} failed` : ""} — changed cells were not overwritten. Re-run the agent.`
+      : ok ? `Approved ${ok}.` : null);
   };
   // Only auto-scroll if the user hasn't scrolled up to read an earlier step.
   useEffect(() => { const el = ref.current; if (el && nearBottom.current) el.scrollTop = el.scrollHeight; }, [log.length]);
   const onScroll = () => { const el = ref.current; if (el) nearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 60; };
   const shown = log.slice(-40);
   return (
-    <div className="r-trace">
+    <div className="r-trace" data-testid="room-trace">
       <div className="r-trace-head">
         <History size={14} style={{ color: "var(--text-muted)" }} />
         <span className="h-title" style={{ fontSize: 11.5 }}>Room trace</span>
@@ -739,7 +767,8 @@ function TraceStrip({ roomId, me }: { roomId: string; me: Actor }) {
         <span className="mono tiny faint">{log.length} events</span>
       </div>
       <div className="r-trace-list" ref={ref} onScroll={onScroll} aria-live="polite" aria-label="Room activity log">
-        {proposals.map((p) => <ProposalRow key={p.id} roomId={roomId} me={me} proposal={p} />)}
+        {resolveMsg && <div className="r-wall-error" role="alert" data-testid="proposal-resolve-msg" style={{ margin: "2px 4px" }}>{resolveMsg} <button className="r-msg-act" onClick={() => setResolveMsg(null)}>Dismiss</button></div>}
+        {proposals.map((p) => <ProposalRow key={p.id} roomId={roomId} me={me} proposal={p} onResolved={(fb) => setResolveMsg(fb.ok ? null : proposalErrMsg(fb.reason))} />)}
         {shown.length === 0 && <div className="tiny faint" style={{ padding: "2px 4px" }}>Edit a cell, move a sticky, or run the collaboration — every change is recorded here.</div>}
         {shown.map((t) => <TraceRow key={t.id} t={t} />)}
       </div>
@@ -749,30 +778,40 @@ function TraceStrip({ roomId, me }: { roomId: string; me: Actor }) {
 
 /** A collapsible trace row (assistant-ui ToolFallback style): tool + status collapsed,
  *  the structured `tool · args → result` detail on expand. */
-function ProposalRow({ roomId, me, proposal }: { roomId: string; me: Actor; proposal: { id: string; author: Actor; op: { elementId?: string; value?: unknown } } }) {
+function ProposalRow({ roomId, me, proposal, onResolved }: { roomId: string; me: Actor; proposal: { id: string; author: Actor; op: { elementId?: string; value?: unknown } }; onResolved: (fb: EditFeedback) => void }) {
   const store = useStore();
   const [busy, setBusy] = useState(false);
   const host = store.listMembers(roomId).some((m) => m.id === me.id && m.role === "host");
   const decide = async (approve: boolean) => {
     setBusy(true);
-    try { await store.resolveProposal(proposal.id, approve, me); }
+    // Keep the card mounted (disabled) during the await; bubble the result up so a CAS conflict
+    // surfaces in the persistent banner instead of the card silently vanishing as "applied".
+    try { onResolved(await store.resolveProposal(proposal.id, approve, me)); }
     finally { setBusy(false); }
   };
   return (
-    <div className="r-proposal">
+    <div className="r-proposal" data-testid="proposal-card">
       <span className="r-trace-ico commit"><Pencil size={12} /></span>
       <div className="r-proposal-main">
         <div className="tt">{proposal.author.name} proposed {proposal.op.elementId ?? "an edit"} = {String(proposal.op.value ?? "")}</div>
         {host ? (
           <div className="r-proposal-actions">
-            <button className="r-mini-btn primary" disabled={busy} onClick={() => void decide(true)}><Check size={12} /> Approve</button>
-            <button className="r-mini-btn" disabled={busy} onClick={() => void decide(false)}><Ban size={12} /> Reject</button>
+            <button className="r-mini-btn primary" data-testid="proposal-approve" disabled={busy} onClick={() => void decide(true)}><Check size={12} /> Approve</button>
+            <button className="r-mini-btn" data-testid="proposal-reject" disabled={busy} onClick={() => void decide(false)}><Ban size={12} /> Reject</button>
           </div>
         ) : <div className="td">awaiting host review</div>}
       </div>
     </div>
   );
 }
+
+/** Human-readable reason for a proposal that could not be applied (CAS conflict, already resolved, etc.). */
+const proposalErrMsg = (reason?: string) =>
+  reason === "conflict" ? "The cell changed since this was proposed — re-run the agent or dismiss."
+    : reason === "not_pending" ? "That proposal was already resolved."
+      : reason === "not_found" ? "That proposal no longer exists."
+        : reason === "host_required" ? "Only the host can resolve proposals."
+          : "Couldn't apply this proposal — try again.";
 
 function TraceRow({ t }: { t: TraceEvent }) {
   const [open, setOpen] = useState(false);

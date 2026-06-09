@@ -555,12 +555,12 @@ function Sheet({ roomId, me, art, onError }: { roomId: string; me: Actor; art: A
                     <td className="label">{cellVal(art, rid, "label")}</td>
                     <td className="num"><span className="r-val-num">{cellVal(art, rid, "q2")}</span></td>
                     <td className="num"><span className="r-val-num">{cellVal(art, rid, "q3")}</span></td>
-                    <td className={vCls}>
+                    <td className={vCls} data-cell-key={vId} data-testid="sheet-cell">
                       <EditableCell key={vId + ":" + (vEl?.version ?? 0)} value={String(vEl?.value ?? "")} disabled={!!lk || drafting} align="right" onCommit={(s) => doCommit(vId, s)} />
                       {lk && <span className="lockbadge"><Lock size={9} /> NA</span>}
                       {drafting && <span className="lockbadge"><Pencil size={9} /> draft</span>}
                     </td>
-                    <td className="r-cell">
+                    <td className="r-cell" data-cell-key={nId} data-testid="sheet-cell">
                       <EditableCell key={nId + ":" + (nEl?.version ?? 0)} value={String(nEl?.value ?? "")} disabled={!!lk} addLabel="note" onCommit={(s) => doCommit(nId, s)} />
                     </td>
                   </tr>

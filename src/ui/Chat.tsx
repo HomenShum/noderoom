@@ -110,6 +110,12 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
         });
       }, reduced ? 0 : 900);
     }
+
+    if (isPrivate && store.mode === "convex" && t) {
+      // Live private NodeAgent: reads the room and replies in this user's private channel only.
+      setThinking(true);
+      void store.askPrivateAgent(t).finally(() => setThinking(false));
+    }
   };
 
   const promote = (t: string) => {

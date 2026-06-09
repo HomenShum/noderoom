@@ -26,6 +26,10 @@
 5. **Public agent** — Maya sends `/ask reconcile Q3 revenue`. *Pass:* the Room NodeAgent's agent message + its cell edits (e.g. `r_gp__variance`, `r_ni__variance`) appear in **all three** views.
 6. **Private agent + isolation** — Maya asks her private NodeAgent (`runPrivateAgent`); it reads the room and replies in **Maya's private channel only**. *Pass:* a private agent reply appears for Maya; neither her question nor the reply is visible to Dev/Sam.
 7. **Personal agent acts in the room** — Maya flips her private panel to the 🌐 Room lane and asks her agent to act; it edits the **shared** sheet and/or posts public chat as her personal agent, attributed **via Maya** (owner-tinted), visible to all. *Pass:* a public effect (a filled variance cell and/or a `via {name}` public bubble) reaches Dev's & Sam's views. (Prod-verified: filled Revenue variance + posted a `via Maya` summary.)
+8. **All-artifact playground** — every view has the full trio (Spreadsheet + **Note** + **Wall**, seeded on room create), and the agent can act on **any** artifact, not just the variance sheet. *Pass:* the Note + Wall surfaces are present in all three views. (Agent editing of notes/walls is proven end-to-end by `tests/allArtifactEdits.test.ts` and a live agent smoke — prod-verified: the Room agent appended a `Q3 takeaways` section to a NOTE and added two post-its to a WALL via `edit_cell kind:"create"`.)
+
+## Room-switch isolation
+An agent run is bound to one `roomId` on every server hop (re-query → `artifact_room_mismatch` check → tools bound at construction), so a run started in room A can never read or write room B; switching rooms tears down A's subscriptions. The client also guards `setThinking`/timers against unmount. Full guarantee + enforcement points: [../ROOM_SWITCH_ISOLATION.md](../ROOM_SWITCH_ISOLATION.md). Isolation across views is exercised by Act 6 (private channel) in this eval.
 
 ## Visual verification
 Per-view screenshots are captured to `docs/eval/three-user-shots/` at the end of Acts 2, 4, and 5 (`{act}-maya.png` / `-dev.png` / `-sam.png`) and inspected to confirm the three views are consistent.

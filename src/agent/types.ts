@@ -97,7 +97,10 @@ export interface CellMeta { value: string; version: number; locked: boolean; }
 /** Variance fields are kept for the financial demo; `cells` is the generic per-column map
  *  any tabular artifact (e.g. the company-research sheet) renders + edits through. */
 export interface RoomSnapshotRow { rowId: string; label: string; q2: string; q3: string; variance: string; note: string; varianceVersion: number; locked: boolean; cells: Record<string, CellMeta>; }
-export interface RoomSnapshot { artifactId: string; version: number; kind: string; rows: RoomSnapshotRow[]; }
+export interface SnapshotElement { id: string; value: unknown; version: number; locked: boolean; }
+/** `rows` is the sheet-shaped projection; `elements` is the kind-agnostic raw element list
+ *  (present in live mode) that note/wall context builders read. */
+export interface RoomSnapshot { artifactId: string; version: number; kind: string; rows: RoomSnapshotRow[]; elements?: SnapshotElement[]; }
 export type SourceResult = { ok: true; title: string; snippet: string; url: string } | { ok: false; error: string };
 export type SpreadsheetContextHit =
   | { kind: "cell"; elementId: string; coordinate: string; rowHeader: string; columnHeader: string; rawValue: string; semanticSummary: string; score: number }
@@ -132,8 +135,9 @@ export interface RoomTools {
   proposeLock(elementIds: string[], reason: string, artifactId?: string): Promise<{ ok: true; lockId: string } | { ok: false; reason: string; lockId?: string }>;
   /** Release a held lock; any waiting drafts smart-merge now. */
   releaseLock(lockId: string): Promise<{ ok?: boolean; reason?: string; merged: MergeView[] }>;
-  /** CAS write — conflict returns as DATA, never throws. Defaults to the primary artifact; pass artifactId for another file. */
-  editCell(elementId: string, value: unknown, baseVersion: number, artifactId?: string): Promise<EditOutcome>;
+  /** CAS write — conflict returns as DATA, never throws. Defaults to the primary artifact; pass artifactId for another file.
+   *  `kind` defaults to "set"; pass "create" to add a new element (e.g. a post-it) or "delete" to remove one. */
+  editCell(elementId: string, value: unknown, baseVersion: number, artifactId?: string, kind?: "set" | "create" | "delete"): Promise<EditOutcome>;
   /** Queue ops to merge when a blocking lock releases (no clobber). Defaults to the primary artifact. */
   createDraft(ops: { elementId: string; value: unknown; baseVersion: number }[], blockedByLockId: string, note: string, artifactId?: string): Promise<{ draftId: string }>;
   /** Post a status line to the agent's chat channel. */

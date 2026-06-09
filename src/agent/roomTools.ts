@@ -53,7 +53,8 @@ export class InMemoryRoomTools implements RoomTools {
         cells,
       };
     });
-    return { artifactId, version: art.version, kind: art.kind, rows };
+    const elements = Object.entries(art.elements).map(([id, el]) => ({ id, value: el.value, version: el.version, locked: !!this.engine.lockFor(artifactId, id) }));
+    return { artifactId, version: art.version, kind: art.kind, rows, elements };
   }
 
   async listArtifacts(): Promise<ArtifactRef[]> {
@@ -109,8 +110,8 @@ export class InMemoryRoomTools implements RoomTools {
     return { merged: r.merged.map((m) => ({ draftId: m.draftId, verdict: m.resolution.verdict, note: m.resolution.note, applied: m.applied.length, conflicts: m.conflicts.length })) };
   }
 
-  async editCell(elementId: string, value: unknown, baseVersion: number, artifactId: string = this.artifactId): Promise<EditOutcome> {
-    const res = this.engine.applyEdit({ roomId: this.roomId, op: { opId: crypto.randomUUID(), artifactId, elementId, kind: "set", value, baseVersion }, actor: this.actor });
+  async editCell(elementId: string, value: unknown, baseVersion: number, artifactId: string = this.artifactId, kind: "set" | "create" | "delete" = "set"): Promise<EditOutcome> {
+    const res = this.engine.applyEdit({ roomId: this.roomId, op: { opId: crypto.randomUUID(), artifactId, elementId, kind, value, baseVersion }, actor: this.actor });
     if (res.ok) return { ok: true, version: res.toVersion };
     if (res.reason === "conflict") return { ok: false, conflict: true, expected: res.expected, actual: res.actual };
     if (res.reason === "locked") return { ok: false, locked: true, holder: res.by.name };

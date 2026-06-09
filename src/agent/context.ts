@@ -77,3 +77,57 @@ export async function buildResearchContext(rt: RoomTools, goal: string): Promise
   return [{ role: "user", content }];
 }
 
+/** Unwrap a cell payload ({value,...}) or return the raw scalar/HTML as a string. */
+function elementText(value: unknown): string {
+  const raw = value && typeof value === "object" && "value" in (value as Record<string, unknown>) ? (value as { value: unknown }).value : value;
+  if (raw === null || raw === undefined) return "";
+  return typeof raw === "string" ? raw : JSON.stringify(raw);
+}
+
+/** JIT context for a NOTE artifact: one editable `doc` element (HTML body). The agent reads the
+ *  current body + version, then rewrites it with CAS (edit_cell on `doc`, or update_wiki). */
+export async function buildNoteContext(rt: RoomTools, goal: string): Promise<AgentMessage[]> {
+  const [snap, aware] = await Promise.all([rt.snapshot(), rt.awareness()]);
+  const els = snap.elements ?? [];
+  const doc = els.find((e) => e.id === "doc") ?? els[0];
+  const docId = doc?.id ?? "doc";
+  const body = elementText(doc?.value);
+  const preview = body.length > 1800 ? body.slice(0, 1800) + " …[truncated]" : (body || "  (empty)");
+  const others = els.filter((e) => e.id !== docId);
+  const locks = aware.activeLocks.length ? aware.activeLocks.map((l) => `  - ${l.holder} holds [${l.elementIds.join(", ")}] — ${l.reason}`).join("\n") : "";
+  const content = [
+    `YOUR TASK: ${goal}`,
+    ``,
+    `This artifact (id "${snap.artifactId}", v${snap.version}) is a NOTE. Its body is the \`${docId}\` element (HTML), currently v${doc?.version ?? 0}.`,
+    `CURRENT CONTENT:`,
+    preview,
+    others.length ? `\nOther editable elements: ${others.map((e) => `${e.id} (v${e.version})`).join(", ")}.` : "",
+    ``,
+    `To update the note: edit the \`${docId}\` element with kind "set" and the new full HTML, using version ${doc?.version ?? 0} for CAS — or use update_wiki (it appends a Sources footer for grounding). Preserve existing structure unless asked to rewrite. If \`${docId}\` is LOCKED, create_draft instead.`,
+    locks ? `\nACTIVE LOCKS:\n${locks}` : "",
+  ].filter((l) => l !== "").join("\n");
+  return [{ role: "user", content }];
+}
+
+/** JIT context for a post-it WALL: each element's value is { text, x, y, color }. The agent can ADD
+ *  (edit_cell kind "create", fresh id, baseVersion 0), EDIT (kind "set" + CAS), or DELETE post-its. */
+export async function buildWallContext(rt: RoomTools, goal: string): Promise<AgentMessage[]> {
+  const [snap, aware] = await Promise.all([rt.snapshot(), rt.awareness()]);
+  const els = snap.elements ?? [];
+  const stickies = els.map((e) => {
+    const s = (e.value ?? {}) as { text?: unknown; x?: unknown; y?: unknown; color?: unknown };
+    const text = String(s.text ?? "").replace(/\s+/g, " ").slice(0, 44);
+    return `  ${e.id.padEnd(12)} [v${e.version}]${aware.activeLocks.some((l) => l.elementIds.includes(e.id)) ? " <LOCKED>" : ""}  pos=(${s.x ?? 0},${s.y ?? 0}) color=${s.color ?? "?"}  "${text}"`;
+  }).join("\n");
+  const content = [
+    `YOUR TASK: ${goal}`,
+    ``,
+    `This artifact (id "${snap.artifactId}", v${snap.version}) is a POST-IT WALL. Each post-it is an element whose value is an object { text, x, y, color }.`,
+    els.length ? `CURRENT POST-ITS:\n${stickies}` : `The wall is empty.`,
+    ``,
+    `To ADD a post-it: edit_cell with a NEW elementId (e.g. "s_idea1"), kind "create", baseVersion 0, value { "text": "…", "x": <40–560>, "y": <40–360>, "color": "#FDE68A" }. Vary x/y by ~120px so notes don't overlap.`,
+    `To EDIT an existing post-it: edit_cell on its id with kind "set" and the version shown (CAS). To REMOVE one: kind "delete". If a post-it is LOCKED, create_draft instead.`,
+  ].filter((l) => l !== "").join("\n");
+  return [{ role: "user", content }];
+}
+

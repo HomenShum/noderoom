@@ -1,10 +1,17 @@
 # Private NodeAgent v2 — "Everyone has a copilot in the room"
 
-> Status: **SHIPPED (v2.1)** — built, deployed, and verified on https://noderoom.live. The public lane
+> Status: **SHIPPED (v2.2)** — built, deployed, and verified on https://noderoom.live. The public lane
 > (edit the shared sheet + post public chat as your personal agent), the 🔒/🌐 composer toggle, and the
 > subtle attribution (owner-tinted avatar, `via {name}` chip, cell provenance dot) are live. Prod-verified:
-> the personal agent filled a shared variance cell **and** posted a `via Maya` public reply. The deeper
-> **private-draft-then-merge** path (agent drafts privately, you promote) remains the next step.
+> the personal agent filled a shared variance cell **and** posted a `via Maya` public reply.
+>
+> **v2.2 adds (this wave):** agents (Room + personal) now edit **every artifact type — notes, the post-it
+> wall, and any sheet — not just the variance sheet** (kind-routed JIT context + `edit_cell` create/set/
+> delete on the same CAS spine). New rooms seed the full **sheet + note + wall** trio. Room-switch
+> isolation is hardened + documented (see [ROOM_SWITCH_ISOLATION.md](./ROOM_SWITCH_ISOLATION.md)).
+> Prod-verified: the Room agent appended a `Q3 takeaways` section to a NOTE and added two post-its to a
+> WALL via `kind:"create"`. The deeper **private-draft-then-merge** path (agent drafts privately, you
+> promote) remains the next step.
 
 ## 1. The bigger idea
 Today a room has humans + **one shared Room agent**. v2 makes it humans + the shared Room agent +

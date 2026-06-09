@@ -143,7 +143,21 @@ test("three users chat, edit the same sheet concurrently, and run the public age
   } catch { personalPublic = "no-visible-effect-within-150s"; }
   await shoot(pages, "act7-personal-public");
 
+  // ── Act 8: ALL-ARTIFACT playground. A new room seeds the full trio (sheet + note + wall), and the
+  //    agent can act on ANY of them (proven end-to-end by tests/allArtifactEdits.test.ts + the live
+  //    note/wall agent smoke). Here we assert every view actually has the Note + Wall surfaces.
+  let allArtifacts = "not-checked";
+  try {
+    for (const p of all) {
+      const tabs = p.locator('.r-panel.artifact [data-testid="artifact-tabs"]');
+      await expect(tabs.getByText(/note/i).first()).toBeVisible({ timeout: 12_000 });
+      await expect(tabs.getByText(/wall/i).first()).toBeVisible({ timeout: 12_000 });
+    }
+    allArtifacts = "sheet+note+wall-in-all-views";
+  } catch { allArtifacts = "tabs-not-all-visible"; }
+  await shoot(pages, "act8-all-artifacts");
+
   // eslint-disable-next-line no-console
-  console.log(JSON.stringify({ room: CODE, sameCellWinner: winner, agent, privateAgent, personalPublic }, null, 2));
+  console.log(JSON.stringify({ room: CODE, sameCellWinner: winner, agent, privateAgent, personalPublic, allArtifacts }, null, 2));
   for (const p of all) await p.context().close();
 });

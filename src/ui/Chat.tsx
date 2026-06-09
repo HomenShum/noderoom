@@ -58,6 +58,13 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
   const feedRef = useRef<HTMLDivElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const nearBottom = useRef(true);
+  // Room-switch safety: an /ask or private-agent call is fire-and-forget. If the user leaves this room
+  // before it resolves, the server action still finishes on its OWN room (every mutation is roomId-scoped,
+  // so no cross-room bleed) — but the client must NOT setState or post into an unmounted/stale channel.
+  // aliveRef gates those; privTimerRef cancels the memory-mode reply timer on unmount.
+  const aliveRef = useRef(true);
+  const privTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => () => { aliveRef.current = false; if (privTimerRef.current) clearTimeout(privTimerRef.current); }, []);
   const messages = store.listMessages(roomId, channel);
   const isPrivate = variant === "private";
   const longJob = isPrivate ? null : store.lastLongFreeJob();
@@ -86,21 +93,23 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
     if (!isPrivate && /^\/ask\b/i.test(t)) {
       const goal = t.replace(/^\/ask\s*/i, "").trim() || "Recompute the Q3 variance from the audited NetSuite numbers.";
       setThinking(true);
-      void store.askAgent({ goal, references: messageRefs }).finally(() => setThinking(false));
+      void store.askAgent({ goal, references: messageRefs }).finally(() => { if (aliveRef.current) setThinking(false); });
       return;
     }
 
     if (!isPrivate && /^\/free\b/i.test(t)) {
       const goal = t.replace(/^\/free\s*/i, "").trim() || "Recompute the Q3 variance from the audited NetSuite numbers.";
       setThinking(true);
-      void store.startLongFreeAgent({ goal, references: messageRefs }).finally(() => setThinking(false));
+      void store.startLongFreeAgent({ goal, references: messageRefs }).finally(() => { if (aliveRef.current) setThinking(false); });
       return;
     }
 
     if (isPrivate && store.mode === "memory") {
       const reduced = window.matchMedia?.("(prefers-reduced-motion:reduce)").matches ?? false;
       setThinking(true);
-      setTimeout(() => {
+      privTimerRef.current = setTimeout(() => {
+        privTimerRef.current = null;
+        if (!aliveRef.current) return; // user left the room — don't post into a stale channel
         setThinking(false);
         const aware = store.awareness(roomId, "agent_priv");
         store.postMessage({
@@ -120,7 +129,7 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
       // Live private NodeAgent. Private lane → replies only to you. Room lane → acts in the shared room
       // (edits the sheet + posts public chat) as your personal agent, attributed to you.
       setThinking(true);
-      void store.askPrivateAgent(t, { publish: roomLane }).finally(() => setThinking(false));
+      void store.askPrivateAgent(t, { publish: roomLane }).finally(() => { if (aliveRef.current) setThinking(false); });
     }
   };
 
@@ -202,12 +211,12 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
         {!isPrivate && <span className="r-tag agent" style={{ gap: 6 }}><span className="r-avatar agent sm" style={{ background: "#d97757", width: 18, height: 18, fontSize: 9 }}>N</span>Room NodeAgent</span>}
         {longJob && <span className="r-tag" title="Latest long-running free-auto job"><Timer size={10} /> {longJob.status} {longJob.attempts}/{longJob.maxAttempts}</span>}
         {canCancelLongJob && (
-          <button className="r-iconbtn" style={{ width: 24, height: 24 }} title={jobBusy === "cancel" ? "Cancelling…" : "Cancel long-running job"} data-testid="job-cancel" disabled={jobBusy !== null} onClick={cancelJob}>
+          <button className="r-iconbtn" style={{ width: 24, height: 24 }} title={jobBusy === "cancel" ? "Cancelling…" : "Cancel long-running job"} aria-label="Cancel long-running job" data-testid="job-cancel" disabled={jobBusy !== null} onClick={cancelJob}>
             <X size={13} />
           </button>
         )}
         {canRetryLongJob && (
-          <button className="r-iconbtn" style={{ width: 24, height: 24 }} title={jobBusy === "retry" ? "Retrying…" : "Retry long-running job"} data-testid="job-retry" disabled={jobBusy !== null} onClick={retryJob}>
+          <button className="r-iconbtn" style={{ width: 24, height: 24 }} title={jobBusy === "retry" ? "Retrying…" : "Retry long-running job"} aria-label="Retry long-running job" data-testid="job-retry" disabled={jobBusy !== null} onClick={retryJob}>
             <RefreshCw size={13} />
           </button>
         )}

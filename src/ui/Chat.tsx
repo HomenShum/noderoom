@@ -1,6 +1,6 @@
 /** Public room chat (`.r-panel.center`) and private agent (`.r-panel.right`). Reads via useStore(). */
 import { useEffect, useRef, useState, type CSSProperties, type ChangeEvent, type DragEvent, type KeyboardEvent } from "react";
-import { Lock, MessageCircle, Globe, Send, Sparkles, Copy, Check, ArrowUpRight, Pencil, Paperclip, X, Timer, RefreshCw } from "lucide-react";
+import { Lock, MessageCircle, Globe, Send, Sparkles, Copy, Check, ArrowUpRight, Pencil, Paperclip, X, Timer, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import { useStore, type RoomStore } from "../app/store";
 import type { Actor, Channel, Message } from "../engine/types";
 import {
@@ -24,9 +24,9 @@ const shortMs = (ms: number) => ms >= 60_000 ? `${Math.round(ms / 1000) / 60}m` 
 
 const SLASH_CMDS = [
   { label: "/ask", insert: "/ask ", hint: "ask the Room NodeAgent to act on the sheet" },
-  { label: "/free", insert: "/free ", hint: "queue the resumable free-auto job" },
   { label: "/ask reconcile Q3 revenue", insert: "/ask reconcile Q3 revenue against the NetSuite export", hint: "recompute the variance column" },
   { label: "/ask flag variance > 15%", insert: "/ask flag any variance over 15%", hint: "footnote the outliers" },
+  { label: "/free", insert: "/free ", hint: "force the resumable free-auto model policy" },
 ];
 
 type ChatProps = {
@@ -46,6 +46,10 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
   const [dropActive, setDropActive] = useState(false);
   const [thinking, setThinking] = useState(false);
   const [slashOpen, setSlashOpen] = useState(false);
+  const [jobDetailsOpen, setJobDetailsOpen] = useState(false);
+  const [failedSends, setFailedSends] = useState<Array<{ cid: string; text: string }>>([]);
+  const [jobBusy, setJobBusy] = useState<null | "cancel" | "retry">(null);
+  const [jobErr, setJobErr] = useState<string | null>(null);
   const feedRef = useRef<HTMLDivElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const nearBottom = useRef(true);
@@ -53,6 +57,7 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
   const isPrivate = variant === "private";
   const longJob = isPrivate ? null : store.lastLongFreeJob();
   const longJobAttempts = isPrivate ? [] : store.lastLongFreeJobAttempts();
+  const longJobDetail = isPrivate ? null : store.lastLongFreeJobDetail();
   const latestAttempt = longJobAttempts.at(-1);
   const canCancelLongJob = !!longJob && !["completed", "failed", "cancelled"].includes(longJob.status);
   const canRetryLongJob = !!longJob && ["failed", "blocked", "cancelled", "paused", "retrying"].includes(longJob.status);
@@ -67,7 +72,9 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
     if (!t && refs.length === 0) return;
     const messageRefs = refs;
     const messageText = refs.length ? `${encodeArtifactRefLine(refs)}${t ? "\n\n" + t : ""}` : t;
-    store.postMessage({ roomId, channel, author: me, text: messageText, clientMsgId: crypto.randomUUID(), kind: "chat" });
+    const cid = crypto.randomUUID();
+    void store.postMessage({ roomId, channel, author: me, text: messageText, clientMsgId: cid, kind: "chat" })
+      .then((fb) => { if (fb && !fb.ok) setFailedSends((f) => (f.some((x) => x.cid === cid) ? f : [...f, { cid, text: messageText }])); });
     setText(""); setRefs([]); setSlashOpen(false);
     requestAnimationFrame(grow);
 
@@ -106,7 +113,27 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
   };
 
   const promote = (t: string) => {
-    store.postMessage({ roomId, channel: "public", author: me, text: `Sharing from my NodeAgent - ${t}`, clientMsgId: crypto.randomUUID(), kind: "chat" });
+    void store.postMessage({ roomId, channel: "public", author: me, text: `Sharing from my NodeAgent - ${t}`, clientMsgId: crypto.randomUUID(), kind: "chat" });
+  };
+  const retrySend = (cid: string, text: string) => {
+    void store.postMessage({ roomId, channel, author: me, text, clientMsgId: cid, kind: "chat" })
+      .then((fb) => { if (fb && fb.ok) setFailedSends((f) => f.filter((x) => x.cid !== cid)); });
+  };
+  const dismissFailed = (cid: string) => setFailedSends((f) => f.filter((x) => x.cid !== cid));
+  const jobReason = (reason?: string) =>
+    reason === "terminal" ? "Can't cancel — the job already finished."
+      : reason === "not_retryable" ? "Can't retry — the job is completed or still running."
+        : reason === "job_not_found" ? "That job no longer exists."
+          : "Action failed — try again.";
+  const cancelJob = () => {
+    if (!longJob || jobBusy) return;
+    setJobBusy("cancel"); setJobErr(null);
+    void store.cancelLongFreeJob(longJob.id).then((fb) => { if (!fb.ok) setJobErr(jobReason(fb.reason)); }).finally(() => setJobBusy(null));
+  };
+  const retryJob = () => {
+    if (!longJob || jobBusy) return;
+    setJobBusy("retry"); setJobErr(null);
+    void store.retryLongFreeJob(longJob.id).then((fb) => { if (!fb.ok) setJobErr(jobReason(fb.reason)); }).finally(() => setJobBusy(null));
   };
 
   const applySlash = (insert: string) => { setText(insert); setSlashOpen(false); requestAnimationFrame(() => { grow(); taRef.current?.focus(); }); };
@@ -163,15 +190,16 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
         {!isPrivate && <span className="r-tag agent" style={{ gap: 6 }}><span className="r-avatar agent sm" style={{ background: "#d97757", width: 18, height: 18, fontSize: 9 }}>N</span>Room NodeAgent</span>}
         {longJob && <span className="r-tag" title="Latest long-running free-auto job"><Timer size={10} /> {longJob.status} {longJob.attempts}/{longJob.maxAttempts}</span>}
         {canCancelLongJob && (
-          <button className="r-iconbtn" style={{ width: 24, height: 24 }} title="Cancel long-running job" onClick={() => void store.cancelLongFreeJob(longJob.id)}>
+          <button className="r-iconbtn" style={{ width: 24, height: 24 }} title={jobBusy === "cancel" ? "Cancelling…" : "Cancel long-running job"} data-testid="job-cancel" disabled={jobBusy !== null} onClick={cancelJob}>
             <X size={13} />
           </button>
         )}
         {canRetryLongJob && (
-          <button className="r-iconbtn" style={{ width: 24, height: 24 }} title="Retry long-running job" onClick={() => void store.retryLongFreeJob(longJob.id)}>
+          <button className="r-iconbtn" style={{ width: 24, height: 24 }} title={jobBusy === "retry" ? "Retrying…" : "Retry long-running job"} data-testid="job-retry" disabled={jobBusy !== null} onClick={retryJob}>
             <RefreshCw size={13} />
           </button>
         )}
+        {jobErr && <span className="r-tag" role="alert" data-testid="job-error" style={{ color: "var(--danger, #c0392b)" }}>{jobErr}</span>}
       </div>
       {isPrivate && <div className="r-private-banner"><Sparkles size={12} /> Reads room context; output stays yours until you promote it</div>}
       {!isPrivate && longJob && (
@@ -181,12 +209,64 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
           {latestAttempt && <span>attempt {latestAttempt.attempt}: {latestAttempt.resolvedModel} · {latestAttempt.stopReason} · {shortMs(latestAttempt.ms)}</span>}
           {longJob.nextRunAt && longJob.status !== "completed" && <span>next {clock(longJob.nextRunAt)}</span>}
           {longJob.error && <span>{longJob.error}</span>}
+          <button className="r-job-detail-toggle" type="button" onClick={() => setJobDetailsOpen((open) => !open)} aria-expanded={jobDetailsOpen}>
+            {jobDetailsOpen ? <ChevronUp size={12} /> : <ChevronDown size={12} />} Details
+          </button>
+        </div>
+      )}
+      {!isPrivate && longJob && jobDetailsOpen && (
+        <div className="r-job-detail" aria-label="Agent job details">
+          <div className="r-job-grid">
+            <span>Runtime</span><b>{longJob.runtime ?? "inline"}</b>
+            <span>Policy</span><b>{longJob.approvalPolicy ?? "n/a"}</b>
+            <span>Slices</span><b>{longJob.actionSliceCount ?? 0}</b>
+            <span>Model calls</span><b>{longJob.modelCallCount ?? 0}</b>
+            <span>Tool calls</span><b>{longJob.toolCallCount ?? 0}</b>
+            <span>Mutations</span><b>{longJob.mutationCount ?? 0}</b>
+            <span>Receipts</span><b>{longJob.receiptCount ?? 0}</b>
+            <span>Scheduler</span><b>{longJob.schedulerHandoffCount ?? 0}</b>
+          </div>
+          {longJobAttempts.length > 0 && (
+            <div className="r-job-list">
+              <span className="r-job-list-title">Attempts</span>
+              {longJobAttempts.slice(-4).map((attempt) => (
+                <span key={`${attempt.attempt}-${attempt.status}`}>{attempt.attempt}. {attempt.status} - {attempt.resolvedModel} - {shortMs(attempt.ms)}</span>
+              ))}
+            </div>
+          )}
+          {longJobDetail && (
+            <div className="r-job-list">
+              <span className="r-job-list-title">Trace</span>
+              {longJobDetail.operations.slice(-4).map((op) => (
+                <span key={`op-${op.sequence}`}>{op.sequence}. {op.kind}:{op.name} - {op.status}{op.countDelta ? ` x${op.countDelta}` : ""}</span>
+              ))}
+              {longJobDetail.receipts.slice(0, 3).map((receipt) => (
+                <span key={`receipt-${receipt.id}`}>receipt {receipt.mutationName} - {receipt.affectedIds.join(", ")}</span>
+              ))}
+              {longJobDetail.latestSteps.slice(-3).map((step) => (
+                <span key={`step-${step.idx}`}>step {step.idx}: {step.tool} - {step.status}{step.elementId ? ` (${step.elementId})` : ""}</span>
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      <div className="r-chat" ref={feedRef} onScroll={onScroll} aria-live="polite">
-        {messages.length === 0 && <div className="tiny faint" style={{ margin: "auto" }}>No messages yet. Say hello.</div>}
-        {messages.map((m) => <Bubble key={m.id} m={m} roomId={roomId} variant={variant} me={me} onPromote={promote} onOpenArtifact={onOpenArtifact} />)}
+      <div className="r-chat" ref={feedRef} onScroll={onScroll} aria-live="polite" data-testid="chat-feed">
+        {messages.length === 0 && failedSends.length === 0 && <div className="tiny faint" style={{ margin: "auto" }}>No messages yet. Say hello.</div>}
+        {messages.map((m) => <Bubble key={m.clientMsgId || m.id} m={m} roomId={roomId} variant={variant} me={me} onPromote={promote} onOpenArtifact={onOpenArtifact} />)}
+        {failedSends.map((f) => (
+          <div className="r-msg" key={"fail-" + f.cid} data-testid="chat-failed" data-state="failed">
+            <span className="r-avatar sm" style={{ background: colorFor(store, roomId, me) }}>{initials(me.name)}</span>
+            <div className="body">
+              <div className="meta"><span className="who">{me.name}</span><span className="r-tag" style={{ color: "var(--danger, #c0392b)", padding: "1px 5px", fontSize: 9 }}>failed to send</span></div>
+              <div className="text" style={{ opacity: 0.75 }}>{parseArtifactRefMessage(f.text).body || f.text}</div>
+              <div className="r-msg-actions" style={{ opacity: 1 }}>
+                <button className="r-msg-act promote" data-testid="chat-retry" onClick={() => retrySend(f.cid, f.text)}><RefreshCw size={12} /> Retry</button>
+                <button className="r-msg-act" onClick={() => dismissFailed(f.cid)}>Dismiss</button>
+              </div>
+            </div>
+          </div>
+        ))}
         {thinking && (
           <div className="r-msg agent" aria-label={`${agentName} is thinking`}>
             <span className="r-avatar agent sm" style={{ background: "#d97757" }}>N</span>
@@ -223,8 +303,9 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
         <div className="r-input-wrap">
           <textarea ref={taRef} rows={1} value={text} onChange={onChange} onKeyDown={onKeyDown}
             placeholder={isPrivate ? "Ask privately..." : "Message the room... type / for commands"}
+            data-testid="chat-composer"
             aria-label={isPrivate ? "Ask privately" : "Message the room"} />
-          <button className="r-send" onClick={() => send()} aria-label="Send message"><Send size={15} /></button>
+          <button className="r-send" onClick={() => send()} data-testid="chat-send" aria-label="Send message"><Send size={15} /></button>
         </div>
         {!isPrivate && !slashOpen && (
           <div className="r-composer-hint">
@@ -243,21 +324,30 @@ function Bubble({ m, roomId, variant, me, onPromote, onOpenArtifact }: { m: Mess
   const [copied, setCopied] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(m.text);
+  const [editErr, setEditErr] = useState<string | null>(null);
   const parsed = parseArtifactRefMessage(m.text);
   const agent = m.author.kind === "agent";
   const ask = !agent && parsed.body.trim().startsWith("/ask");
   const mine = !agent && m.author.id === me.id;
   const canPromote = agent && variant === "private";
+  const pending = String(m.id).startsWith("opt-"); // optimistic, not yet confirmed by the server
   const copy = () => { void navigator.clipboard?.writeText(m.text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1200); }); };
-  const saveEdit = () => { const t = draft.trim(); if (t && t !== m.text) store.editMessage(m.id, t, me); setEditing(false); };
+  const saveEdit = () => {
+    const t = draft.trim();
+    if (t && t !== m.text) {
+      setEditing(false); // optimistic update paints the new text instantly
+      void store.editMessage(m.id, t, me).then((fb) => { setEditErr(fb.ok ? null : "Couldn't save your edit — it was reverted."); });
+    } else setEditing(false);
+  };
 
   return (
-    <div className={"r-msg" + (agent ? " agent" : "")}>
+    <div className={"r-msg" + (agent ? " agent" : "")} data-testid="chat-message" data-clientmsgid={m.clientMsgId} data-state={pending ? "pending" : "confirmed"} style={pending ? { opacity: 0.6 } : undefined}>
       <span className={"r-avatar sm" + (agent ? " agent" : "")} style={{ background: colorFor(store, roomId, m.author) }}>{agent ? "N" : initials(m.author.name)}</span>
       <div className="body">
         <div className="meta">
           <span className="who">{m.author.name}</span>
           {agent && <span className="r-tag agent" style={{ padding: "1px 5px", fontSize: 9 }}>agent</span>}
+          {pending && <span className="r-tag" data-testid="chat-pending" style={{ padding: "1px 5px", fontSize: 9 }}>sending…</span>}
           <span className="time">{clock(m.createdAt)}</span>
         </div>
         {editing ? (
@@ -281,15 +371,16 @@ function Bubble({ m, roomId, variant, me, onPromote, onOpenArtifact }: { m: Mess
           </>
         )}
 
+        {editErr && <div className="tiny" role="alert" data-testid="chat-edit-error" style={{ color: "var(--danger, #c0392b)", marginTop: 2 }}>{editErr}</div>}
         {editing ? (
           <div className="r-msg-actions" style={{ opacity: 1 }}>
-            <button className="r-msg-act promote" onClick={saveEdit}>Save</button>
-            <button className="r-msg-act" onClick={() => { setDraft(m.text); setEditing(false); }}>Cancel</button>
+            <button className="r-msg-act promote" data-testid="chat-edit-save" onClick={saveEdit}>Save</button>
+            <button className="r-msg-act" onClick={() => { setDraft(m.text); setEditErr(null); setEditing(false); }}>Cancel</button>
           </div>
         ) : (
           <div className="r-msg-actions">
             <button className="r-msg-act" onClick={copy} aria-label="Copy message">{copied ? <Check size={12} /> : <Copy size={12} />} {copied ? "Copied" : "Copy"}</button>
-            {mine && <button className="r-msg-act" onClick={() => { setDraft(m.text); setEditing(true); }} aria-label="Edit message"><Pencil size={12} /> Edit</button>}
+            {mine && <button className="r-msg-act" data-testid="chat-edit" onClick={() => { setDraft(m.text); setEditErr(null); setEditing(true); }} aria-label="Edit message"><Pencil size={12} /> Edit</button>}
             {canPromote && <button className="r-msg-act promote" onClick={() => onPromote(m.text)} aria-label="Promote to the public chat"><ArrowUpRight size={12} /> Promote to public</button>}
           </div>
         )}

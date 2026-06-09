@@ -22,3 +22,11 @@ coverage/
 .design-ref/
 
 .vercel
+
+# Playwright E2E outputs
+test-results/
+playwright-report/
+playwright/.cache/
+
+# local scratch
+.tmp-qa/

@@ -1,0 +1,53 @@
+import { test, expect } from "./fixtures";
+
+/**
+ * Guided walkthrough (memory mode, no backend). Runs in real Chromium with a real viewport, so the
+ * spotlight geometry is trustworthy here (unlike the headless preview, whose viewport can collapse).
+ */
+test.describe("guided tour (memory mode)", () => {
+  test("auto-starts on first visit, spotlights real targets, skips + replays", async ({ page }) => {
+    await page.goto("/?mode=memory");
+    await page.evaluate(() => { try { localStorage.removeItem("noderoom:tour:v1"); } catch { /* ignore */ } });
+    await page.getByRole("button", { name: /Enter the Q3 diligence room/i }).click();
+
+    // Auto-starts on the centered welcome step.
+    const tour = page.getByTestId("guided-tour");
+    await expect(tour).toBeVisible();
+    await expect(page.getByText("Welcome to NodeRoom")).toBeVisible();
+    await expect(page.getByText("1 / 8")).toBeVisible();
+
+    // Step 2 spotlights the left rail — assert the spotlight box overlaps the rail.
+    await page.getByTestId("tour-next").click();
+    const spot = page.locator(".r-tour-spot");
+    await expect(spot).toBeVisible();
+    const rail = await page.getByTestId("left-rail").boundingBox();
+    const spotBox = await spot.boundingBox();
+    expect(rail).not.toBeNull();
+    expect(spotBox).not.toBeNull();
+    expect(Math.abs(spotBox!.x - (rail!.x - 6))).toBeLessThan(8);
+    expect(Math.abs(spotBox!.width - (rail!.width + 12))).toBeLessThan(8);
+
+    // Step 3 is the chat step; copy advances.
+    await page.getByTestId("tour-next").click();
+    await expect(page.getByText("Ask the room — or the agent")).toBeVisible();
+
+    // Skip closes the tour and persists the seen-flag (no nag).
+    await page.getByTestId("tour-skip").click();
+    await expect(tour).toHaveCount(0);
+    const seen = await page.evaluate(() => localStorage.getItem("noderoom:tour:v1"));
+    expect(seen).toBe("done");
+
+    // The "?" button replays it on demand.
+    await page.getByTestId("tour-button").click();
+    await expect(page.getByTestId("guided-tour")).toBeVisible();
+    await expect(page.getByText("1 / 8")).toBeVisible();
+  });
+
+  test("does NOT auto-start once the seen-flag is set", async ({ page }) => {
+    await page.goto("/?mode=memory");
+    await page.evaluate(() => { try { localStorage.setItem("noderoom:tour:v1", "done"); } catch { /* ignore */ } });
+    await page.getByRole("button", { name: /Enter the Q3 diligence room/i }).click();
+    await expect(page.locator(".r-panel.center").getByTestId("chat-composer")).toBeVisible();
+    await expect(page.getByTestId("guided-tour")).toHaveCount(0);
+  });
+});

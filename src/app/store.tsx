@@ -32,13 +32,27 @@ export type AgentRunTelemetry = { model: string; steps: number; toolCalls: numbe
 export type AgentJobTelemetry = {
   id: string;
   status: string;
+  entrypoint?: string;
+  scope?: string;
+  runtime?: string;
   attempts: number;
   maxAttempts: number;
   modelPolicy: string;
+  approvalPolicy?: string;
+  evidencePolicy?: string;
   stopReason?: string;
   nextRunAt?: number;
   finalText?: string;
   error?: string;
+  latestRunId?: string;
+  actionSliceCount?: number;
+  queryCount?: number;
+  mutationCount?: number;
+  modelCallCount?: number;
+  toolCallCount?: number;
+  schedulerHandoffCount?: number;
+  receiptCount?: number;
+  createdAt?: number;
   updatedAt: number;
 };
 export type AgentJobAttemptTelemetry = {
@@ -52,6 +66,13 @@ export type AgentJobAttemptTelemetry = {
   costUsd: number;
   error?: string;
   scheduledNextAt?: number;
+};
+export type AgentJobDetailTelemetry = {
+  operations: Array<{ sequence: number; kind: string; name: string; status: string; countDelta?: number; targetKind?: string; targetId?: string }>;
+  receipts: Array<{ id: string; mutationName: string; affectedIds: string[]; createdAt: number }>;
+  leases: Array<{ targetKind: string; targetId: string; mode: string; status: string; expiresAt: number }>;
+  draftOperations: Array<{ operationName: string; status: string; affectedIds: string[]; createdAt: number }>;
+  latestSteps: Array<{ idx: number; tool: string; status: string; elementId?: string; mutationReceiptIds?: string[] }>;
 };
 export type UploadedArtifactInput = {
   kind: "sheet" | "note";
@@ -77,11 +98,13 @@ export interface RoomStore {
   awareness(roomId: string, agentId?: string): { activeLocks: Lock[] };
   /** Apply a hand edit (CAS). Returns feedback so the UI can surface a conflict honestly. */
   applyEdit(args: { roomId: string; op: ChangeOp; actor: Actor }): Promise<EditFeedback>;
-  postMessage(args: { roomId: string; channel: Channel; author: Actor; text: string; clientMsgId: string; kind?: Message["kind"] }): void;
-  /** Edit your own already-sent message in place. */
-  editMessage(messageId: string, text: string, author: Actor): void;
+  /** Send a chat message. Returns feedback so the UI can surface a failed send (and offer retry) instead of letting the optimistic bubble silently vanish. */
+  postMessage(args: { roomId: string; channel: Channel; author: Actor; text: string; clientMsgId: string; kind?: Message["kind"] }): Promise<EditFeedback>;
+  /** Edit your own already-sent message in place. Returns feedback so a rejected edit reverts visibly, not silently. */
+  editMessage(messageId: string, text: string, author: Actor): Promise<EditFeedback>;
   toggleAutoAllow(roomId: string, actor: Actor): void;
-  resolveProposal(proposalId: string, approve: boolean, actor: Actor): Promise<void>;
+  /** Approve/reject a proposal. Returns feedback so an approve that loses a CAS race surfaces the conflict instead of a false "applied". */
+  resolveProposal(proposalId: string, approve: boolean, actor: Actor): Promise<EditFeedback>;
   addResearchRows(args: { roomId: string; artifactId: string; rows: ResearchRowInput[]; actor: Actor }): Promise<number>;
   uploadArtifact(args: { roomId: string; artifact: UploadedArtifactInput; actor: Actor }): Promise<string>;
   canRunCollab: boolean;
@@ -95,8 +118,9 @@ export interface RoomStore {
   lastRun(): AgentRunTelemetry | null;
   lastLongFreeJob(): AgentJobTelemetry | null;
   lastLongFreeJobAttempts(): AgentJobAttemptTelemetry[];
-  cancelLongFreeJob(jobId: string): Promise<void>;
-  retryLongFreeJob(jobId: string): Promise<void>;
+  lastLongFreeJobDetail(): AgentJobDetailTelemetry | null;
+  cancelLongFreeJob(jobId: string): Promise<EditFeedback>;
+  retryLongFreeJob(jobId: string): Promise<EditFeedback>;
 }
 
 const Ctx = createContext<RoomStore | null>(null);
@@ -179,10 +203,10 @@ export function EngineStoreProvider({ roomId, children }: { roomId: string; me: 
     lockFor: (aid, eid) => engine.lockFor(aid, eid),
     awareness: (id, aid) => engine.awareness(id, aid),
     applyEdit: async (args) => { const r = engine.applyEdit(args); return r.ok ? { ok: true } : { ok: false, reason: r.reason }; },
-    postMessage: (args) => { engine.postMessage(args); },
-    editMessage: (id, text) => { engine.updateMessage(id, { text }); },
+    postMessage: async (args) => { engine.postMessage(args); return { ok: true }; },
+    editMessage: async (id, text) => { engine.updateMessage(id, { text }); return { ok: true }; },
     toggleAutoAllow: (id, actor) => { engine.toggleAutoAllow(id, actor); },
-    resolveProposal: async (id, approve, actor) => { engine.resolveProposal(id, approve, actor); },
+    resolveProposal: async (id, approve, actor) => { engine.resolveProposal(id, approve, actor); return { ok: true }; },
     addResearchRows: async ({ roomId, artifactId, rows, actor }) => engine.addResearchRows({ roomId, artifactId, rows, by: actor }).length,
     uploadArtifact: async ({ roomId, artifact, actor }) => engine.createArtifact({ roomId, kind: artifact.kind, title: artifact.title, seed: artifact.seed, meta: artifact.meta, by: actor }).id,
     canRunCollab: roomId === demo.roomId,
@@ -262,8 +286,9 @@ export function EngineStoreProvider({ roomId, children }: { roomId: string; me: 
     lastRun: () => null, // the in-memory scripted agent makes no API calls — no token/cost telemetry
     lastLongFreeJob: () => null,
     lastLongFreeJobAttempts: () => [],
-    cancelLongFreeJob: async () => undefined,
-    retryLongFreeJob: async () => undefined,
+    lastLongFreeJobDetail: () => null,
+    cancelLongFreeJob: async () => ({ ok: true }),
+    retryLongFreeJob: async () => ({ ok: true }),
   }), [rev, roomId]);
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }
@@ -283,6 +308,7 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
   const jobs = useQuery(api.agentJobs.list, { roomId: rid, requester: proof }) ?? [];
   const latestJobId = (jobs as Array<{ _id: string }>)[0]?._id;
   const jobAttempts = useQuery(api.agentJobs.attempts, latestJobId ? { jobId: latestJobId as never, requester: proof } : "skip") ?? [];
+  const jobDetail = useQuery(api.agentJobs.detail, latestJobId ? { jobId: latestJobId as never, requester: proof } : "skip");
   const proposals = useQuery(api.artifacts.listProposals, { roomId: rid, requester: proof }) ?? [];
 
   const applyCellEdit = useMutation(api.artifacts.applyCellEdit).withOptimisticUpdate((local, args) => {
@@ -306,7 +332,15 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
     local.setQuery(api.messages.list, q, [...cur, { _id: ("opt-" + args.clientMsgId) as never, _creationTime: Date.now(), roomId: args.roomId, channel: args.channel, author: args.proof.actor, text: args.text, clientMsgId: args.clientMsgId, kind: "chat", createdAt: Date.now() }]);
   });
   const toggle = useMutation(api.rooms.toggleAutoAllow);
-  const editMsg = useMutation(api.messages.update);
+  // Optimistic edit: text is reversible + predictable (patch same _id) + author-authoritative → optimistic-safe.
+  // Match by _id across every loaded messages.list ref (public + the actor's private channel); the editor only
+  // has the messageId, so do NOT reconstruct query args — update whichever loaded list holds the row.
+  const editMsg = useMutation(api.messages.update).withOptimisticUpdate((local, args) => {
+    for (const { args: qargs, value } of local.getAllQueries(api.messages.list)) {
+      if (!value || !value.some((m) => m._id === args.messageId)) continue;
+      local.setQuery(api.messages.list, qargs, value.map((m) => (m._id === args.messageId ? { ...m, text: args.text } : m)));
+    }
+  });
   const resolveProposalMutation = useMutation(api.artifacts.resolveProposal);
   const addResearchRowsMutation = useMutation(api.artifacts.addResearchRows);
   const createArtifactMutation = useMutation(api.artifacts.createArtifact);
@@ -343,10 +377,19 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
         const r = await applyCellEdit({ roomId: rid, artifactId: op.artifactId as never, elementId: op.elementId, kind: op.kind, value: op.value, baseVersion: op.baseVersion, proof });
         return r.ok ? { ok: true } : { ok: false, reason: r.reason };
       },
-      postMessage: ({ channel, text, clientMsgId }) => { void sendMsg({ roomId: rid, channel: chanStr(channel), proof, text, clientMsgId }); },
-      editMessage: (id, text) => { void editMsg({ messageId: id as never, text, requester: proof }); },
+      postMessage: async ({ channel, text, clientMsgId }) => {
+        try { await sendMsg({ roomId: rid, channel: chanStr(channel), proof, text, clientMsgId }); return { ok: true }; }
+        catch (e) { return { ok: false, reason: e instanceof Error ? e.message : "send_failed" }; }
+      },
+      editMessage: async (id, text) => {
+        try { const r = await editMsg({ messageId: id as never, text, requester: proof }); return r?.ok ? { ok: true } : { ok: false, reason: r?.reason ?? "edit_failed" }; }
+        catch (e) { return { ok: false, reason: e instanceof Error ? e.message : "edit_failed" }; }
+      },
       toggleAutoAllow: () => { void toggle({ roomId: rid, requester: proof }); },
-      resolveProposal: async (proposalId, approve) => { await resolveProposalMutation({ proposalId: proposalId as never, approve, requester: proof }); },
+      resolveProposal: async (proposalId, approve) => {
+        try { const r = await resolveProposalMutation({ proposalId: proposalId as never, approve, requester: proof }); return r.ok ? { ok: true } : { ok: false, reason: r.reason }; }
+        catch (e) { return { ok: false, reason: e instanceof Error ? e.message : "resolve_failed" }; }
+      },
       addResearchRows: async ({ artifactId, rows }) => {
         const ids = await addResearchRowsMutation({ roomId: rid, artifactId: artifactId as never, rows, requester: proof });
         return ids.length;
@@ -411,17 +454,36 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
         return r ? { model: r.model, steps: r.steps, toolCalls: r.toolCalls, inputTokens: r.inputTokens, outputTokens: r.outputTokens, costUsd: r.costUsd, ms: r.ms } : null;
       },
       lastLongFreeJob: () => {
-        const j = (jobs as Array<{ _id: string; status: string; attempts: number; maxAttempts: number; modelPolicy: string; handoff?: { reason?: string }; nextRunAt?: number; finalText?: string; error?: string; updatedAt: number }>)[0];
+        const j = (jobs as Array<{
+          _id: string; status: string; entrypoint?: string; scope?: string; runtime?: string; attempts: number; maxAttempts: number;
+          modelPolicy: string; approvalPolicy?: string; evidencePolicy?: string; handoff?: { reason?: string }; nextRunAt?: number;
+          finalText?: string; error?: string; latestRunId?: string; actionSliceCount?: number; queryCount?: number; mutationCount?: number;
+          modelCallCount?: number; toolCallCount?: number; schedulerHandoffCount?: number; receiptCount?: number; createdAt?: number; updatedAt: number;
+        }>)[0];
         return j ? {
           id: String(j._id),
           status: j.status,
+          entrypoint: j.entrypoint,
+          scope: j.scope,
+          runtime: j.runtime,
           attempts: j.attempts,
           maxAttempts: j.maxAttempts,
           modelPolicy: j.modelPolicy,
+          approvalPolicy: j.approvalPolicy,
+          evidencePolicy: j.evidencePolicy,
           stopReason: j.handoff?.reason,
           nextRunAt: j.nextRunAt,
           finalText: j.finalText,
           error: j.error,
+          latestRunId: j.latestRunId ? String(j.latestRunId) : undefined,
+          actionSliceCount: j.actionSliceCount,
+          queryCount: j.queryCount,
+          mutationCount: j.mutationCount,
+          modelCallCount: j.modelCallCount,
+          toolCallCount: j.toolCallCount,
+          schedulerHandoffCount: j.schedulerHandoffCount,
+          receiptCount: j.receiptCount,
+          createdAt: j.createdAt,
           updatedAt: j.updatedAt,
         } : null;
       },
@@ -448,10 +510,33 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
         error: a.error,
         scheduledNextAt: a.scheduledNextAt,
       })),
-      cancelLongFreeJob: async (jobId) => { await cancelFreeAutoJob({ jobId: jobId as never, requester: proof }); },
-      retryLongFreeJob: async (jobId) => { await retryFreeAutoJob({ jobId: jobId as never, requester: proof }); },
+      lastLongFreeJobDetail: () => {
+        if (!jobDetail) return null;
+        const d = jobDetail as {
+          operations?: Array<{ sequence: number; kind: string; name: string; status: string; countDelta?: number; targetKind?: string; targetId?: string }>;
+          receipts?: Array<{ _id: string; mutationName: string; affectedIds: string[]; createdAt: number }>;
+          leases?: Array<{ targetKind: string; targetId: string; mode: string; status: string; expiresAt: number }>;
+          draftOperations?: Array<{ operationName: string; status: string; affectedIds: string[]; createdAt: number }>;
+          latestSteps?: Array<{ idx: number; tool: string; status: string; elementId?: string; mutationReceiptIds?: string[] }>;
+        };
+        return {
+          operations: (d.operations ?? []).map((o) => ({ sequence: o.sequence, kind: o.kind, name: o.name, status: o.status, countDelta: o.countDelta, targetKind: o.targetKind, targetId: o.targetId })),
+          receipts: (d.receipts ?? []).map((r) => ({ id: String(r._id), mutationName: r.mutationName, affectedIds: r.affectedIds, createdAt: r.createdAt })),
+          leases: (d.leases ?? []).map((l) => ({ targetKind: l.targetKind, targetId: l.targetId, mode: l.mode, status: l.status, expiresAt: l.expiresAt })),
+          draftOperations: (d.draftOperations ?? []).map((op) => ({ operationName: op.operationName, status: op.status, affectedIds: op.affectedIds, createdAt: op.createdAt })),
+          latestSteps: (d.latestSteps ?? []).map((s) => ({ idx: s.idx, tool: s.tool, status: s.status, elementId: s.elementId, mutationReceiptIds: s.mutationReceiptIds?.map(String) })),
+        };
+      },
+      cancelLongFreeJob: async (jobId) => {
+        try { const r = await cancelFreeAutoJob({ jobId: jobId as never, requester: proof }); return r.ok ? { ok: true } : { ok: false, reason: r.reason }; }
+        catch (e) { return { ok: false, reason: e instanceof Error ? e.message : "cancel_failed" }; }
+      },
+      retryLongFreeJob: async (jobId) => {
+        try { const r = await retryFreeAutoJob({ jobId: jobId as never, requester: proof }); return r.ok ? { ok: true } : { ok: false, reason: r.reason }; }
+        catch (e) { return { ok: false, reason: e instanceof Error ? e.message : "retry_failed" }; }
+      },
     };
-  }, [data, pub, priv, traces, runs, jobs, jobAttempts, proposals, applyCellEdit, sendMsg, toggle, editMsg, resolveProposalMutation, addResearchRowsMutation, createArtifactMutation, runAgent, startFreeAutoJob, cancelFreeAutoJob, retryFreeAutoJob, rid, proof, me.id]);
+  }, [data, pub, priv, traces, runs, jobs, jobAttempts, jobDetail, proposals, applyCellEdit, sendMsg, toggle, editMsg, resolveProposalMutation, addResearchRowsMutation, createArtifactMutation, runAgent, startFreeAutoJob, cancelFreeAutoJob, retryFreeAutoJob, rid, proof, me.id]);
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }

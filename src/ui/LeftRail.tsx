@@ -51,7 +51,7 @@ export function LeftRail({ roomId, me, artId, onPick, style }: { roomId: string;
   };
 
   return (
-    <div className="r-panel left" style={style}>
+    <div className="r-panel left" style={style} data-testid="left-rail">
       <div className="r-panel-head"><FolderOpen size={15} /><span className="h-title">Room</span></div>
       <div className="r-rail">
         <div className="r-rail-section">

@@ -42,15 +42,18 @@ export const list = query({
   },
 });
 
-/** Edit your own message in place — only the original author may. */
+/** Edit your own message in place — only the original author may.
+ * Returns a discriminated result so the client can surface a rejected edit honestly
+ * instead of silently no-op'ing (HONEST_STATUS). */
 export const update = mutation({
   args: { messageId: v.id("messages"), text: v.string(), requester: actorProofV },
   handler: async (ctx, { messageId, text, requester }) => {
     const m = await ctx.db.get(messageId);
-    if (!m) return;
+    if (!m) return { ok: false as const, reason: "not_found" as const };
     const actor = await requireActorProof(ctx, m.roomId, requester);
-    if (m.author.id !== actor.id) return;
+    if (m.author.id !== actor.id) return { ok: false as const, reason: "not_author" as const };
     await requireActorInRoom(ctx, m.roomId, actor);
     await ctx.db.patch(messageId, { text });
+    return { ok: true as const };
   },
 });

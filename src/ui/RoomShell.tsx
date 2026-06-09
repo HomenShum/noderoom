@@ -5,15 +5,17 @@
  * demo in-memory, the real `runRoomAgent` Convex action when live.
  */
 
-import { useState } from "react";
-import { PanelLeft, Table2, PanelRight, Moon, Sun, LogOut, Link2, ShieldCheck, X } from "lucide-react";
+import { useEffect, useState } from "react";
+import { PanelLeft, Table2, PanelRight, Moon, Sun, LogOut, Link2, ShieldCheck, X, HelpCircle } from "lucide-react";
 import { useStore } from "../app/store";
 import { Chat } from "./Chat";
 import { Artifact } from "./panels/Artifact";
 import { LeftRail } from "./LeftRail";
+import { GuidedTour, type TourStep } from "./GuidedTour";
 import type { Actor, Channel } from "../engine/types";
 
 const AUTO_ACCEPT_PREF_KEY = "noderoom:autoAcceptConsent:v1";
+const TOUR_KEY = "noderoom:tour:v1";
 
 function initials(name: string): string {
   return name.replace(/[^A-Za-z· ]/g, "").split(/[ ·]/).filter(Boolean).map((s) => s[0]).slice(0, 2).join("").toUpperCase() || "?";
@@ -30,6 +32,15 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
   const [collab, setCollab] = useState({ running: false, done: false });
   const [autoAcceptModal, setAutoAcceptModal] = useState(false);
   const [rememberAutoAccept, setRememberAutoAccept] = useState(false);
+  const [tourOpen, setTourOpen] = useState(false);
+  // First-run: auto-start the walkthrough once in the seeded demo room. Persists a "seen" flag so a
+  // returning visitor is never nagged; the header "?" button replays it on demand.
+  useEffect(() => {
+    if (!live) return;
+    let seen = false;
+    try { seen = localStorage.getItem(TOUR_KEY) === "done"; } catch { /* ignore */ }
+    if (!seen) { setShow({ left: true, artifact: true, priv: true }); setTourOpen(true); }
+  }, [live]);
   if (!room) return <div className="r-app"><div className="r-screen"><div style={{ margin: "auto" }} className="muted">Loading room…</div></div></div>;
 
   const members = store.listMembers(roomId);
@@ -41,6 +52,63 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
     setArtId(id);
     setShow((s) => ({ ...s, artifact: true }));
   };
+
+  const varianceArt = arts.find((a) => a.title === "Q3 variance") ?? arts.find((a) => a.kind === "sheet");
+  // Open the tour from a clean, known layout: all panels shown + the variance sheet selected, ONCE.
+  // Steps then anchor only to always-visible elements, so there are no per-step side-effects to thrash.
+  const startTour = () => {
+    if (varianceArt) openArtifact(varianceArt.id);
+    setShow({ left: true, artifact: true, priv: true });
+    setTourOpen(true);
+  };
+  const tourSteps: TourStep[] = [
+    {
+      title: "Welcome to NodeRoom",
+      body: "A live room where you and AI NodeAgents edit a shared spreadsheet, notes, and a post-it wall together — without ever clobbering each other. Here's the 60-second tour. You're in a safe demo: nothing is sent anywhere.",
+      placement: "center",
+    },
+    {
+      selector: '[data-testid="left-rail"]',
+      title: "The shared room",
+      body: "Every artifact lives here — a spreadsheet, notes, a research sheet, and a post-it wall — alongside the people and agents in the room.",
+      placement: "right",
+    },
+    {
+      selector: '.r-panel.center [data-testid="chat-composer"]',
+      title: "Ask the room — or the agent",
+      body: "Talk in plain language. Start a message with /ask to put the Room NodeAgent to work on the spreadsheet, e.g. /ask reconcile Q3 revenue.",
+      placement: "top",
+    },
+    {
+      selector: '[data-testid="collab-run"]',
+      title: "Human + agent, no clobbering",
+      body: "Click Run collaboration to watch the agent lock a range, draft around your edits, and smart-merge on unlock — a strict compare-and-swap, no-clobber model. Cells update instantly, no spinner.",
+      placement: "left",
+    },
+    {
+      selector: '[data-testid="room-trace"]',
+      title: "Everything is auditable",
+      body: "Every change — by hand or by agent — is recorded here. With Auto-allow off, agent edits arrive as proposals the host approves or rejects.",
+      placement: "left",
+    },
+    {
+      selector: '[data-testid="artifact-tabs"]',
+      title: "Spreadsheet, notes & a post-it wall",
+      body: "Switch tabs to the research sheet, the shared note, or the drag-and-drop post-it wall — every surface is live and conflict-safe.",
+      placement: "bottom",
+    },
+    {
+      selector: '.r-panel.right [data-testid="chat-composer"]',
+      title: "Your private NodeAgent",
+      body: "It reads the room for context, but its output stays yours until you Promote it to the public chat.",
+      placement: "left",
+    },
+    {
+      title: "Now you try",
+      body: "Type /ask reconcile Q3 revenue in the public chat and watch the agent work — or hit Run collaboration. Replay this tour anytime from the ? button up top.",
+      placement: "center",
+    },
+  ];
 
   const runCollab = async () => {
     if (collab.running) return;
@@ -96,6 +164,7 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
         <div className="r-brand">NodeRoom <span>· {room.title}</span></div>
         <div className="r-roomcode"><Link2 size={12} /> code <b>{room.code}</b></div>
         {store.mode === "convex" && <span className="r-tag" style={{ background: "rgba(31,138,91,.16)", color: "#2E9E6B" }}>● live convex</span>}
+        {store.mode === "memory" && <span className="r-tag r-demo-badge" title="Scripted demo — no backend or API keys needed; everything runs locally and offline.">● demo</span>}
         <span className="r-spacer" />
         <div className="r-toggle-group">
           <button className="r-iconbtn" data-on={String(show.left)} title="Files & people" onClick={() => setShow((s) => ({ ...s, left: !s.left }))}><PanelLeft size={16} /></button>
@@ -110,6 +179,7 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
           {members.slice(0, 4).map((m) => (<span key={m.id} className="r-av" style={{ background: m.color }}>{initials(m.name)}<span className="pulse" /></span>))}
           <span className="r-av agent" style={{ background: "#d97757" }}>◆</span>
         </div>
+        <button className="r-iconbtn" title="Take the guided tour" aria-label="Take the guided tour" data-testid="tour-button" onClick={startTour}><HelpCircle size={16} /></button>
         <ThemeToggle />
         <button className="r-iconbtn" title="Leave room" onClick={onLeave}><LogOut size={16} /></button>
       </div>
@@ -141,6 +211,7 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
           </div>
         </div>
       )}
+      <GuidedTour steps={tourSteps} open={tourOpen} onClose={() => setTourOpen(false)} storageKey={TOUR_KEY} />
     </div>
   );
 }

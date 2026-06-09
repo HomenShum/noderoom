@@ -70,8 +70,8 @@ export class ConvexRoomTools implements RoomTools {
     return { merged };
   }
 
-  async editCell(elementId: string, value: unknown, baseVersion: number, artifactId: string = this.artifactId): Promise<EditOutcome> {
-    const r = await this.ctx.runMutation(artifactsApplyAgentCellEditRef, { roomId: this.roomId, artifactId, elementId, value, baseVersion, actor: this.actor, jobId: this.jobId });
+  async editCell(elementId: string, value: unknown, baseVersion: number, artifactId: string = this.artifactId, kind?: "set" | "create" | "delete"): Promise<EditOutcome> {
+    const r = await this.ctx.runMutation(artifactsApplyAgentCellEditRef, { roomId: this.roomId, artifactId, elementId, value, baseVersion, kind, actor: this.actor, jobId: this.jobId });
     if (r.ok) return { ok: true, version: r.version, mutationReceiptId: r.mutationReceiptId ? String(r.mutationReceiptId) : undefined };
     if (r.reason === "conflict") return { ok: false, conflict: true, expected: r.expected, actual: r.actual };
     if (r.reason === "locked") return { ok: false, locked: true, holder: r.by };

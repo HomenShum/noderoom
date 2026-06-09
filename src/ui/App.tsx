@@ -29,6 +29,17 @@ function starterSheetSeed(): Array<{ id: string; value: unknown }> {
   }
   return seed;
 }
+// A fresh room gets the full trio the product pitches — spreadsheet + note + post-it wall — so it's a
+// real playground out of the box and every artifact type is agent-editable from the first minute.
+function starterNoteSeed(): Array<{ id: string; value: unknown }> {
+  return [{ id: "doc", value: "<h1>Team notes</h1><p>Shared notes for the Q3 review. Type here, or ask your NodeAgent (public <code>/ask</code>, or your private agent in the 🌐 Room lane) to draft and update this note.</p>" }];
+}
+function starterWallSeed(): Array<{ id: string; value: unknown }> {
+  return [
+    { id: "s_welcome", value: { text: "Drop ideas here — drag to rearrange.", x: 64, y: 64, color: "#FDE68A" } },
+    { id: "s_agent", value: { text: "Ask an agent to add post-its in the Room lane.", x: 280, y: 150, color: "#BBF7D0" } },
+  ];
+}
 
 export interface Session {
   roomId: string;
@@ -92,6 +103,8 @@ function ConvexApp() {
           joined = { roomId: String(r.roomId), memberId: String(r.memberId) };
           const proof = { actor: { kind: "user" as const, id: joined.memberId, name }, token };
           await createArtifact({ roomId: r.roomId, kind: "sheet", title: "Q3 variance", seed: starterSheetSeed(), proof });
+          await createArtifact({ roomId: r.roomId, kind: "note", title: "Team notes", seed: starterNoteSeed(), proof });
+          await createArtifact({ roomId: r.roomId, kind: "wall", title: "Ideas wall", seed: starterWallSeed(), proof });
         } catch {
           const r = await join({ code, name, authToken: token });
           joined = r ? { roomId: String(r.roomId), memberId: String(r.memberId) } : null;

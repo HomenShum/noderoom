@@ -14,7 +14,7 @@ import { v } from "convex/values";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
-import { actorProofV, actorV, getElement, activeLockOn, requireActorInRoom, requireActorProof, requireArtifactInRoom, type ActorValue } from "./lib";
+import { actorProofV, actorV, getElement, activeLockOn, lockCoveringElement, LOCK_TTL_MS, requireActorInRoom, requireActorProof, requireArtifactInRoom, type ActorValue } from "./lib";
 import { syncSpreadsheetIndexFromDb, syncSpreadsheetIndexFromSeed } from "./spreadsheetIndexLib";
 
 const MAX_ARTIFACT_TITLE_CHARS = 180;
@@ -125,7 +125,10 @@ export const getSheet = internalQuery({
         cells,
       };
     });
-    return { artifactId, version: art.version, kind: art.kind, rows };
+    // Raw element list — the kind-agnostic view the agent's note/wall context builders read
+    // (rows[] above is the sheet-shaped projection; this exposes every element's true value).
+    const elements = els.map((e) => ({ id: e.elementId, value: e.value, version: e.version, locked: lockedSet.has(e.elementId) }));
+    return { artifactId, version: art.version, kind: art.kind, rows, elements };
   },
 });
 
@@ -200,10 +203,24 @@ async function applyCellEditCore(ctx: MutationCtx, a: ApplyCellEditArgs) {
     const job = a.jobId ? await ctx.db.get(a.jobId) : null;
     if (a.jobId && (!job || String(job.roomId) !== String(a.roomId))) throw new Error("job_room_mismatch");
     const kind = a.kind ?? "set";
-    // 1. LOCK gate — a held range is read-only for non-holders.
-    const lock = await activeLockOn(ctx, a.artifactId, a.elementId);
-    if (lock && lock.holder.id !== a.actor.id) {
-      return { ok: false as const, reason: "locked" as const, by: lock.holder.name };
+    // 1. LOCK gate — a held range is read-only for non-holders; P0-5 lease fencing for the holder.
+    //    Kleppmann's fencing-token failure mode: TTL (5min) < slice budget (9min) means a long job's
+    //    own lease can lapse mid-run. activeLockOn erases expired locks, which silently degraded the
+    //    holder's write into an UNLOCKED write — losing the cross-cell range guarantee the lock
+    //    expansion exists to provide. Fencing semantics:
+    //      - another holder, lease valid  → "locked" (unchanged)
+    //      - another holder, lease lapsed → treated as gone (janitor sweeps it)
+    //      - MY lock, lease lapsed        → "lease_expired" as DATA (re-acquire, don't force)
+    //      - MY lock, lease valid         → write proceeds and RENEWS the lease (post-apply below)
+    const coveringLock = await lockCoveringElement(ctx, a.artifactId, a.elementId);
+    const lockNow = Date.now();
+    const leaseValid = !!coveringLock && (coveringLock.expiresAt === undefined || coveringLock.expiresAt > lockNow);
+    const heldByMe = !!coveringLock && coveringLock.holder.id === a.actor.id;
+    if (coveringLock && !heldByMe && leaseValid) {
+      return { ok: false as const, reason: "locked" as const, by: coveringLock.holder.name };
+    }
+    if (coveringLock && heldByMe && !leaseValid) {
+      return { ok: false as const, reason: "lease_expired" as const, lockId: String(coveringLock._id) };
     }
     // 2. CAS gate — reject a stale baseline (this is the anti-clobber check).
     const el = await getElement(ctx, a.artifactId, a.elementId);
@@ -235,6 +252,11 @@ async function applyCellEditCore(ctx: MutationCtx, a: ApplyCellEditArgs) {
     }
     await ctx.db.patch(a.artifactId, { version: art.version + 1, updatedAt: now, order: nextOrder });
     await syncSpreadsheetIndexFromDb(ctx, art);
+    // P0-5 renewal: a successful write under my valid lease extends it — a healthy long job
+    // (9-min slices) keeps its lock alive by working, instead of structurally outliving the 5-min TTL.
+    if (coveringLock && heldByMe && leaseValid && coveringLock.expiresAt !== undefined) {
+      await ctx.db.patch(coveringLock._id, { expiresAt: now + LOCK_TTL_MS });
+    }
     const nextVersion = kind === "delete" ? actual : actual + 1;
     // 4. TRACE — every applied edit is auditable.
     await ctx.db.insert("traces", { roomId: art.roomId, ts: now, actor: a.actor, type: "edit_applied", summary: `${a.actor.name} set ${a.elementId} = ${String(a.value)}`, detail: `edit_cell · ${a.elementId} = ${String(a.value)} · v${actual} → v${actual + 1}` });
@@ -406,6 +428,9 @@ export const applyAgentCellEdit = internalMutation({
     roomId: v.id("rooms"),
     artifactId: v.id("artifacts"),
     elementId: v.string(),
+    // "set" (default) updates an existing element; "create" adds a NEW one (e.g. a post-it on a wall);
+    // "delete" removes one. The CAS/lock/proposal spine in applyCellEditCore is identical for all three.
+    kind: v.optional(v.union(v.literal("set"), v.literal("create"), v.literal("delete"))),
     value: v.any(),
     baseVersion: v.number(),
     actor: actorV,

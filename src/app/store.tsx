@@ -168,6 +168,13 @@ function targetSheet(artifacts: Artifact[], refs?: ArtifactRef[]): Artifact | un
   return refSheet ?? artifacts.find((a) => a.kind === "sheet" && a.title === "Q3 variance") ?? artifacts.find((a) => a.kind === "sheet");
 }
 
+/** Kind-agnostic target: a referenced note/wall/sheet is selectable so the live agent can edit ANY
+ *  artifact (not just the variance sheet). Falls back to the variance sheet, any sheet, then artifact[0]. */
+function targetArtifact(artifacts: Artifact[], refs?: ArtifactRef[]): Artifact | undefined {
+  const ref = refs?.map((r) => artifacts.find((a) => a.id === r.id)).find(Boolean);
+  return ref ?? artifacts.find((a) => a.kind === "sheet" && a.title === "Q3 variance") ?? artifacts.find((a) => a.kind === "sheet") ?? artifacts[0];
+}
+
 function canonicalRefs(artifacts: Artifact[], refs?: ArtifactRef[]): ArtifactRef[] | undefined {
   const canonical = refs
     ?.map((ref) => artifacts.find((a) => a.id === ref.id))
@@ -336,7 +343,13 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
     const cur = local.getQuery(api.messages.list, q) ?? [];
     local.setQuery(api.messages.list, q, [...cur, { _id: ("opt-" + args.clientMsgId) as never, _creationTime: Date.now(), roomId: args.roomId, channel: args.channel, author: args.proof.actor, text: args.text, clientMsgId: args.clientMsgId, kind: "chat", createdAt: Date.now() }]);
   });
-  const toggle = useMutation(api.rooms.toggleAutoAllow);
+  // QA P1: the auto-allow switch flips instantly (server toggle reconciles) — matches applyCellEdit's pattern.
+  const toggle = useMutation(api.rooms.toggleAutoAllow).withOptimisticUpdate((local, args) => {
+    const q = { roomId: args.roomId, requester: args.requester };
+    const cur = local.getQuery(api.rooms.full, q);
+    if (!cur) return;
+    local.setQuery(api.rooms.full, q, { ...cur, room: { ...cur.room, autoAllow: !cur.room.autoAllow } } as typeof cur);
+  });
   // Optimistic edit: text is reversible + predictable (patch same _id) + author-authoritative → optimistic-safe.
   // Match by _id across every loaded messages.list ref (public + the actor's private channel); the editor only
   // has the messageId, so do NOT reconstruct query args — update whichever loaded list holds the row.
@@ -346,7 +359,14 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
       local.setQuery(api.messages.list, qargs, value.map((m) => (m._id === args.messageId ? { ...m, text: args.text } : m)));
     }
   });
-  const resolveProposalMutation = useMutation(api.artifacts.resolveProposal);
+  // QA P1: a resolved proposal leaves the pending list instantly (approve that loses CAS still
+  // surfaces via the mutation's returned feedback — optimistic removal never hides the conflict).
+  const resolveProposalMutation = useMutation(api.artifacts.resolveProposal).withOptimisticUpdate((local, args) => {
+    const q = { roomId: rid, requester: args.requester };
+    const cur = local.getQuery(api.artifacts.listProposals, q);
+    if (!cur) return;
+    local.setQuery(api.artifacts.listProposals, q, cur.filter((p) => String(p.id) !== String(args.proposalId)));
+  });
   const addResearchRowsMutation = useMutation(api.artifacts.addResearchRows);
   const createArtifactMutation = useMutation(api.artifacts.createArtifact);
   const runAgent = useAction(api.agent.runRoomAgent);
@@ -414,25 +434,26 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
       },
       askAgent: async (input) => {
         const references = canonicalRefs(artifacts, input.references);
-        const sheet = targetSheet(artifacts, references);
+        // Kind-agnostic target: /ask + a referenced note/wall/sheet edits THAT artifact; the agent's
+        // context builder is routed by kind server-side. No more variance-only refusal.
+        const target = targetArtifact(artifacts, references);
         const sess = sessions.find((s) => s.scope === "public");
-        if (!sheet || !sess) return;
-        if (!isVarianceSheet(sheet)) {
-          await sendMsg({
-            roomId: rid,
-            channel: "public",
-            proof,
-            text: `Referenced ${referenceNames(references)} is available as structured dataframe context (${sheet.meta?.dataframe?.rowCount ?? "unknown"} rows). Dynamic ENRICH/CLASSIFY execution is staged next; Q3 variance recompute only runs on Q3 variance.`,
-            clientMsgId: crypto.randomUUID(),
-          });
-          return;
-        }
-        await runAgent({ roomId: rid, artifactId: sheet.id as never, requester: proof, goal: withReferenceContext(input.goal, references) });
+        if (!target || !sess) return;
+        await runAgent({
+          roomId: rid,
+          artifactId: target.id as never,
+          requester: proof,
+          mode: target.title === "Company research" ? "research" : undefined,
+          goal: withReferenceContext(input.goal, references),
+        });
       },
       askPrivateAgent: async (goal, opts) => {
         if (opts?.publish) {
-          const sheet = artifacts.find((a) => a.kind === "sheet");
-          if (sheet) { await runAgent({ roomId: rid, artifactId: sheet.id as never, requester: proof, goal, asOwner: { id: me.id, name: me.name } }); return; }
+          const target = targetArtifact(artifacts);
+          if (target) {
+            await runAgent({ roomId: rid, artifactId: target.id as never, requester: proof, mode: target.title === "Company research" ? "research" : undefined, goal, asOwner: { id: me.id, name: me.name } });
+            return;
+          }
         }
         await runPrivateAgent({ roomId: rid, requester: proof, goal });
       },

@@ -33,7 +33,7 @@ type RunResult = {
 import { AgentRunError, runAgent } from "../src/agent/runtime";
 import { ROOM_TOOLS } from "../src/agent/tools";
 import { convexModel as agentModel, convexPriceRun as priceRun } from "../src/agent/convexModel";
-import { buildResearchContext } from "../src/agent/context";
+import { buildResearchContext, buildNoteContext, buildWallContext } from "../src/agent/context";
 import { runIdempotencyKey } from "../src/agent/idempotency";
 import { compactMessages } from "../src/agent/compaction";
 import { journalSliceKey } from "../src/agent/journal";
@@ -76,7 +76,7 @@ export const runRoomAgent = action({
     if (!roomState) throw new Error("room_not_found");
     const requester = roomState.members.find((m: { id: unknown }) => String(m.id) === a.requester.actor.id);
     if (!requester) throw new Error("member_required");
-    const targetArtifact = roomState.artifacts.find((art: { id: unknown }) => String(art.id) === String(a.artifactId)) as { id: unknown; version?: number } | undefined;
+    const targetArtifact = roomState.artifacts.find((art: { id: unknown }) => String(art.id) === String(a.artifactId)) as { id: unknown; version?: number; kind?: string } | undefined;
     if (!targetArtifact) throw new Error("artifact_room_mismatch");
     let actor: Actor;
     let sessionId: string;
@@ -266,7 +266,10 @@ export const runRoomAgent = action({
         model,
         tools: ROOM_TOOLS,
         maxSteps,
-        contextBuilder: a.mode === "research" ? buildResearchContext : undefined,
+        // Route the JIT context by artifact kind so the agent can edit ANY artifact, not just the
+        // variance sheet: research sheet → research builder; note → note builder; wall → wall builder;
+        // any other sheet → the default variance/sheet builder (runtime falls back when undefined).
+        contextBuilder: a.mode === "research" ? buildResearchContext : targetArtifact.kind === "note" ? buildNoteContext : targetArtifact.kind === "wall" ? buildWallContext : undefined,
         compaction,
         journal: modelJournal,
         deadlineAt,

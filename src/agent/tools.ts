@@ -76,9 +76,9 @@ export const ROOM_TOOLS: AgentTool[] = [
   },
   {
     name: "edit_cell",
-    description: "Set a cell value with optimistic concurrency control. baseVersion MUST be the version you last read for that cell. Returns { ok:true, version } on success, or { ok:false, conflict:true, actual:N } if the cell changed since you read it — in which case read_range it again and retry with version N. Never ignore a conflict.",
-    schema: z.object({ elementId: z.string(), value: z.any(), baseVersion: z.number().int(), artifactId: z.string().optional() }),
-    execute: (a: { elementId: string; value: unknown; baseVersion: number; artifactId?: string }, rt) => rt.editCell(a.elementId, a.value, a.baseVersion, a.artifactId),
+    description: "Write an element value with optimistic concurrency control. Works on ANY artifact: a spreadsheet cell, a note's `doc` body, or a post-it on a wall. baseVersion MUST be the version you last read for that element. `kind` defaults to \"set\" (update an existing element); pass \"create\" to ADD a new element (e.g. a new post-it — use a fresh elementId and baseVersion 0), or \"delete\" to remove one. Returns { ok:true, version } on success, or { ok:false, conflict:true, actual:N } if it changed since you read it — read_range again and retry with version N. Never ignore a conflict.",
+    schema: z.object({ elementId: z.string(), value: z.any(), baseVersion: z.number().int(), kind: z.enum(["set", "create", "delete"]).optional().describe("'set' (default) updates an existing element; 'create' adds a new one; 'delete' removes one"), artifactId: z.string().optional() }),
+    execute: (a: { elementId: string; value: unknown; baseVersion: number; kind?: "set" | "create" | "delete"; artifactId?: string }, rt) => rt.editCell(a.elementId, a.value, a.baseVersion, a.artifactId, a.kind),
   },
   {
     name: "write_cell_result",

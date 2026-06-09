@@ -1,8 +1,12 @@
 # NodeRoom — Conference / Hackathon Demo Run-of-Show
 
-> **The one rule:** demo in **memory mode**. It is a fully deterministic, offline-capable build of every
-> feature — no backend, no API keys, no wifi. The "demo gods" cannot break it. Live multiplayer (real
-> Convex) is an optional upgrade for the wow-moment *only if you've rehearsed it on the venue network*.
+> **The one rule:** for anything you can't babysit, use **memory mode** — a fully deterministic,
+> offline-capable build of every feature (no backend, no API keys, no wifi). The "demo gods" cannot
+> break it. Live multiplayer is wired and verified for the stage wow, but the *public* QR stays memory.
+
+**Deployed & verified in a real browser (2026-06-09):**
+- **Public self-serve QR → [https://noderoom.live/?mode=memory](https://noderoom.live/?mode=memory)** — the safe build: each visitor gets their **own isolated** scripted room, fully offline, no keys. (Verified: room + guided tour render, `● demo` badge, spotlight tracks targets, zero errors.)
+- **Stage / second-device live → [https://noderoom.live](https://noderoom.live)** — joins the **shared `Q3DEMO`** room; chat + edits sync live across devices (verified two-client cross-sync). Uses the project's Convex + provider keys and is a *shared* room anyone with the link can edit — **use it on stage, don't print it on the public slide.**
 
 ---
 
@@ -10,10 +14,14 @@
 
 | Mode | URL | What you get | Risk | Use it for |
 |---|---|---|---|---|
-| **Memory (default)** | `…/?mode=memory` | The seeded Q3 diligence room; the agent, lock→draft→merge, research enrichment, chat, wall — all **scripted & instant**, fully offline | **None** | The self-serve QR for attendees; your safe stage fallback |
-| **Live Convex** | `…/` (with `VITE_CONVEX_URL` set + seeded `Q3DEMO` room) | True multi-user: edits land live across devices; real LLM `/ask` | wifi/backend/keys | The multiplayer wow beat — **only if rehearsed on the venue network** |
+| **Memory (safe / public)** | `https://noderoom.live/?mode=memory` | The seeded Q3 room — agent, lock→draft→merge, research enrichment, chat, wall — **scripted & instant, isolated per visitor, fully offline** | **None** | The **QR on your slide** for attendees; your stage fallback |
+| **Live (stage)** | `https://noderoom.live` | The **shared** Q3DEMO room: edits/chat sync live across devices; real LLM `/ask` | shared room + your keys + wifi | The **second-device multiplayer wow** on stage |
 
-A small **`● demo`** badge in the top bar tells everyone (and you) when you're in the safe scripted build.
+A **`● demo`** badge = the safe scripted build; a **`● live convex`** badge = the shared live room.
+
+> **Want the public domain to be memory-only again** (no shared root, no key usage)? One revert:
+> `vercel env rm VITE_CONVEX_URL production && vercel env rm VITE_CONVEX_SITE_URL production && vercel --prod --yes`
+> — then `https://noderoom.live` itself is the safe build.
 
 ---
 

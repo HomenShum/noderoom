@@ -23,6 +23,18 @@ export const startSession = internalMutation({
   handler: (ctx, a) => ctx.db.insert("agentSessions", { roomId: a.roomId, agentId: a.agentId, agentName: a.agentName, scope: a.scope, ownerId: a.ownerId, status: "idle", lastAction: "started", updatedAt: Date.now() }),
 });
 
+/** Ensure (upsert) the PUBLIC-acting personal agent session for a member, so their agent can act in the
+ * shared room (edit the sheet, post public chat) attributed to them. Returns the session id. */
+export const ensurePersonalPublicSession = internalMutation({
+  args: { roomId: v.id("rooms"), ownerId: v.string() },
+  handler: async (ctx, a) => {
+    const sessions = await ctx.db.query("agentSessions").withIndex("by_room", (q) => q.eq("roomId", a.roomId)).collect();
+    const found = sessions.find((s) => s.agentId === "agent_priv" && s.scope === "public" && s.ownerId === a.ownerId);
+    if (found) return found._id;
+    return ctx.db.insert("agentSessions", { roomId: a.roomId, agentId: "agent_priv", agentName: "Your NodeAgent", scope: "public", ownerId: a.ownerId, status: "idle", lastAction: "started", updatedAt: Date.now() });
+  },
+});
+
 export const updateSession = internalMutation({
   args: { sessionId: v.id("agentSessions"), status: v.optional(v.union(v.literal("idle"), v.literal("working"), v.literal("blocked"), v.literal("drafting"), v.literal("done"))), heldLockId: v.optional(v.string()), lastAction: v.optional(v.string()) },
   handler: async (ctx, { sessionId, ...patch }) => { await ctx.db.patch(sessionId, { ...patch, updatedAt: Date.now() }); },

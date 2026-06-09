@@ -50,6 +50,7 @@ const agentRunsClaimOrReuseRef = makeFunctionReference<"mutation">("agentRuns:cl
 const agentRunsFinishRef = makeFunctionReference<"mutation">("agentRuns:finish") as any;
 const agentStepsRecordRef = makeFunctionReference<"mutation">("agentSteps:record") as any;
 const postPrivateReplyRef = makeFunctionReference<"mutation">("messages:postPrivateAgentReply") as any;
+const ensurePersonalPublicSessionRef = makeFunctionReference<"mutation">("collab:ensurePersonalPublicSession") as any;
 
 function envNumber(name: string, fallback: number, min: number, max: number): number {
   const raw = Number(process.env[name] ?? fallback);
@@ -65,6 +66,8 @@ export const runRoomAgent = action({
     goal: v.string(),
     maxSteps: v.optional(v.number()),
     mode: v.optional(v.union(v.literal("variance"), v.literal("research"))),
+    // When set, run as this member's PERSONAL agent acting publicly (attributed via ownerId) instead of the shared Room agent.
+    asOwner: v.optional(v.object({ id: v.string(), name: v.string() })),
   },
   handler: async (ctx, a): Promise<RunResult> => {
     const t0 = Date.now();
@@ -75,10 +78,20 @@ export const runRoomAgent = action({
     if (!requester) throw new Error("member_required");
     const targetArtifact = roomState.artifacts.find((art: { id: unknown }) => String(art.id) === String(a.artifactId)) as { id: unknown; version?: number } | undefined;
     if (!targetArtifact) throw new Error("artifact_room_mismatch");
-    const session = roomState.sessions.find((s: { scope?: string; agentId: string; agentName: string; id: unknown }) => s.scope === "public");
-    if (!session) throw new Error("agent_session_mismatch");
-    const actor: Actor = { kind: "agent", id: session.agentId, name: session.agentName, scope: "public" };
-    const sessionId = String(session.id);
+    let actor: Actor;
+    let sessionId: string;
+    if (a.asOwner) {
+      // Personal agent acting publicly for a member: edits the shared sheet + posts public chat, attributed
+      // via ownerId. Reuses this whole runner (idempotency, jobs, CAS, proposals, traces) — no fork of the spine.
+      const sid = await ctx.runMutation(ensurePersonalPublicSessionRef, { roomId: a.roomId, ownerId: a.asOwner.id });
+      actor = { kind: "agent", id: "agent_priv", name: "Your NodeAgent", scope: "public", ownerId: a.asOwner.id };
+      sessionId = String(sid);
+    } else {
+      const session = roomState.sessions.find((s: { scope?: string; ownerId?: string; agentId: string; agentName: string; id: unknown }) => s.scope === "public" && !s.ownerId);
+      if (!session) throw new Error("agent_session_mismatch");
+      actor = { kind: "agent", id: session.agentId, name: session.agentName, scope: "public" };
+      sessionId = String(session.id);
+    }
     const model = agentModel(process.env.AGENT_MODEL ?? "gemini-3.5-flash"); // current recorded L1-L4 collaboration-safe fallback; override via AGENT_MODEL.
     const requestedSteps = a.maxSteps ?? (a.mode === "research" ? 60 : 10);
     const maxSteps = Math.max(1, Math.min(requestedSteps, a.mode === "research" ? 80 : 24));

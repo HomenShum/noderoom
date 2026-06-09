@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updatedAt": "2026-06-08",
+  "updatedAt": "2026-06-09",
   "sourceOfTruth": "Append new product or runtime guarantees to features[] and rerun npm run qa:matrix.",
   "releaseRule": "A feature is production-ready only when deterministic tests, live/backend smoke where applicable, traceability, privacy boundaries, and documented failure behavior are all present.",
   "features": [
@@ -30,7 +30,7 @@
       "id": "public_private_chat_agent",
       "area": "Public/private chat + agent",
       "claim": "Public chat, private chat, public room agent, and private agent route messages to the right scope.",
-      "status": "green",
+      "status": "yellow",
       "productionGate": "Scope separation tests, room member proof, and browser smoke for public/private panels.",
       "deterministicChecks": [
         "tests/roomEngine.test.ts",
@@ -45,7 +45,7 @@
         { "type": "test", "ref": "tests/agentRuntime.test.ts" },
         { "type": "doc", "ref": "docs/AGENT_RUNTIME.md" }
       ],
-      "nextReview": "Add browser E2E for message routing once a Playwright harness is committed."
+      "nextReview": "Add browser E2E for public/private routing, optimistic send failure/retry, and stable clientMsgId bubble keys."
     },
     {
       "id": "trace_proposals_auto_accept",
@@ -79,7 +79,8 @@
       ],
       "liveChecks": [
         "npm run provider-parser:smoke",
-        "npm run ladder:real -- <model-id>"
+        "npm run ladder:real -- <model-id>",
+        "npm run benchmark:free"
       ],
       "evidence": [
         { "type": "test", "ref": "tests/professionalWorkflows.test.ts" },
@@ -158,18 +159,23 @@
       "productionGate": "Forced multi-slice test, crash-after-checkpoint resume, duplicate stale lease rejection, and live /free smoke.",
       "deterministicChecks": [
         "tests/agentJobsSource.test.ts",
-        "tests/agentReliability.test.ts"
+        "tests/agentJobsRuntime.test.ts",
+        "tests/agentReliability.test.ts",
+        "tests/gatewayAndJournal.test.ts"
       ],
       "liveChecks": [
         "npm run free-job:smoke",
+        "npm run ladder:free",
         "npm run ladder:real -- openrouter/free-auto --rung-timeout-ms=540000 --reserve-ms=30000"
       ],
       "evidence": [
         { "type": "test", "ref": "tests/agentJobsSource.test.ts" },
+        { "type": "test", "ref": "tests/agentJobsRuntime.test.ts" },
+        { "type": "test", "ref": "tests/gatewayAndJournal.test.ts" },
         { "type": "doc", "ref": "docs/LONG_RUNNING_AGENTS.md" },
         { "type": "doc", "ref": "docs/eval/free-auto-ladder.md" }
       ],
-      "nextReview": "Add duplicate enqueue idempotency, stricter budget clamps, per-tool abort propagation, durable provider-step journaling, model health/quarantine, and real forced multi-slice Convex job-runner tests."
+      "nextReview": "Add stricter budget clamps, per-tool abort propagation, provider request idempotency keys where supported, model health/quarantine, and real forced multi-slice Convex job-runner tests."
     },
     {
       "id": "provider_parser",
@@ -197,13 +203,12 @@
       "area": "QA system",
       "claim": "The QA matrix, README cockpit, and visual graphs are generated from one appendable source of truth.",
       "status": "green",
-      "productionGate": "Matrix schema tests and qa:matrix --check drift detection.",
+      "productionGate": "Matrix schema tests plus qa:matrix --check as a docs-sync drift gate, not a quality gate.",
       "deterministicChecks": [
-        "npm run qa:matrix:check",
         "tests/qaMatrix.test.ts"
       ],
       "liveChecks": [
-        "not applicable"
+        "npm run qa:matrix:check"
       ],
       "evidence": [
         { "type": "data", "ref": "docs/qa/production-matrix.json" },
@@ -211,10 +216,81 @@
         { "type": "test", "ref": "tests/qaMatrix.test.ts" }
       ],
       "nextReview": "Require each new user-facing feature PR to append or update one matrix row."
+    },
+    {
+      "id": "browser_e2e_dogfood",
+      "area": "Browser E2E dogfood",
+      "claim": "The real React UI is verified against a live/local Convex backend for optimistic reactivity, rollback, cross-user visibility, and privacy boundaries.",
+      "status": "red",
+      "productionGate": "Playwright or equivalent real-browser specs for two-context cell edits, optimistic chat failure/retry, public/private leak checks, wall CRUD, job controls, and proposal conflict feedback.",
+      "deterministicChecks": [
+        "tests/qaMatrix.test.ts"
+      ],
+      "liveChecks": [
+        "missing: Playwright real-browser harness against local Convex backend"
+      ],
+      "evidence": [
+        { "type": "doc", "ref": "docs/audit/E2E_DOGFOOD_DESIGN.md" },
+        { "type": "doc", "ref": "docs/audit/QA_FINDINGS.md" }
+      ],
+      "nextReview": "Install and wire the real-DOM harness, add data-testid hooks only for asserted surfaces, and promote the row after the first two-context specs pass in CI."
+    },
+    {
+      "id": "unified_nodeagent_jobs",
+      "area": "Unified NodeAgent jobs",
+      "claim": "Every NodeAgent request uses a durable agentJobs root with request envelope, operation accounting, leases, and links to runs/steps.",
+      "status": "yellow",
+      "productionGate": "Interactive /ask and /free both create or reuse agentJobs, artifact writes emit receipts, job details are browser-visible, notebook graph mutations enqueue embeddings, and live browser/backend smoke proves linked runs/steps.",
+      "deterministicChecks": [
+        "tests/agentJobsSource.test.ts",
+        "tests/agentJobsRuntime.test.ts",
+        "tests/gatewayAndJournal.test.ts",
+        "npx convex codegen",
+        "npx tsc --noEmit --project convex\\tsconfig.json --pretty false"
+      ],
+      "liveChecks": [
+        "npm run free-job:smoke",
+        "browser: run /ask and confirm linked job row plus latest run/attempt details"
+      ],
+      "evidence": [
+        { "type": "doc", "ref": "docs/NODEAGENT_ARCHITECTURE.md" },
+        { "type": "schema", "ref": "convex/schema.ts" },
+        { "type": "mutation", "ref": "convex/agentJobs.ts" },
+        { "type": "action", "ref": "convex/agent.ts" },
+        { "type": "test", "ref": "tests/agentJobsSource.test.ts" },
+        { "type": "test", "ref": "tests/agentJobsRuntime.test.ts" },
+        { "type": "test", "ref": "tests/gatewayAndJournal.test.ts" }
+      ],
+      "nextReview": "Replace source-only graph/embedding checks with Convex runtime tests, add browser assertion for the job detail drilldown, and add stale-receipt replay tests."
+    },
+    {
+      "id": "agent_improvement_loop",
+      "area": "Agent improvement loop",
+      "claim": "Live traces, workflow feedback, eval gates, UI media review, and Codex handoff artifacts continuously fuel README evidence.",
+      "status": "yellow",
+      "productionGate": "Deterministic loop passes, live provider/Convex/UI media lanes run when keys are present, and failures generate a handoff before chart promotion.",
+      "deterministicChecks": [
+        "npm run agent:improve",
+        "tests/professionalWorkflows.test.ts",
+        "tests/workflowEvals.test.ts"
+      ],
+      "liveChecks": [
+        "npm run agent:improve -- --live",
+        "npm run agent:improve -- --full-live",
+        "npm run agent:improve -- --ui-media=docs/eval/ui-recordings/<recording-or-screenshot>"
+      ],
+      "evidence": [
+        { "type": "script", "ref": "scripts/agent-improvement-loop.ts" },
+        { "type": "script", "ref": "scripts/gemini-ui-review.ts" },
+        { "type": "doc", "ref": "docs/eval/agent-improvement-loop.md" },
+        { "type": "data", "ref": "docs/eval/agent-improvement-loop/gemini-ui-review.json" },
+        { "type": "media", "ref": "docs/eval/ui-recordings/live-ui-walkthrough-20260608.mp4" }
+      ],
+      "nextReview": "Record full live provider benchmark, free-auto ladder, and Gemini-reviewed UI recording before marking green."
     }
   ],
   "modelLadder": {
-    "source": "docs/eval/live-provider-agent-ladder-2026-06-08.md",
+    "source": "docs/eval/free-auto-router-ladder.json",
     "gate": "Interactive collaboration routes must pass L1-L4 for lock/CAS/draft safety.",
     "routes": [
       {
@@ -254,6 +330,69 @@
         "recommendedUse": "parser/read-only/background until blocked-range rung passes"
       },
       {
+        "modelRoute": "openrouter/free-auto",
+        "provider": "OpenRouter free-auto router",
+        "l1": "PASS",
+        "l2": "PASS",
+        "l3": "FAIL",
+        "l4": "TIMEOUT",
+        "recommendedUse": "opt-in /free only; router alias exhausted L3 and timed out L4"
+      },
+      {
+        "modelRoute": "openrouter/free-auto top-5 candidates",
+        "provider": "OpenRouter router-expanded ladder",
+        "l1": "PASS",
+        "l2": "PASS",
+        "l3": "PASS",
+        "l4": "TIMEOUT",
+        "recommendedUse": "not promotable; summarizes routed top free candidates, see concrete rows"
+      },
+      {
+        "modelRoute": "nvidia/nemotron-3-super-120b-a12b:free",
+        "provider": "OpenRouter free candidate",
+        "l1": "PASS",
+        "l2": "PASS",
+        "l3": "PASS",
+        "l4": "TIMEOUT",
+        "recommendedUse": "best free candidate for /free; not interactive because L4 times out"
+      },
+      {
+        "modelRoute": "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "provider": "OpenRouter free candidate",
+        "l1": "FAIL",
+        "l2": "FAIL",
+        "l3": "FAIL",
+        "l4": "FAIL",
+        "recommendedUse": "do not route; invalid JSON in live ladder"
+      },
+      {
+        "modelRoute": "qwen/qwen3-coder:free",
+        "provider": "OpenRouter free candidate",
+        "l1": "FAIL",
+        "l2": "FAIL",
+        "l3": "FAIL",
+        "l4": "FAIL",
+        "recommendedUse": "do not route; provider retry errors in live ladder"
+      },
+      {
+        "modelRoute": "openrouter/owl-alpha",
+        "provider": "OpenRouter free candidate",
+        "l1": "FAIL",
+        "l2": "FAIL",
+        "l3": "PASS",
+        "l4": "FAIL",
+        "recommendedUse": "not safe; mutates during read and misses required draft"
+      },
+      {
+        "modelRoute": "qwen/qwen3-next-80b-a3b-instruct:free",
+        "provider": "OpenRouter free candidate",
+        "l1": "FAIL",
+        "l2": "FAIL",
+        "l3": "FAIL",
+        "l4": "FAIL",
+        "recommendedUse": "do not route; provider retry errors in live ladder"
+      },
+      {
         "modelRoute": "gpt-5.4-nano",
         "provider": "OpenAI",
         "l1": "PASS",
@@ -274,7 +413,7 @@
     ]
   },
   "readme": {
-    "maxFeatureRows": 10,
+    "maxFeatureRows": 13,
     "summaryTitle": "Production QA cockpit"
   }
 }

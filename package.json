@@ -35,6 +35,7 @@
     "halo:supervise": "powershell -NoProfile -ExecutionPolicy Bypass -File scripts/halo-supervise-until.ps1",
     "workflow:room-previews": "tsx scripts/workflow-preview-gifs.ts",
     "workflow:trace-previews": "tsx scripts/render-workflow-preview.ts",
+    "workflow:app-previews": "playwright test capture-previews",
     "workflow:previews": "npm run workflow:room-previews && npm run workflow:trace-previews",
     "architecture:budget": "tsx scripts/architecture-budget-check.ts",
     "convex:boundaries": "tsx scripts/convex-boundary-check.ts",

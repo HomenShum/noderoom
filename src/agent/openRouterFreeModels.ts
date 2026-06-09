@@ -34,6 +34,13 @@ let cachedModels: { fetchedAt: number; models: OpenRouterModelInfo[] } | null = 
 
 const FALLBACK_FREE_MODELS: OpenRouterModelInfo[] = [
   {
+    id: "openrouter/owl-alpha",
+    name: "OpenRouter Owl Alpha",
+    context_length: 1_000_000,
+    pricing: { prompt: "0", completion: "0" },
+    supported_parameters: ["max_tokens", "reasoning", "response_format", "structured_outputs", "tool_choice", "tools"],
+  },
+  {
     id: "qwen/qwen3-coder:free",
     name: "Qwen3 Coder (free)",
     context_length: 1_048_576,

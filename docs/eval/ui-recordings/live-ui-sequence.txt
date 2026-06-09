@@ -1,0 +1,9 @@
+file 'D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom/docs/eval/ui-recordings/live-spreadsheet-20260608.png'
+duration 2
+file 'D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom/docs/eval/ui-recordings/live-research-20260608.png'
+duration 2
+file 'D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom/docs/eval/ui-recordings/live-note-20260608.png'
+duration 2
+file 'D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom/docs/eval/ui-recordings/live-wall-20260608.png'
+duration 2
+file 'D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom/docs/eval/ui-recordings/live-wall-20260608.png'

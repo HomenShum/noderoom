@@ -1,0 +1,21 @@
+{
+  "schema": 1,
+  "runId": "20260609T061501Z",
+  "startedAt": "2026-06-09T06:15:01.628Z",
+  "updatedAt": "2026-06-09T06:15:36.329Z",
+  "until": "2026-06-09T17:00:00.000Z",
+  "sleepMinutes": 30,
+  "dryRun": false,
+  "once": true,
+  "cycle": 1,
+  "state": "completed",
+  "summaryPath": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\halo-runs\\20260609T061501Z\\summary.jsonl",
+  "lockPath": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\halo-runs\\.active-run.json",
+  "lastEvent": {
+    "stepId": "gemini-ui-review",
+    "status": "skip",
+    "completedAt": "2026-06-09T06:15:36.309Z",
+    "logPath": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\halo-runs\\20260609T061501Z\\logs\\cycle-001-gemini-ui-review.log",
+    "reason": "skipped by --skip-live (deterministic-only run)"
+  }
+}

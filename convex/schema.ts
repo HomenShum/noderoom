@@ -25,6 +25,40 @@ const actor = v.object({
   ownerId: v.optional(v.string()),
 });
 
+const entrypointV = v.union(
+  v.literal("public_ask"),
+  v.literal("private_agent"),
+  v.literal("free"),
+  v.literal("system"),
+  v.literal("automation"),
+);
+const agentScopeV = v.union(v.literal("public_room"), v.literal("private_user"), v.literal("team"));
+const approvalPolicyV = v.union(v.literal("read_only"), v.literal("draft_first"), v.literal("auto_commit_safe"), v.literal("host_review"));
+const evidencePolicyV = v.union(v.literal("public_only"), v.literal("private_allowed"), v.literal("mixed_requires_redaction"));
+const traceLevelV = v.union(v.literal("summary"), v.literal("standard"), v.literal("full_operation_ledger"));
+const operationEventKindV = v.union(
+  v.literal("action"),
+  v.literal("query"),
+  v.literal("mutation"),
+  v.literal("model_call"),
+  v.literal("tool_call"),
+  v.literal("scheduler"),
+  v.literal("lease"),
+  v.literal("checkpoint"),
+);
+const operationStatusV = v.union(v.literal("started"), v.literal("completed"), v.literal("failed"), v.literal("skipped"));
+const graphObjectKindV = v.union(
+  v.literal("notebook"),
+  v.literal("node"),
+  v.literal("relation"),
+  v.literal("artifact"),
+  v.literal("element"),
+  v.literal("range"),
+  v.literal("wiki_page"),
+  v.literal("wiki_block"),
+);
+const visibilityV = v.union(v.literal("private"), v.literal("room"), v.literal("public"));
+
 export default defineSchema({
   rooms: defineTable({
     code: v.string(),
@@ -149,6 +183,7 @@ export default defineSchema({
 
   /** Per-agent-run telemetry — model, steps, tool calls, tokens, cost, latency. */
   agentRuns: defineTable({
+    jobId: v.optional(v.id("agentJobs")),
     roomId: v.id("rooms"),
     agentId: v.string(),
     model: v.string(),
@@ -178,6 +213,16 @@ export default defineSchema({
     artifactId: v.id("artifacts"),
     requester: actor,
     goal: v.string(),
+    entrypoint: v.optional(entrypointV),
+    scope: v.optional(agentScopeV),
+    commandText: v.optional(v.string()),
+    request: v.optional(v.any()),
+    priority: v.optional(v.number()),
+    approvalPolicy: v.optional(approvalPolicyV),
+    evidencePolicy: v.optional(evidencePolicyV),
+    autoAllow: v.optional(v.boolean()),
+    traceLevel: v.optional(traceLevelV),
+    idempotencyKey: v.optional(v.string()),
     mode: v.optional(v.union(v.literal("variance"), v.literal("research"))),
     status: v.union(
       v.literal("queued"),
@@ -190,13 +235,20 @@ export default defineSchema({
       v.literal("failed"),
     ),
     modelPolicy: v.string(),
-    runtime: v.optional(v.union(v.literal("scheduler"), v.literal("workflow"))),
+    runtime: v.optional(v.union(v.literal("inline"), v.literal("scheduler"), v.literal("workflow"))),
     workflowId: v.optional(v.string()),
     workId: v.optional(v.string()),
     cursor: v.optional(v.any()),
     handoff: v.optional(v.any()),
     attempts: v.number(),
     maxAttempts: v.number(),
+    actionSliceCount: v.optional(v.number()),
+    queryCount: v.optional(v.number()),
+    mutationCount: v.optional(v.number()),
+    modelCallCount: v.optional(v.number()),
+    toolCallCount: v.optional(v.number()),
+    schedulerHandoffCount: v.optional(v.number()),
+    receiptCount: v.optional(v.number()),
     latestRunId: v.optional(v.id("agentRuns")),
     leaseId: v.optional(v.string()),
     leaseUntil: v.optional(v.number()),
@@ -208,7 +260,8 @@ export default defineSchema({
     completedAt: v.optional(v.number()),
   })
     .index("by_room", ["roomId", "updatedAt"])
-    .index("by_status_nextRunAt", ["status", "nextRunAt"]),
+    .index("by_status_nextRunAt", ["status", "nextRunAt"])
+    .index("by_idempotency", ["idempotencyKey", "createdAt"]),
 
   agentJobAttempts: defineTable({
     jobId: v.id("agentJobs"),
@@ -226,6 +279,226 @@ export default defineSchema({
     startedAt: v.number(),
     endedAt: v.number(),
   }).index("by_job", ["jobId", "attempt"]),
+
+  agentModelStepJournal: defineTable({
+    jobId: v.id("agentJobs"),
+    sliceKey: v.string(),
+    step: v.number(),
+    model: v.string(),
+    inputHash: v.string(),
+    outputHash: v.string(),
+    result: v.any(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_job_slice_step", ["jobId", "sliceKey", "step"])
+    .index("by_job", ["jobId", "createdAt"]),
+
+  agentOperationEvents: defineTable({
+    jobId: v.id("agentJobs"),
+    runId: v.optional(v.id("agentRuns")),
+    stepId: v.optional(v.id("agentSteps")),
+    sequence: v.number(),
+    kind: operationEventKindV,
+    name: v.string(),
+    targetKind: v.optional(graphObjectKindV),
+    targetId: v.optional(v.string()),
+    inputHash: v.optional(v.string()),
+    outputHash: v.optional(v.string()),
+    status: operationStatusV,
+    countDelta: v.optional(v.number()),
+    affectedIds: v.optional(v.array(v.string())),
+    startedAt: v.number(),
+    completedAt: v.optional(v.number()),
+  })
+    .index("by_job_sequence", ["jobId", "sequence"])
+    .index("by_run", ["runId", "sequence"]),
+
+  agentMutationReceipts: defineTable({
+    jobId: v.id("agentJobs"),
+    runId: v.optional(v.id("agentRuns")),
+    stepId: v.optional(v.id("agentSteps")),
+    mutationName: v.string(),
+    permission: v.string(),
+    inputHash: v.string(),
+    output: v.any(),
+    affectedIds: v.array(v.string()),
+    beforeVersions: v.optional(v.any()),
+    afterVersions: v.optional(v.any()),
+    traceId: v.optional(v.string()),
+    createdAt: v.number(),
+  })
+    .index("by_job", ["jobId", "createdAt"])
+    .index("by_trace", ["traceId"]),
+
+  agentDraftOperations: defineTable({
+    jobId: v.id("agentJobs"),
+    proposedBy: actor,
+    operationName: v.string(),
+    input: v.any(),
+    affectedIds: v.array(v.string()),
+    status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected"), v.literal("needs_rebase"), v.literal("applied")),
+    approvalRequiredBy: v.optional(v.string()),
+    createdAt: v.number(),
+    resolvedAt: v.optional(v.number()),
+  }).index("by_job_status", ["jobId", "status"]),
+
+  agentLeases: defineTable({
+    jobId: v.id("agentJobs"),
+    runId: v.optional(v.id("agentRuns")),
+    roomId: v.id("rooms"),
+    targetKind: graphObjectKindV,
+    targetId: v.string(),
+    mode: v.union(v.literal("read"), v.literal("write"), v.literal("structural")),
+    status: v.union(v.literal("active"), v.literal("released"), v.literal("expired"), v.literal("stolen")),
+    expiresAt: v.number(),
+    createdAt: v.number(),
+    releasedAt: v.optional(v.number()),
+  })
+    .index("by_job_status", ["jobId", "status"])
+    .index("by_target_status", ["targetKind", "targetId", "status"]),
+
+  wikiPages: defineTable({
+    roomId: v.id("rooms"),
+    title: v.string(),
+    slug: v.string(),
+    visibility: visibilityV,
+    version: v.number(),
+    latestRevisionId: v.optional(v.string()),
+    createdByJobId: v.optional(v.id("agentJobs")),
+    updatedByJobId: v.optional(v.id("agentJobs")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_room_slug", ["roomId", "slug"])
+    .index("by_room", ["roomId", "updatedAt"]),
+
+  wikiRevisions: defineTable({
+    roomId: v.id("rooms"),
+    wikiPageId: v.id("wikiPages"),
+    revisionId: v.string(),
+    content: v.string(),
+    contentFormat: v.union(v.literal("markdown"), v.literal("json")),
+    evidencePolicy: evidencePolicyV,
+    createdByJobId: v.optional(v.id("agentJobs")),
+    createdAt: v.number(),
+  }).index("by_page", ["wikiPageId", "createdAt"]),
+
+  notebooks: defineTable({
+    roomId: v.id("rooms"),
+    title: v.string(),
+    ownerId: v.optional(v.string()),
+    visibility: visibilityV,
+    rootNodeId: v.optional(v.id("nodes")),
+    defaultRelationTypeId: v.optional(v.id("relationTypes")),
+    version: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  }).index("by_room", ["roomId", "updatedAt"]),
+
+  nodes: defineTable({
+    roomId: v.id("rooms"),
+    notebookId: v.id("notebooks"),
+    authorId: v.string(),
+    kind: v.union(
+      v.literal("note"),
+      v.literal("folder"),
+      v.literal("wiki_ref"),
+      v.literal("artifact_ref"),
+      v.literal("source"),
+      v.literal("claim"),
+      v.literal("task"),
+      v.literal("agent_summary"),
+    ),
+    title: v.optional(v.string()),
+    content: v.string(),
+    contentFormat: v.union(v.literal("plain"), v.literal("markdown"), v.literal("lexical"), v.literal("json")),
+    visibility: visibilityV,
+    accessMode: v.optional(v.union(v.literal("read"), v.literal("write"), v.literal("owner"))),
+    version: v.number(),
+    isDeleted: v.boolean(),
+    canonicalRelationId: v.optional(v.id("relations")),
+    sourceArtifactId: v.optional(v.id("artifacts")),
+    sourceElementId: v.optional(v.string()),
+    createdByJobId: v.optional(v.id("agentJobs")),
+    updatedByJobId: v.optional(v.id("agentJobs")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_notebook", ["notebookId", "updatedAt"])
+    .index("by_room", ["roomId", "updatedAt"]),
+
+  relationTypes: defineTable({
+    roomId: v.id("rooms"),
+    notebookId: v.optional(v.id("notebooks")),
+    key: v.string(),
+    label: v.string(),
+    reverseLabel: v.string(),
+    description: v.optional(v.string()),
+    visibility: visibilityV,
+    isSystem: v.boolean(),
+    version: v.number(),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_room_key", ["roomId", "key"])
+    .index("by_notebook_key", ["notebookId", "key"]),
+
+  relations: defineTable({
+    roomId: v.id("rooms"),
+    notebookId: v.id("notebooks"),
+    fromObjectKind: graphObjectKindV,
+    fromId: v.string(),
+    toObjectKind: graphObjectKindV,
+    toId: v.string(),
+    relationTypeId: v.id("relationTypes"),
+    authorId: v.string(),
+    visibility: visibilityV,
+    version: v.number(),
+    isDeleted: v.boolean(),
+    positionKey: v.string(),
+    listType: v.union(v.literal("all"), v.literal("note_content"), v.literal("pinned"), v.literal("pointer"), v.literal("outline")),
+    createdByJobId: v.optional(v.id("agentJobs")),
+    updatedByJobId: v.optional(v.id("agentJobs")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_notebook", ["notebookId", "positionKey"])
+    .index("by_from", ["fromObjectKind", "fromId"])
+    .index("by_to", ["toObjectKind", "toId"])
+    .index("by_relation_type", ["relationTypeId"]),
+
+  embeddingJobs: defineTable({
+    roomId: v.id("rooms"),
+    sourceKind: graphObjectKindV,
+    sourceId: v.string(),
+    contentHash: v.string(),
+    status: v.union(v.literal("queued"), v.literal("running"), v.literal("completed"), v.literal("failed")),
+    attempts: v.number(),
+    nextRunAt: v.optional(v.number()),
+    error: v.optional(v.string()),
+    createdByJobId: v.optional(v.id("agentJobs")),
+    createdAt: v.number(),
+    updatedAt: v.number(),
+  })
+    .index("by_status_nextRunAt", ["status", "nextRunAt"])
+    .index("by_source_hash", ["roomId", "sourceKind", "sourceId", "contentHash"]),
+
+  embeddings: defineTable({
+    roomId: v.id("rooms"),
+    sourceKind: graphObjectKindV,
+    sourceId: v.string(),
+    sourceVersion: v.number(),
+    contentHash: v.string(),
+    provider: v.string(),
+    model: v.string(),
+    dimension: v.number(),
+    vector: v.array(v.number()),
+    visibility: visibilityV,
+    createdAt: v.number(),
+  })
+    .index("by_source", ["roomId", "sourceKind", "sourceId"])
+    .index("by_content_hash", ["roomId", "contentHash"]),
 
   spreadsheetCells: defineTable({
     artifactId: v.id("artifacts"),
@@ -270,10 +543,13 @@ export default defineSchema({
     .index("by_child", ["artifactId", "childElementId"]),
 
   agentSteps: defineTable({
+    jobId: v.optional(v.id("agentJobs")),
     runId: v.id("agentRuns"),
     roomId: v.id("rooms"),
     agentId: v.string(),
     idx: v.number(),
+    phase: v.optional(v.string()),
+    operationEventIds: v.optional(v.array(v.id("agentOperationEvents"))),
     tool: v.string(),
     args: v.string(),
     result: v.string(),
@@ -283,6 +559,9 @@ export default defineSchema({
     ts: v.number(),
     /** Set for edit_cell steps — enables "why is this cell this value" provenance. */
     elementId: v.optional(v.string()),
+    affectedObjectIds: v.optional(v.array(v.string())),
+    mutationReceiptIds: v.optional(v.array(v.id("agentMutationReceipts"))),
+    toolRegistryVersion: v.optional(v.number()),
     /** Tamper-evidence: SHA-256 over this record's sorted-key serialization, chained to the previous. */
     recordHash: v.string(),
     prevStepHash: v.string(),

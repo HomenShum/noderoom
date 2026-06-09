@@ -17,7 +17,7 @@ type Matrix = {
   features: Feature[];
   modelLadder: {
     source: string;
-    routes: Array<{ modelRoute: string; provider: string; l1: string; l2: string; l3: string; l4: string }>;
+    routes: Array<{ modelRoute: string; provider: string; l1: string; l2: string; l3: string; l4: string; recommendedUse?: string }>;
   };
 };
 
@@ -60,6 +60,53 @@ describe("production QA matrix", () => {
         expect(statuses.has(rung), `${route.modelRoute} has invalid rung status ${rung}`).toBe(true);
       }
     }
+  });
+
+  it("does not hide free-auto router coverage behind generic model rows", () => {
+    const longRunning = matrix.features.find((feature) => feature.id === "long_running_free_auto");
+    expect(longRunning, "long_running_free_auto matrix row is missing").toBeTruthy();
+    expect(longRunning!.liveChecks.some((check) => check.includes("openrouter/free-auto") || check.includes("ladder:free"))).toBe(true);
+
+    const routes = matrix.modelLadder.routes.map((route) => route.modelRoute);
+    expect(routes).toContain("openrouter/free-auto");
+    expect(routes.some((route) => /free-auto.*top|top.*free-auto/i.test(route))).toBe(true);
+  });
+
+  it("keeps qa:matrix:check labeled as docs-sync, not primary quality evidence", () => {
+    for (const feature of matrix.features) {
+      if (feature.status !== "green") continue;
+      expect(
+        feature.deterministicChecks[0]?.includes("qa:matrix:check"),
+        `${feature.id} uses the docs-sync drift command as primary green evidence`,
+      ).toBe(false);
+    }
+  });
+
+  it("renders manual or missing live checks as graph gaps instead of coverage", () => {
+    const script = readFileSync(join(root, "scripts/qa-matrix.ts"), "utf8");
+    const browserE2E = matrix.features.find((feature) => feature.id === "browser_e2e_dogfood");
+
+    expect(browserE2E?.status).toBe("red");
+    expect(browserE2E?.liveChecks.some((check) => /^missing:/i.test(check))).toBe(true);
+    expect(script).toContain("executedLiveCheck");
+    expect(script).toContain("manual browser");
+    expect(script).toContain("missing:");
+    expect(script).toContain("f.liveChecks.some(executedLiveCheck)");
+  });
+
+  it("keeps the Convex interactive fallback on a ladder-safe route", () => {
+    const source = readFileSync(join(root, "convex/agent.ts"), "utf8");
+    const match = source.match(/AGENT_MODEL\s*\?\?\s*"([^"]+)"/);
+    expect(match, "convex/agent.ts must declare an explicit AGENT_MODEL fallback").toBeTruthy();
+    const fallback = match![1];
+    const route = matrix.modelLadder.routes.find((r) => r.modelRoute === fallback);
+    expect(route, `${fallback} is not recorded in the model ladder`).toBeTruthy();
+    expect([route!.l1, route!.l2, route!.l3, route!.l4], `${fallback} is not L1-L4 safe`).toEqual([
+      "PASS",
+      "PASS",
+      "PASS",
+      "PASS",
+    ]);
   });
 
   it("publishes the generated QA cockpit from README", () => {

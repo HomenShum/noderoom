@@ -3,7 +3,7 @@
  */
 import { describe, it, expect } from "vitest";
 import { checkSpendCeiling, redactPII } from "../src/agent/gateway";
-import { MapStepJournal } from "../src/agent/journal";
+import { journalSliceKey, MapStepJournal } from "../src/agent/journal";
 import { runAgent } from "../src/agent/runtime";
 import { scriptedModel } from "../src/agent/scripted";
 import { recomputeVariancePlan } from "../src/agent/plans";
@@ -60,6 +60,15 @@ describe("gateway spend ceiling wired into the runtime", () => {
 });
 
 describe("exactly-once journal (no double-bill on slice retry)", () => {
+  it("derives stable slice keys from semantic input, not object insertion order", () => {
+    const a = journalSliceKey({ jobId: "job1", cursor: { b: 2, a: 1 }, stepBudget: 3 });
+    const b = journalSliceKey({ stepBudget: 3, cursor: { a: 1, b: 2 }, jobId: "job1" });
+    const c = journalSliceKey({ jobId: "job1", cursor: { a: 1, b: 3 }, stepBudget: 3 });
+
+    expect(a).toBe(b);
+    expect(a).not.toBe(c);
+  });
+
   it("a retried slice replays journaled model steps — zero new model calls, work still completes", async () => {
     const journal = new MapStepJournal();
     let modelCalls = 0;

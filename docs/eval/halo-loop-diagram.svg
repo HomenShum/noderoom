@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1160" height="312" viewBox="0 0 1160 312" font-family="ui-monospace, 'JetBrains Mono', monospace">
+  <defs>
+    <marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0,0 L10,5 L0,10 z" fill="#d97757"/>
+    </marker>
+  </defs>
+  <rect width="1160" height="312" rx="18" fill="#111418"/>
+  <text x="28" y="40" fill="#E6E1DA" font-size="20" font-weight="700">HALO &#183; Hierarchical Agent Loop Optimization</text>
+  <text x="28" y="64" fill="#8B93A1" font-size="11.5">A replayable trace becomes an eval becomes a regression gate becomes a Codex / Claude Code handoff &#8212; then it repeats.</text>
+
+  <!-- 7 stage cards -->
+  <g>
+    <!-- card 0: TRACE -->
+    <rect x="22" y="92" width="146" height="96" rx="10" fill="#171B20" stroke="#2A2F37"/>
+    <circle cx="40" cy="114" r="11" fill="#d97757"/><text x="40" y="118" fill="#111418" font-size="12" font-weight="800" text-anchor="middle">1</text>
+    <text x="58" y="118" fill="#E6E1DA" font-size="12.5" font-weight="700">TRACE</text>
+    <text x="34" y="146" fill="#9aa3b2" font-size="9.5">replayable run</text>
+    <text x="34" y="170" fill="#d97757" font-size="8.5">agentSteps + writeTrace</text>
+
+    <!-- card 1: FEEDBACK -->
+    <rect x="184" y="92" width="146" height="96" rx="10" fill="#171B20" stroke="#2A2F37"/>
+    <circle cx="202" cy="114" r="11" fill="#d97757"/><text x="202" y="118" fill="#111418" font-size="12" font-weight="800" text-anchor="middle">2</text>
+    <text x="220" y="118" fill="#E6E1DA" font-size="12.5" font-weight="700">FEEDBACK</text>
+    <text x="196" y="146" fill="#9aa3b2" font-size="9.5">three sources</text>
+    <text x="196" y="170" fill="#d97757" font-size="8.5">trace&#183;human&#183;LLM-judge</text>
+
+    <!-- card 2: EVALS -->
+    <rect x="346" y="92" width="146" height="96" rx="10" fill="#171B20" stroke="#2A2F37"/>
+    <circle cx="364" cy="114" r="11" fill="#d97757"/><text x="364" y="118" fill="#111418" font-size="12" font-weight="800" text-anchor="middle">3</text>
+    <text x="382" y="118" fill="#E6E1DA" font-size="12.5" font-weight="700">EVALS</text>
+    <text x="358" y="146" fill="#9aa3b2" font-size="9.5">raise the bar</text>
+    <text x="358" y="170" fill="#d97757" font-size="8.5">ladder&#183;workflow&#183;credit</text>
+
+    <!-- card 3: RECORD -->
+    <rect x="508" y="92" width="146" height="96" rx="10" fill="#171B20" stroke="#2A2F37"/>
+    <circle cx="526" cy="114" r="11" fill="#d97757"/><text x="526" y="118" fill="#111418" font-size="12" font-weight="800" text-anchor="middle">4</text>
+    <text x="544" y="118" fill="#E6E1DA" font-size="12.5" font-weight="700">RECORD</text>
+    <text x="520" y="146" fill="#9aa3b2" font-size="9.5">append-only store</text>
+    <text x="520" y="170" fill="#d97757" font-size="8.5">(commit+tree, case, ts)</text>
+
+    <!-- card 4: GATE -->
+    <rect x="670" y="92" width="146" height="96" rx="10" fill="#171B20" stroke="#2A2F37"/>
+    <circle cx="688" cy="114" r="11" fill="#d97757"/><text x="688" y="118" fill="#111418" font-size="12" font-weight="800" text-anchor="middle">5</text>
+    <text x="706" y="118" fill="#E6E1DA" font-size="12.5" font-weight="700">GATE</text>
+    <text x="682" y="146" fill="#9aa3b2" font-size="9.5">regression block</text>
+    <text x="682" y="170" fill="#d97757" font-size="8.5">eval:diff &gt; exit 1</text>
+
+    <!-- card 5: HANDOFF -->
+    <rect x="832" y="92" width="146" height="96" rx="10" fill="#171B20" stroke="#2A2F37"/>
+    <circle cx="850" cy="114" r="11" fill="#d97757"/><text x="850" y="118" fill="#111418" font-size="12" font-weight="800" text-anchor="middle">6</text>
+    <text x="868" y="118" fill="#E6E1DA" font-size="12.5" font-weight="700">HANDOFF</text>
+    <text x="846" y="146" fill="#9aa3b2" font-size="9.5">coding agent</text>
+    <text x="846" y="170" fill="#d97757" font-size="8.5">Codex / Claude packet</text>
+
+    <!-- card 6: FIX -->
+    <rect x="994" y="92" width="146" height="96" rx="10" fill="#171B20" stroke="#2A2F37"/>
+    <circle cx="1012" cy="114" r="11" fill="#d97757"/><text x="1012" y="118" fill="#111418" font-size="12" font-weight="800" text-anchor="middle">7</text>
+    <text x="1030" y="118" fill="#E6E1DA" font-size="12.5" font-weight="700">FIX</text>
+    <text x="1008" y="146" fill="#9aa3b2" font-size="9.5">scoped change</text>
+    <text x="1008" y="170" fill="#d97757" font-size="8.5">smallest necessary</text>
+  </g>
+
+  <!-- forward connectors -->
+  <g stroke="#d97757" stroke-width="2" marker-end="url(#arrow)">
+    <line x1="170" y1="140" x2="182" y2="140"/>
+    <line x1="332" y1="140" x2="344" y2="140"/>
+    <line x1="494" y1="140" x2="506" y2="140"/>
+    <line x1="656" y1="140" x2="668" y2="140"/>
+    <line x1="818" y1="140" x2="830" y2="140"/>
+    <line x1="980" y1="140" x2="992" y2="140"/>
+  </g>
+
+  <!-- return loop: FIX -> TRACE -->
+  <path d="M 1067 188 C 1067 252 1067 258 1020 258 L 142 258 C 95 258 95 252 95 190" fill="none" stroke="#d97757" stroke-width="2" stroke-dasharray="5 4" marker-end="url(#arrow)"/>
+  <text x="581" y="284" fill="#8B93A1" font-size="10.5" text-anchor="middle">repeat &#8212; on every change, and continuously overnight until the gate is green</text>
+</svg>

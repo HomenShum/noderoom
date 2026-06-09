@@ -5,12 +5,213 @@ import { components, internal } from "./_generated/api";
 import { actorProofV, requireActorProof, requireArtifactInRoom } from "./lib";
 
 const attemptStatusV = v.union(v.literal("completed"), v.literal("handoff"), v.literal("retrying"), v.literal("failed"));
+const terminalStatuses = new Set(["completed", "failed", "blocked", "cancelled"]);
+const entrypointV = v.union(v.literal("public_ask"), v.literal("private_agent"), v.literal("free"), v.literal("system"), v.literal("automation"));
+const agentScopeV = v.union(v.literal("public_room"), v.literal("private_user"), v.literal("team"));
+const approvalPolicyV = v.union(v.literal("read_only"), v.literal("draft_first"), v.literal("auto_commit_safe"), v.literal("host_review"));
+const evidencePolicyV = v.union(v.literal("public_only"), v.literal("private_allowed"), v.literal("mixed_requires_redaction"));
+const traceLevelV = v.union(v.literal("summary"), v.literal("standard"), v.literal("full_operation_ledger"));
 
 function clean<T extends Record<string, unknown>>(value: T): T {
   const out: Record<string, unknown> = {};
   for (const [key, val] of Object.entries(value)) if (val !== undefined) out[key] = val;
   return out as T;
 }
+
+function defaultJobIdempotencyKey(args: { roomId: unknown; artifactId: unknown; actorId: string; goal: string; entrypoint: string }) {
+  const normalizedGoal = args.goal.trim().replace(/\s+/g, " ").toLowerCase();
+  return `${args.entrypoint}:${String(args.roomId)}:${String(args.artifactId)}:${args.actorId}:${normalizedGoal}`;
+}
+
+async function recordOperationEvent(ctx: any, args: {
+  jobId: string;
+  runId?: string;
+  sequence: number;
+  kind: "action" | "query" | "mutation" | "model_call" | "tool_call" | "scheduler" | "lease" | "checkpoint";
+  name: string;
+  targetKind?: "notebook" | "node" | "relation" | "artifact" | "element" | "range" | "wiki_page" | "wiki_block";
+  targetId?: string;
+  status?: "started" | "completed" | "failed" | "skipped";
+  countDelta?: number;
+  affectedIds?: string[];
+  startedAt?: number;
+  completedAt?: number;
+}) {
+  const now = Date.now();
+  await ctx.db.insert("agentOperationEvents", clean({
+    jobId: args.jobId,
+    runId: args.runId,
+    sequence: args.sequence,
+    kind: args.kind,
+    name: args.name,
+    targetKind: args.targetKind,
+    targetId: args.targetId,
+    status: args.status ?? "completed",
+    countDelta: args.countDelta,
+    affectedIds: args.affectedIds,
+    startedAt: args.startedAt ?? now,
+    completedAt: args.completedAt ?? now,
+  }));
+}
+
+export const createOrReuse = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    artifactId: v.id("artifacts"),
+    requester: actorProofV,
+    goal: v.string(),
+    entrypoint: entrypointV,
+    scope: agentScopeV,
+    modelPolicy: v.string(),
+    idempotencyKey: v.string(),
+    mode: v.optional(v.union(v.literal("variance"), v.literal("research"))),
+    approvalPolicy: v.optional(approvalPolicyV),
+    evidencePolicy: v.optional(evidencePolicyV),
+    autoAllow: v.optional(v.boolean()),
+    traceLevel: v.optional(traceLevelV),
+    request: v.optional(v.any()),
+    maxAttempts: v.optional(v.number()),
+  },
+  handler: async (ctx, a) => {
+    if (a.goal.length > 2_000) throw new Error("goal_too_long");
+    const actor = await requireActorProof(ctx, a.roomId, a.requester);
+    await requireArtifactInRoom(ctx, a.roomId, a.artifactId);
+    const prior = await ctx.db.query("agentJobs").withIndex("by_idempotency", (q) => q.eq("idempotencyKey", a.idempotencyKey)).order("desc").take(5);
+    const reusable = prior.find((job) => String(job.roomId) === String(a.roomId) && String(job.artifactId) === String(a.artifactId));
+    if (reusable) return { jobId: reusable._id, reused: true as const, status: reusable.status, latestRunId: reusable.latestRunId };
+    const now = Date.now();
+    const jobId = await ctx.db.insert("agentJobs", clean({
+      roomId: a.roomId,
+      artifactId: a.artifactId,
+      requester: actor,
+      goal: a.goal,
+      entrypoint: a.entrypoint,
+      scope: a.scope,
+      commandText: a.goal,
+      request: a.request,
+      priority: 0,
+      approvalPolicy: a.approvalPolicy ?? "host_review",
+      evidencePolicy: a.evidencePolicy ?? "public_only",
+      autoAllow: a.autoAllow ?? false,
+      traceLevel: a.traceLevel ?? "standard",
+      idempotencyKey: a.idempotencyKey,
+      mode: a.mode,
+      status: "running",
+      modelPolicy: a.modelPolicy,
+      runtime: "inline",
+      attempts: 0,
+      maxAttempts: Math.max(1, Math.min(a.maxAttempts ?? 1, 20)),
+      actionSliceCount: 0,
+      queryCount: 0,
+      mutationCount: 1,
+      modelCallCount: 0,
+      toolCallCount: 0,
+      schedulerHandoffCount: 0,
+      receiptCount: 0,
+      nextRunAt: now,
+      createdAt: now,
+      updatedAt: now,
+    }));
+    await recordOperationEvent(ctx, {
+      jobId,
+      sequence: 1,
+      kind: "mutation",
+      name: "agentJobs.createOrReuse",
+      targetKind: "artifact",
+      targetId: String(a.artifactId),
+      countDelta: 1,
+      affectedIds: [String(jobId), String(a.artifactId)],
+      startedAt: now,
+      completedAt: now,
+    });
+    return { jobId, reused: false as const, status: "running" as const };
+  },
+});
+
+export const finishInteractive = internalMutation({
+  args: {
+    jobId: v.id("agentJobs"),
+    runId: v.optional(v.id("agentRuns")),
+    status: v.union(v.literal("completed"), v.literal("failed"), v.literal("blocked"), v.literal("paused")),
+    finalText: v.optional(v.string()),
+    error: v.optional(v.string()),
+    handoff: v.optional(v.any()),
+    cursor: v.optional(v.any()),
+    scheduledNextAt: v.optional(v.number()),
+    scheduleWorkflow: v.optional(v.boolean()),
+    resolvedModel: v.string(),
+    stopReason: v.string(),
+    ms: v.number(),
+    inputTokens: v.number(),
+    outputTokens: v.number(),
+    costUsd: v.number(),
+    modelCalls: v.number(),
+    toolCalls: v.number(),
+    queryCount: v.optional(v.number()),
+    mutationCount: v.optional(v.number()),
+    receiptCount: v.optional(v.number()),
+  },
+  handler: async (ctx, a) => {
+    const job = await ctx.db.get(a.jobId);
+    if (!job) return { ok: false as const, reason: "job_not_found" as const };
+    if (terminalStatuses.has(job.status) && job.latestRunId) return { ok: true as const, terminal: true as const };
+    const now = Date.now();
+    const attempt = job.attempts + 1;
+    await ctx.db.insert("agentJobAttempts", clean({
+      jobId: a.jobId,
+      runId: a.runId,
+      attempt,
+      status: a.status === "completed" ? "completed" : a.status === "paused" ? "handoff" : "failed",
+      resolvedModel: a.resolvedModel,
+      stopReason: a.stopReason,
+      ms: a.ms,
+      inputTokens: a.inputTokens,
+      outputTokens: a.outputTokens,
+      costUsd: a.costUsd,
+      error: a.error,
+      startedAt: now - a.ms,
+      endedAt: now,
+    }));
+    const baseSequence = (job.actionSliceCount ?? 0) + (job.queryCount ?? 0) + (job.mutationCount ?? 0) + (job.modelCallCount ?? 0) + (job.toolCallCount ?? 0) + (job.schedulerHandoffCount ?? 0) + 2;
+    const eventStatus = a.status === "failed" || a.status === "blocked" ? "failed" : "completed";
+    await recordOperationEvent(ctx, { jobId: a.jobId, runId: a.runId, sequence: baseSequence, kind: "action", name: "agent.runRoomAgent", countDelta: 1, status: eventStatus, startedAt: now - a.ms, completedAt: now });
+    await recordOperationEvent(ctx, { jobId: a.jobId, runId: a.runId, sequence: baseSequence + 1, kind: "model_call", name: a.resolvedModel, countDelta: a.modelCalls, status: eventStatus, startedAt: now - a.ms, completedAt: now });
+    await recordOperationEvent(ctx, { jobId: a.jobId, runId: a.runId, sequence: baseSequence + 2, kind: "tool_call", name: "NodeAgent tools", countDelta: a.toolCalls, status: eventStatus, startedAt: now - a.ms, completedAt: now });
+    await recordOperationEvent(ctx, { jobId: a.jobId, runId: a.runId, sequence: baseSequence + 3, kind: "checkpoint", name: "agentJobs.finishInteractive", countDelta: 1, status: "completed", startedAt: now, completedAt: now });
+    let workflowId: string | undefined;
+    if (a.status === "paused" && a.scheduleWorkflow) {
+      workflowId = String(await start(ctx, internal.agentWorkflows.freeAutoWorkflow, { jobId: a.jobId }, {
+        onComplete: internal.agentWorkflows.freeAutoWorkflowComplete,
+        context: { jobId: a.jobId },
+      }));
+      await recordOperationEvent(ctx, { jobId: a.jobId, runId: a.runId, sequence: baseSequence + 4, kind: "scheduler", name: "agentWorkflows.freeAutoWorkflow", countDelta: 1, status: "completed", startedAt: now, completedAt: now });
+    }
+    await ctx.db.patch(a.jobId, clean({
+      status: a.status,
+      attempts: attempt,
+      latestRunId: a.runId,
+      finalText: a.finalText,
+      error: a.error,
+      handoff: a.handoff,
+      cursor: a.cursor,
+      nextRunAt: a.scheduledNextAt,
+      runtime: workflowId ? "workflow" : job.runtime,
+      workflowId,
+      actionSliceCount: (job.actionSliceCount ?? 0) + 1,
+      queryCount: (job.queryCount ?? 0) + (a.queryCount ?? 1),
+      mutationCount: (job.mutationCount ?? 0) + (a.mutationCount ?? 1),
+      modelCallCount: (job.modelCallCount ?? 0) + a.modelCalls,
+      toolCallCount: (job.toolCallCount ?? 0) + a.toolCalls,
+      receiptCount: (job.receiptCount ?? 0) + (a.receiptCount ?? 0),
+      schedulerHandoffCount: (job.schedulerHandoffCount ?? 0) + (workflowId ? 1 : 0),
+      leaseId: "",
+      leaseUntil: 0,
+      updatedAt: now,
+      completedAt: a.status === "completed" ? now : undefined,
+    }) as any);
+    return { ok: true as const };
+  },
+});
 
 export const startFreeAuto = mutation({
   args: {
@@ -20,6 +221,7 @@ export const startFreeAuto = mutation({
     goal: v.string(),
     mode: v.optional(v.union(v.literal("variance"), v.literal("research"))),
     maxAttempts: v.optional(v.number()),
+    idempotencyKey: v.optional(v.string()),
   },
   handler: async (ctx, a) => {
     if (a.goal.length > 2_000) throw new Error("goal_too_long");
@@ -27,21 +229,73 @@ export const startFreeAuto = mutation({
     await requireArtifactInRoom(ctx, a.roomId, a.artifactId);
     const now = Date.now();
     const maxAttempts = Math.max(1, Math.min(a.maxAttempts ?? 20, 100));
+    const idempotencyKey = a.idempotencyKey ?? defaultJobIdempotencyKey({ roomId: a.roomId, artifactId: a.artifactId, actorId: actor.id, goal: a.goal, entrypoint: "free" });
+    const prior = await ctx.db.query("agentJobs").withIndex("by_idempotency", (q) => q.eq("idempotencyKey", idempotencyKey)).order("desc").take(5);
+    const reusable = prior.find((job) => String(job.roomId) === String(a.roomId) && String(job.artifactId) === String(a.artifactId) && !terminalStatuses.has(job.status));
+    if (reusable) return reusable._id;
     const jobId = await ctx.db.insert("agentJobs", clean({
       roomId: a.roomId,
       artifactId: a.artifactId,
       requester: actor,
       goal: a.goal,
+      entrypoint: "free",
+      scope: "public_room",
+      commandText: a.goal,
+      request: {
+        roomId: String(a.roomId),
+        targetArtifactId: String(a.artifactId),
+        commandText: a.goal,
+        entrypoint: "free",
+        scope: "public_room",
+        approvalPolicy: "draft_first",
+        evidencePolicy: "public_only",
+        traceLevel: "full_operation_ledger",
+      },
+      priority: 0,
+      approvalPolicy: "draft_first",
+      evidencePolicy: "public_only",
+      autoAllow: false,
+      traceLevel: "full_operation_ledger",
+      idempotencyKey,
       mode: a.mode,
       status: "queued",
       modelPolicy: "openrouter/free-auto",
       runtime: "workflow",
       attempts: 0,
       maxAttempts,
+      actionSliceCount: 0,
+      queryCount: 0,
+      mutationCount: 1,
+      modelCallCount: 0,
+      toolCallCount: 0,
+      schedulerHandoffCount: 1,
+      receiptCount: 0,
       nextRunAt: now,
       createdAt: now,
       updatedAt: now,
     }));
+    await recordOperationEvent(ctx, {
+      jobId,
+      sequence: 1,
+      kind: "mutation",
+      name: "agentJobs.startFreeAuto",
+      targetKind: "artifact",
+      targetId: String(a.artifactId),
+      countDelta: 1,
+      affectedIds: [String(jobId), String(a.artifactId)],
+      startedAt: now,
+      completedAt: now,
+    });
+    await recordOperationEvent(ctx, {
+      jobId,
+      sequence: 2,
+      kind: "scheduler",
+      name: "agentWorkflows.freeAutoWorkflow",
+      countDelta: 1,
+      affectedIds: [String(jobId)],
+      startedAt: now,
+      completedAt: now,
+    });
     const workflowId = await start(ctx, internal.agentWorkflows.freeAutoWorkflow, { jobId }, {
       onComplete: internal.agentWorkflows.freeAutoWorkflowComplete,
       context: { jobId },
@@ -66,6 +320,30 @@ export const attempts = query({
     if (!job) return [];
     await requireActorProof(ctx, job.roomId, requester);
     return ctx.db.query("agentJobAttempts").withIndex("by_job", (q) => q.eq("jobId", jobId)).collect();
+  },
+});
+
+export const detail = query({
+  args: { jobId: v.id("agentJobs"), requester: actorProofV },
+  handler: async (ctx, { jobId, requester }) => {
+    const job = await ctx.db.get(jobId);
+    if (!job) return null;
+    await requireActorProof(ctx, job.roomId, requester);
+    const attempts = await ctx.db.query("agentJobAttempts").withIndex("by_job", (q) => q.eq("jobId", jobId)).collect();
+    const operations = await ctx.db.query("agentOperationEvents").withIndex("by_job_sequence", (q) => q.eq("jobId", jobId)).take(100);
+    const receipts = await ctx.db.query("agentMutationReceipts").withIndex("by_job", (q) => q.eq("jobId", jobId)).order("desc").take(50);
+    const modelJournal = await ctx.db.query("agentModelStepJournal").withIndex("by_job", (q) => q.eq("jobId", jobId)).order("desc").take(50);
+    const leases = (await Promise.all((["active", "released", "expired", "stolen"] as const).map((status) =>
+      ctx.db.query("agentLeases").withIndex("by_job_status", (q) => q.eq("jobId", jobId).eq("status", status)).take(25)
+    ))).flat();
+    const draftOperations = (await Promise.all((["pending", "approved", "rejected", "needs_rebase", "applied"] as const).map((status) =>
+      ctx.db.query("agentDraftOperations").withIndex("by_job_status", (q) => q.eq("jobId", jobId).eq("status", status)).take(25)
+    ))).flat();
+    const latestRun = job.latestRunId ? await ctx.db.get(job.latestRunId) : null;
+    const latestSteps = job.latestRunId
+      ? await ctx.db.query("agentSteps").withIndex("by_run", (q) => q.eq("runId", job.latestRunId!)).take(80)
+      : [];
+    return { job, attempts, operations, receipts, modelJournal, leases, draftOperations, latestRun, latestSteps };
   },
 });
 
@@ -222,12 +500,36 @@ export const claimSlice = internalMutation({
     }
 
     const attempt = job.attempts + 1;
+    const leaseUntil = now + Math.max(1_000, leaseMs);
     await ctx.db.patch(jobId, {
       status: "running",
       attempts: attempt,
       leaseId,
-      leaseUntil: now + Math.max(1_000, leaseMs),
+      leaseUntil,
+      actionSliceCount: (job.actionSliceCount ?? 0) + 1,
       updatedAt: now,
+    });
+    await ctx.db.insert("agentLeases", {
+      jobId,
+      roomId: job.roomId,
+      targetKind: "artifact",
+      targetId: String(job.artifactId),
+      mode: "write",
+      status: "active",
+      expiresAt: leaseUntil,
+      createdAt: now,
+    });
+    await recordOperationEvent(ctx, {
+      jobId,
+      sequence: (job.actionSliceCount ?? 0) + (job.queryCount ?? 0) + (job.mutationCount ?? 0) + (job.modelCallCount ?? 0) + (job.toolCallCount ?? 0) + (job.schedulerHandoffCount ?? 0) + 2,
+      kind: "lease",
+      name: "agentJobs.claimSlice",
+      targetKind: "artifact",
+      targetId: String(job.artifactId),
+      countDelta: 1,
+      affectedIds: [String(jobId), String(job.artifactId)],
+      startedAt: now,
+      completedAt: now,
     });
 
     return {
@@ -300,6 +602,9 @@ export const finishSlice = internalMutation({
       status: nextStatus,
       leaseId: "",
       leaseUntil: 0,
+      modelCallCount: (job.modelCallCount ?? 0) + 1,
+      toolCallCount: (job.toolCallCount ?? 0) + (a.inputTokens || a.outputTokens ? 1 : 0),
+      mutationCount: (job.mutationCount ?? 0) + 1,
       updatedAt: now,
     };
     if (a.runId) patch.latestRunId = a.runId;
@@ -309,6 +614,22 @@ export const finishSlice = internalMutation({
     if (a.error !== undefined) patch.error = a.error;
     if (a.scheduledNextAt !== undefined) patch.nextRunAt = a.scheduledNextAt;
     if (nextStatus === "completed") patch.completedAt = now;
+    const activeLeases = await ctx.db.query("agentLeases").withIndex("by_job_status", (q) => q.eq("jobId", a.jobId).eq("status", "active")).collect();
+    for (const lease of activeLeases) await ctx.db.patch(lease._id, { status: "released", releasedAt: now });
+    await recordOperationEvent(ctx, {
+      jobId: a.jobId,
+      runId: a.runId,
+      sequence: (job.actionSliceCount ?? 0) + (job.queryCount ?? 0) + (job.mutationCount ?? 0) + (job.modelCallCount ?? 0) + (job.toolCallCount ?? 0) + (job.schedulerHandoffCount ?? 0) + 3,
+      kind: "checkpoint",
+      name: "agentJobs.finishSlice",
+      targetKind: "artifact",
+      targetId: String(job.artifactId),
+      status: nextStatus === "failed" ? "failed" : "completed",
+      countDelta: 1,
+      affectedIds: [String(a.jobId), String(job.artifactId)],
+      startedAt: now,
+      completedAt: now,
+    });
     await ctx.db.patch(a.jobId, patch as any);
     if (a.scheduledNextAt !== undefined && nextStatus !== "failed" && job.runtime !== "workflow") {
       await ctx.scheduler.runAfter(Math.max(0, a.scheduledNextAt - now), internal.agentJobRunner.runFreeAutoJobSlice, { jobId: a.jobId });

@@ -108,7 +108,7 @@ export interface AwarenessView {
   recentTrace: string[];
 }
 export type EditOutcome =
-  | { ok: true; version: number }
+  | { ok: true; version: number; mutationReceiptId?: string }
   | { ok: false; conflict: true; expected: number; actual: number }
   | { ok: false; locked: true; holder: string }
   | { ok: false; error: string };

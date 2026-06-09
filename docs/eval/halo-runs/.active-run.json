@@ -1,0 +1,10 @@
+{
+  "schema": 1,
+  "pid": 149656,
+  "runId": "20260609T183814Z",
+  "startedAt": "2026-06-09T18:38:14.705Z",
+  "updatedAt": "2026-06-09T19:09:17.507Z",
+  "until": "2026-06-10T17:00:00.000Z",
+  "statusPath": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\halo-runs\\20260609T183814Z\\status.json",
+  "commandLine": "tsx scripts/halo-overnight.ts --until=2026-06-10T17:00:00Z --sleep-minutes=30 --skip-e2e --skip-live"
+}

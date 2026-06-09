@@ -1,0 +1,293 @@
+{
+  "schema": 1,
+  "runId": "20260608T223247Z",
+  "generatedAt": "2026-06-08T22:32:52.088Z",
+  "cookbookSource": "https://developers.openai.com/cookbook/examples/agents_sdk/agent_improvement_loop",
+  "mode": {
+    "live": false,
+    "fullLive": false,
+    "strict": false
+  },
+  "targetUsers": [
+    "GTM sales operators managing account lists, enrichment, and PitchBook-style matching",
+    "Finance and banking analysts reconciling workbooks, exports, timecards, and variance evidence",
+    "Harness engineers converting messy workflow evidence into repeatable eval gates"
+  ],
+  "workflowProfile": {
+    "manifestFiles": 70,
+    "csvFiles": 23,
+    "xlsxFiles": 47,
+    "categoryCounts": {
+      "gtm_company_research": 46,
+      "finance_ops": 11,
+      "eval_harness": 2,
+      "analytics_optimization": 3,
+      "legacy_agent_outputs": 3,
+      "mixed": 5
+    },
+    "piiHeaderSignals": 47,
+    "formulaSampleFiles": 16,
+    "mergedCellFiles": 18,
+    "notes": [
+      "The profile stores only workbook shapes, categories, and header-level signals; raw private rows are not a repo artifact.",
+      "Most files are company research, classification, PitchBook, ParselyFi, or healthtech/JPM workflows.",
+      "Finance and ops files include timecards, timesheets, expense sheets, cost exports, and transaction exports with formula and layout concerns."
+    ]
+  },
+  "workflowCoverage": {
+    "totalCases": 17,
+    "byCategory": {
+      "gtm_company_research": 8,
+      "finance_ops": 4,
+      "eval_harness": 2,
+      "analytics_optimization": 2,
+      "legacy_agent_outputs": 1
+    },
+    "byRequirement": {
+      "artifact_refs": 12,
+      "cell_payload_evidence": 12,
+      "schema_detection": 8,
+      "cross_file_context": 7,
+      "spreadsheet_semantic_index": 7,
+      "privacy_redaction": 13,
+      "human_review": 16,
+      "long_running_free_auto": 4,
+      "workflow_checkpoint_resume": 4,
+      "resolved_model_audit": 4,
+      "wiki_grounded_update": 4,
+      "provider_parser_adapter": 2,
+      "formula_dependency_locks": 3,
+      "liteparse_layout_fallback": 1
+    },
+    "topCases": [
+      {
+        "id": "gtm-healthtech-sector-classification",
+        "category": "gtm_company_research",
+        "persona": "Healthcare investor classifying a large conference or PitchBook export",
+        "requiredHarness": [
+          "cell_payload_evidence",
+          "schema_detection",
+          "spreadsheet_semantic_index",
+          "long_running_free_auto",
+          "workflow_checkpoint_resume",
+          "resolved_model_audit",
+          "wiki_grounded_update",
+          "human_review"
+        ]
+      },
+      {
+        "id": "gtm-pitchbook-company-match-enrich",
+        "category": "gtm_company_research",
+        "persona": "Sales operations analyst preparing a PitchBook upload and match review",
+        "requiredHarness": [
+          "artifact_refs",
+          "cell_payload_evidence",
+          "schema_detection",
+          "cross_file_context",
+          "spreadsheet_semantic_index",
+          "privacy_redaction",
+          "human_review"
+        ]
+      },
+      {
+        "id": "gtm-amo-signal-scorer",
+        "category": "gtm_company_research",
+        "persona": "GTM analyst scoring target accounts against a reusable AMO rubric",
+        "requiredHarness": [
+          "spreadsheet_semantic_index",
+          "cell_payload_evidence",
+          "long_running_free_auto",
+          "workflow_checkpoint_resume",
+          "resolved_model_audit",
+          "privacy_redaction",
+          "human_review"
+        ]
+      },
+      {
+        "id": "finance-timesheet-invoice-review",
+        "category": "finance_ops",
+        "persona": "Ops or finance reviewer approving contractor time",
+        "requiredHarness": [
+          "schema_detection",
+          "formula_dependency_locks",
+          "cell_payload_evidence",
+          "provider_parser_adapter",
+          "liteparse_layout_fallback",
+          "privacy_redaction",
+          "human_review"
+        ]
+      },
+      {
+        "id": "gtm-jpm-market-map-joins",
+        "category": "gtm_company_research",
+        "persona": "Investor building a JPM health market map from multiple workbook tabs",
+        "requiredHarness": [
+          "cross_file_context",
+          "spreadsheet_semantic_index",
+          "cell_payload_evidence",
+          "artifact_refs",
+          "privacy_redaction",
+          "human_review"
+        ]
+      },
+      {
+        "id": "gtm-company-deep-report",
+        "category": "gtm_company_research",
+        "persona": "Account executive or analyst building a company brief for outreach",
+        "requiredHarness": [
+          "artifact_refs",
+          "cross_file_context",
+          "provider_parser_adapter",
+          "wiki_grounded_update",
+          "privacy_redaction",
+          "human_review"
+        ]
+      },
+      {
+        "id": "finance-cost-reconciliation",
+        "category": "finance_ops",
+        "persona": "Finance analyst reconciling model/vendor spend",
+        "requiredHarness": [
+          "cell_payload_evidence",
+          "formula_dependency_locks",
+          "spreadsheet_semantic_index",
+          "cross_file_context",
+          "artifact_refs",
+          "human_review"
+        ]
+      },
+      {
+        "id": "eval-ui-action-execution-map",
+        "category": "eval_harness",
+        "persona": "QA engineer mapping product actions to expected runtime behavior",
+        "requiredHarness": [
+          "artifact_refs",
+          "workflow_checkpoint_resume",
+          "long_running_free_auto",
+          "resolved_model_audit",
+          "privacy_redaction",
+          "human_review"
+        ]
+      }
+    ]
+  },
+  "steps": [
+    {
+      "id": "professional-catalog",
+      "label": "Professional workflow catalog",
+      "lane": "deterministic",
+      "command": "npm run eval:professional",
+      "status": "pass",
+      "ms": 1599,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 eval:professional\n> vitest run tests/professionalWorkflows.test.ts\n\n\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/professionalWorkflows.test.ts (7 tests) 7ms\n\n Test Files  1 passed (1)\n      Tests  7 passed (7)\n   Start at  15:32:47\n   Duration  713ms (transform 71ms, setup 0ms, collect 122ms, tests 7ms, environment 0ms, prepare 128ms)\n\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "workflow-evals",
+      "label": "GTM/finance workflow evals",
+      "lane": "deterministic",
+      "command": "npx vitest run tests/workflowEvals.test.ts",
+      "status": "pass",
+      "ms": 2447,
+      "exitCode": 0,
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/workflowEvals.test.ts (5 tests) 20ms\n\n Test Files  1 passed (1)\n      Tests  5 passed (5)\n   Start at  15:32:49\n   Duration  1.22s (transform 151ms, setup 0ms, collect 596ms, tests 20ms, environment 0ms, prepare 136ms)\n\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "collaboration-ladder",
+      "label": "Collaboration ladder L1-L6",
+      "lane": "deterministic",
+      "command": "npm run ladder",
+      "status": "pass",
+      "ms": 1013,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 ladder\n> tsx evals/ladder.ts\n\n  scripted · L1_read ... PASS (1 tools, 0.0s, $0.0000, resolved=scripted-read)\n  scripted · L2_edit ... PASS (4 tools, 0.0s, $0.0000)\n  scripted · L3_conflict ... PASS (4 tools, 0.0s, $0.0000)\n  scripted · L4_blocked ... PASS (4 tools, 0.0s, $0.0000)\n  scripted · L5_large_range ... PASS (4 tools, 0.0s, $0.0000)\n  scripted · L6_long_horizon ... PASS (16 tools, 0.0s, $0.0000)\n\nFAILURE HEATMAP (model x level)\n------------------------------------------------------------------------\nmodel                         L1  L2  L3  L4  L5  L6\nscripted                      OK  OK  OK  OK  OK  OK\n------------------------------------------------------------------------\nlegend: L1=READ (no mutation) | L2=EDIT (single CAS) | L3=CONFLICT (no clobber) | L4=BLOCKED (must draft) | L5=LARGE RANGE (no full snapshot) | L6=LONG HORIZON (compaction + recovery)\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "free-route-discovery",
+      "label": "OpenRouter free-auto discovery",
+      "lane": "live",
+      "command": "npm run openrouter:free -- --limit=5",
+      "status": "skip",
+      "ms": 0,
+      "exitCode": null,
+      "reason": "pass --live and set OPENROUTER_API_KEY to discover current free-auto candidates"
+    },
+    {
+      "id": "provider-parser-smoke",
+      "label": "Provider parser live smoke",
+      "lane": "live",
+      "command": "npm run provider-parser:smoke",
+      "status": "skip",
+      "ms": 0,
+      "exitCode": null,
+      "reason": "pass --live; script will skip providers without keys"
+    },
+    {
+      "id": "free-job-smoke",
+      "label": "Convex /free job smoke",
+      "lane": "live",
+      "command": "npm run free-job:smoke",
+      "status": "skip",
+      "ms": 0,
+      "exitCode": null,
+      "reason": "pass --live and set CONVEX_URL or VITE_CONVEX_URL"
+    },
+    {
+      "id": "benchmark-v2",
+      "label": "V2 multi-model benchmark",
+      "lane": "full-live",
+      "command": "npm run benchmark",
+      "status": "skip",
+      "ms": 0,
+      "exitCode": null,
+      "reason": "pass --full-live to spend live provider calls on the full benchmark"
+    },
+    {
+      "id": "free-auto-ladder",
+      "label": "Free-auto router ladder",
+      "lane": "full-live",
+      "command": "npm run ladder:free",
+      "status": "skip",
+      "ms": 0,
+      "exitCode": null,
+      "reason": "pass --full-live and set OPENROUTER_API_KEY; this can take hours"
+    },
+    {
+      "id": "gemini-ui-review",
+      "label": "Gemini UI media review",
+      "lane": "ui",
+      "command": "npx tsx scripts/gemini-ui-review.ts",
+      "status": "skip",
+      "ms": 0,
+      "exitCode": null,
+      "reason": "pass --ui-media=<screenshot-or-video> and set GOOGLE_GENERATIVE_AI_API_KEY"
+    }
+  ],
+  "handoff": {
+    "topRecommendations": [
+      "Run skipped free-route-discovery once prerequisites are present: pass --live and set OPENROUTER_API_KEY to discover current free-auto candidates.",
+      "Run skipped provider-parser-smoke once prerequisites are present: pass --live; script will skip providers without keys.",
+      "Run skipped free-job-smoke once prerequisites are present: pass --live and set CONVEX_URL or VITE_CONVEX_URL.",
+      "Run skipped gemini-ui-review once prerequisites are present: pass --ui-media=<screenshot-or-video> and set GOOGLE_GENERATIVE_AI_API_KEY.",
+      "Persist each new live trace into a durable eval fixture before promoting README charts.",
+      "Add browser-visible multi-user checks for public/private chat, artifact references, proposals, and trace accept-all."
+    ],
+    "generatedEvalIdeas": [
+      "GTM PitchBook match: upload source and result files, drag both into chat, assert CellPayload evidence and no CRM clobber.",
+      "JPM health market map: cross-tab join into watchlist, assert source artifact row/column evidence.",
+      "Finance variance reconciliation: multi-user conflict plus reconcile_cell skip/correct/conflict assertions.",
+      "Timecard approval: detect gaps/duplicates and write a note without leaking private line items.",
+      "Provider parser media: PDF/PPTX/screenshot extraction into evidence-bearing dataframe cells.",
+      "UI trace lifecycle: browser click path for auto-accept modal, accept-all, proposal trace, and artifact updates."
+    ],
+    "nextLiveRuns": [
+      "npm run agent:improve -- --live",
+      "npm run agent:improve -- --full-live",
+      "npm run agent:improve -- --ui-media=docs/eval/ui-recordings/<recording-or-screenshot>",
+      "npm run benchmark:charts after docs/eval/results.json has benchmarkVersion=company-research-v2-9checks-router"
+    ]
+  }
+}

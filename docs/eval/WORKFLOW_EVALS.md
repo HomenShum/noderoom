@@ -1,34 +1,41 @@
-# Workflow Evals — beyond the L1–L6 collaboration ladder (2026-06-07)
+# Workflow Evals - beyond the L1-L6 collaboration ladder (2026-06-07)
 
-The L1–L6 ladder (`evals/ladder.ts`) tests the **collaboration primitive** (lock → CAS → draft → no-clobber).
-These evals test the **real product workflows**. A grounded design pass (5 parallel agents reading the
-actual codebase) produced scenario specs; implementing them surfaced that **only 2 of 5 are agent-executable
-today** — the other 3 are blocked by missing *capabilities*, not missing tests.
+The L1-L6 ladder (`evals/ladder.ts`) tests the collaboration primitive: lock, CAS, draft, range
+discipline, and compaction recovery. These evals test product workflows.
+
+The earlier design pass produced five workflow specs. All five now have green deterministic coverage;
+the remaining work is live provider repetition, browser E2E, and production-scale Convex proof.
 
 ## Status
 
 | Workflow | Status | Where | Note |
 |---|---|---|---|
-| **GTM enrichment** | ✅ **green** | `tests/workflowEvals.test.ts` (harness) | `companyResearchPlan` fills pending accounts → complete, sourced `CellPayload`+evidence, CRM columns untouched, edit-read provenance. |
-| **Parser extraction** | ✅ **green** | `tests/workflowEvals.test.ts` (direct) | banner-band CSV → header detected below banner, blanks stay empty (no invention), per-cell provenance, honest warning. |
-| **Cross-file workflows** | ✅ **green** | `tests/workflowEvals.test.ts` | UNBLOCKED by the **multi-artifact tool layer** (`artifactId` on the RoomTools port + `list_artifacts`). One run bound to the sheet now discovers files, reads the sheet, and writes the note. |
-| **Wiki updates** | ✅ **green** | `tests/workflowEvals.test.ts` | UNBLOCKED by the **`update_wiki`** tool (grounded, citation-enforced, CAS) riding on multi-artifact reach. |
-| **Finance reconciliation** | ✅ **green** | `tests/workflowEvals.test.ts` | UNBLOCKED by the **`reconcile_cell`** derive/compare tool: read → write only if different → SKIPS already-correct cells (no clobber) → CAS-protected. |
+| GTM enrichment | green | `tests/workflowEvals.test.ts` | `companyResearchPlan` fills pending accounts, writes sourced `CellPayload` evidence, leaves CRM columns untouched, and preserves edit-read provenance. |
+| Parser extraction | green | `tests/workflowEvals.test.ts` | Banner-band CSV parsing detects headers below the banner, keeps blanks empty, and records honest warnings. |
+| Cross-file workflows | green | `tests/workflowEvals.test.ts` | Multi-artifact RoomTools and `list_artifacts` let an agent read the sheet and write the note/wiki. |
+| Wiki updates | green | `tests/workflowEvals.test.ts` | `update_wiki` performs grounded note writes with required citations and CAS. |
+| Finance reconciliation | green | `tests/workflowEvals.test.ts` | `reconcile_cell` derives expected values, skips already-correct cells, and CAS-corrects only when different. |
 
-## The capability roadmap this eval pass produced — DONE
-All four capabilities the eval pass specified have shipped (each backed by a green eval):
-1. ✅ **Multi-artifact tool layer** — `artifactId` on the RoomTools port + `list_artifacts` tool (both ports + the engine). Unblocked cross-file + wiki.
-2. ✅ **`update_wiki` agent tool** — grounded write to a note doc with required citations + a visible Sources footer. Unblocked wiki.
-3. ✅ **`reconcile_cell` capability** — derives/compares (`if current==expected skip; else CAS-correct`). Unblocked finance reconciliation.
-4. ⏳ **`parse_file` agent tool** (optional) — parsing is still eval'd directly (correct for a pure app-layer function); promoting it into `ROOM_TOOLS` for agent-driven parsing is the only optional remainder.
+## Capability Roadmap
+
+Shipped capabilities:
+
+1. Multi-artifact tool layer: artifact-scoped RoomTools plus `list_artifacts`.
+2. `update_wiki`: grounded write to a note document with required citations.
+3. `reconcile_cell`: derive, compare, skip, or CAS-correct.
+4. Direct parser fixtures for spreadsheet ingestion.
+
+Still optional:
+
+1. Promote `parse_file` into `ROOM_TOOLS` for fully agent-driven parsing.
+2. Add live GTM and finance provider jobs with row-level trace assertions.
+3. Add browser E2E for public/private chat, drag-file references, and cross-artifact edits.
 
 ## Running
-- Scripted (deterministic, fast): `npx vitest run workflowEvals` — both green.
-- Real-model matrix (the honest signal): the GTM scenario can run via `companyResearchPlan` targets through
-  `evals/ladder.ts --real <model>` once a `research` rung is added (the ladder's variance-only `Env`/rung
-  helpers were generalized — `cellValue`/`onlyTouched`/`editReadProvenance` already read `{rowId}__{col}` and
-  recognize `write_cell_result`).
 
-## Why this matters
-Broadening evals did its job: it proved 2 real workflows green **and** turned "we should test these 5
-workflows" into "here are the 3 capabilities to build first." The evals are the spec.
+```bash
+npx vitest run tests/workflowEvals.test.ts
+npm run eval:professional
+```
+
+The real-model matrix should use workflow-specific live evals, not only the variance ladder.

@@ -34,6 +34,7 @@ export class ConvexRoomTools implements RoomTools {
     private artifactId: Id<"artifacts">,
     private actor: Actor,
     private sessionId: string,
+    private jobId?: Id<"agentJobs">,
   ) {}
 
   async snapshot(artifactId: string = this.artifactId): Promise<RoomSnapshot> {
@@ -70,8 +71,8 @@ export class ConvexRoomTools implements RoomTools {
   }
 
   async editCell(elementId: string, value: unknown, baseVersion: number, artifactId: string = this.artifactId): Promise<EditOutcome> {
-    const r = await this.ctx.runMutation(artifactsApplyAgentCellEditRef, { roomId: this.roomId, artifactId, elementId, value, baseVersion, actor: this.actor });
-    if (r.ok) return { ok: true, version: r.version };
+    const r = await this.ctx.runMutation(artifactsApplyAgentCellEditRef, { roomId: this.roomId, artifactId, elementId, value, baseVersion, actor: this.actor, jobId: this.jobId });
+    if (r.ok) return { ok: true, version: r.version, mutationReceiptId: r.mutationReceiptId ? String(r.mutationReceiptId) : undefined };
     if (r.reason === "conflict") return { ok: false, conflict: true, expected: r.expected, actual: r.actual };
     if (r.reason === "locked") return { ok: false, locked: true, holder: r.by };
     return { ok: false, error: r.reason };

@@ -1,0 +1,126 @@
+{
+  "schema": 1,
+  "runId": "20260609T060148Z",
+  "startedAt": "2026-06-09T06:01:48.651Z",
+  "until": "2026-06-09T17:00:00.000Z",
+  "sleepMinutes": 30,
+  "once": false,
+  "dryRun": true,
+  "skipE2e": false,
+  "fullLive": true,
+  "git": {
+    "commitSha": "33c2203",
+    "gitDirty": true,
+    "worktreeHash": "1525016c64d58f32"
+  },
+  "env": {
+    "CONVEX_URL": false,
+    "VITE_CONVEX_URL": true,
+    "OPENROUTER_API_KEY": true,
+    "GOOGLE_GENERATIVE_AI_API_KEY": true,
+    "OPENAI_API_KEY": true,
+    "ANTHROPIC_API_KEY": true
+  },
+  "steps": [
+    {
+      "id": "typecheck",
+      "lane": "deterministic",
+      "command": "npm run typecheck",
+      "timeoutMs": 600000,
+      "eligible": true
+    },
+    {
+      "id": "unit-tests",
+      "lane": "deterministic",
+      "command": "npm run test",
+      "timeoutMs": 1200000,
+      "eligible": true
+    },
+    {
+      "id": "e2e-tests",
+      "lane": "deterministic",
+      "command": "npm run test:e2e",
+      "timeoutMs": 1500000,
+      "eligible": true
+    },
+    {
+      "id": "agent-improvement-loop",
+      "lane": "deterministic",
+      "command": "npm run agent:improve",
+      "timeoutMs": 1500000,
+      "eligible": true
+    },
+    {
+      "id": "eval-diff",
+      "lane": "deterministic",
+      "command": "npm run eval:diff",
+      "timeoutMs": 600000,
+      "eligible": true
+    },
+    {
+      "id": "qa-matrix",
+      "lane": "deterministic",
+      "command": "npm run qa:matrix:check",
+      "timeoutMs": 600000,
+      "eligible": true
+    },
+    {
+      "id": "convex-boundaries",
+      "lane": "deterministic",
+      "command": "npm run convex:boundaries",
+      "timeoutMs": 600000,
+      "eligible": true
+    },
+    {
+      "id": "architecture-budget",
+      "lane": "deterministic",
+      "command": "npm run architecture:budget",
+      "timeoutMs": 600000,
+      "eligible": true
+    },
+    {
+      "id": "openrouter-free",
+      "lane": "live",
+      "command": "npm run openrouter:free -- --limit=5 --smoke --agent-smoke",
+      "timeoutMs": 600000,
+      "eligible": true
+    },
+    {
+      "id": "provider-parser-smoke",
+      "lane": "live",
+      "command": "npm run provider-parser:smoke",
+      "timeoutMs": 600000,
+      "eligible": true
+    },
+    {
+      "id": "free-job-smoke",
+      "lane": "live",
+      "command": "npm run free-job:smoke",
+      "timeoutMs": 1200000,
+      "eligible": true
+    },
+    {
+      "id": "benchmark-v2",
+      "lane": "full-live",
+      "command": "npm run benchmark -- --model-timeout-ms=180000 --model-reserve-ms=15000 --row-hard-timeout-ms=210000",
+      "timeoutMs": 3600000,
+      "eligible": true
+    },
+    {
+      "id": "free-auto-ladder",
+      "lane": "full-live",
+      "command": "npm run ladder:free",
+      "timeoutMs": 10800000,
+      "eligible": true
+    },
+    {
+      "id": "gemini-ui-review",
+      "lane": "ui",
+      "command": "npm run ui:gemini-review --",
+      "timeoutMs": 600000,
+      "eligible": false,
+      "skipReason": "pass --ui-media=<path> and set GOOGLE_GENERATIVE_AI_API_KEY"
+    }
+  ],
+  "summaryPath": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\halo-runs\\20260609T060148Z\\summary.jsonl"
+}

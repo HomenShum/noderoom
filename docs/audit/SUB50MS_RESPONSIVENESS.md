@@ -45,9 +45,26 @@ and LLM inference is seconds regardless; the thinking spinner + optimistic queue
 instant). These are either inherently slow or genuinely shared-state arbitration (CAS, locks),
 where server-first is the right call for a multiplayer room.
 
-**The one real perceived-latency miss:** `addResearchRows` ("Add accounts"),
-`createArtifact`/`uploadArtifact` are plain mutations with **no optimistic insert** — new rows
-paint only after `rooms.full` re-streams (`store.tsx:370-371`). Fixable for parity (P2).
+**~~The one real perceived-latency miss~~ — CLOSED.** Full optimistic coverage shipped: every
+UI-surfaced mutation now paints locally. Added: `addResearchRows` (exact client mirror of the
+server's deterministic row builder — same slugs, suffix-dedup, defaults), `createArtifact`/
+`uploadArtifact` (placeholder-id insert + echo guard; authoritative id swaps atomically),
+job `cancel`/`retry` (status flips mirroring the server's own transition guards), and
+`resolveProposal` was **deepened** — approve now paints the cell value too, killing a visible
+two-phase flick (chip vanished instantly, cell landed a beat later). Also fixed a real replay bug:
+`sendMsg` appended unconditionally, so a `retrySend` with the same `clientMsgId` whose first
+attempt landed server-side would paint a duplicate bubble for the in-flight window — now guarded
+(per convex@1.40 `optimistic_updates.d.ts:64-66`: updates "can be called multiple times …
+replayed", so every update must be replay-idempotent). Deliberately **not** made optimistic:
+`startFreeAuto` — its idempotency path may return a *reused* job with no insert, so an optimistic
+row would paint a phantom that vanishes on reconcile (guaranteed flicker); the optimistic chat
+announcement is the instant feedback there.
+
+**Proven, not asserted (offline paint proof):** with `context.setOffline(true)` — network
+physically unavailable — chat send painted in **75ms** and a cell edit in **85ms** (both include
+Playwright CDP/polling overhead; app-side paint is 1–2 frames). On reconnect the queued mutations
+flushed to **exactly one bubble** (dup guard) and an **identical cell value** (shape parity →
+zero-flicker authoritative swap, which Convex performs atomically with the rollback).
 
 **The at-scale caveat (today's speed is unproven under load):**
 - `rooms.full` re-serializes the **whole room** (all artifacts + all elements, `convex/rooms.ts:78-84`)
@@ -97,8 +114,9 @@ paint only after `rooms.full` re-streams (`store.tsx:370-371`). Fixable for pari
 3. **P1 — `React.lazy` the TipTap editor** (and optionally the Wall) out of the index chunk.
 4. **P1 — Upload long task:** kill the O(n²) `indexOf` with a precomputed Map (cheap), then move
    parse+index to a Web Worker.
-5. **P2 — Optimistic inserts** for `addResearchRows` / `createArtifact` / `uploadArtifact` (the
-   last non-optimistic hand interactions).
+5. **P2 — Optimistic inserts** — ✅ **DONE** (see §2): addResearchRows, createArtifact/upload,
+   job cancel/retry, deepened resolveProposal, sendMsg replay guard. Verified by the offline
+   paint proof.
 6. **P2 — Hardening bundle:** `contain: content` on the three big panels; fix `.r-tour-spot` to
    transform/clip-path; passive tour scroll listener; dev-only INP/long-task probe so P1 results
    are *measured*, not asserted.

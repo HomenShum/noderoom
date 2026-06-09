@@ -548,6 +548,7 @@ function Sheet({ roomId, me, art, onError }: { roomId: string; me: Actor; art: A
                 const lk = lockedByOther(store, art.id, vId, me);
                 const drafting = draftedFor(store, roomId, art.id, vId);
                 const committed = !lk && vEl && vEl.version > 1 && now - vEl.updatedAt < 1500;
+                const personalEditor = vEl?.updatedBy && (vEl.updatedBy as Actor).ownerId ? store.listMembers(roomId).find((mm) => mm.id === (vEl.updatedBy as Actor).ownerId) : undefined;
                 const vCls = "r-cell num" + (lk ? " locked" : "") + (drafting ? " draft" : "") + (committed ? " committed" : "");
                 return (
                   <tr key={rid}>
@@ -559,6 +560,7 @@ function Sheet({ roomId, me, art, onError }: { roomId: string; me: Actor; art: A
                       <EditableCell key={vId + ":" + (vEl?.version ?? 0)} value={String(vEl?.value ?? "")} disabled={!!lk || drafting} align="right" onCommit={(s) => doCommit(vId, s)} />
                       {lk && <span className="lockbadge"><Lock size={9} /> NA</span>}
                       {drafting && <span className="lockbadge"><Pencil size={9} /> draft</span>}
+                      {personalEditor && <span className="r-prov-dot" style={{ background: personalEditor.color }} title={`edited by ${personalEditor.name}'s agent`} />}
                     </td>
                     <td className="r-cell" data-cell-key={nId} data-testid="sheet-cell">
                       <EditableCell key={nId + ":" + (nEl?.version ?? 0)} value={String(nEl?.value ?? "")} disabled={!!lk} addLabel="note" onCommit={(s) => doCommit(nId, s)} />

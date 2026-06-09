@@ -13,7 +13,11 @@ import {
 
 const COLORS = ["#d97757", "#5b9bf5", "#7bd089", "#a78bfa", "#e4c567", "#e8845f"];
 function colorFor(store: RoomStore, roomId: string, a: Actor): string {
-  if (a.kind === "agent") return "#d97757";
+  if (a.kind === "agent") {
+    // A personal agent (acting for a member) wears that member's color; the shared Room agent stays orange.
+    if (a.ownerId) return store.listMembers(roomId).find((m) => m.id === a.ownerId)?.color ?? "#d97757";
+    return "#d97757";
+  }
   return store.listMembers(roomId).find((m) => m.id === a.id)?.color ?? COLORS[0];
 }
 function initials(name: string): string {
@@ -50,6 +54,7 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
   const [failedSends, setFailedSends] = useState<Array<{ cid: string; text: string }>>([]);
   const [jobBusy, setJobBusy] = useState<null | "cancel" | "retry">(null);
   const [jobErr, setJobErr] = useState<string | null>(null);
+  const [roomLane, setRoomLane] = useState(false); // private panel: false = whisper to me, true = act in the room
   const feedRef = useRef<HTMLDivElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const nearBottom = useRef(true);
@@ -112,9 +117,10 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
     }
 
     if (isPrivate && store.mode === "convex" && t) {
-      // Live private NodeAgent: reads the room and replies in this user's private channel only.
+      // Live private NodeAgent. Private lane → replies only to you. Room lane → acts in the shared room
+      // (edits the sheet + posts public chat) as your personal agent, attributed to you.
       setThinking(true);
-      void store.askPrivateAgent(t).finally(() => setThinking(false));
+      void store.askPrivateAgent(t, { publish: roomLane }).finally(() => setThinking(false));
     }
   };
 
@@ -285,6 +291,16 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
       </div>
 
       <div className="r-composer">
+        {isPrivate && store.mode === "convex" && (
+          <div className="r-lane" role="group" aria-label="Where your agent acts">
+            <button type="button" className="r-lane-btn" data-on={String(!roomLane)} data-testid="lane-private" onClick={() => setRoomLane(false)} title="Private: your agent reads the room and replies only to you">
+              <Lock size={11} /> Private
+            </button>
+            <button type="button" className="r-lane-btn" data-on={String(roomLane)} data-testid="lane-room" onClick={() => setRoomLane(true)} title="Room: your agent acts in the shared room — edits the sheet + posts to public chat, attributed to you">
+              <Globe size={11} /> Room
+            </button>
+          </div>
+        )}
         {slashOpen && (
           <div className="r-slash" role="listbox" aria-label="Commands">
             {SLASH_CMDS.map((c) => (
@@ -308,7 +324,7 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
         )}
         <div className="r-input-wrap">
           <textarea ref={taRef} rows={1} value={text} onChange={onChange} onKeyDown={onKeyDown}
-            placeholder={isPrivate ? "Ask privately..." : "Message the room... type / for commands"}
+            placeholder={isPrivate ? (roomLane ? "Tell your agent to act in the room…" : "Ask privately…") : "Message the room... type / for commands"}
             data-testid="chat-composer"
             aria-label={isPrivate ? "Ask privately" : "Message the room"} />
           <button className="r-send" onClick={() => send()} data-testid="chat-send" aria-label="Send message"><Send size={15} /></button>
@@ -333,6 +349,7 @@ function Bubble({ m, roomId, variant, me, onPromote, onOpenArtifact }: { m: Mess
   const [editErr, setEditErr] = useState<string | null>(null);
   const parsed = parseArtifactRefMessage(m.text);
   const agent = m.author.kind === "agent";
+  const viaOwner = agent && m.author.ownerId ? store.listMembers(roomId).find((x) => x.id === m.author.ownerId)?.name : null;
   const ask = !agent && parsed.body.trim().startsWith("/ask");
   const mine = !agent && m.author.id === me.id;
   const canPromote = agent && variant === "private";
@@ -353,6 +370,7 @@ function Bubble({ m, roomId, variant, me, onPromote, onOpenArtifact }: { m: Mess
         <div className="meta">
           <span className="who">{m.author.name}</span>
           {agent && <span className="r-tag agent" style={{ padding: "1px 5px", fontSize: 9 }}>agent</span>}
+          {viaOwner && <span className="r-tag" data-testid="agent-via" style={{ padding: "1px 5px", fontSize: 9 }}>via {viaOwner}</span>}
           {pending && <span className="r-tag" data-testid="chat-pending" style={{ padding: "1px 5px", fontSize: 9 }}>sending…</span>}
           <span className="time">{clock(m.createdAt)}</span>
         </div>

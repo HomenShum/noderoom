@@ -25,6 +25,7 @@
 4. **Shared-sheet edit (same cell, conflict)** — Maya and Dev both write `r_rev__variance` near-simultaneously. *Pass:* CAS picks one winner; the loser's optimistic value reverts; **all three views show the same final value** (no clobber, no torn state).
 5. **Public agent** — Maya sends `/ask reconcile Q3 revenue`. *Pass:* the Room NodeAgent's agent message + its cell edits (e.g. `r_gp__variance`, `r_ni__variance`) appear in **all three** views.
 6. **Private agent + isolation** — Maya asks her private NodeAgent (`runPrivateAgent`); it reads the room and replies in **Maya's private channel only**. *Pass:* a private agent reply appears for Maya; neither her question nor the reply is visible to Dev/Sam.
+7. **Personal agent acts in the room** — Maya flips her private panel to the 🌐 Room lane and asks her agent to act; it edits the **shared** sheet and/or posts public chat as her personal agent, attributed **via Maya** (owner-tinted), visible to all. *Pass:* a public effect (a filled variance cell and/or a `via {name}` public bubble) reaches Dev's & Sam's views. (Prod-verified: filled Revenue variance + posted a `via Maya` summary.)
 
 ## Visual verification
 Per-view screenshots are captured to `docs/eval/three-user-shots/` at the end of Acts 2, 4, and 5 (`{act}-maya.png` / `-dev.png` / `-sam.png`) and inspected to confirm the three views are consistent.

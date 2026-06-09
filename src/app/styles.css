@@ -426,3 +426,9 @@ input { font-family: inherit; }
 .r-tour-actions { display: flex; align-items: center; gap: 8px; }
 .r-tour-actions .grow { flex: 1; }
 .r-demo-badge { background: var(--accent-tint); color: var(--accent-ink); border: 1px solid var(--accent-border); }
+
+/* ── Personal-agent lane toggle (private composer) + cell provenance dot ── */
+.r-lane { display: inline-flex; gap: 2px; padding: 3px; margin-bottom: 8px; border-radius: 9px; background: var(--bg-secondary); border: 1px solid var(--line); width: fit-content; }
+.r-lane-btn { display: inline-flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 7px; font-size: 11.5px; font-weight: 600; color: var(--text-muted); background: transparent; border: 1px solid transparent; transition: background .15s, color .15s; }
+.r-lane-btn[data-on="true"] { background: var(--bg-primary); color: var(--text-primary); border-color: var(--line); box-shadow: var(--shadow-sm); }
+.r-prov-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; margin-left: 6px; vertical-align: middle; box-shadow: 0 0 0 1.5px var(--bg-primary); }

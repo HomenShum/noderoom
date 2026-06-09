@@ -111,8 +111,10 @@ export interface RoomStore {
   runCollab(): Promise<void>;
   /** Drive the public Room NodeAgent on a free-form goal — the `/ask` path. */
   askAgent(input: AgentAskInput): Promise<void>;
-  /** Drive the per-user PRIVATE NodeAgent — reads the room, replies in the user's own private channel only. */
-  askPrivateAgent(goal: string): Promise<void>;
+  /** Drive the per-user PRIVATE NodeAgent. Default: reads the room, replies in the user's own private
+   * channel. With `{ publish: true }`: the agent acts in the shared room (edits the sheet + posts public
+   * chat) as the user's personal agent, attributed to them. */
+  askPrivateAgent(goal: string, opts?: { publish?: boolean }): Promise<void>;
   startLongFreeAgent(input: AgentAskInput): Promise<void>;
   /** Enrich every PENDING company on the research sheet (ParselyFi loop) — status-gated, sourced. */
   askResearch(): Promise<void>;
@@ -427,7 +429,13 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
         }
         await runAgent({ roomId: rid, artifactId: sheet.id as never, requester: proof, goal: withReferenceContext(input.goal, references) });
       },
-      askPrivateAgent: async (goal) => { await runPrivateAgent({ roomId: rid, requester: proof, goal }); },
+      askPrivateAgent: async (goal, opts) => {
+        if (opts?.publish) {
+          const sheet = artifacts.find((a) => a.kind === "sheet");
+          if (sheet) { await runAgent({ roomId: rid, artifactId: sheet.id as never, requester: proof, goal, asOwner: { id: me.id, name: me.name } }); return; }
+        }
+        await runPrivateAgent({ roomId: rid, requester: proof, goal });
+      },
       startLongFreeAgent: async (input) => {
         const references = canonicalRefs(artifacts, input.references);
         const sheet = targetSheet(artifacts, references);

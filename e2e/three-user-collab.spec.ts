@@ -122,7 +122,28 @@ test("three users chat, edit the same sheet concurrently, and run the public age
     await expect(priv(p).locator('[data-testid="chat-message"].agent')).toHaveCount(0);
   }
 
+  // ── Act 7: PERSONAL agent acts in the ROOM (public). Maya flips her private panel to the Room lane and
+  //    asks her agent to fill cells; it edits the SHARED sheet and/or posts public chat, attributed
+  //    "via Maya", visible to Dev & Sam (real LLM, best-effort).
+  let personalPublic = "not-run";
+  try {
+    await priv(maya).getByTestId("lane-room").click();
+    const emptyBefore: string[] = [];
+    for (const r of ["r_cogs", "r_ni", "r_opex"]) if (!(await cellText(sam, v(r))).length) emptyBefore.push(r);
+    const viaBefore = await chat(sam).locator('[data-testid="agent-via"]').count();
+    await priv(maya).getByTestId("chat-composer").fill("Fill any remaining empty variance cells with your best estimate, then post a one-line summary to the room.");
+    await priv(maya).getByTestId("chat-send").click();
+    await expect.poll(async () => {
+      const viaNow = await chat(sam).locator('[data-testid="agent-via"]').count();
+      let filled = false;
+      for (const r of emptyBefore) if ((await cellText(sam, v(r))).length) filled = true;
+      return viaNow > viaBefore || filled;
+    }, { timeout: 150_000, intervals: [3000] }).toBeTruthy();
+    personalPublic = "acted-in-room-visible-to-all";
+  } catch { personalPublic = "no-visible-effect-within-150s"; }
+  await shoot(pages, "act7-personal-public");
+
   // eslint-disable-next-line no-console
-  console.log(JSON.stringify({ room: CODE, sameCellWinner: winner, agent, privateAgent }, null, 2));
+  console.log(JSON.stringify({ room: CODE, sameCellWinner: winner, agent, privateAgent, personalPublic }, null, 2));
   for (const p of all) await p.context().close();
 });

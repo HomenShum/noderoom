@@ -308,6 +308,46 @@ export function EngineStoreProvider({ roomId, children }: { roomId: string; me: 
 /* ── live Convex ── */
 const chanStr = (ch: Channel): string => (ch === "public" ? "public" : ch.private);
 
+/* ── optimistic-update helpers ─────────────────────────────────────────────
+   Convex semantics (convex@1.40 optimistic_updates.d.ts): the update is rolled back
+   ATOMICALLY with the authoritative query results when the mutation completes — so
+   zero TEMPORAL flicker is the platform's guarantee. What's ours: (1) SHAPE PARITY —
+   the optimistic value must equal what the server will compute, or the swap shows a
+   content jump; (2) REPLAY IDEMPOTENCE — "optimistic updates can be called multiple
+   times … replayed" on fresh server state while the mutation is in flight, so every
+   update must recompute from current state and tolerate its own server echo. */
+
+/** Mirror of applyCellEditCore's apply step (convex/artifacts.ts): version bump, order
+ *  handling for create/delete, updatedBy attribution. Shared by the hand-edit and the
+ *  proposal-approve optimistic paths so both paint the exact server outcome. */
+function withCellApplied(artifacts: Artifact[], artifactId: string, elementId: string, kind: "set" | "create" | "delete", value: unknown, actor: Actor): Artifact[] {
+  return artifacts.map((a) => {
+    if (a.id !== artifactId) return a;
+    const prev = (a.elements[elementId] ?? { version: 0 }) as { version: number };
+    const elements = { ...a.elements };
+    const order = kind === "create" && !elements[elementId] ? [...a.order, elementId] : kind === "delete" ? a.order.filter((id) => id !== elementId) : a.order;
+    if (kind === "delete") delete elements[elementId];
+    else elements[elementId] = { id: elementId, value, version: prev.version + 1, updatedAt: Date.now(), updatedBy: actor } as Artifact["elements"][string];
+    return { ...a, version: a.version + 1, order, elements };
+  });
+}
+
+/* Client mirrors of convex/artifacts.ts research-row helpers — MUST stay in lockstep
+   (they make addResearchRows deterministic, which is what makes its optimistic insert
+   parity-exact: same slugs, same suffix-dedup, same default column values). */
+const RESEARCH_COLS = [
+  "company", "website", "status", "tier", "intent", "owner", "crm_status",
+  "summary", "funding", "headcount", "recent_signal", "source", "source2", "last_researched",
+] as const;
+function slugResearchRowClient(company: string): string {
+  const base = company.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 28);
+  return base ? `rc_${base}` : `rc_company`;
+}
+function defaultWebsiteClient(company: string): string {
+  const host = company.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 32);
+  return host ? `https://www.${host}.com` : "";
+}
+
 export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: string; me: Actor; proof: ActorProof; children: ReactNode }) {
   const rid = roomId as never;
   const data = useQuery(api.rooms.full, { roomId: rid, requester: proof });
@@ -326,21 +366,16 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
   const applyCellEdit = useMutation(api.artifacts.applyCellEdit).withOptimisticUpdate((local, args) => {
     const cur = local.getQuery(api.rooms.full, { roomId: args.roomId, requester: args.proof });
     if (!cur) return;
-    const artifacts = (cur.artifacts as unknown as Artifact[]).map((a) => {
-      if (a.id !== args.artifactId) return a;
-      const prev = (a.elements[args.elementId] ?? { version: 0 }) as { version: number };
-      const kind = args.kind ?? "set";
-      const elements = { ...a.elements };
-      const order = kind === "create" && !elements[args.elementId] ? [...a.order, args.elementId] : kind === "delete" ? a.order.filter((id) => id !== args.elementId) : a.order;
-      if (kind === "delete") delete elements[args.elementId];
-      else elements[args.elementId] = { id: args.elementId, value: args.value, version: prev.version + 1, updatedAt: Date.now(), updatedBy: args.proof.actor };
-      return { ...a, version: a.version + 1, order, elements };
-    });
+    const artifacts = withCellApplied(cur.artifacts as unknown as Artifact[], args.artifactId as unknown as string, args.elementId, args.kind ?? "set", args.value, args.proof.actor);
     local.setQuery(api.rooms.full, { roomId: args.roomId, requester: args.proof }, { ...cur, artifacts } as typeof cur);
   });
   const sendMsg = useMutation(api.messages.send).withOptimisticUpdate((local, args) => {
     const q = { roomId: args.roomId, channel: args.channel, requester: args.proof };
     const cur = local.getQuery(api.messages.list, q) ?? [];
+    // Replay/retry guard: if the list already holds this clientMsgId (retrySend re-sends with the
+    // SAME cid, and the first attempt may have landed server-side), appending again would paint a
+    // duplicate bubble for the whole in-flight window. Idempotent by clientMsgId.
+    if (cur.some((m) => m.clientMsgId === args.clientMsgId)) return;
     local.setQuery(api.messages.list, q, [...cur, { _id: ("opt-" + args.clientMsgId) as never, _creationTime: Date.now(), roomId: args.roomId, channel: args.channel, author: args.proof.actor, text: args.text, clientMsgId: args.clientMsgId, kind: "chat", createdAt: Date.now() }]);
   });
   // QA P1: the auto-allow switch flips instantly (server toggle reconciles) — matches applyCellEdit's pattern.
@@ -361,19 +396,104 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
   });
   // QA P1: a resolved proposal leaves the pending list instantly (approve that loses CAS still
   // surfaces via the mutation's returned feedback — optimistic removal never hides the conflict).
+  // Zero-flicker deepening: an APPROVE also paints the cell value now — previously the chip vanished
+  // instantly but the cell landed a beat later (a visible two-phase flick). The op comes from the
+  // proposals query itself; the server applies with proposal.author, so attribution matches exactly.
   const resolveProposalMutation = useMutation(api.artifacts.resolveProposal).withOptimisticUpdate((local, args) => {
     const q = { roomId: rid, requester: args.requester };
     const cur = local.getQuery(api.artifacts.listProposals, q);
     if (!cur) return;
+    const prop = cur.find((p) => String(p.id) === String(args.proposalId));
     local.setQuery(api.artifacts.listProposals, q, cur.filter((p) => String(p.id) !== String(args.proposalId)));
+    if (!args.approve || !prop) return;
+    const op = prop.op as { elementId: string; kind: "set" | "create" | "delete"; value: unknown };
+    const full = local.getQuery(api.rooms.full, q);
+    if (!full) return;
+    const artifacts = withCellApplied(full.artifacts as unknown as Artifact[], String(prop.artifactId), op.elementId, op.kind, op.value, prop.author as Actor);
+    local.setQuery(api.rooms.full, q, { ...full, artifacts } as typeof full);
   });
-  const addResearchRowsMutation = useMutation(api.artifacts.addResearchRows);
-  const createArtifactMutation = useMutation(api.artifacts.createArtifact);
+  // "Add accounts" paints instantly: an EXACT client mirror of the server's deterministic row
+  // builder (same slugs, same suffix-dedup against order, same default column values), recomputed
+  // from fresh state on every replay — so the authoritative swap is pixel-identical.
+  const addResearchRowsMutation = useMutation(api.artifacts.addResearchRows).withOptimisticUpdate((local, args) => {
+    const q = { roomId: args.roomId, requester: args.requester };
+    const cur = local.getQuery(api.rooms.full, q);
+    if (!cur) return;
+    const now = Date.now();
+    const artifacts = (cur.artifacts as unknown as Artifact[]).map((a) => {
+      if (a.id !== (args.artifactId as unknown as string)) return a;
+      const nextOrder = [...a.order];
+      const elements = { ...a.elements };
+      let changed = false;
+      for (const row of args.rows as ResearchRowInput[]) {
+        const company = row.company.trim();
+        if (!company) continue;
+        const base = slugResearchRowClient(company);
+        let rowId = base, suffix = 1;
+        while (nextOrder.some((id) => id.startsWith(`${rowId}__`))) rowId = `${base}_${suffix++}`;
+        const vals: Record<(typeof RESEARCH_COLS)[number], string> = {
+          company,
+          website: row.website?.trim() || defaultWebsiteClient(company),
+          status: "pending",
+          tier: row.tier?.trim() || "B",
+          intent: row.intent?.trim() ?? "",
+          owner: row.owner?.trim() || args.requester.actor.name,
+          crm_status: row.crmStatus?.trim() || "Research",
+          summary: "", funding: "", headcount: "", recent_signal: "", source: "", source2: "", last_researched: "",
+        };
+        for (const col of RESEARCH_COLS) {
+          const elementId = `${rowId}__${col}`;
+          nextOrder.push(elementId);
+          elements[elementId] = { id: elementId, value: vals[col], version: 1, updatedAt: now, updatedBy: args.requester.actor } as Artifact["elements"][string];
+        }
+        changed = true;
+      }
+      return changed ? { ...a, order: nextOrder, elements, version: a.version + 1, updatedAt: now } : a;
+    });
+    local.setQuery(api.rooms.full, q, { ...cur, artifacts } as typeof cur);
+  });
+  // Upload/new-artifact paints instantly under a placeholder id; the authoritative id swaps in
+  // atomically at completion (tab is labeled by title, selection happens post-await with the real
+  // id — no visible jump). Echo guard: skip if this mutation's artifact already streamed in.
+  const createArtifactMutation = useMutation(api.artifacts.createArtifact).withOptimisticUpdate((local, args) => {
+    const q = { roomId: args.roomId, requester: args.proof };
+    const cur = local.getQuery(api.rooms.full, q);
+    if (!cur) return;
+    const arts = cur.artifacts as unknown as Artifact[];
+    if (arts.some((a) => a.title === args.title && a.kind === args.kind && a.order.length === args.seed.length)) return;
+    const now = Date.now();
+    const elements: Artifact["elements"] = {};
+    for (const s of args.seed as Array<{ id: string; value: unknown }>) {
+      elements[s.id] = { id: s.id, value: s.value, version: 1, updatedAt: now, updatedBy: args.proof.actor } as Artifact["elements"][string];
+    }
+    const optimistic = {
+      id: `opt-art-${args.kind}-${args.title}`, roomId: args.roomId as unknown as string, kind: args.kind, title: args.title,
+      version: 1, order: (args.seed as Array<{ id: string }>).map((s) => s.id), elements, updatedAt: now, meta: args.meta,
+    } as unknown as Artifact;
+    local.setQuery(api.rooms.full, q, { ...cur, artifacts: [...arts, optimistic] } as typeof cur);
+  });
   const runAgent = useAction(api.agent.runRoomAgent);
   const runPrivateAgent = useAction(api.agent.runPrivateAgent);
   const startFreeAutoJob = useMutation(api.agentJobs.startFreeAuto);
-  const cancelFreeAutoJob = useMutation(api.agentJobs.cancel);
-  const retryFreeAutoJob = useMutation(api.agentJobs.retry);
+  // Job-strip controls flip instantly. Mirrors the server's transition + ITS guards (cancel: no-op
+  // on terminal; retry: no-op on completed/running) so an ok:false result reconciles honestly via
+  // rollback + the returned feedback. Args carry only jobId — patch whichever loaded list holds it.
+  const cancelFreeAutoJob = useMutation(api.agentJobs.cancel).withOptimisticUpdate((local, args) => {
+    for (const { args: qargs, value } of local.getAllQueries(api.agentJobs.list)) {
+      if (!value?.some((j) => String(j._id) === String(args.jobId))) continue;
+      local.setQuery(api.agentJobs.list, qargs, value.map((j) =>
+        String(j._id) === String(args.jobId) && !["completed", "failed", "cancelled"].includes(j.status)
+          ? { ...j, status: "cancelled", error: "cancelled_by_user", updatedAt: Date.now() } : j));
+    }
+  });
+  const retryFreeAutoJob = useMutation(api.agentJobs.retry).withOptimisticUpdate((local, args) => {
+    for (const { args: qargs, value } of local.getAllQueries(api.agentJobs.list)) {
+      if (!value?.some((j) => String(j._id) === String(args.jobId))) continue;
+      local.setQuery(api.agentJobs.list, qargs, value.map((j) =>
+        String(j._id) === String(args.jobId) && !["completed", "running"].includes(j.status)
+          ? { ...j, status: "queued", error: undefined, nextRunAt: Date.now(), updatedAt: Date.now() } : j));
+    }
+  });
 
   const store = useMemo<RoomStore>(() => {
     const room = (data?.room ?? undefined) as unknown as Room | undefined;

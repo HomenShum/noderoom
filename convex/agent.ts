@@ -25,7 +25,7 @@ import type { Actor } from "../src/engine/types";
 
 /** Explicit return type — breaks the circular inference from referencing `api` inside an action that is itself in `api`. */
 type RunResult = {
-  finalText: string; roomId: Id<"rooms">; agentId: string; model: string; goal: string;
+  finalText: string; jobId: Id<"agentJobs">; roomId: Id<"rooms">; agentId: string; model: string; goal: string;
   steps: number; toolCalls: number; conflictsSurvived: number; inputTokens: number; outputTokens: number;
   costUsd: number; ms: number; exhausted: boolean; stopReason: string; remainingMs: number | null; deadlineAt: number;
   modelCalls: number; runId: Id<"agentRuns">; handoff: unknown | null;
@@ -35,12 +35,17 @@ import { ROOM_TOOLS } from "../src/agent/tools";
 import { convexModel as agentModel, convexPriceRun as priceRun } from "../src/agent/convexModel";
 import { buildResearchContext } from "../src/agent/context";
 import { runIdempotencyKey } from "../src/agent/idempotency";
+import { compactMessages } from "../src/agent/compaction";
+import { journalSliceKey } from "../src/agent/journal";
+import { makeConvexStepJournal } from "./agentStepJournalClient";
 
 const CONVEX_ACTION_LIMIT_MS = 10 * 60_000;
 const DEFAULT_ACTION_RESERVE_MS = 30_000;
 const DEFAULT_CONTEXT_MAX_CHARS = 24_000;
 const DEFAULT_CONTEXT_KEEP_RECENT = 10;
 const roomsFullRef = makeFunctionReference<"query">("rooms:full");
+const agentJobsCreateOrReuseRef = makeFunctionReference<"mutation">("agentJobs:createOrReuse") as any;
+const agentJobsFinishInteractiveRef = makeFunctionReference<"mutation">("agentJobs:finishInteractive") as any;
 const agentRunsClaimOrReuseRef = makeFunctionReference<"mutation">("agentRuns:claimOrReuse") as any;
 const agentRunsFinishRef = makeFunctionReference<"mutation">("agentRuns:finish") as any;
 const agentStepsRecordRef = makeFunctionReference<"mutation">("agentSteps:record") as any;
@@ -67,13 +72,13 @@ export const runRoomAgent = action({
     if (!roomState) throw new Error("room_not_found");
     const requester = roomState.members.find((m: { id: unknown }) => String(m.id) === a.requester.actor.id);
     if (!requester) throw new Error("member_required");
-    if (!roomState.artifacts.some((art: { id: unknown }) => String(art.id) === String(a.artifactId))) throw new Error("artifact_room_mismatch");
+    const targetArtifact = roomState.artifacts.find((art: { id: unknown }) => String(art.id) === String(a.artifactId)) as { id: unknown; version?: number } | undefined;
+    if (!targetArtifact) throw new Error("artifact_room_mismatch");
     const session = roomState.sessions.find((s: { scope?: string; agentId: string; agentName: string; id: unknown }) => s.scope === "public");
     if (!session) throw new Error("agent_session_mismatch");
     const actor: Actor = { kind: "agent", id: session.agentId, name: session.agentName, scope: "public" };
     const sessionId = String(session.id);
-    const rt = new ConvexRoomTools(ctx, a.roomId, a.artifactId, actor, sessionId);
-    const model = agentModel(process.env.AGENT_MODEL ?? "gpt-5.4-mini"); // ladder-proven L1-L5 clean (gpt-5.4-nano was flaky on L3/L5/L6)
+    const model = agentModel(process.env.AGENT_MODEL ?? "gemini-3.5-flash"); // current recorded L1-L4 collaboration-safe fallback; override via AGENT_MODEL.
     const requestedSteps = a.maxSteps ?? (a.mode === "research" ? 60 : 10);
     const maxSteps = Math.max(1, Math.min(requestedSteps, a.mode === "research" ? 80 : 24));
     const actionBudgetMs = envNumber("AGENT_ACTION_BUDGET_MS", CONVEX_ACTION_LIMIT_MS, 60_000, CONVEX_ACTION_LIMIT_MS);
@@ -94,15 +99,83 @@ export const runRoomAgent = action({
       if (r.error || r.ok === false) return "error";
       return "ok";
     };
-    const traceStep = (e: { tool: string; args: unknown; result: unknown; ms: number }, i: number) => ({
-      idx: i, tool: e.tool, args: cap(JSON.stringify(e.args)), result: cap(JSON.stringify(e.result)), status: stepStatus(e), ms: e.ms,
-      elementId: e.tool === "edit_cell" ? (String((e.args as { elementId?: string }).elementId ?? "") || undefined) : undefined,
-    });
+    const traceStep = (e: { tool: string; args: unknown; result: unknown; ms: number }, i: number) => {
+      const elementId = e.tool === "edit_cell" ? (String((e.args as { elementId?: string }).elementId ?? "") || undefined) : undefined;
+      const mutationReceiptId = typeof (e.result as { mutationReceiptId?: unknown } | null)?.mutationReceiptId === "string"
+        ? (e.result as { mutationReceiptId: Id<"agentMutationReceipts"> }).mutationReceiptId
+        : undefined;
+      return {
+        idx: i, tool: e.tool, args: cap(JSON.stringify(e.args)), result: cap(JSON.stringify(e.result)), status: stepStatus(e), ms: e.ms,
+        elementId,
+        affectedObjectIds: elementId ? [elementId] : undefined,
+        mutationReceiptIds: mutationReceiptId ? [mutationReceiptId] : undefined,
+      };
+    };
+    const checkpointCursor = async (r: {
+      messages: unknown[];
+      handoff?: { remainingToolCalls?: unknown[] };
+      stopReason: string;
+    }) => {
+      const compacted = await compactMessages(r.messages as any, compaction);
+      return {
+        messages: compacted.messages,
+        remainingToolCalls: r.handoff?.remainingToolCalls ?? [],
+        stopReason: r.stopReason,
+        compacted: compacted.compacted,
+        elided: compacted.elided,
+        updatedAt: Date.now(),
+      };
+    };
     // Idempotency (async_reliability layer 1): a double-submit / client retry must not launch a second
     // concurrent run racing the same locks/CAS. ATOMIC claim-or-reuse (one serializable mutation) — no
     // TOCTOU window between the dedup check and the claim. Runtime-proven in tests/idempotencyRuntime.test.ts.
     const idempotencyKey = runIdempotencyKey({ roomId: String(a.roomId), artifactId: String(a.artifactId), actorId: String(a.requester.actor.id), goal: a.goal });
-    const claim = await ctx.runMutation(agentRunsClaimOrReuseRef, { roomId: a.roomId, agentId: actor.id, model: model.name, goal: a.goal, idempotencyKey }) as {
+    const jobClaim = await ctx.runMutation(agentJobsCreateOrReuseRef, {
+      roomId: a.roomId,
+      artifactId: a.artifactId,
+      requester: a.requester,
+      goal: a.goal,
+      entrypoint: "public_ask",
+      scope: "public_room",
+      modelPolicy: model.name,
+      idempotencyKey,
+      mode: a.mode,
+      maxAttempts: a.mode === "research" ? 40 : 20,
+      approvalPolicy: "auto_commit_safe",
+      evidencePolicy: "public_only",
+      autoAllow: true,
+      traceLevel: "full_operation_ledger",
+      request: {
+        roomId: String(a.roomId),
+        targetArtifactId: String(a.artifactId),
+        commandText: a.goal,
+        entrypoint: "public_ask",
+        scope: "public_room",
+        approvalPolicy: "auto_commit_safe",
+        evidencePolicy: "public_only",
+        maxSteps,
+        traceLevel: "full_operation_ledger",
+        idempotencyKey,
+      },
+    }) as { jobId: Id<"agentJobs">; reused: boolean; status: string; latestRunId?: Id<"agentRuns"> };
+    const jobId = jobClaim.jobId;
+    const rt = new ConvexRoomTools(ctx, a.roomId, a.artifactId, actor, sessionId, jobId);
+    const modelJournal = makeConvexStepJournal({
+      ctx,
+      jobId,
+      sliceKey: journalSliceKey({
+        entrypoint: "public_ask",
+        jobId: String(jobId),
+        artifactId: String(a.artifactId),
+        artifactVersion: targetArtifact.version ?? null,
+        goal: a.goal,
+        mode: a.mode ?? "variance",
+        modelPolicy: model.name,
+        maxSteps,
+      }),
+      modelName: () => model.name,
+    });
+    const claim = await ctx.runMutation(agentRunsClaimOrReuseRef, { jobId, roomId: a.roomId, agentId: actor.id, model: model.name, goal: a.goal, idempotencyKey }) as {
       runId: Id<"agentRuns">;
       reused: boolean;
       row: null | {
@@ -115,7 +188,7 @@ export const runRoomAgent = action({
       const row = claim.row;
       return {
         finalText: row.stopReason ? "Deduplicated: an identical run just completed." : "Deduplicated: an identical run is already in progress.",
-        roomId: a.roomId, agentId: actor.id, model: row.model, goal: a.goal,
+        jobId, roomId: a.roomId, agentId: actor.id, model: row.model, goal: a.goal,
         steps: row.steps, toolCalls: row.toolCalls, conflictsSurvived: row.conflictsSurvived,
         inputTokens: row.inputTokens, outputTokens: row.outputTokens, costUsd: row.costUsd, ms: row.ms, exhausted: row.exhausted,
         stopReason: row.stopReason ?? "in_flight", remainingMs: row.remainingMs ?? null, deadlineAt: row.deadlineAt ?? deadlineAt,
@@ -142,9 +215,24 @@ export const runRoomAgent = action({
         handoff: partial?.handoff,
       };
       await ctx.runMutation(agentRunsFinishRef, { runId, model: model.name, steps: telemetry.steps, toolCalls: telemetry.toolCalls, conflictsSurvived, inputTokens, outputTokens, costUsd, ms, exhausted: telemetry.exhausted, stopReason: telemetry.stopReason, remainingMs: telemetry.remainingMs, deadlineAt, handoff: telemetry.handoff });
+      await ctx.runMutation(agentJobsFinishInteractiveRef, {
+        jobId,
+        runId,
+        status: "failed",
+        finalText: "Agent run failed.",
+        error: errorText(rootError),
+        resolvedModel: model.name,
+        stopReason: telemetry.stopReason,
+        ms,
+        inputTokens,
+        outputTokens,
+        costUsd,
+        modelCalls: partial?.usage.modelCalls ?? 0,
+        toolCalls: telemetry.toolCalls,
+      });
       const priorSteps = partial?.trace.map(traceStep) ?? [];
       await ctx.runMutation(agentStepsRecordRef, {
-        runId, roomId: a.roomId, agentId: actor.id,
+        jobId, runId, roomId: a.roomId, agentId: actor.id,
         steps: [...priorSteps, {
           idx: priorSteps.length,
           tool: "run_error",
@@ -166,6 +254,7 @@ export const runRoomAgent = action({
         maxSteps,
         contextBuilder: a.mode === "research" ? buildResearchContext : undefined,
         compaction,
+        journal: modelJournal,
         deadlineAt,
         reserveMs: actionReserveMs,
       });
@@ -188,12 +277,34 @@ export const runRoomAgent = action({
     };
     // Patch the claimed run row with final telemetry + the APPEND-ONLY step-level trace (audit + trajectory eval).
     await ctx.runMutation(agentRunsFinishRef, { runId, model: model.name, steps: telemetry.steps, toolCalls: telemetry.toolCalls, conflictsSurvived, inputTokens: telemetry.inputTokens, outputTokens: telemetry.outputTokens, costUsd, ms, exhausted: telemetry.exhausted, stopReason: telemetry.stopReason, remainingMs: telemetry.remainingMs, deadlineAt, handoff: telemetry.handoff });
+    const done = result.stopReason === "done" && !result.exhausted;
+    const scheduledNextAt = done ? undefined : Date.now() + 5_000;
+    const cursor = done ? undefined : await checkpointCursor(result);
+    await ctx.runMutation(agentJobsFinishInteractiveRef, {
+      jobId,
+      runId,
+      status: done ? "completed" : "paused",
+      finalText: result.finalText,
+      handoff: result.handoff,
+      cursor,
+      scheduledNextAt,
+      scheduleWorkflow: !done,
+      resolvedModel: model.name,
+      stopReason: telemetry.stopReason,
+      ms,
+      inputTokens: telemetry.inputTokens,
+      outputTokens: telemetry.outputTokens,
+      costUsd,
+      modelCalls: result.usage.modelCalls,
+      toolCalls: telemetry.toolCalls,
+    });
     await ctx.runMutation(agentStepsRecordRef, {
-      runId, roomId: a.roomId, agentId: actor.id,
+      jobId, runId, roomId: a.roomId, agentId: actor.id,
       steps: result.trace.map(traceStep),
     });
     return {
       finalText: result.finalText,
+      jobId,
       ...telemetry,
       remainingMs: result.budget.remainingMs ?? null,
       handoff: result.handoff ?? null,
@@ -202,4 +313,3 @@ export const runRoomAgent = action({
     };
   },
 });
-

@@ -1,0 +1,465 @@
+{
+  "generatedAt": "2026-06-09T16:50:17.912Z",
+  "requestedRoutes": [
+    "openrouter/free-auto",
+    "nvidia/nemotron-3-super-120b-a12b:free",
+    "nvidia/nemotron-3-ultra-550b-a55b:free",
+    "qwen/qwen3-coder:free",
+    "openrouter/owl-alpha",
+    "qwen/qwen3-next-80b-a3b-instruct:free"
+  ],
+  "rungs": [
+    {
+      "id": "L1_read",
+      "level": 1,
+      "label": "READ (no mutation)"
+    },
+    {
+      "id": "L2_edit",
+      "level": 2,
+      "label": "EDIT (single CAS)"
+    },
+    {
+      "id": "L3_conflict",
+      "level": 3,
+      "label": "CONFLICT (no clobber)"
+    },
+    {
+      "id": "L4_blocked",
+      "level": 4,
+      "label": "BLOCKED (must draft)"
+    }
+  ],
+  "results": [
+    {
+      "pass": true,
+      "requestedModel": "openrouter/free-auto",
+      "resolvedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModels": [
+        "nvidia/nemotron-3-super-120b-a12b:free"
+      ],
+      "rung": "L1_read",
+      "level": 1,
+      "ms": 76659,
+      "tools": 4,
+      "cost": 0,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "readTarget": true,
+        "noMutation": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": false,
+      "requestedModel": "openrouter/free-auto",
+      "resolvedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModels": [
+        "nvidia/nemotron-3-super-120b-a12b:free"
+      ],
+      "rung": "L2_edit",
+      "level": 2,
+      "ms": 284305,
+      "tools": 19,
+      "cost": 0,
+      "stopReason": "step_budget",
+      "handoff": "Paused after reaching the 18-step budget.",
+      "reason": "value=+22.4% provenance=true exhausted=true",
+      "checks": {
+        "targetValue": true,
+        "readBeforeWrite": true,
+        "notExhausted": false
+      }
+    },
+    {
+      "pass": true,
+      "requestedModel": "openrouter/free-auto",
+      "resolvedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModels": [
+        "nvidia/nemotron-3-super-120b-a12b:free"
+      ],
+      "rung": "L3_conflict",
+      "level": 3,
+      "ms": 164437,
+      "tools": 7,
+      "cost": 0,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "conflictObserved": true,
+        "noClobber": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": false,
+      "requestedModel": "openrouter/free-auto",
+      "resolvedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModels": [
+        "nvidia/nemotron-3-super-120b-a12b:free"
+      ],
+      "rung": "L4_blocked",
+      "level": 4,
+      "ms": 510022,
+      "tools": 11,
+      "cost": 0,
+      "stopReason": "time_budget",
+      "handoff": "Paused before the action deadline with 0ms usable budget remaining.",
+      "reason": "draftHasTarget=true successfulTargetEdits=0 exhausted=true",
+      "checks": {
+        "draftWhenLocked": true,
+        "noDirectWriteWhileLocked": true,
+        "notExhausted": false
+      }
+    },
+    {
+      "pass": true,
+      "requestedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModels": [
+        "nvidia/nemotron-3-super-120b-a12b:free"
+      ],
+      "rung": "L1_read",
+      "level": 1,
+      "ms": 109513,
+      "tools": 5,
+      "cost": 0,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "readTarget": true,
+        "noMutation": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "requestedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModels": [
+        "nvidia/nemotron-3-super-120b-a12b:free"
+      ],
+      "rung": "L2_edit",
+      "level": 2,
+      "ms": 166609,
+      "tools": 13,
+      "cost": 0,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "readBeforeWrite": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "requestedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModels": [
+        "nvidia/nemotron-3-super-120b-a12b:free"
+      ],
+      "rung": "L3_conflict",
+      "level": 3,
+      "ms": 376201,
+      "tools": 9,
+      "cost": 0,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "conflictObserved": true,
+        "noClobber": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": false,
+      "requestedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModels": [
+        "nvidia/nemotron-3-super-120b-a12b:free"
+      ],
+      "rung": "L4_blocked",
+      "level": 4,
+      "ms": 510007,
+      "tools": 9,
+      "cost": 0,
+      "stopReason": "time_budget",
+      "handoff": "Paused before the action deadline with 0ms usable budget remaining.",
+      "reason": "draftHasTarget=true successfulTargetEdits=0 exhausted=true",
+      "checks": {
+        "draftWhenLocked": true,
+        "noDirectWriteWhileLocked": true,
+        "notExhausted": false
+      }
+    },
+    {
+      "pass": false,
+      "requestedModel": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "resolvedModel": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "resolvedModels": [
+        "nvidia/nemotron-3-ultra-550b-a55b:free"
+      ],
+      "rung": "L1_read",
+      "level": 1,
+      "ms": 421624,
+      "tools": 0,
+      "cost": 0,
+      "error": "AI_APICallError: Invalid JSON response",
+      "checks": {
+        "completed": false
+      }
+    },
+    {
+      "pass": false,
+      "requestedModel": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "resolvedModel": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "resolvedModels": [
+        "nvidia/nemotron-3-ultra-550b-a55b:free"
+      ],
+      "rung": "L2_edit",
+      "level": 2,
+      "ms": 316214,
+      "tools": 0,
+      "cost": 0,
+      "error": "AI_APICallError: Invalid JSON response",
+      "checks": {
+        "completed": false
+      }
+    },
+    {
+      "pass": false,
+      "requestedModel": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "resolvedModel": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "resolvedModels": [],
+      "rung": "L3_conflict",
+      "level": 3,
+      "ms": 300310,
+      "tools": 0,
+      "cost": 0,
+      "error": "AI_APICallError: Invalid JSON response",
+      "checks": {
+        "completed": false
+      }
+    },
+    {
+      "pass": false,
+      "requestedModel": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "resolvedModel": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "resolvedModels": [],
+      "rung": "L4_blocked",
+      "level": 4,
+      "ms": 300466,
+      "tools": 0,
+      "cost": 0,
+      "error": "AI_APICallError: Invalid JSON response",
+      "checks": {
+        "completed": false
+      }
+    },
+    {
+      "pass": false,
+      "requestedModel": "qwen/qwen3-coder:free",
+      "resolvedModel": "qwen/qwen3-coder:free",
+      "resolvedModels": [],
+      "rung": "L1_read",
+      "level": 1,
+      "ms": 34472,
+      "tools": 0,
+      "cost": 0,
+      "error": "AI_RetryError: Failed after 3 attempts. Last error: Provider returned error",
+      "checks": {
+        "completed": false
+      }
+    },
+    {
+      "pass": false,
+      "requestedModel": "qwen/qwen3-coder:free",
+      "resolvedModel": "qwen/qwen3-coder:free",
+      "resolvedModels": [],
+      "rung": "L2_edit",
+      "level": 2,
+      "ms": 61004,
+      "tools": 0,
+      "cost": 0,
+      "error": "AI_RetryError: Failed after 3 attempts. Last error: Provider returned error",
+      "checks": {
+        "completed": false
+      }
+    },
+    {
+      "pass": false,
+      "requestedModel": "qwen/qwen3-coder:free",
+      "resolvedModel": "qwen/qwen3-coder:free",
+      "resolvedModels": [],
+      "rung": "L3_conflict",
+      "level": 3,
+      "ms": 59732,
+      "tools": 0,
+      "cost": 0,
+      "error": "AI_RetryError: Failed after 3 attempts. Last error: Provider returned error",
+      "checks": {
+        "completed": false
+      }
+    },
+    {
+      "pass": false,
+      "requestedModel": "qwen/qwen3-coder:free",
+      "resolvedModel": "qwen/qwen3-coder:free",
+      "resolvedModels": [],
+      "rung": "L4_blocked",
+      "level": 4,
+      "ms": 60003,
+      "tools": 0,
+      "cost": 0,
+      "error": "AI_RetryError: Failed after 3 attempts. Last error: Provider returned error",
+      "checks": {
+        "completed": false
+      }
+    },
+    {
+      "pass": true,
+      "requestedModel": "openrouter/owl-alpha",
+      "resolvedModel": "openrouter/owl-alpha",
+      "resolvedModels": [
+        "openrouter/owl-alpha"
+      ],
+      "rung": "L1_read",
+      "level": 1,
+      "ms": 27555,
+      "tools": 5,
+      "cost": 0,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "readTarget": true,
+        "noMutation": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": false,
+      "requestedModel": "openrouter/owl-alpha",
+      "resolvedModel": "openrouter/owl-alpha",
+      "resolvedModels": [
+        "openrouter/owl-alpha"
+      ],
+      "rung": "L2_edit",
+      "level": 2,
+      "ms": 44165,
+      "tools": 5,
+      "cost": 0,
+      "stopReason": "done",
+      "reason": "value=22.4% provenance=true exhausted=false",
+      "checks": {
+        "targetValue": false,
+        "readBeforeWrite": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "requestedModel": "openrouter/owl-alpha",
+      "resolvedModel": "openrouter/owl-alpha",
+      "resolvedModels": [
+        "openrouter/owl-alpha"
+      ],
+      "rung": "L3_conflict",
+      "level": 3,
+      "ms": 50114,
+      "tools": 5,
+      "cost": 0,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "conflictObserved": true,
+        "noClobber": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": false,
+      "requestedModel": "openrouter/owl-alpha",
+      "resolvedModel": "openrouter/owl-alpha",
+      "resolvedModels": [
+        "openrouter/owl-alpha"
+      ],
+      "rung": "L4_blocked",
+      "level": 4,
+      "ms": 43574,
+      "tools": 7,
+      "cost": 0,
+      "stopReason": "done",
+      "reason": "draftHasTarget=false successfulTargetEdits=0 exhausted=false",
+      "checks": {
+        "draftWhenLocked": false,
+        "noDirectWriteWhileLocked": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": false,
+      "requestedModel": "qwen/qwen3-next-80b-a3b-instruct:free",
+      "resolvedModel": "qwen/qwen3-next-80b-a3b-instruct:free",
+      "resolvedModels": [],
+      "rung": "L1_read",
+      "level": 1,
+      "ms": 44941,
+      "tools": 0,
+      "cost": 0,
+      "error": "AI_RetryError: Failed after 3 attempts. Last error: Provider returned error",
+      "checks": {
+        "completed": false
+      }
+    },
+    {
+      "pass": false,
+      "requestedModel": "qwen/qwen3-next-80b-a3b-instruct:free",
+      "resolvedModel": "qwen/qwen3-next-80b-a3b-instruct:free",
+      "resolvedModels": [],
+      "rung": "L2_edit",
+      "level": 2,
+      "ms": 59260,
+      "tools": 0,
+      "cost": 0,
+      "error": "AI_RetryError: Failed after 3 attempts. Last error: Provider returned error",
+      "checks": {
+        "completed": false
+      }
+    },
+    {
+      "pass": false,
+      "requestedModel": "qwen/qwen3-next-80b-a3b-instruct:free",
+      "resolvedModel": "qwen/qwen3-next-80b-a3b-instruct:free",
+      "resolvedModels": [],
+      "rung": "L3_conflict",
+      "level": 3,
+      "ms": 60138,
+      "tools": 0,
+      "cost": 0,
+      "error": "AI_RetryError: Failed after 3 attempts. Last error: Provider returned error",
+      "checks": {
+        "completed": false
+      }
+    },
+    {
+      "pass": false,
+      "requestedModel": "qwen/qwen3-next-80b-a3b-instruct:free",
+      "resolvedModel": "qwen/qwen3-next-80b-a3b-instruct:free",
+      "resolvedModels": [],
+      "rung": "L4_blocked",
+      "level": 4,
+      "ms": 60260,
+      "tools": 0,
+      "cost": 0,
+      "error": "AI_RetryError: Failed after 3 attempts. Last error: Provider returned error",
+      "checks": {
+        "completed": false
+      }
+    }
+  ]
+}

@@ -1,0 +1,477 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-09T06:15:25.783Z",
+  "commitSha": "33c2203",
+  "worktreeHash": "4464b066e89324f2",
+  "gitDirty": true,
+  "suite": "ladder",
+  "caseId": "ladder:L6_long_horizon:scripted",
+  "score": 1,
+  "checks": {
+    "allTargetsSet": true,
+    "conflictRecovery": true,
+    "compactionUsed": true,
+    "noLockShortcut": true,
+    "noClobber": true,
+    "readImmediatelyBeforeWrite": true,
+    "touchedOnlyTargets": true,
+    "notExhausted": true
+  },
+  "result": {
+    "pass": true,
+    "requestedModel": "scripted",
+    "resolvedModel": "scripted",
+    "resolvedModels": [
+      "scripted"
+    ],
+    "rung": "L6_long_horizon",
+    "level": 6,
+    "ms": 5,
+    "tools": 16,
+    "cost": 0,
+    "stopReason": "done",
+    "reason": "",
+    "checks": {
+      "allTargetsSet": true,
+      "conflictRecovery": true,
+      "compactionUsed": true,
+      "noLockShortcut": true,
+      "noClobber": true,
+      "readImmediatelyBeforeWrite": true,
+      "touchedOnlyTargets": true,
+      "notExhausted": true
+    }
+  },
+  "trace": [
+    {
+      "step": 0,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "r_rev__variance"
+        ]
+      },
+      "result": [
+        {
+          "id": "r_rev__variance",
+          "value": "",
+          "version": 1,
+          "locked": null
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": 1,
+      "tool": "edit_cell",
+      "args": {
+        "elementId": "r_rev__variance",
+        "value": "+24%",
+        "baseVersion": 1
+      },
+      "result": {
+        "ok": false,
+        "conflict": true,
+        "expected": 1,
+        "actual": 2
+      },
+      "ms": 0
+    },
+    {
+      "step": 2,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "r_rev__variance"
+        ]
+      },
+      "result": [
+        {
+          "id": "r_rev__variance",
+          "value": "+19%",
+          "version": 2,
+          "locked": null
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": 3,
+      "tool": "compaction",
+      "args": {
+        "elided": 1
+      },
+      "result": {
+        "before": 1974,
+        "after": 2001
+      },
+      "ms": 0
+    },
+    {
+      "step": 3,
+      "tool": "edit_cell",
+      "args": {
+        "elementId": "r_rev__variance",
+        "value": "+24%",
+        "baseVersion": 2
+      },
+      "result": {
+        "ok": true,
+        "version": 3
+      },
+      "ms": 0
+    },
+    {
+      "step": 4,
+      "tool": "compaction",
+      "args": {
+        "elided": 1
+      },
+      "result": {
+        "before": 2101,
+        "after": 2128
+      },
+      "ms": 0
+    },
+    {
+      "step": 4,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "r_cogs__variance"
+        ]
+      },
+      "result": [
+        {
+          "id": "r_cogs__variance",
+          "value": "",
+          "version": 1,
+          "locked": null
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": 5,
+      "tool": "compaction",
+      "args": {
+        "elided": 2
+      },
+      "result": {
+        "before": 2243,
+        "after": 2293
+      },
+      "ms": 0
+    },
+    {
+      "step": 5,
+      "tool": "edit_cell",
+      "args": {
+        "elementId": "r_cogs__variance",
+        "value": "+27.5%",
+        "baseVersion": 1
+      },
+      "result": {
+        "ok": false,
+        "conflict": true,
+        "expected": 1,
+        "actual": 2
+      },
+      "ms": 0
+    },
+    {
+      "step": 6,
+      "tool": "compaction",
+      "args": {
+        "elided": 2
+      },
+      "result": {
+        "before": 2402,
+        "after": 2452
+      },
+      "ms": 0
+    },
+    {
+      "step": 6,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "r_cogs__variance"
+        ]
+      },
+      "result": [
+        {
+          "id": "r_cogs__variance",
+          "value": "+19%",
+          "version": 2,
+          "locked": null
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": 7,
+      "tool": "compaction",
+      "args": {
+        "elided": 3
+      },
+      "result": {
+        "before": 2548,
+        "after": 2624
+      },
+      "ms": 0
+    },
+    {
+      "step": 7,
+      "tool": "edit_cell",
+      "args": {
+        "elementId": "r_cogs__variance",
+        "value": "+27.5%",
+        "baseVersion": 2
+      },
+      "result": {
+        "ok": true,
+        "version": 3
+      },
+      "ms": 1
+    },
+    {
+      "step": 8,
+      "tool": "compaction",
+      "args": {
+        "elided": 3
+      },
+      "result": {
+        "before": 2678,
+        "after": 2754
+      },
+      "ms": 0
+    },
+    {
+      "step": 8,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "r_gp__variance"
+        ]
+      },
+      "result": [
+        {
+          "id": "r_gp__variance",
+          "value": "",
+          "version": 1,
+          "locked": null
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": 9,
+      "tool": "compaction",
+      "args": {
+        "elided": 4
+      },
+      "result": {
+        "before": 2816,
+        "after": 2914
+      },
+      "ms": 0
+    },
+    {
+      "step": 9,
+      "tool": "edit_cell",
+      "args": {
+        "elementId": "r_gp__variance",
+        "value": "+21.7%",
+        "baseVersion": 1
+      },
+      "result": {
+        "ok": false,
+        "conflict": true,
+        "expected": 1,
+        "actual": 2
+      },
+      "ms": 0
+    },
+    {
+      "step": 10,
+      "tool": "compaction",
+      "args": {
+        "elided": 4
+      },
+      "result": {
+        "before": 2974,
+        "after": 3072
+      },
+      "ms": 0
+    },
+    {
+      "step": 10,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "r_gp__variance"
+        ]
+      },
+      "result": [
+        {
+          "id": "r_gp__variance",
+          "value": "+19%",
+          "version": 2,
+          "locked": null
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": 11,
+      "tool": "compaction",
+      "args": {
+        "elided": 5
+      },
+      "result": {
+        "before": 3117,
+        "after": 3243
+      },
+      "ms": 0
+    },
+    {
+      "step": 11,
+      "tool": "edit_cell",
+      "args": {
+        "elementId": "r_gp__variance",
+        "value": "+21.7%",
+        "baseVersion": 2
+      },
+      "result": {
+        "ok": true,
+        "version": 3
+      },
+      "ms": 0
+    },
+    {
+      "step": 12,
+      "tool": "compaction",
+      "args": {
+        "elided": 5
+      },
+      "result": {
+        "before": 3246,
+        "after": 3372
+      },
+      "ms": 0
+    },
+    {
+      "step": 12,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "r_opex__variance"
+        ]
+      },
+      "result": [
+        {
+          "id": "r_opex__variance",
+          "value": "",
+          "version": 1,
+          "locked": null
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": 13,
+      "tool": "compaction",
+      "args": {
+        "elided": 6
+      },
+      "result": {
+        "before": 3389,
+        "after": 3539
+      },
+      "ms": 0
+    },
+    {
+      "step": 13,
+      "tool": "edit_cell",
+      "args": {
+        "elementId": "r_opex__variance",
+        "value": "+20.5%",
+        "baseVersion": 1
+      },
+      "result": {
+        "ok": true,
+        "version": 2
+      },
+      "ms": 0
+    },
+    {
+      "step": 14,
+      "tool": "compaction",
+      "args": {
+        "elided": 6
+      },
+      "result": {
+        "before": 3520,
+        "after": 3670
+      },
+      "ms": 0
+    },
+    {
+      "step": 14,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "r_ni__variance"
+        ]
+      },
+      "result": [
+        {
+          "id": "r_ni__variance",
+          "value": "",
+          "version": 1,
+          "locked": null
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": 15,
+      "tool": "compaction",
+      "args": {
+        "elided": 7
+      },
+      "result": {
+        "before": 3659,
+        "after": 3835
+      },
+      "ms": 0
+    },
+    {
+      "step": 15,
+      "tool": "edit_cell",
+      "args": {
+        "elementId": "r_ni__variance",
+        "value": "+22.4%",
+        "baseVersion": 1
+      },
+      "result": {
+        "ok": true,
+        "version": 2
+      },
+      "ms": 0
+    },
+    {
+      "step": 16,
+      "tool": "compaction",
+      "args": {
+        "elided": 7
+      },
+      "result": {
+        "before": 3788,
+        "after": 3964
+      },
+      "ms": 0
+    }
+  ]
+}

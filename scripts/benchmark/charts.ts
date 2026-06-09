@@ -11,9 +11,30 @@ const ACCENT = "#D97757", PASS = "#3FB37F", FAIL = "#E0564E";
 const MONO = "ui-monospace, 'JetBrains Mono', monospace";
 const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
-type Row = { model: string; ok: boolean; passed: number; total: number; costUsd: number; ms: number; toolCalls: number; error?: string };
-const data = JSON.parse(readFileSync(new URL("../../docs/eval/results.json", import.meta.url), "utf8")) as { generatedAt: string; companies: number; checks: string[]; models: Row[] };
+const BENCHMARK_VERSION = "company-research-v2-9checks-router";
+
+type Row = {
+  model: string;
+  requestedModel?: string;
+  resolvedModel?: string;
+  ok: boolean;
+  passed: number;
+  total: number;
+  costUsd: number;
+  ms: number;
+  toolCalls: number;
+  error?: string;
+};
+const data = JSON.parse(readFileSync(new URL("../../docs/eval/results.json", import.meta.url), "utf8")) as { benchmarkVersion?: string; generatedAt: string; companies: number; checks: string[]; models: Row[] };
+if (data.benchmarkVersion !== BENCHMARK_VERSION) {
+  throw new Error(`benchmark results are stale or missing benchmarkVersion=${BENCHMARK_VERSION}; rerun npm run benchmark or npm run benchmark:free`);
+}
+const staleRows = data.models.filter((r) => r.total !== data.checks.length);
+if (staleRows.length > 0) {
+  throw new Error(`benchmark results contain stale rows with totals that do not match ${data.checks.length} checks: ${staleRows.map((r) => `${r.model}=${r.total}`).join(", ")}`);
+}
 const rows = [...data.models].sort((a, b) => (b.passed - a.passed) || (a.costUsd - b.costUsd));
+const rowLabel = (r: Row) => r.resolvedModel && r.resolvedModel !== r.model ? `${r.model} -> ${r.resolvedModel}` : r.model;
 const stamp = `company-research · ${data.companies} companies · ${data.checks.length} boolean checks · ${esc(data.generatedAt.slice(0, 10))}`;
 
 /* ── leaderboard (deepswe style) ── */
@@ -31,7 +52,7 @@ function leaderboard(): string {
     const frac = r.error ? 0 : r.passed / maxChecks;
     const col = r.error ? FAIL : r.passed === maxChecks ? PASS : ACCENT;
     out.push(`<text x="28" y="${y + 6}" fill="${MUTE}" font-size="12">${i + 1}</text>`);
-    out.push(`<text x="48" y="${y + 6}" fill="${TEXT}" font-size="12.5">${esc(r.model)}</text>`);
+    out.push(`<text x="48" y="${y + 6}" fill="${TEXT}" font-size="12.5">${esc(rowLabel(r))}</text>`);
     out.push(`<rect x="${barX}" y="${y - 7}" width="${barW}" height="14" rx="4" fill="${PANEL}"/>`);
     out.push(`<rect x="${barX}" y="${y - 7}" width="${Math.max(2, barW * frac)}" height="14" rx="4" fill="${col}"/>`);
     const label = r.error ? `ERR` : `${r.passed}/${r.total}`;
@@ -69,11 +90,11 @@ function costQuality(): string {
     const pct = (r.passed / data.checks.length) * 100;
     const cx = x(r.costUsd), cy = y(pct);
     const col = pct === 100 ? PASS : ACCENT;
-    out.push(`<circle cx="${cx}" cy="${cy}" r="7" fill="${col}"/><text x="${cx + 11}" y="${cy + 4}" fill="${TEXT}" font-size="10.5">${esc(r.model)} ($${r.costUsd.toFixed(4)})</text>`);
+    out.push(`<circle cx="${cx}" cy="${cy}" r="7" fill="${col}"/><text x="${cx + 11}" y="${cy + 4}" fill="${TEXT}" font-size="10.5">${esc(rowLabel(r))} ($${r.costUsd.toFixed(4)})</text>`);
   });
   if (ok.length) {
     const cheapest = ok.filter((r) => r.passed === data.checks.length).sort((a, b) => a.costUsd - b.costUsd)[0];
-    if (cheapest) out.push(`<text x="${padL + 6}" y="${padT + 16}" fill="${ACCENT}" font-size="11" font-weight="700">◄ route here: ${esc(cheapest.model)} — cheapest clearing the gate</text>`);
+    if (cheapest) out.push(`<text x="${padL + 6}" y="${padT + 16}" fill="${ACCENT}" font-size="11" font-weight="700">◄ route here: ${esc(rowLabel(cheapest))} — cheapest clearing the gate</text>`);
   }
   return out.join("") + "</svg>";
 }

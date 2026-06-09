@@ -1,0 +1,105 @@
+{
+  "version": 1,
+  "surfaces": [
+    {
+      "id": "artifact-collab-core",
+      "description": "Room, artifact, element, lock, draft, proposal, trace, spreadsheet index, and visible collaboration UI behavior.",
+      "patterns": [
+        "convex/artifacts.ts",
+        "convex/collab.ts",
+        "convex/drafts.ts",
+        "convex/lib.ts",
+        "convex/locks.ts",
+        "convex/messages.ts",
+        "convex/rooms.ts",
+        "convex/seed.ts",
+        "convex/spreadsheetIndexLib.ts",
+        "src/app/**",
+        "src/engine/**",
+        "src/ui/**"
+      ]
+    },
+    {
+      "id": "agent-runtime",
+      "description": "Interactive NodeAgent action, room tool adapter, model/tool loop, prompts, compaction, and agent-local helpers.",
+      "patterns": [
+        "convex/agent.ts",
+        "convex/convexRoomTools.ts",
+        "src/agent/**",
+        "src/agents/**"
+      ]
+    },
+    {
+      "id": "nodeagent-jobs",
+      "description": "Durable agentJobs, runs, steps, workflow slices, leases, operation events, and long-running job lifecycle.",
+      "patterns": [
+        "convex/agentJobs.ts",
+        "convex/agentJobRunner.ts",
+        "convex/agentRuns.ts",
+        "convex/agentSteps.ts",
+        "convex/agentWorkflows.ts",
+        "convex/agentStepJournal.ts",
+        "convex/agentStepJournalClient.ts"
+      ]
+    },
+    {
+      "id": "provider-parser",
+      "description": "Provider parser adapters, file ids, upload/import parsing, and parser smoke checks.",
+      "patterns": [
+        "scripts/provider-parser-smoke.ts",
+        "scripts/liteparse-smoke.ts",
+        "src/provider-parser/**",
+        "src/providers/**"
+      ]
+    },
+    {
+      "id": "qa-improvement-loop",
+      "description": "HALO loop, eval trust policy, budget and boundary checks, generated reports, QA matrix, and documentation gates.",
+      "patterns": [
+        "README.md",
+        "package.json",
+        "docs/AGENT_EVAL.md",
+        "docs/AGENT_RUNTIME.md",
+        "docs/ARCHITECTURE.md",
+        "docs/AUDIT.md",
+        "docs/INTERVIEW_NOTES.md",
+        "docs/LONG_RUNNING_AGENTS.md",
+        "docs/NODEAGENT_ARCHITECTURE.md",
+        "docs/OVERENGINEERING_AUDIT.md",
+        "docs/PRODUCTION_GUARANTEE_MATRIX.md",
+        "docs/WHY_NODEAGENT_AND_HALO.md",
+        "docs/architecture-budget.json",
+        "docs/audit/**",
+        "docs/eval/**",
+        "docs/qa/**",
+        "evals/**",
+        ".tmp-qa/**",
+        "scripts/agent-improvement-loop.ts",
+        "scripts/architecture-budget-check.ts",
+        "scripts/benchmark/**",
+        "scripts/convex-boundary-check.ts",
+        "scripts/gemini-ui-review.ts",
+        "scripts/halo-overnight.ts",
+        "scripts/render-workflow-preview.ts",
+        "scripts/workflow-preview/**",
+        "scripts/workflow-preview-gifs.ts",
+        "scripts/qa-matrix.ts",
+        "src/eval/**",
+        "tests/**",
+        "vite.config.ts",
+        "vitest.config.ts"
+      ]
+    },
+    {
+      "id": "graph-wiki-embedding-experimental",
+      "description": "Notebook graph, wiki canonical tables, relation types, embedding queue/CRUD, and schema expansion behind explicit evidence gates.",
+      "patterns": [
+        "convex/schema.ts",
+        "convex/_generated/**",
+        "convex/notebookGraph.ts",
+        "convex/embeddings.ts",
+        "convex/embeddingRunner.ts"
+      ]
+    }
+  ]
+}

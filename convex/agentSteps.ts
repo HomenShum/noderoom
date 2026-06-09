@@ -16,6 +16,8 @@ const statusV = v.union(v.literal("ok"), v.literal("conflict"), v.literal("locke
 const stepV = v.object({
   idx: v.number(), tool: v.string(), args: v.string(), result: v.string(),
   status: statusV, ms: v.number(), elementId: v.optional(v.string()),
+  affectedObjectIds: v.optional(v.array(v.string())),
+  mutationReceiptIds: v.optional(v.array(v.id("agentMutationReceipts"))),
 });
 
 async function sha256hex(s: string): Promise<string> {
@@ -29,13 +31,13 @@ const core = (s: { runId: string; roomId: string; agentId: string; idx: number; 
   ({ runId: s.runId, roomId: s.roomId, agentId: s.agentId, idx: s.idx, tool: s.tool, args: s.args, result: s.result, status: s.status, ms: s.ms, elementId: s.elementId ?? "", prevStepHash: s.prevStepHash });
 
 export const record = internalMutation({
-  args: { runId: v.id("agentRuns"), roomId: v.id("rooms"), agentId: v.string(), steps: v.array(stepV) },
+  args: { jobId: v.optional(v.id("agentJobs")), runId: v.id("agentRuns"), roomId: v.id("rooms"), agentId: v.string(), steps: v.array(stepV) },
   handler: async (ctx, a) => {
     const ts = Date.now();
     let prevStepHash = `genesis:${a.runId}`;
     for (const s of a.steps) {
       const recordHash = await sha256hex(canonical(core({ runId: a.runId, roomId: a.roomId, agentId: a.agentId, ...s, prevStepHash })));
-      await ctx.db.insert("agentSteps", { runId: a.runId, roomId: a.roomId, agentId: a.agentId, idx: s.idx, tool: s.tool, args: s.args, result: s.result, status: s.status, ms: s.ms, elementId: s.elementId, ts, recordHash, prevStepHash });
+      await ctx.db.insert("agentSteps", { jobId: a.jobId, runId: a.runId, roomId: a.roomId, agentId: a.agentId, idx: s.idx, tool: s.tool, args: s.args, result: s.result, status: s.status, ms: s.ms, elementId: s.elementId, affectedObjectIds: s.affectedObjectIds, mutationReceiptIds: s.mutationReceiptIds, ts, recordHash, prevStepHash });
       prevStepHash = recordHash;
     }
   },

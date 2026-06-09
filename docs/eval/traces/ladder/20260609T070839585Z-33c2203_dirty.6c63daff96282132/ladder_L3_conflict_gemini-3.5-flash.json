@@ -1,0 +1,131 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-09T07:08:39.585Z",
+  "commitSha": "33c2203",
+  "worktreeHash": "6c63daff96282132",
+  "gitDirty": true,
+  "suite": "ladder",
+  "caseId": "ladder:L3_conflict:gemini-3.5-flash",
+  "score": 1,
+  "checks": {
+    "targetValue": true,
+    "conflictObserved": true,
+    "noClobber": true,
+    "notExhausted": true
+  },
+  "result": {
+    "pass": true,
+    "requestedModel": "gemini-3.5-flash",
+    "resolvedModel": "gemini-3.5-flash",
+    "resolvedModels": [
+      "gemini-3.5-flash"
+    ],
+    "rung": "L3_conflict",
+    "level": 3,
+    "ms": 17449,
+    "tools": 6,
+    "cost": 0.0381315,
+    "stopReason": "done",
+    "reason": "",
+    "checks": {
+      "targetValue": true,
+      "conflictObserved": true,
+      "noClobber": true,
+      "notExhausted": true
+    }
+  },
+  "trace": [
+    {
+      "step": 0,
+      "tool": "say",
+      "args": {
+        "text": "Setting Net income variance (r_ni__variance) to +22.4% without locking..."
+      },
+      "result": {
+        "ok": true
+      },
+      "ms": 0
+    },
+    {
+      "step": 1,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "r_ni__variance"
+        ],
+        "artifactId": "art_9"
+      },
+      "result": [
+        {
+          "id": "r_ni__variance",
+          "value": "",
+          "version": 1,
+          "locked": null
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": 2,
+      "tool": "edit_cell",
+      "args": {
+        "elementId": "r_ni__variance",
+        "value": "+22.4%",
+        "baseVersion": 1,
+        "artifactId": "art_9"
+      },
+      "result": {
+        "ok": false,
+        "conflict": true,
+        "expected": 1,
+        "actual": 2
+      },
+      "ms": 0
+    },
+    {
+      "step": 3,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "r_ni__variance"
+        ],
+        "artifactId": "art_9"
+      },
+      "result": [
+        {
+          "id": "r_ni__variance",
+          "value": "+19%",
+          "version": 2,
+          "locked": null
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": 4,
+      "tool": "edit_cell",
+      "args": {
+        "elementId": "r_ni__variance",
+        "value": "+22.4%",
+        "baseVersion": 2,
+        "artifactId": "art_9"
+      },
+      "result": {
+        "ok": true,
+        "version": 3
+      },
+      "ms": 0
+    },
+    {
+      "step": 5,
+      "tool": "say",
+      "args": {
+        "text": "Net income variance (r_ni__variance) successfully set to +22.4% with CAS."
+      },
+      "result": {
+        "ok": true
+      },
+      "ms": 0
+    }
+  ]
+}

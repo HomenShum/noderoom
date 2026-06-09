@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<style>
+  :root { --bg:#151413; --panel:#1c1a18; --edge:rgba(255,255,255,.08); --ink:#ECE7E0; --mut:#8B8178; --acc:#d97757; --ok:#3FB37F; --bad:#E0564E; --lock:#E0A14E; }
+  * { box-sizing:border-box; margin:0; }
+  html,body { background:var(--bg); }
+  #stage { width:760px; height:420px; background:var(--bg); color:var(--ink);
+    font-family:'Manrope',ui-sans-serif,system-ui,sans-serif; padding:26px 30px; position:relative; overflow:hidden; }
+  .top { display:flex; align-items:baseline; justify-content:space-between; }
+  .ttl { font-size:21px; font-weight:800; letter-spacing:-.01em; }
+  .badge { font-size:10px; text-transform:uppercase; letter-spacing:.18em; color:var(--acc); font-weight:700; }
+  .sub { color:var(--mut); font-size:12px; margin-top:3px; }
+  .sheet { margin-top:20px; border:1px solid var(--edge); border-radius:12px; overflow:hidden; background:var(--panel); }
+  .row { display:grid; grid-template-columns:170px 1fr 96px; align-items:center; height:42px; border-bottom:1px solid var(--edge);
+    font-size:13px; transition:background .2s, box-shadow .2s; }
+  .row:last-child { border-bottom:none; }
+  .row .lab { padding:0 14px; color:var(--mut); font-family:ui-monospace,'JetBrains Mono',monospace; font-size:11.5px; }
+  .row .val { padding:0 14px; font-family:ui-monospace,'JetBrains Mono',monospace; font-weight:700; transition:color .2s; }
+  .row .tag { padding:0 14px; text-align:right; font-size:10px; text-transform:uppercase; letter-spacing:.1em; color:var(--mut); }
+  .row.active { background:rgba(217,119,87,.10); box-shadow:inset 3px 0 0 var(--acc); }
+  .row.locked .tag { color:var(--lock); }
+  .row.locked { box-shadow:inset 3px 0 0 var(--lock); background:rgba(224,161,78,.08); }
+  .row.conflict { background:rgba(224,86,78,.14); box-shadow:inset 3px 0 0 var(--bad); }
+  .row.conflict .val { color:var(--bad); }
+  .row.committed .val { color:var(--ok); }
+  .ticker { position:absolute; left:30px; right:30px; bottom:24px; display:flex; align-items:center; gap:12px; }
+  .who { width:30px; height:30px; border-radius:9px; display:grid; place-items:center; font-weight:800; font-size:13px; flex:none;
+    background:linear-gradient(135deg,var(--acc),#b9532f); color:#160d08; }
+  .act { font-size:13px; color:var(--ink); }
+  .act b { color:var(--acc); }
+  .step { position:absolute; right:30px; bottom:27px; font-size:10px; color:var(--mut); font-family:ui-monospace,monospace; letter-spacing:.08em; }
+  .dots { position:absolute; left:30px; bottom:7px; display:flex; gap:5px; }
+  .dot { width:14px; height:3px; border-radius:2px; background:var(--edge); }
+  .dot.on { background:var(--acc); }
+</style>
+</head>
+<body>
+<div id="stage">
+  <div class="top"><div class="ttl" id="ttl"></div><div class="badge" id="badge"></div></div>
+  <div class="sub" id="sub"></div>
+  <div class="sheet" id="sheet"></div>
+  <div class="ticker"><div class="who">AI</div><div class="act" id="act"></div></div>
+  <div class="step" id="stepn"></div>
+  <div class="dots" id="dots"></div>
+</div>
+<script>
+const WF = window.__WF__ || { title:"Workflow", badge:"", subtitle:"", cells:[], trace:[] };
+const cells = WF.cells.map(c => ({ ...c, value: c.value ?? "", version: c.version ?? 1, state:"" }));
+const byId = Object.fromEntries(cells.map(c => [c.id, c]));
+// Each frame is the state AFTER applying step i (frame 0 = initial).
+const frames = [];
+function snap(act) { frames.push({ cells: cells.map(c => ({ ...c })), act }); }
+snap('<b>Goal</b> ' + (WF.subtitle || ''));
+for (const ev of WF.trace) {
+  const tool = ev.tool;
+  const ids = (ev.args && ev.args.elementIds) || (ev.args && ev.args.elementId ? [ev.args.elementId] : []);
+  const res = ev.result || {};
+  for (const c of cells) c.state = c.state === 'conflict' ? '' : c.state; // clear transient
+  let act = tool;
+  if (tool === 'read_range') {
+    for (const c of cells) c.state = '';
+    const rows = Array.isArray(res) ? res : [];
+    for (const r of rows) { if (byId[r.id]) { byId[r.id].state = 'active'; byId[r.id].version = r.version ?? byId[r.id].version; if (r.value!=='' && r.value!=null) byId[r.id].value = r.value; } }
+    act = '<b>reads</b> ' + ids.join(', ') + ' &middot; sees version' + (rows[0] ? ' v'+rows[0].version : '');
+  } else if (tool === 'propose_lock') {
+    for (const c of cells) c.state = '';
+    for (const id of ids) if (byId[id]) byId[id].state = 'locked';
+    act = '<b>locks</b> the affected range &middot; read-only for others';
+  } else if (tool === 'edit_cell' || tool === 'write_cell_result') {
+    const id = (ev.args && ev.args.elementId) || ids[0];
+    const v = ev.args && (ev.args.value && ev.args.value.value !== undefined ? ev.args.value.value : ev.args.value);
+    if (res.conflict) { if (byId[id]) byId[id].state = 'conflict'; act = '<b>conflict</b> &mdash; a human edited it first; CAS rejects the stale write'; }
+    else if (res.locked) { if (byId[id]) byId[id].state = 'locked'; act = '<b>blocked</b> &mdash; range is locked; will draft instead'; }
+    else if (res.ok) { if (byId[id]) { byId[id].state = 'committed'; if (v!=null) byId[id].value = String(v); byId[id].version = (byId[id].version||1)+1; } act = '<b>writes</b> ' + (v!=null?String(v):'') + ' with CAS &middot; no clobber'; }
+    else { act = tool; }
+  } else if (tool === 'create_draft') {
+    const ops = (ev.args && ev.args.ops) || [];
+    for (const op of ops) if (byId[op.elementId]) { byId[op.elementId].state = 'active'; }
+    act = '<b>drafts</b> the change for smart-merge on unlock';
+  } else if (tool === 'release_lock' || tool === 'release') {
+    for (const c of cells) if (c.state==='locked') c.state='';
+    act = '<b>releases</b> the lock';
+  } else { act = tool; }
+  snap(act);
+}
+snap('<b>done</b> &middot; every edit versioned, nothing overwritten');
+
+const el = id => document.getElementById(id);
+el('ttl').textContent = WF.title; el('badge').textContent = WF.badge || ''; el('sub').textContent = WF.subtitle || '';
+el('dots').innerHTML = frames.map(()=>'<div class="dot"></div>').join('');
+window.frameCount = () => frames.length;
+window.showFrame = (i) => {
+  const f = frames[Math.max(0,Math.min(i,frames.length-1))];
+  el('sheet').innerHTML = f.cells.map(c =>
+    `<div class="row ${c.state}"><div class="lab">${c.label}</div><div class="val">${c.value===''?'&mdash;':c.value}</div><div class="tag">${c.state==='locked'?'locked':c.state==='conflict'?'conflict':c.state==='committed'?'committed v'+c.version:'v'+c.version}</div></div>`
+  ).join('');
+  el('act').innerHTML = f.act;
+  el('stepn').textContent = i+'/'+(frames.length-1);
+  const dots = el('dots').children; for (let k=0;k<dots.length;k++) dots[k].className = 'dot'+(k<=i?' on':'');
+};
+window.showFrame(0);
+</script>
+</body>
+</html>

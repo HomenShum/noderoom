@@ -1,0 +1,208 @@
+# HALO Overnight Run
+
+Last updated: 2026-06-09T19:09Z.
+
+Target deadline: 2026-06-10 10:00 AM PT.
+
+The original full-live process ran through the June 9 10:00 AM PT cutoff and
+completed six cycles. The thread heartbeat now checks every 30 minutes through
+June 10 and records strict status snapshots. The local supervisor has started a
+deterministic continuation through the June 10 deadline.
+
+A local supervisor is available for this same handoff policy:
+
+```bash
+npm run halo:supervise -- -Until "2026-06-10T17:00:00Z" -PollSeconds 300
+```
+
+It waits while `docs/eval/halo-runs/.active-run.json` points at a live process,
+then starts `halo:overnight` with deterministic lanes through the June 10
+deadline. Logs go to `docs/eval/halo-runs/supervisor.log`.
+
+Supervisor status at this update: background PowerShell PID `31284` is alive.
+It launched active deterministic runner PID `149656` / run id
+`20260609T183814Z`. `halo:status --strict --require-supervisor --record` passes
+using `docs/eval/halo-runs/supervisor-state.json` as the supervisor heartbeat.
+
+## Current Active Run
+
+Authoritative loop:
+
+```bash
+tsx scripts/halo-overnight.ts --until=2026-06-10T17:00:00Z --sleep-minutes=30 --skip-e2e --skip-live
+```
+
+Run id: `20260609T183814Z`
+
+Live status:
+
+- Status file: `docs/eval/halo-runs/20260609T183814Z/status.json`
+- Step log stream: `docs/eval/halo-runs/20260609T183814Z/summary.jsonl`
+- Active lock: `docs/eval/halo-runs/.active-run.json`
+- Current step at this update: `sleeping` after cycle 2.
+- Current wake: `2026-06-09T19:39:17.507Z`.
+- Current output status: `docs/eval/free-auto-router-ladder.json` exists
+  (12,291 bytes). The latest full-live router ladder completed and failed
+  overall.
+- Process status: the parent runner process is alive and the lock is current.
+- Status command: `npm run halo:status`
+- Strict status command: `npm run halo:status -- --strict --require-supervisor`
+- Recorded status command: `npm run halo:status -- --strict --require-supervisor --record`
+- Snapshot report command: `npm run halo:snapshots`
+- Supervisor command: `npm run halo:supervise -- -Until "2026-06-10T17:00:00Z" -PollSeconds 300`
+
+The active lock points at the currently running process. A second
+`halo:overnight` runner exits before writing run artifacts while that process is
+alive.
+
+Active deterministic continuation evidence in `20260609T183814Z`, cycle 2:
+
+- `typecheck`: pass
+- `unit-tests`: pass, 29 files / 173 tests
+- `test:e2e`: skipped by `--skip-e2e`
+- `agent:improve`: pass, wrote
+  `docs/eval/agent-improvement-loop/20260609T190903Z.json`
+- `eval:diff`: pass, 0 degraded / 0 improved / 0 new / 9 same
+- `qa:matrix:check`: pass, 13 features / 13 model routes current
+- `convex:boundaries`: pass
+- `architecture:budget`: advisory pass with the same review-required surfaces
+
+Prior full-live run: `20260609T060208Z` completed six cycles and ended after the
+June 9 cutoff with failure status because at least one cycle contained failed
+gates. After it completed, the stale lock and supervisor restart path exposed
+two run-control bugs. Both have been fixed:
+
+- `scripts/halo-overnight.ts` now releases the active lock explicitly after a
+  normal `completed` status write.
+- `scripts/halo-supervise-until.ps1` now calls `npm.cmd` with `--key=value`
+  arguments and writes `supervisor-state.json`.
+- `scripts/halo-status.ts` now uses the supervisor state file before falling
+  back to process enumeration, avoiding false strict failures from flaky nested
+  PowerShell process listing.
+
+## Evidence Already Recorded
+
+Deterministic cycle evidence in `20260609T060208Z`:
+
+- `typecheck`: pass
+- `unit-tests`: pass, 29 files / 173 tests
+- `test:e2e`: pass for memory-mode chat specs; backend live specs skipped
+- `agent:improve`: pass, recorded ladder/credit/workflow artifacts
+- `eval:diff`: pass, no degraded checks
+- `qa:matrix:check`: pass after regenerated QA/benchmark artifacts
+- `convex:boundaries`: pass
+- `architecture:budget`: advisory pass; still reports review-required surfaces
+
+Live cycle evidence in `20260609T060208Z`:
+
+- OpenRouter free-model discovery and tool smoke: pass; top resolved smoke model was `nvidia/nemotron-3-super-120b-a12b:free`
+- Provider parser smoke: pass across Gemini, OpenAI, Anthropic, and OpenRouter
+- Convex `/free` job smoke: pass; one attempt, resolved `nvidia/nemotron-3-super-120b-a12b:free`, completed in about 56s
+- V2 multi-model benchmark: pass as a completed run, but not as promotion evidence
+- Free-auto router ladder: fail after 3,823,229ms. It wrote
+  `docs/eval/free-auto-router-ladder.json`; no free route cleared L1-L4.
+  `openrouter/free-auto` passed L1/L2, failed L3 by step budget, and timed out
+  L4. `nvidia/nemotron-3-super-120b-a12b:free` passed L1-L3 but timed out L4.
+  The other free candidates failed due invalid JSON, provider retry errors, or
+  unsafe/missing actions.
+
+Separate UI/video evidence:
+
+- Gemini UI review: pass against `docs/eval/ui-recordings/live-ui-walkthrough-20260608.mp4`
+- Output: `docs/eval/agent-improvement-loop/gemini-ui-review.json`
+
+## Benchmark Reading
+
+The benchmark result is mixed and should not be described as a production
+guarantee:
+
+- `openrouter/free-auto`: 0/9 checks, resolved `nvidia/nemotron-3-super-120b-a12b:free`
+- `gemini-3.5-flash`: 5/9 checks
+- `claude-sonnet-4-6`: 5/9 checks
+- several paid/smaller models: 1/9 checks
+- `gpt-5.5`: provider/tool-call error in this run
+
+Use this as routing feedback and failure analysis, not a default-model promotion.
+
+## Subagent Review Findings To Preserve
+
+Workflow QA:
+
+- The 70-file professional workflow catalog is useful, but many GTM/finance cases still need concrete row-level fixtures.
+- Priority gates: PitchBook company match/enrich, healthtech sector classification, AMO scorer, JPM joins, PII boundaries, cost reconciliation, template population, timesheet review, transaction summaries, and credit underwriting.
+- README charts should stay yellow for workflow rows until fixture-backed and live-provider traces exist.
+
+Model/router QA:
+
+- `npm run ladder` is scripted unless `--real` is passed.
+- `ladder:free` is the right live router test because it runs `openrouter/free-auto` plus current top free candidates.
+- Current free-auto evidence is negative for interactive collaboration; keep it on the long-running `/free` lane.
+
+UI/browser QA:
+
+- Current E2E proves memory-mode chat; live Convex/browser two-context specs remain the main red gap.
+- Missing stable selectors and backend harness pieces still block production claims for file upload/view, private chat, proposals, auto-accept, spreadsheet CAS, and wall conflicts.
+
+Run-control QA:
+
+- Duplicate full-live runners can corrupt shared artifacts, so `scripts/halo-overnight.ts` now has an active-run lock.
+- `--skip-live` now skips the Gemini UI lane too.
+- Lock parsing tolerates Windows PowerShell UTF-8 BOM output.
+- Long steps stream child output into their step log and refresh `status.json`
+  and `.active-run.json` every 30s.
+- Sleeping states publish `sleepUntil` in `status.json`; `halo:status` and
+  `halo:snapshots` render it when available. Latest active continuation wake:
+  `2026-06-09T19:08:51.474Z`.
+- `npm run halo:status` gives the lock, PID liveness, current step, latest
+  events, and router ladder artifact state for each heartbeat/handoff.
+- `npm run halo:status` now reports `supervisor-state.json`, latest
+  `supervisor.log` lines, lock/run/deadline ages, and active runner process
+  freshness; current verified supervisor PID is `31284`.
+- `npm run halo:status -- --strict --require-supervisor` now exits nonzero if
+  the active lock points at a dead process, no supervisor process is found, or
+  more than one supervisor process is found.
+- `npm run halo:status -- --strict --require-supervisor --record` appends the
+  complete status report to `docs/eval/halo-runs/status-snapshots.jsonl`.
+- `npm run halo:snapshots` renders the JSONL trail into
+  `docs/eval/halo-runs/status-snapshots.md` for a quick morning handoff read.
+  Latest generated report parses 39 snapshots, shows active deterministic runner
+  `20260609T183814Z` sleeping, records the router JSON artifact, and records
+  the earlier duplicate/missing-supervisor anomalies that have since been
+  closed.
+- A scheduled-task fire created a second supervisor at 2026-06-09T00:05 PT.
+  The duplicate was stopped, `scripts/halo-supervise-until.ps1` now exits if an
+  existing supervisor process is active. Later, after the first full-live runner
+  completed, the stale-lock/restart path exposed a Windows `npm` invocation bug;
+  `scripts/halo-supervise-until.ps1` now uses `npm.cmd` and writes
+  `supervisor-state.json`.
+- `scripts/halo-cron.cmd` also checks for an existing supervisor before launching
+  one, avoiding even the short-lived duplicate process during scheduled fires.
+  Smoke run at 2026-06-09T00:14 PT logged `supervisor already active; skip` and
+  exited `0` without creating a second supervisor.
+- Latest wrapper checks: `npm run halo:status -- --json --strict --require-supervisor --record`,
+  duplicate-supervisor smoke via `npm run halo:supervise -- -Until "2026-06-10T17:00:00Z" -PollSeconds 1`,
+  cron wrapper skip smoke via `cmd /c scripts\halo-cron.cmd`,
+  `npm run qa:matrix`,
+  `npm run qa:matrix:check`,
+  `npm run halo:snapshots`,
+  `npx vitest run tests/qaMatrix.test.ts`,
+  `npm run typecheck -- --pretty false`, `npm test` (29 files / 173 tests), and
+  `git diff --check` all pass for the current HALO run-control changes.
+- `scripts/halo-supervise-until.ps1` and `scripts/halo-cron.cmd` now target the
+  June 10 handoff window instead of the original June 9 cutoff.
+
+## Next Handoff Checks
+
+At or before the June 10 10:00 AM PT handoff:
+
+1. Read `docs/eval/halo-runs/20260609T183814Z/status.json`.
+2. Run `npm run halo:status -- --strict --require-supervisor --record` for a
+   normalized lock/status/artifact/supervisor summary that fails on missing
+   coverage and appends a durable snapshot.
+3. If a new cycle rewrites `docs/eval/free-auto-router-ladder.json`, inspect it
+   and rerun `npm run qa:matrix` plus `npm run halo:snapshots`.
+4. If the active run completed before June 10 and no supervisor is running,
+   start the lock-aware supervisor:
+   `npm run halo:supervise -- -Until "2026-06-10T17:00:00Z" -PollSeconds 300`.
+5. Run `npm run benchmark:charts` and `npm run qa:matrix:check` after any new benchmark output.
+6. Preserve red/yellow claims for live browser E2E, row-level professional fixtures, and free-auto collaboration promotion unless fresh evidence closes them.

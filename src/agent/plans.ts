@@ -209,56 +209,6 @@ export function companyResearchPlan(companies: CompanyResearchTarget[]): Planner
   };
 }
 
-export function companyResearchPlanLegacy(companies: CompanyResearchTarget[]): Planner {
-  return companyResearchPlan(companies);
-/*
-  const cellIds = (c: string) => [
-    `${c}__status`, `${c}__summary`, `${c}__funding`, `${c}__headcount`, `${c}__recent_signal`,
-    `${c}__source`, `${c}__source2`, `${c}__last_researched`,
-  ];
-  const targetFor = (c: string) => companies.find((x) => x.rowId === c);
-  const urlsFor = (c: string) => {
-    const t = targetFor(c);
-    return [t?.sourceUrl ?? "", t?.source2Url ?? ""].filter(Boolean);
-  };
-  return ({ messages }) => {
-    // Hold-first: if a lock is held, finish + RELEASE that company before starting another
-    // (so a status="complete" never strands an unreleased lock).
-    const held = heldLock(messages);
-    if (held) {
-      const c = held.company;
-      const target = targetFor(c);
-      if (!target) return { toolCalls: [{ tool: "release_lock", args: { lockId: held.lockId } }] };
-      const v = knownVersions(messages);
-      const ids = cellIds(c);
-      const lt = lastTool(messages);
-      const conflicted = lt?.name === "edit_cell" && !!lt.result && lt.result.conflict === true && String(editTargetFor(messages, lt.callId) ?? "").startsWith(`${c}__`);
-      if (cellIds(c).some((id) => v[id] === undefined)) return { toolCalls: [{ tool: "read_range", args: { elementIds: cellIds(c) } }, { tool: "fetch_source", args: { url: urlFor(c) } }] };
-      if (!committed.has(`${c}__status`)) {
-        const f = lastFetch(messages);
-        const src = f ? `${f.title} — ${f.url}` : urlFor(c);
-        return {
-          say: `${c}: sourced from ${f?.title ?? urlFor(c)}.`,
-          toolCalls: [
-            { tool: "edit_cell", args: { elementId: `${c}__summary`, value: summaryFor(c), baseVersion: v[`${c}__summary`] } },
-            { tool: "edit_cell", args: { elementId: `${c}__source`, value: src, baseVersion: v[`${c}__source`] } },
-            { tool: "edit_cell", args: { elementId: `${c}__status`, value: "complete", baseVersion: v[`${c}__status`] } },
-          ],
-        };
-      }
-      return { toolCalls: [{ tool: "release_lock", args: { lockId: held.lockId } }] };
-    }
-    // No lock held → claim the next pending company.
-    const done = completedCompanies(messages);
-    const cur = companies.find((c) => !done.has(c.rowId));
-    if (!cur) return { say: `Researched ${companies.length} ${companies.length === 1 ? "company" : "companies"} — each sourced, status complete.`, done: true };
-    return { say: `Researching ${cur.rowId} — claiming its row.`, toolCalls: [{ tool: "propose_lock", args: { elementIds: cellIds(cur.rowId), reason: `research ${cur.rowId}` } }] };
-  };
-}
-
-*/
-}
-
 export function recomputeVariancePlan(targets: Record<string, string>, opts: { reason?: string; lock?: boolean } = {}): Planner {
   const useLock = opts.lock !== false;
   const ids = Object.keys(targets);

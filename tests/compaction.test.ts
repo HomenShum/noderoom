@@ -39,6 +39,26 @@ describe("context compaction", () => {
     expect(r.compacted).toBe(false);
   });
 
+  it("preserves provider metadata on tool calls during compaction", async () => {
+    const msgs = syntheticHistory(10);
+    msgs[1] = {
+      role: "assistant",
+      content: "",
+      toolCalls: [{
+        id: "gemini-call",
+        tool: "read_range",
+        args: { elementIds: ["r0"] },
+        providerMetadata: { geminiThoughtSignature: "sig-123" },
+      }],
+    };
+
+    const r = await compactMessages(msgs, { maxChars: 800, keepRecent: 4 });
+
+    const call = r.messages[1].toolCalls?.[0];
+    expect(r.compacted).toBe(true);
+    expect(call?.providerMetadata?.geminiThoughtSignature).toBe("sig-123");
+  });
+
   it("an agent run with compaction enabled still completes and finishes the task", async () => {
     const engine = new RoomEngine();
     const d = buildDemoRoom(engine);

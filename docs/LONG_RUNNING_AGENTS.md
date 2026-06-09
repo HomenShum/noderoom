@@ -42,9 +42,19 @@ handoff
 
 The handoff is also written as a trace event (`tool: "handoff"`), so it participates in the same append-only, hash-chained `agentSteps` audit path as normal tool calls.
 
-## Featured Free-Auto Job Path
+Current direction: `/ask` is no longer a separate persistence path. Every
+request creates or reuses an `agentJobs` row first, then runs the first slice
+immediately. If that slice exhausts its step/time budget, it checkpoints cursor
+state and starts the same Workflow/Workpool continuation path. Each action,
+query, mutation, scheduler handoff, model call, and tool call is recorded in the
+job operation ledger. `/free` remains only the explicit slow/free model policy.
+See
+[`docs/NODEAGENT_ARCHITECTURE.md`](NODEAGENT_ARCHITECTURE.md).
 
-NodeRoom also has a dedicated async free-auto path for slow/free models:
+## Free-Auto Model Policy
+
+NodeRoom also has an explicit free-auto command for demos and low-cost
+background work:
 
 ```text
 /free <goal>
@@ -52,19 +62,23 @@ NodeRoom also has a dedicated async free-auto path for slow/free models:
   -> durable agentJobs row
   -> @convex-dev/workflow freeAutoWorkflow
   -> Workpool-limited internal action agentJobRunner.runFreeAutoJobSlice
-  -> runAgent with model=openrouter/free-auto
+  -> runAgent with modelPolicy=openrouter/free-auto
   -> checkpoint or complete
   -> workflow sleep/resume when work remains
 ```
 
-This path is deliberately separate from `/ask`. `/ask` remains the fast live collaboration path. `/free` is a background job path that can run beyond 10 minutes because each action slice voluntarily stops before the platform limit and persists progress.
+This is not a second agent architecture. It is a command that starts the same
+durable job contract with `modelPolicy=openrouter/free-auto`. Normal `/ask`
+also can continue beyond 10 minutes now: if the first action slice cannot
+finish, it writes a checkpoint and starts Workflow continuation with the job's
+selected model policy.
 
 Durable tables:
 
 ```text
 agentJobs
   roomId, artifactId, goal, status
-  modelPolicy = openrouter/free-auto
+  modelPolicy = AGENT_MODEL for /ask, openrouter/free-auto for /free
   runtime = workflow
   workflowId, workId
   cursor, handoff
@@ -89,6 +103,11 @@ FREE_AUTO_JOB_MAX_STEPS_PER_SLICE=3
 FREE_AUTO_JOB_CONTEXT_MAX_CHARS=24000
 FREE_AUTO_JOB_CONTEXT_KEEP_RECENT=10
 ```
+
+`FREE_AUTO_JOB_MODEL` only overrides jobs whose saved policy is
+`openrouter/free-auto`. A handed-off `/ask` job keeps the model policy selected
+for the interactive slice, so Workflow continuation does not silently switch a
+Gemini/OpenAI/Claude run into the free-auto lane.
 
 Default cap math:
 
@@ -150,23 +169,70 @@ freeAutoWorkflow
     its own retry/attempt accounting and provider calls must not double-bill
 ```
 
-## Remaining `/free` Hardening
+## Durable Provider-Step Journal
+
+Workflow retry alone is not enough for provider calls. The expensive failure
+case is:
+
+```text
+slice starts
+  -> calls provider
+  -> provider returns a valid model step
+  -> process crashes before the job checkpoint mutation
+  -> retry starts from the old cursor
+  -> without a journal, the retry calls and bills the provider again
+```
+
+NodeRoom closes that gap at the model-step boundary:
+
+```text
+runAgent step N
+  -> journal.get(jobId, sliceKey, N)
+  -> if found: replay AgentStep, do not call provider, do not count new tokens
+  -> if missing: call provider
+  -> immediately journal.record(jobId, sliceKey, N, AgentStep)
+  -> execute tool calls
+  -> checkpoint cursor/handoff at slice end
+```
+
+The durable table is `agentModelStepJournal`, indexed by
+`(jobId, sliceKey, step)`. The `sliceKey` is intentionally not the attempt
+number. Attempts increment on retries; the slice key is derived from the
+semantic slice input:
+
+- `/ask`: job id, artifact id/version, goal, mode, model policy, and step cap.
+- Workflow continuation: job id, artifact id, goal, mode, model policy, cursor,
+  handoff, and step cap.
+
+That means a retry before checkpoint sees the same key and replays the model
+step, while a successful checkpoint writes a new cursor and naturally starts a
+new slice journal. Tools may re-execute on replay, which is acceptable because
+writes are still guarded by locks, CAS baselines, and mutation receipts.
+
+Honest boundary: if the process dies before the provider response is received
+or before `journal.record` commits, there is no completed result to replay. The
+next retry may call the provider again. Where providers expose request
+idempotency keys, those can be added as a further adapter-level optimization,
+but the durable journal solves the common crash-after-response/before-checkpoint
+double-bill case.
+
+## Remaining Hardening
 
 The durable shape is built: `agentJobs`, `agentJobAttempts`,
 `freeAutoWorkflow`, Workpool-limited slices, leases, cursor/handoff resume,
-cancel/retry, and resolved-model attempt telemetry. What remains is the
-reliability layer that turns it from a demo-compatible background path into a
-production worker:
+cancel/retry, resolved-model attempt telemetry, and durable provider-step
+journaling. What remains is the reliability layer that turns it from a
+demo-compatible background path into a production worker:
 
 | Gap | Why it matters | Direction |
 |---|---|---|
 | Duplicate enqueue idempotency | A lease prevents two workers from running the same job; it does not prevent a double-click from creating two jobs. | Add `agentJobs.idempotencyKey` and claim-or-reuse by room, artifact, actor, and normalized goal. |
 | Stricter budget clamps | Defaults leave margin, but env overrides can shrink the reserve too far. | Cap slice budgets below the platform limit and enforce a larger reserve floor. |
 | Per-tool abort propagation | The runtime checks time before each tool, and model calls are abortable, but a slow tool started near the deadline can still run to completion. | Thread a deadline `AbortSignal` into tools and long I/O helpers. |
-| Durable provider-step journal | `runAgent` supports a `StepJournal`, and tests prove replay avoids re-billing, but the Convex `/free` runner does not yet pass a durable journal. | Add a Convex journal table keyed by `(jobId, attempt, step)` or a stable slice-step id. |
+| Provider idempotency keys | The durable journal replays after a response is recorded, but cannot replay a response that never committed. | Add provider request idempotency keys where supported and store provider request ids on journal rows. |
 | Model health and quarantine | Static free-model ranking plus fallback is not the same as production routing. | Track latency, timeouts, failures, rate limits, fallback count, and quarantine windows. |
 | Failure-path model provenance | A successful call records the concrete resolved model, but an all-candidates-failed path can still report the alias. | Store attempted models and final attempted model on each attempt. |
-| Real job-runner tests | Current deterministic coverage proves the shape, but the live smoke completed in one slice. | Add forced multi-slice Convex tests for resume, stale leases, crash-after-provider-call replay, retry backoff, and duplicate enqueue. |
+| Real job-runner tests | Current deterministic coverage proves the shape, and live smoke covers `/ask` handoff; deeper crash injection still needs dedicated fixtures. | Add forced multi-slice Convex tests for resume, stale leases, crash-after-provider-call replay, retry backoff, and duplicate enqueue. |
 
 ## Context Management
 

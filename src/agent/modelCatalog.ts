@@ -97,6 +97,7 @@ export const modelPricing: Record<string, ModelPricing> = {
   // OpenRouter FREE tier (tool-calling) — needs OPENROUTER_API_KEY to actually run:
   [OPENROUTER_FREE_AUTO_MODEL]: freeOpenRouterPricing(1_000_000),
   [OPENROUTER_FREE_META_MODEL]: freeOpenRouterPricing(200_000),
+  "openrouter/owl-alpha": freeOpenRouterPricing(1_000_000),
   "moonshotai/kimi-k2.6:free": { inputPer1M: 0, outputPer1M: 0, contextWindow: 262000 },
   "z-ai/glm-4.5-air:free": { inputPer1M: 0, outputPer1M: 0, contextWindow: 131000 },
   "qwen/qwen3-coder:free": { inputPer1M: 0, outputPer1M: 0, contextWindow: 262000 },
@@ -258,16 +259,16 @@ export const llmModelCatalog: ModelCatalog = {
     coding: ["gemini-3.1-pro-preview", "gemini-3-flash-preview", "gemini-2.5-pro"],
   },
   openrouter: {
-    chat: [OPENROUTER_FREE_AUTO_MODEL, "kimi-k2.6", "minimax-m2.7", "glm-4.7-flash", "deepseek-v3.2-speciale", "glm-4.7"],
-    agent: [OPENROUTER_FREE_AUTO_MODEL, "kimi-k2.6", "minimax-m2.7", "glm-4.7", "deepseek-v3.2-speciale", "glm-4.7-flash"],
-    router: [OPENROUTER_FREE_AUTO_MODEL, "kimi-k2.6", "minimax-m2.7", "glm-4.7-flash", "deepseek-v3.2-speciale"],
+    chat: ["kimi-k2.6", "minimax-m2.7", OPENROUTER_FREE_AUTO_MODEL, "glm-4.7-flash", "deepseek-v3.2-speciale", "glm-4.7"],
+    agent: ["kimi-k2.6", "minimax-m2.7", "glm-4.7", OPENROUTER_FREE_AUTO_MODEL, "deepseek-v3.2-speciale", "glm-4.7-flash"],
+    router: ["kimi-k2.6", "minimax-m2.7", OPENROUTER_FREE_AUTO_MODEL, "glm-4.7-flash", "deepseek-v3.2-speciale"],
     judge: ["kimi-k2.6", "deepseek-r1", "glm-4.7", "minimax-m2.7"],
     analysis: ["kimi-k2.6", "deepseek-r1", "glm-4.7", "minimax-m2.7"],
     deepResearch: ["kimi-k2.6", "deepseek-r1", "glm-4.7", "minimax-m2.7"],
     vision: [],
-    fileSearch: [OPENROUTER_FREE_AUTO_MODEL, "kimi-k2.6", "minimax-m2.7", "glm-4.7-flash", "deepseek-v3.2-speciale"],
+    fileSearch: ["kimi-k2.6", "minimax-m2.7", OPENROUTER_FREE_AUTO_MODEL, "glm-4.7-flash", "deepseek-v3.2-speciale"],
     voice: [],
-    coding: [OPENROUTER_FREE_AUTO_MODEL, "kimi-k2.6", "minimax-m2.7", "glm-4.7-flash", "deepseek-v3.2-speciale", "mistral-large"],
+    coding: ["kimi-k2.6", "minimax-m2.7", OPENROUTER_FREE_AUTO_MODEL, "glm-4.7-flash", "deepseek-v3.2-speciale", "mistral-large"],
   },
   xai: {
     chat: ["grok-3-mini", "grok-4-1-fast-reasoning"],
@@ -572,8 +573,8 @@ export const modelAliases: Record<string, string> = {
   "deep-research-max": "deep-research-max-preview-04-2026",
 
   // OpenRouter aliases
-  "openrouter": OPENROUTER_FREE_AUTO_MODEL,
-  "auto": OPENROUTER_FREE_AUTO_MODEL,
+  "openrouter": "kimi-k2.6",
+  "auto": "gemini-3.5-flash",
   "free": OPENROUTER_FREE_AUTO_MODEL,
   "free-auto": OPENROUTER_FREE_AUTO_MODEL,
   "openrouter-auto": OPENROUTER_FREE_AUTO_MODEL,

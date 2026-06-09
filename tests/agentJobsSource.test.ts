@@ -45,4 +45,133 @@ describe("long-running agent job source invariants", () => {
     expect(index).toContain("spreadsheetDependencies");
     expect(index).toContain("by_parent");
   });
+
+  it("uses agentJobs as the durable root for interactive and free agent requests", () => {
+    const agent = readFileSync("convex/agent.ts", "utf8");
+    const runs = readFileSync("convex/agentRuns.ts", "utf8");
+    const jobs = readFileSync("convex/agentJobs.ts", "utf8");
+    const schema = readFileSync("convex/schema.ts", "utf8");
+
+    expect(agent).toContain('makeFunctionReference<"mutation">("agentJobs:createOrReuse")');
+    expect(agent).toContain('makeFunctionReference<"mutation">("agentJobs:finishInteractive")');
+    expect(agent).toContain("jobId, roomId");
+    expect(runs).toContain('jobId: v.optional(v.id("agentJobs"))');
+    expect(jobs).toContain("export const createOrReuse");
+    expect(jobs).toContain("idempotencyKey");
+    expect(schema).toContain('entrypoint: v.optional(entrypointV)');
+    expect(schema).toContain('scope: v.optional(agentScopeV)');
+  });
+
+  it("keeps /ask model policy during workflow handoff while allowing /free overrides", () => {
+    const runner = readFileSync("convex/agentJobRunner.ts", "utf8");
+
+    expect(runner).toContain('modelPolicy === "openrouter/free-auto"');
+    expect(runner).toContain("process.env.FREE_AUTO_JOB_MODEL ?? modelPolicy");
+    expect(runner).toContain("const model = agentModel(resolvedModelPolicy)");
+  });
+
+  it("round-trips Gemini tool-call thought signatures for resumed jobs", () => {
+    const model = readFileSync("src/agent/convexModel.ts", "utf8");
+    const types = readFileSync("src/agent/types.ts", "utf8");
+
+    expect(types).toContain("providerMetadata?: Record<string, unknown>");
+    expect(model).toContain("thoughtSignature?: string");
+    expect(model).toContain("thought_signature?: string");
+    expect(model).toContain("geminiThoughtSignature");
+    expect(model).toContain("...(thoughtSignature ? { thoughtSignature } : {})");
+  });
+
+  it("persists provider-step journals for crash-safe model replay", () => {
+    const schema = readFileSync("convex/schema.ts", "utf8");
+    const journalFns = readFileSync("convex/agentStepJournal.ts", "utf8");
+    const journalClient = readFileSync("convex/agentStepJournalClient.ts", "utf8");
+    const agent = readFileSync("convex/agent.ts", "utf8");
+    const runner = readFileSync("convex/agentJobRunner.ts", "utf8");
+    const journal = readFileSync("src/agent/journal.ts", "utf8");
+
+    expect(schema).toContain("agentModelStepJournal");
+    expect(schema).toContain('index("by_job_slice_step", ["jobId", "sliceKey", "step"])');
+    expect(journalFns).toContain("export const get = internalQuery");
+    expect(journalFns).toContain("export const record = internalMutation");
+    expect(journalClient).toContain("makeConvexStepJournal");
+    expect(journal).toContain("journalSliceKey");
+    expect(agent).toContain("journal: modelJournal");
+    expect(runner).toContain("journal: modelJournal");
+  });
+
+  it("defines the operation ledger, receipts, draft operations, and first-class leases", () => {
+    const schema = readFileSync("convex/schema.ts", "utf8");
+    const jobs = readFileSync("convex/agentJobs.ts", "utf8");
+    const artifacts = readFileSync("convex/artifacts.ts", "utf8");
+    const roomTools = readFileSync("convex/convexRoomTools.ts", "utf8");
+    const steps = readFileSync("convex/agentSteps.ts", "utf8");
+
+    expect(schema).toContain("agentOperationEvents");
+    expect(schema).toContain("agentMutationReceipts");
+    expect(schema).toContain("agentDraftOperations");
+    expect(schema).toContain("agentLeases");
+    expect(schema).toContain('kind: operationEventKindV');
+    expect(schema).toContain('targetKind: graphObjectKindV');
+    expect(jobs).toContain("recordOperationEvent");
+    expect(jobs).toContain('ctx.db.insert("agentLeases"');
+    expect(jobs).toContain('status: "released"');
+    expect(artifacts).toContain('ctx.db.insert("agentMutationReceipts"');
+    expect(artifacts).toContain('jobId: v.optional(v.id("agentJobs"))');
+    expect(roomTools).toContain("private jobId?: Id<\"agentJobs\">");
+    expect(roomTools).toContain("jobId: this.jobId");
+    expect(steps).toContain("mutationReceiptIds");
+    expect(steps).toContain('jobId: v.optional(v.id("agentJobs"))');
+  });
+
+  it("implements notebook graph mutations and an embedding queue/runner for the unified NodeAgent domain", () => {
+    const schema = readFileSync("convex/schema.ts", "utf8");
+    const graph = readFileSync("convex/notebookGraph.ts", "utf8");
+    const embeddings = readFileSync("convex/embeddings.ts", "utf8");
+    const runner = readFileSync("convex/embeddingRunner.ts", "utf8");
+
+    for (const table of ["wikiPages", "wikiRevisions", "notebooks", "nodes", "relations", "relationTypes", "embeddingJobs", "embeddings"]) {
+      expect(schema).toContain(`${table}: defineTable`);
+    }
+    expect(schema).toContain("fromObjectKind: graphObjectKindV");
+    expect(schema).toContain("toObjectKind: graphObjectKindV");
+    expect(schema).toContain("positionKey: v.string()");
+    expect(schema).toContain("contentHash: v.string()");
+    expect(schema).toContain("vector: v.array(v.number())");
+    for (const fn of ["createNotebook", "readContext", "createChildNode", "updateNodeContent", "createRelation", "reorderRelations"]) {
+      expect(graph).toContain(`export const ${fn}`);
+    }
+    expect(graph).toContain("enqueueEmbeddingJob");
+    expect(graph).toContain("agentMutationReceipts");
+    for (const fn of ["enqueueForSource", "claimNext", "upsertForSource", "tombstoneForSource", "searchVisible"]) {
+      expect(embeddings).toContain(`export const ${fn}`);
+    }
+    expect(runner).toContain("export const runOne");
+    expect(runner).toContain('provider: "local"');
+  });
+
+  it("exposes a browser-readable job detail query linked to attempts, operations, receipts, leases, and steps", () => {
+    const jobs = readFileSync("convex/agentJobs.ts", "utf8");
+    const store = readFileSync("src/app/store.tsx", "utf8");
+    const chat = readFileSync("src/ui/Chat.tsx", "utf8");
+
+    expect(jobs).toContain("export const detail");
+    expect(jobs).toContain("agentOperationEvents");
+    expect(jobs).toContain("agentMutationReceipts");
+    expect(jobs).toContain("agentSteps");
+    expect(store).toContain("lastLongFreeJobDetail");
+    expect(store).toContain("api.agentJobs.detail");
+    expect(chat).toContain("r-job-detail");
+    expect(chat).toContain("Receipts");
+  });
+
+  it("keeps NodeAgent execution server-side instead of relying on client_action as a production primitive", () => {
+    const agent = readFileSync("convex/agent.ts", "utf8");
+    const jobs = readFileSync("convex/agentJobs.ts", "utf8");
+
+    expect(agent).not.toContain("client_action");
+    expect(jobs).not.toContain("client_action");
+    expect(agent).toContain("ConvexRoomTools");
+    expect(jobs).toContain("requireActorProof");
+    expect(jobs).toContain("requireArtifactInRoom");
+  });
 });

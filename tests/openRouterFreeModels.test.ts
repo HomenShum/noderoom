@@ -48,9 +48,11 @@ describe("OpenRouter free auto routing", () => {
     expect(ranked[0].reasons).toContain("coding/agent specialist");
   });
 
-  it("resolves default aliases to the local free-auto route", () => {
-    expect(resolveModelAlias("openrouter")).toBe(OPENROUTER_FREE_AUTO_MODEL);
-    expect(resolveModelAlias("auto")).toBe(OPENROUTER_FREE_AUTO_MODEL);
+  it("keeps free-auto opt-in instead of hiding it behind generic aliases", () => {
+    expect(resolveModelAlias("openrouter")).toBe("kimi-k2.6");
+    expect(resolveModelAlias("auto")).toBe("gemini-3.5-flash");
+    expect(resolveModelAlias("free")).toBe(OPENROUTER_FREE_AUTO_MODEL);
+    expect(resolveModelAlias("free-auto")).toBe(OPENROUTER_FREE_AUTO_MODEL);
     expect(resolveModelAlias("kimi")).toBe("moonshotai/kimi-k2.6:free");
   });
 
@@ -62,6 +64,7 @@ describe("OpenRouter free auto routing", () => {
   it("reports zero cost for free routes", () => {
     expect(priceRun("openrouter/free-auto", 100_000, 10_000)).toBe(0);
     expect(priceRun("qwen/qwen3-coder:free", 100_000, 10_000)).toBe(0);
+    expect(priceRun("openrouter/owl-alpha", 100_000, 10_000)).toBe(0);
   });
 
   it("does not mask aborted discovery as a static fallback", async () => {

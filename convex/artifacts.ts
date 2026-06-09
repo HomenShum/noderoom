@@ -137,6 +137,8 @@ type ApplyCellEditArgs = {
   value: unknown;
   baseVersion: number;
   actor: ActorValue;
+  jobId?: Id<"agentJobs">;
+  runId?: Id<"agentRuns">;
 };
 
 type ProposalOp = {
@@ -154,6 +156,26 @@ function parseProposalOp(op: unknown): ProposalOp {
     throw new Error("invalid_proposal_op");
   }
   return { opId: o.opId, artifactId: o.artifactId, elementId: o.elementId, kind: o.kind as ProposalOp["kind"], value: o.value, baseVersion: o.baseVersion };
+}
+
+function clean<T extends Record<string, unknown>>(value: T): T {
+  const out: Record<string, unknown> = {};
+  for (const [key, val] of Object.entries(value)) if (val !== undefined) out[key] = val;
+  return out as T;
+}
+
+async function sha256hex(s: string): Promise<string> {
+  const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(s));
+  return Array.from(new Uint8Array(buf)).map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+function canonical(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(canonical);
+  if (!value || typeof value !== "object") return value;
+  return Object.keys(value).sort().reduce<Record<string, unknown>>((acc, key) => {
+    acc[key] = canonical((value as Record<string, unknown>)[key]);
+    return acc;
+  }, {});
 }
 
 async function applyApprovedProposal(ctx: MutationCtx, roomId: Id<"rooms">, artifactId: Id<"artifacts">, op: ProposalOp, author: ActorValue) {
@@ -175,6 +197,8 @@ async function applyApprovedProposal(ctx: MutationCtx, roomId: Id<"rooms">, arti
 async function applyCellEditCore(ctx: MutationCtx, a: ApplyCellEditArgs) {
     const art = await requireArtifactInRoom(ctx, a.roomId, a.artifactId);
     await requireActorInRoom(ctx, a.roomId, a.actor);
+    const job = a.jobId ? await ctx.db.get(a.jobId) : null;
+    if (a.jobId && (!job || String(job.roomId) !== String(a.roomId))) throw new Error("job_room_mismatch");
     const kind = a.kind ?? "set";
     // 1. LOCK gate — a held range is read-only for non-holders.
     const lock = await activeLockOn(ctx, a.artifactId, a.elementId);
@@ -211,9 +235,37 @@ async function applyCellEditCore(ctx: MutationCtx, a: ApplyCellEditArgs) {
     }
     await ctx.db.patch(a.artifactId, { version: art.version + 1, updatedAt: now, order: nextOrder });
     await syncSpreadsheetIndexFromDb(ctx, art);
+    const nextVersion = kind === "delete" ? actual : actual + 1;
     // 4. TRACE — every applied edit is auditable.
     await ctx.db.insert("traces", { roomId: art.roomId, ts: now, actor: a.actor, type: "edit_applied", summary: `${a.actor.name} set ${a.elementId} = ${String(a.value)}`, detail: `edit_cell · ${a.elementId} = ${String(a.value)} · v${actual} → v${actual + 1}` });
-    return { ok: true as const, version: kind === "delete" ? actual : actual + 1 };
+    let mutationReceiptId: Id<"agentMutationReceipts"> | undefined;
+    if (a.jobId && job) {
+      mutationReceiptId = await ctx.db.insert("agentMutationReceipts", clean({
+        jobId: a.jobId,
+        runId: a.runId,
+        mutationName: "artifacts.applyAgentCellEdit",
+        permission: a.actor.kind === "agent" ? "agent_session" : "actor_proof",
+        inputHash: await sha256hex(JSON.stringify(canonical({
+          roomId: String(a.roomId),
+          artifactId: String(a.artifactId),
+          elementId: a.elementId,
+          kind,
+          value: a.value,
+          baseVersion: a.baseVersion,
+        }))),
+        output: { ok: true, version: nextVersion },
+        affectedIds: [String(a.artifactId), `${String(a.artifactId)}:${a.elementId}`],
+        beforeVersions: { [a.elementId]: actual },
+        afterVersions: { [a.elementId]: kind === "delete" ? null : nextVersion },
+        createdAt: now,
+      }));
+      await ctx.db.patch(a.jobId, {
+        mutationCount: (job.mutationCount ?? 0) + 1,
+        receiptCount: (job.receiptCount ?? 0) + 1,
+        updatedAt: now,
+      });
+    }
+    return clean({ ok: true as const, version: nextVersion, mutationReceiptId });
 }
 
 /** UI hand-edit path — token-bound user proof plus the same CAS write. */
@@ -357,6 +409,8 @@ export const applyAgentCellEdit = internalMutation({
     value: v.any(),
     baseVersion: v.number(),
     actor: actorV,
+    jobId: v.optional(v.id("agentJobs")),
+    runId: v.optional(v.id("agentRuns")),
   },
   handler: applyCellEditCore,
 });

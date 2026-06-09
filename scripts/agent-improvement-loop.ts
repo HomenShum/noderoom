@@ -1,0 +1,603 @@
+import "./benchmark/loadEnv";
+import { spawnSync } from "node:child_process";
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { basename, join } from "node:path";
+import { DEFAULT_ARCHITECTURE_BUDGET } from "../src/eval/architectureBudget";
+import { ARCHITECTURE_FIT_CHECKS, EVAL_TRUST_LEVELS } from "../src/eval/evalTrustPolicy";
+import {
+  ROOT_CAUSE_CATEGORIES,
+  evaluateEvalCandidateForHandoff,
+  type EvalCandidate,
+  type HandoffDecision,
+} from "../src/eval/improvementArtifacts";
+import {
+  PROFESSIONAL_FILE_PROFILE_SUMMARY,
+  PROFESSIONAL_WORKFLOW_CASES,
+  type ProfessionalHarnessRequirement,
+} from "../evals/professionalWorkflows";
+
+type Lane = "deterministic" | "live" | "ui" | "full-live";
+type StepStatus = "pass" | "fail" | "skip";
+
+type StepSpec = {
+  id: string;
+  label: string;
+  lane: Lane;
+  command: string;
+  args: string[];
+  timeoutMs: number;
+  requiredEnv?: string[];
+  includeWhen?: () => boolean;
+  skipReason?: string;
+};
+
+type StepResult = {
+  id: string;
+  label: string;
+  lane: Lane;
+  command: string;
+  status: StepStatus;
+  ms: number;
+  exitCode: number | null;
+  reason?: string;
+  stdoutTail?: string;
+  stderrTail?: string;
+};
+
+type LoopRun = {
+  schema: 1;
+  runId: string;
+  generatedAt: string;
+  cookbookSource: string;
+  mode: {
+    live: boolean;
+    fullLive: boolean;
+    uiMedia?: string;
+    strict: boolean;
+  };
+  targetUsers: string[];
+  workflowProfile: typeof PROFESSIONAL_FILE_PROFILE_SUMMARY;
+  workflowCoverage: ReturnType<typeof workflowCoverage>;
+  architectureReview: ReturnType<typeof buildArchitectureReview>;
+  steps: StepResult[];
+  handoff: {
+    topRecommendations: string[];
+    generatedEvalIdeas: EvalCandidate[];
+    implementationHandoffCandidates: HandoffDecision[];
+    blockedImplementationHandoffCandidates: HandoffDecision[];
+    nextLiveRuns: string[];
+    architectureBudget: ReturnType<typeof buildArchitectureBudget>;
+  };
+};
+
+const outDir = join(process.cwd(), "docs", "eval", "agent-improvement-loop");
+const latestJson = join(outDir, "latest.json");
+const summaryMd = join(process.cwd(), "docs", "eval", "agent-improvement-loop.md");
+const summarySvg = join(process.cwd(), "docs", "eval", "agent-improvement-loop.svg");
+const cookbookUrl = "https://developers.openai.com/cookbook/examples/agents_sdk/agent_improvement_loop";
+
+const args = process.argv.slice(2);
+const live = args.includes("--live") || args.includes("--full-live");
+const fullLive = args.includes("--full-live");
+const strict = args.includes("--strict");
+const uiMedia = optionValue("--ui-media");
+
+const steps: StepSpec[] = [
+  {
+    id: "professional-catalog",
+    label: "Professional workflow catalog",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "eval:professional"],
+    timeoutMs: 120_000,
+  },
+  {
+    id: "workflow-evals",
+    label: "GTM/finance workflow evals",
+    lane: "deterministic",
+    command: "npx",
+    args: ["vitest", "run", "tests/workflowEvals.test.ts"],
+    timeoutMs: 120_000,
+  },
+  {
+    id: "collaboration-ladder",
+    label: "Collaboration ladder L1-L6",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "ladder", "--", "--record"],
+    timeoutMs: 120_000,
+  },
+  {
+    id: "credit-evals",
+    label: "MM-banking credit decision evals",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "eval:credit", "--", "--record"],
+    timeoutMs: 120_000,
+  },
+  {
+    id: "eval-diff",
+    label: "Eval regression diff",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "eval:diff"],
+    timeoutMs: 120_000,
+  },
+  {
+    id: "convex-boundaries",
+    label: "Convex query/action/mutation boundaries",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "convex:boundaries"],
+    timeoutMs: 120_000,
+  },
+  {
+    id: "architecture-budget",
+    label: "Architecture budget review",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "architecture:budget"],
+    timeoutMs: 120_000,
+  },
+  {
+    id: "free-route-discovery",
+    label: "OpenRouter free-auto discovery",
+    lane: "live",
+    command: "npm",
+    args: ["run", "openrouter:free", "--", "--limit=5"],
+    timeoutMs: 120_000,
+    includeWhen: () => live,
+    requiredEnv: ["OPENROUTER_API_KEY"],
+    skipReason: "pass --live and set OPENROUTER_API_KEY to discover current free-auto candidates",
+  },
+  {
+    id: "provider-parser-smoke",
+    label: "Provider parser live smoke",
+    lane: "live",
+    command: "npm",
+    args: ["run", "provider-parser:smoke"],
+    timeoutMs: 300_000,
+    includeWhen: () => live,
+    skipReason: "pass --live; script will skip providers without keys",
+  },
+  {
+    id: "free-job-smoke",
+    label: "Convex /free job smoke",
+    lane: "live",
+    command: "npm",
+    args: ["run", "free-job:smoke"],
+    timeoutMs: 20 * 60_000,
+    includeWhen: () => live,
+    requiredEnv: ["CONVEX_URL"],
+    skipReason: "pass --live and set CONVEX_URL or VITE_CONVEX_URL",
+  },
+  {
+    id: "benchmark-v2",
+    label: "V2 multi-model benchmark",
+    lane: "full-live",
+    command: "npm",
+    args: ["run", "benchmark", "--", "--model-timeout-ms=180000", "--model-reserve-ms=15000", "--row-hard-timeout-ms=210000"],
+    timeoutMs: 45 * 60_000,
+    includeWhen: () => fullLive,
+    skipReason: "pass --full-live to spend live provider calls on the full benchmark",
+  },
+  {
+    id: "free-auto-ladder",
+    label: "Free-auto router ladder",
+    lane: "full-live",
+    command: "npm",
+    args: ["run", "ladder:free"],
+    timeoutMs: 3 * 60 * 60_000,
+    includeWhen: () => fullLive,
+    requiredEnv: ["OPENROUTER_API_KEY"],
+    skipReason: "pass --full-live and set OPENROUTER_API_KEY; this can take hours",
+  },
+  {
+    id: "gemini-ui-review",
+    label: "Gemini UI media review",
+    lane: "ui",
+    command: "npx",
+    args: ["tsx", "scripts/gemini-ui-review.ts", ...(uiMedia ? [`--media=${uiMedia}`] : [])],
+    timeoutMs: 300_000,
+    includeWhen: () => !!uiMedia,
+    requiredEnv: ["GOOGLE_GENERATIVE_AI_API_KEY"],
+    skipReason: "pass --ui-media=<screenshot-or-video> and set GOOGLE_GENERATIVE_AI_API_KEY",
+  },
+];
+
+const runId = compactDate(new Date());
+mkdirSync(outDir, { recursive: true });
+
+const results = steps.map(runStep);
+const loopRun: LoopRun = {
+  schema: 1,
+  runId,
+  generatedAt: new Date().toISOString(),
+  cookbookSource: cookbookUrl,
+  mode: { live, fullLive, uiMedia, strict },
+  targetUsers: [
+    "GTM sales operators managing account lists, enrichment, and PitchBook-style matching",
+    "Finance and banking analysts reconciling workbooks, exports, timecards, and variance evidence",
+    "Harness engineers converting messy workflow evidence into repeatable eval gates",
+  ],
+  workflowProfile: PROFESSIONAL_FILE_PROFILE_SUMMARY,
+  workflowCoverage: workflowCoverage(),
+  architectureReview: buildArchitectureReview(),
+  steps: results,
+  handoff: buildHandoff(results),
+};
+
+const timestampedJson = join(outDir, `${runId}.json`);
+writeFileSync(timestampedJson, JSON.stringify(loopRun, null, 2));
+writeFileSync(latestJson, JSON.stringify(loopRun, null, 2));
+writeFileSync(summaryMd, renderMarkdown(loopRun, timestampedJson));
+writeFileSync(summarySvg, renderSvg(loopRun));
+
+console.log(`wrote ${rel(timestampedJson)}`);
+console.log(`wrote ${rel(summaryMd)}`);
+console.log(`wrote ${rel(summarySvg)}`);
+
+if (strict && results.some((result) => result.status === "fail")) process.exitCode = 1;
+
+function runStep(step: StepSpec): StepResult {
+  const commandText = [step.command, ...step.args].join(" ");
+  const shouldRun = step.includeWhen ? step.includeWhen() : true;
+  const missing = (step.requiredEnv ?? []).filter((name) => !hasEnv(name));
+  if (!shouldRun || missing.length > 0) {
+    return {
+      id: step.id,
+      label: step.label,
+      lane: step.lane,
+      command: commandText,
+      status: "skip",
+      ms: 0,
+      exitCode: null,
+      reason: missing.length > 0 ? `missing env: ${missing.join(", ")}` : step.skipReason ?? `lane ${step.lane} not selected`,
+    };
+  }
+
+  const started = Date.now();
+  console.log(`RUN  ${step.id} :: ${commandText}`);
+  const child = spawnSync(step.command, step.args, {
+    cwd: process.cwd(),
+    env: process.env,
+    encoding: "utf8",
+    shell: true,
+    timeout: step.timeoutMs,
+    maxBuffer: 8 * 1024 * 1024,
+  });
+  const ms = Date.now() - started;
+  const timedOut = child.error?.message?.toLowerCase().includes("timed out");
+  const status: StepStatus = child.status === 0 && !timedOut ? "pass" : "fail";
+  console.log(`${status.toUpperCase()} ${step.id} ${(ms / 1000).toFixed(1)}s`);
+  return {
+    id: step.id,
+    label: step.label,
+    lane: step.lane,
+    command: commandText,
+    status,
+    ms,
+    exitCode: child.status,
+    reason: child.error?.message,
+    stdoutTail: tail(stripAnsi(child.stdout ?? ""), 5000),
+    stderrTail: tail(stripAnsi(child.stderr ?? ""), 5000),
+  };
+}
+
+function workflowCoverage() {
+  const byCategory: Record<string, number> = {};
+  const byRequirement: Record<ProfessionalHarnessRequirement, number> = {} as Record<ProfessionalHarnessRequirement, number>;
+  for (const item of PROFESSIONAL_WORKFLOW_CASES) {
+    byCategory[item.category] = (byCategory[item.category] ?? 0) + 1;
+    for (const req of item.requiredHarness) byRequirement[req] = (byRequirement[req] ?? 0) + 1;
+  }
+  const topCases = [...PROFESSIONAL_WORKFLOW_CASES]
+    .sort((a, b) => b.requiredHarness.length - a.requiredHarness.length)
+    .slice(0, 8)
+    .map((item) => ({
+      id: item.id,
+      category: item.category,
+      persona: item.persona,
+      requiredHarness: item.requiredHarness,
+    }));
+  return {
+    totalCases: PROFESSIONAL_WORKFLOW_CASES.length,
+    byCategory,
+    byRequirement,
+    topCases,
+  };
+}
+
+function buildHandoff(results: StepResult[]): LoopRun["handoff"] {
+  const failed = results.filter((step) => step.status === "fail");
+  const skipped = results.filter((step) => step.status === "skip");
+  const architectureBudgetStep = results.find((step) => step.id === "architecture-budget");
+  const generatedEvalIdeas = buildGeneratedEvalIdeas();
+  const handoffDecisions = generatedEvalIdeas.map(evaluateEvalCandidateForHandoff);
+  const implementationHandoffCandidates = handoffDecisions.filter((decision) => decision.kind === "implementation");
+  const blockedImplementationHandoffCandidates = handoffDecisions.filter((decision) => decision.kind !== "implementation");
+  const topRecommendations = [
+    ...failed.map((step) => `Fix failing loop step ${step.id}: ${step.reason ?? "see captured output"}.`),
+    ...(architectureBudgetStep?.stdoutTail?.includes("architecture budget: review required")
+      ? ["Resolve architecture budget review items or rerun with explicit handoff evidence before implementation."]
+      : []),
+    ...implementationHandoffCandidates.map((decision) => `Implement scoped handoff for eval candidate ${decision.evalCandidateId}.`),
+    ...skipped
+      .filter((step) => step.lane === "live" || step.lane === "ui")
+      .slice(0, 4)
+      .map((step) => `Run skipped ${step.id} once prerequisites are present: ${step.reason ?? step.command}.`),
+    "Persist each new live trace into a durable eval fixture before promoting README charts.",
+    "Keep provider benchmarks behind row-level hard timeouts so one stuck free model cannot block the loop.",
+    "Add browser-visible multi-user checks for public/private chat, artifact references, proposals, and trace accept-all.",
+  ].slice(0, 8);
+
+  const nextLiveRuns = [
+    "npm run agent:improve -- --live",
+    "npm run agent:improve -- --full-live",
+    "npm run agent:improve -- --ui-media=docs/eval/ui-recordings/<recording-or-screenshot>",
+    "npm run benchmark:charts",
+  ];
+  return {
+    topRecommendations,
+    generatedEvalIdeas,
+    implementationHandoffCandidates,
+    blockedImplementationHandoffCandidates,
+    nextLiveRuns,
+    architectureBudget: buildArchitectureBudget(),
+  };
+}
+
+function buildArchitectureBudget() {
+  return DEFAULT_ARCHITECTURE_BUDGET;
+}
+
+function buildArchitectureReview() {
+  return {
+    rule:
+      "Research must describe the workflow, architecture gap, and existing capability fit before it proposes evals or code.",
+    evalTrustLevels: EVAL_TRUST_LEVELS,
+    gateModes: ["none", "advisory", "blocking"] as const,
+    architectureFitChecks: ARCHITECTURE_FIT_CHECKS,
+    rootCauseCategories: ROOT_CAUSE_CATEGORIES,
+  };
+}
+
+function buildGeneratedEvalIdeas(): EvalCandidate[] {
+  const caseById = new Map(PROFESSIONAL_WORKFLOW_CASES.map((item) => [item.id, item]));
+  const pitchbook = caseById.get("gtm-pitchbook-company-match-enrich") ?? PROFESSIONAL_WORKFLOW_CASES[0];
+  const finance = PROFESSIONAL_WORKFLOW_CASES.find((item) => item.category === "finance_ops") ?? PROFESSIONAL_WORKFLOW_CASES[0];
+  const evalHarness = PROFESSIONAL_WORKFLOW_CASES.find((item) => item.category === "eval_harness") ?? PROFESSIONAL_WORKFLOW_CASES[0];
+
+  return [
+    {
+      id: "candidate-gtm-pitchbook-match",
+      title: "GTM PitchBook match with evidence and no CRM clobber",
+      workflowDomain: pitchbook.category,
+      persona: pitchbook.persona,
+      goal: pitchbook.agentGoal,
+      sourceResearchPacketIds: [],
+      architectureFit: {
+        status: "existing_capability",
+        existingCapabilityNotes: ["Artifact refs, CellPayload evidence, lock/CAS, and workflow eval scaffolds already exist."],
+        missingCapabilityNotes: ["Needs a concrete trace fixture before becoming a gate."],
+        convexBoundaryNeeds: { queries: [], mutations: [], actions: [], tools: [], validators: ["cross-file evidence assertion"] },
+        smallestChange: "Add a deterministic fixture and assertions before touching runtime code.",
+        avoidAdding: ["new GTM service", "new database tables"],
+        requiredEvidence: pitchbook.assertions.slice(0, 2),
+      },
+      confidenceLevel: "candidate",
+      gateMode: "advisory",
+      contestedClaims: [],
+      assertions: pitchbook.assertions.slice(0, 3).map((description, index) => ({
+        id: `gtm-${index + 1}`,
+        description,
+        evidenceRefs: pitchbook.sourcePatterns,
+      })),
+      rootCauseCategories: ["weak_source_evidence", "missing_read_before_write"],
+    },
+    {
+      id: "research-validated-finance-reconcile",
+      title: "Finance variance reconciliation with formula-safe writes",
+      workflowDomain: finance.category,
+      persona: finance.persona,
+      goal: finance.agentGoal,
+      sourceResearchPacketIds: ["professional-workflow-profile-20260608"],
+      architectureFit: {
+        status: "small_gap",
+        existingCapabilityNotes: ["Formula dependency locks, CellPayload evidence, and no-clobber paths are already part of the harness."],
+        missingCapabilityNotes: ["Needs one concrete variance fixture with formula-preservation assertions."],
+        convexBoundaryNeeds: {
+          queries: ["read bounded formula/source ranges"],
+          mutations: ["CAS write only changed variance notes"],
+          actions: [],
+          tools: [],
+          validators: ["formula-preservation assertion", "source-row evidence assertion"],
+        },
+        smallestChange: "Add an eval fixture and validator around existing spreadsheet tools before adding any new tool.",
+        avoidAdding: ["finance workflow service", "new spreadsheet engine"],
+        requiredEvidence: finance.assertions.slice(0, 2),
+      },
+      confidenceLevel: "research_validated",
+      gateMode: "advisory",
+      contestedClaims: [],
+      assertions: finance.assertions.slice(0, 3).map((description, index) => ({
+        id: `finance-${index + 1}`,
+        description,
+        evidenceRefs: finance.sourcePatterns,
+      })),
+      rootCauseCategories: ["bad_mutation_contract", "weak_source_evidence"],
+    },
+    {
+      id: "contested-eval-harness-expansion",
+      title: "Eval harness generated from workflow rubrics",
+      workflowDomain: evalHarness.category,
+      persona: evalHarness.persona,
+      goal: evalHarness.agentGoal,
+      sourceResearchPacketIds: ["professional-workflow-profile-20260608"],
+      architectureFit: {
+        status: "existing_capability",
+        existingCapabilityNotes: ["agent:improve already produces local artifacts and deterministic gates."],
+        missingCapabilityNotes: ["Research-derived evals need confidence and gate policy before they can block."],
+        convexBoundaryNeeds: { queries: [], mutations: [], actions: [], tools: [], validators: ["eval trust policy"] },
+        smallestChange: "Keep this as an advisory eval fixture until the rubric is not contested.",
+        avoidAdding: ["new HALO tables", "new eval service"],
+        requiredEvidence: evalHarness.assertions.slice(0, 2),
+      },
+      confidenceLevel: "contested",
+      gateMode: "advisory",
+      contestedClaims: ["Different teams disagree on how much human review is required before eval promotion."],
+      assertions: evalHarness.assertions.slice(0, 3).map((description, index) => ({
+        id: `eval-${index + 1}`,
+        description,
+        evidenceRefs: evalHarness.sourcePatterns,
+      })),
+      rootCauseCategories: ["eval_measures_wrong_behavior", "ui_review_friction"],
+    },
+  ];
+}
+
+function renderMarkdown(run: LoopRun, timestampedJson: string): string {
+  const pass = run.steps.filter((step) => step.status === "pass").length;
+  const fail = run.steps.filter((step) => step.status === "fail").length;
+  const skip = run.steps.filter((step) => step.status === "skip").length;
+  const lines: string[] = [];
+  lines.push("# Agent Improvement Loop");
+  lines.push("");
+  lines.push(`Generated: ${run.generatedAt}`);
+  lines.push("");
+  lines.push(`Source pattern: ${run.cookbookSource}`);
+  lines.push("");
+  lines.push("NodeRoom adapts the cookbook loop as: traces -> human/model feedback -> reusable evals -> gate -> Codex handoff -> next harness change.");
+  lines.push("");
+  lines.push(`Latest run artifact: \`${rel(timestampedJson)}\``);
+  lines.push("");
+  lines.push(`Summary: ${pass} pass, ${fail} fail, ${skip} skip.`);
+  lines.push("");
+  lines.push("## Step Results");
+  lines.push("");
+  lines.push("| Step | Lane | Status | Duration | Command |");
+  lines.push("|---|---|---:|---:|---|");
+  for (const step of run.steps) {
+    lines.push(`| ${step.label} | ${step.lane} | ${step.status.toUpperCase()} | ${(step.ms / 1000).toFixed(1)}s | \`${step.command}\` |`);
+  }
+  lines.push("");
+  lines.push("## Workflow Coverage");
+  lines.push("");
+  lines.push(`Reviewed file profile: ${run.workflowProfile.manifestFiles} files (${run.workflowProfile.csvFiles} CSV, ${run.workflowProfile.xlsxFiles} XLSX).`);
+  lines.push("");
+  lines.push("| Category | Cases |");
+  lines.push("|---|---:|");
+  for (const [category, count] of Object.entries(run.workflowCoverage.byCategory)) {
+    lines.push(`| ${category} | ${count} |`);
+  }
+  lines.push("");
+  lines.push("## Architecture Before Eval");
+  lines.push("");
+  lines.push(run.architectureReview.rule);
+  lines.push("");
+  lines.push("| Eval trust level | Meaning |");
+  lines.push("|---|---|");
+  for (const item of run.architectureReview.evalTrustLevels) {
+    lines.push(`| ${item.level} | ${item.meaning} |`);
+  }
+  lines.push("");
+  lines.push(`Gate modes: ${run.architectureReview.gateModes.join(", ")}.`);
+  lines.push("");
+  lines.push("Architecture fit checks before adding code:");
+  lines.push("");
+  for (const item of run.architectureReview.architectureFitChecks) lines.push(`- ${item}`);
+  lines.push("");
+  lines.push("Root-cause labels used for HALO diagnosis:");
+  lines.push("");
+  for (const item of run.architectureReview.rootCauseCategories) lines.push(`- \`${item.category}\`: ${item.meaning}`);
+  lines.push("");
+  lines.push("## Generated Eval Ideas");
+  lines.push("");
+  lines.push("| Eval candidate | Trust | Gate | Architecture fit | Handoff decision |");
+  lines.push("|---|---|---|---|---|");
+  const decisions = new Map(run.handoff.blockedImplementationHandoffCandidates.concat(run.handoff.implementationHandoffCandidates).map((decision) => [decision.evalCandidateId, decision]));
+  for (const idea of run.handoff.generatedEvalIdeas) {
+    const decision = decisions.get(idea.id);
+    const decisionText = decision ? `${decision.kind}${decision.reasons.length > 0 ? `: ${decision.reasons.join("; ")}` : ""}` : "none";
+    lines.push(`| ${idea.id} | ${idea.confidenceLevel} | ${idea.gateMode} | ${idea.architectureFit.status} | ${decisionText} |`);
+  }
+  lines.push("");
+  lines.push("## Codex Handoff");
+  lines.push("");
+  lines.push("### Architecture Budget");
+  lines.push("");
+  lines.push(`Allowed scope: ${run.handoff.architectureBudget.allowedScope}`);
+  lines.push("");
+  lines.push("Default allowed areas:");
+  for (const item of run.handoff.architectureBudget.defaultAllowedAreas) lines.push(`- ${item}`);
+  lines.push("");
+  lines.push("Forbidden without human approval:");
+  for (const item of run.handoff.architectureBudget.forbiddenWithoutHumanApproval) lines.push(`- ${item}`);
+  lines.push("");
+  lines.push("### Recommendations");
+  lines.push("");
+  for (const item of run.handoff.topRecommendations) lines.push(`- ${item}`);
+  if (run.handoff.implementationHandoffCandidates.length === 0) {
+    lines.push("- No implementation handoff candidates passed trust and architecture-fit policy in this run.");
+  }
+  lines.push("");
+  lines.push("## Next Live Runs");
+  lines.push("");
+  for (const item of run.handoff.nextLiveRuns) lines.push(`- \`${item}\``);
+  lines.push("");
+  return `${lines.join("\n")}\n`;
+}
+
+function renderSvg(run: LoopRun): string {
+  const width = 980;
+  const rowH = 38;
+  const height = 104 + run.steps.length * rowH + 74;
+  const colors: Record<StepStatus, string> = { pass: "#3FB37F", fail: "#E0564E", skip: "#D9A441" };
+  const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+  const out: string[] = [];
+  out.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" font-family="ui-monospace, 'JetBrains Mono', monospace">`);
+  out.push(`<rect width="${width}" height="${height}" rx="16" fill="#111418"/>`);
+  out.push(`<text x="28" y="36" fill="#E6E1DA" font-size="19" font-weight="700">NodeRoom agent improvement loop</text>`);
+  out.push(`<text x="28" y="58" fill="#8B93A1" font-size="11">traces -> feedback -> evals -> gate -> handoff | ${esc(run.generatedAt.slice(0, 19))}</text>`);
+  out.push(`<text x="28" y="78" fill="#8B93A1" font-size="10">${run.workflowCoverage.totalCases} professional workflow cases tracked</text>`);
+  run.steps.forEach((step, index) => {
+    const y = 104 + index * rowH;
+    const color = colors[step.status];
+    out.push(`<rect x="22" y="${y - 24}" width="${width - 44}" height="${rowH - 6}" rx="8" fill="${index % 2 ? "#171B20" : "#14181D"}" stroke="#2A2F37"/>`);
+    out.push(`<text x="38" y="${y - 5}" fill="#E6E1DA" font-size="12.5" font-weight="700">${esc(step.label)}</text>`);
+    out.push(`<text x="38" y="${y + 11}" fill="#8B93A1" font-size="10.5">${esc(step.lane)} | ${esc(step.command.slice(0, 82))}</text>`);
+    out.push(`<rect x="${width - 170}" y="${y - 19}" width="76" height="24" rx="6" fill="${color}"/>`);
+    out.push(`<text x="${width - 132}" y="${y - 3}" fill="#111418" font-size="10.5" text-anchor="middle" font-weight="800">${step.status.toUpperCase()}</text>`);
+    out.push(`<text x="${width - 34}" y="${y - 3}" fill="#8B93A1" font-size="10.5" text-anchor="end">${(step.ms / 1000).toFixed(1)}s</text>`);
+  });
+  out.push(`<text x="28" y="${height - 28}" fill="#8B93A1" font-size="10">README charts should use only recorded loop artifacts, not manual confidence.</text>`);
+  out.push("</svg>");
+  return out.join("");
+}
+
+function optionValue(name: string): string | undefined {
+  const prefix = `${name}=`;
+  return args.find((arg) => arg.startsWith(prefix))?.slice(prefix.length);
+}
+
+function hasEnv(name: string): boolean {
+  if (process.env[name]) return true;
+  if (name === "CONVEX_URL" && process.env.VITE_CONVEX_URL) return true;
+  return false;
+}
+
+function compactDate(date: Date): string {
+  return date.toISOString().replace(/[-:]/g, "").replace(/\.\d{3}Z$/, "Z");
+}
+
+function stripAnsi(value: string): string {
+  return value.replace(/\x1B\[[0-?]*[ -/]*[@-~]/g, "");
+}
+
+function tail(value: string, max: number): string {
+  return value.length <= max ? value : value.slice(value.length - max);
+}
+
+function rel(path: string): string {
+  return path.startsWith(process.cwd()) ? path.slice(process.cwd().length + 1).replace(/\\/g, "/") : basename(path);
+}

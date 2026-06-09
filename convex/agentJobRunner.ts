@@ -18,6 +18,8 @@ import { buildResearchContext } from "../src/agent/context";
 import { compactMessages } from "../src/agent/compaction";
 import type { AgentMessage, AgentResult, AgentTraceEvent, ToolCall } from "../src/agent/types";
 import type { Actor } from "../src/engine/types";
+import { journalSliceKey } from "../src/agent/journal";
+import { makeConvexStepJournal } from "./agentStepJournalClient";
 
 const CONVEX_ACTION_LIMIT_MS = 10 * 60_000;
 const DEFAULT_SLICE_BUDGET_MS = 9 * 60_000;
@@ -81,6 +83,10 @@ function stepStatus(e: { tool: string; result: unknown }): "ok" | "conflict" | "
 }
 
 function traceStep(e: AgentTraceEvent, i: number) {
+  const elementId = e.tool === "edit_cell" ? (String((e.args as { elementId?: string }).elementId ?? "") || undefined) : undefined;
+  const mutationReceiptId = typeof (e.result as { mutationReceiptId?: unknown } | null)?.mutationReceiptId === "string"
+    ? (e.result as { mutationReceiptId: Id<"agentMutationReceipts"> }).mutationReceiptId
+    : undefined;
   return {
     idx: i,
     tool: e.tool,
@@ -88,7 +94,9 @@ function traceStep(e: AgentTraceEvent, i: number) {
     result: cap(JSON.stringify(e.result)),
     status: stepStatus(e),
     ms: e.ms,
-    elementId: e.tool === "edit_cell" ? (String((e.args as { elementId?: string }).elementId ?? "") || undefined) : undefined,
+    elementId,
+    affectedObjectIds: elementId ? [elementId] : undefined,
+    mutationReceiptIds: mutationReceiptId ? [mutationReceiptId] : undefined,
   };
 }
 
@@ -139,18 +147,39 @@ export const runFreeAutoJobSlice = internalAction({
     if (!claimed) return { ok: false as const, reason: "not_claimed" as const };
 
     const actor: Actor = { kind: "agent", id: claimed.agentId, name: claimed.agentName, scope: "public" };
-    const rt = new ConvexRoomTools(ctx, claimed.roomId, claimed.artifactId, actor, String(claimed.sessionId));
-    const model = agentModel(process.env.FREE_AUTO_JOB_MODEL ?? "openrouter/free-auto");
+    const rt = new ConvexRoomTools(ctx, claimed.roomId, claimed.artifactId, actor, String(claimed.sessionId), claimed.jobId);
+    const modelPolicy = claimed.modelPolicy || "openrouter/free-auto";
+    const resolvedModelPolicy = modelPolicy === "openrouter/free-auto"
+      ? process.env.FREE_AUTO_JOB_MODEL ?? modelPolicy
+      : modelPolicy;
+    const model = agentModel(resolvedModelPolicy);
     const contextMaxChars = envNumber("FREE_AUTO_JOB_CONTEXT_MAX_CHARS", DEFAULT_CONTEXT_MAX_CHARS, 4_000, 120_000);
     const contextKeepRecent = envNumber("FREE_AUTO_JOB_CONTEXT_KEEP_RECENT", DEFAULT_CONTEXT_KEEP_RECENT, 2, 40);
     const maxSteps = envNumber("FREE_AUTO_JOB_MAX_STEPS_PER_SLICE", 3, 1, 12);
     const deadlineAt = t0 + sliceBudgetMs;
+    const modelJournal = makeConvexStepJournal({
+      ctx,
+      jobId: claimed.jobId,
+      sliceKey: journalSliceKey({
+        entrypoint: claimed.modelPolicy === "openrouter/free-auto" ? "free" : "workflow_continuation",
+        jobId: String(claimed.jobId),
+        artifactId: String(claimed.artifactId),
+        goal: claimed.goal,
+        mode: claimed.mode ?? "variance",
+        modelPolicy: resolvedModelPolicy,
+        cursor: claimed.cursor ?? null,
+        handoff: claimed.handoff ?? null,
+        maxSteps,
+      }),
+      modelName: () => model.name,
+    });
 
     const recordRun = async (result: AgentResult, extraStep?: { tool: string; result: string }): Promise<RunRecord> => {
       const ms = Date.now() - t0;
       const costUsd = priceRun(model.name, result.usage.inputTokens, result.usage.outputTokens);
       const conflictsSurvived = result.trace.filter((t) => t.tool === "edit_cell" && (t.result as { conflict?: boolean })?.conflict).length;
       const telemetry = {
+        jobId: claimed.jobId,
         roomId: claimed.roomId,
         agentId: actor.id,
         model: model.name,
@@ -179,9 +208,12 @@ export const runFreeAutoJobSlice = internalAction({
           status: "error" as const,
           ms,
           elementId: undefined,
+          affectedObjectIds: undefined,
+          mutationReceiptIds: undefined,
         });
       }
       await ctx.runMutation(agentStepsRecordRef, {
+        jobId: claimed.jobId,
         runId,
         roomId: claimed.roomId,
         agentId: actor.id,
@@ -203,6 +235,7 @@ export const runFreeAutoJobSlice = internalAction({
         resumeToolCalls,
         contextBuilder: initialMessages ? undefined : claimed.mode === "research" ? buildResearchContext : undefined,
         compaction: { maxChars: contextMaxChars, keepRecent: contextKeepRecent },
+        journal: modelJournal,
         deadlineAt,
         reserveMs,
         // Gateway spend ceiling — cap a single slice's token spend (a per-job cap aggregates across slices in telemetry).
@@ -285,4 +318,3 @@ export const runFreeAutoJobSlice = internalAction({
     }
   },
 });
-

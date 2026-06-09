@@ -59,7 +59,7 @@ type GeminiResponse = {
     content?: {
       parts?: Array<
         | { text?: string }
-        | { functionCall?: { name?: string; args?: JsonObject } }
+        | { functionCall?: { name?: string; args?: JsonObject }; thoughtSignature?: string; thought_signature?: string }
       >;
     };
   }>;
@@ -289,11 +289,12 @@ async function geminiStep(
     .map((p) => p.text ?? "")
     .join("");
   const toolCalls = parts
-    .filter((p): p is { functionCall: { name?: string; args?: JsonObject } } => "functionCall" in p)
+    .filter((p): p is { functionCall: { name?: string; args?: JsonObject }; thoughtSignature?: string; thought_signature?: string } => "functionCall" in p)
     .map((p): ToolCall => ({
       id: crypto.randomUUID(),
       tool: p.functionCall.name ?? "unknown_tool",
       args: p.functionCall.args ?? {},
+      providerMetadata: p.thoughtSignature || p.thought_signature ? { geminiThoughtSignature: p.thoughtSignature ?? p.thought_signature } : undefined,
     }));
   return {
     text: text || undefined,
@@ -354,7 +355,13 @@ function toGeminiContents(messages: AgentMessage[]) {
     if (m.role === "assistant") {
       const parts: unknown[] = [];
       if (m.content) parts.push({ text: m.content });
-      for (const tc of m.toolCalls ?? []) parts.push({ functionCall: { name: tc.tool, args: tc.args } });
+      for (const tc of m.toolCalls ?? []) {
+        const thoughtSignature = typeof tc.providerMetadata?.geminiThoughtSignature === "string" ? tc.providerMetadata.geminiThoughtSignature : undefined;
+        parts.push({
+          functionCall: { name: tc.tool, args: tc.args },
+          ...(thoughtSignature ? { thoughtSignature } : {}),
+        });
+      }
       return { role: "model", parts };
     }
     if (m.role === "tool") {

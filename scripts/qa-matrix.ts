@@ -52,14 +52,16 @@ type Matrix = {
 };
 
 type BenchmarkResults = {
+  benchmarkVersion?: string;
   generatedAt: string;
   task: string;
   checks: string[];
-  models: Array<{ model: string; ok: boolean; passed: number; total: number; costUsd: number; ms: number }>;
+  models: Array<{ model: string; requestedModel?: string; resolvedModel?: string; ok: boolean; passed: number; total: number; costUsd: number; ms: number }>;
 };
 
 const root = new URL("../", import.meta.url);
 const checkOnly = process.argv.includes("--check");
+const CURRENT_BENCHMARK_VERSION = "company-research-v2-9checks-router";
 const START = "<!-- QA_COCKPIT_START -->";
 const END = "<!-- QA_COCKPIT_END -->";
 const BG = "#111418";
@@ -77,13 +79,15 @@ const read = (rel: string) => readFileSync(new URL(rel, root), "utf8");
 const parseJson = <T>(rel: string) => JSON.parse(read(rel)) as T;
 const esc = (s: string) =>
   s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
-const statusColor = (s: Status | LadderStatus) => (s === "green" || s === "PASS" ? GREEN : s === "yellow" ? YELLOW : RED);
+const statusColor = (s: Status | LadderStatus) => (s === "green" || s === "PASS" ? GREEN : s === "yellow" || s === "TIMEOUT" ? YELLOW : s === "SKIP" ? LINE : RED);
 const statusLabel = (s: Status) => (s === "green" ? "Green" : s === "yellow" ? "Yellow" : "Red");
 const short = (s: string, max = 86) => (s.length <= max ? s : `${s.slice(0, max - 1)}...`);
 const backtickList = (items: string[]) => items.map((x) => `\`${x}\``).join(", ");
+const executedLiveCheck = (check: string) => !/^\s*(not applicable|manual\b|manual browser\b|missing:)/i.test(check);
 
 const matrix = parseJson<Matrix>("docs/qa/production-matrix.json");
 const benchmark = parseJson<BenchmarkResults>("docs/eval/results.json");
+const benchmarkIsCurrent = benchmark.benchmarkVersion === CURRENT_BENCHMARK_VERSION;
 
 function writeArtifact(rel: string, content: string, drift: string[]) {
   const path = new URL(rel, root);
@@ -152,6 +156,8 @@ function renderFullMatrix(): string {
   lines.push("npx tsc --noEmit --project convex\\tsconfig.json --pretty false");
   lines.push("npm test");
   lines.push("npm run ladder");
+  lines.push("npm run ladder:free");
+  lines.push("npm run benchmark:free");
   lines.push("npm run provider-parser:smoke");
   lines.push("npm run build");
   lines.push("```");
@@ -168,17 +174,20 @@ function renderFullMatrix(): string {
 function renderReadmeSection(): string {
   const greens = matrix.features.filter((f) => f.status === "green").length;
   const yellows = matrix.features.filter((f) => f.status === "yellow").length;
+  const reds = matrix.features.filter((f) => f.status === "red").length;
   const fullPassRoutes = matrix.modelLadder.routes.filter((r) => [r.l1, r.l2, r.l3, r.l4].every((x) => x === "PASS"));
-  const bestBenchmark = [...benchmark.models]
-    .filter((m) => m.passed === m.total)
-    .sort((a, b) => a.costUsd - b.costUsd)[0];
+  const bestBenchmark = benchmarkIsCurrent
+    ? [...benchmark.models]
+      .filter((m) => m.passed === m.total && m.total === benchmark.checks.length)
+      .sort((a, b) => a.costUsd - b.costUsd)[0]
+    : undefined;
 
   const lines: string[] = [];
   lines.push(`## ${matrix.readme.summaryTitle}`);
   lines.push("");
   lines.push("This section is generated from `docs/qa/production-matrix.json`. When the system grows, append or update a matrix row, then run `npm run qa:matrix`; CI can run `npm run qa:matrix:check` to catch stale docs.");
   lines.push("");
-  lines.push(`<sub>${matrix.features.length} feature guarantees tracked | ${greens} green | ${yellows} yellow | ${fullPassRoutes.length} live model route(s) cleared L1-L4 in the latest recorded ladder.</sub>`);
+  lines.push(`<sub>${matrix.features.length} feature guarantees tracked | ${greens} green | ${yellows} yellow | ${reds} red | ${fullPassRoutes.length} live model route(s) cleared L1-L4 in the latest recorded ladder.</sub>`);
   lines.push("");
   lines.push("![QA coverage graph](docs/eval/qa-coverage.svg)");
   lines.push("");
@@ -197,7 +206,21 @@ function renderReadmeSection(): string {
   }
   lines.push("");
   if (bestBenchmark) {
-    lines.push(`Research benchmark route: \`${bestBenchmark.model}\` is the cheapest recorded model clearing ${bestBenchmark.total}/${bestBenchmark.total} checks at $${bestBenchmark.costUsd.toFixed(4)} per run. Collaboration routing still uses the ladder gate above, not benchmark cost alone.`);
+    const label = bestBenchmark.resolvedModel && bestBenchmark.resolvedModel !== bestBenchmark.model
+      ? `${bestBenchmark.model} -> ${bestBenchmark.resolvedModel}`
+      : bestBenchmark.model;
+    lines.push(`Research benchmark route: \`${label}\` is the cheapest current v2 recorded model clearing ${bestBenchmark.total}/${bestBenchmark.total} checks at $${bestBenchmark.costUsd.toFixed(4)} per run. Collaboration routing still uses the ladder gate above, not benchmark cost alone.`);
+  } else if (benchmarkIsCurrent) {
+    const bestRecorded = [...benchmark.models].sort((a, b) => b.passed - a.passed || a.ms - b.ms)[0];
+    const budget = "timeouts" in benchmark && benchmark.timeouts && typeof benchmark.timeouts === "object"
+      ? ` Budget: \`${JSON.stringify(benchmark.timeouts)}\`.`
+      : "";
+    const summary = bestRecorded
+      ? ` Best recorded row was \`${bestRecorded.model}${bestRecorded.resolvedModel && bestRecorded.resolvedModel !== bestRecorded.model ? ` -> ${bestRecorded.resolvedModel}` : ""}\` at ${bestRecorded.passed}/${bestRecorded.total}.`
+      : "";
+    lines.push(`Research benchmark route: current v2 router-aware results are recorded for ${benchmark.models.length} route(s), but no route cleared the ${benchmark.checks.length}-check gate.${summary}${budget}`);
+  } else {
+    lines.push(`Research benchmark route: current v2 router-aware results are not recorded yet. Run \`npm run benchmark\` or \`npm run benchmark:free\` to replace the stale ${benchmark.checks.length}-check artifact with \`${CURRENT_BENCHMARK_VERSION}\`.`);
   }
   lines.push("");
   lines.push("Full QA ledger: [`docs/PRODUCTION_GUARANTEE_MATRIX.md`](docs/PRODUCTION_GUARANTEE_MATRIX.md).");
@@ -226,7 +249,7 @@ function renderQaCoverageSvg(): string {
     out.push(`<text x="58" y="${y - 8}" fill="${TEXT}" font-size="12.5" font-weight="700">${esc(f.area)}</text>`);
     out.push(`<text x="58" y="${y + 9}" fill="${MUTE}" font-size="10.5">${esc(short(f.claim, 58))}</text>`);
     const hasUnit = f.deterministicChecks.length > 0;
-    const hasLive = f.liveChecks.some((x) => !/not applicable/i.test(x));
+    const hasLive = f.liveChecks.some(executedLiveCheck);
     const hasTrace = /trace|audit|evidence|proposal|CellPayload|CAS|lock/i.test(`${f.claim} ${f.productionGate} ${f.evidence.map((e) => e.ref).join(" ")}`);
     const hasNext = f.nextReview.length > 0;
     [hasUnit, hasLive, hasTrace, hasNext].forEach((ok, lane) => {
@@ -235,7 +258,7 @@ function renderQaCoverageSvg(): string {
     });
     out.push(`<text x="${W - 34}" y="${y - 1}" fill="${color}" font-size="11" text-anchor="end" font-weight="700">${statusLabel(f.status)}</text>`);
   });
-  out.push(`<text x="28" y="${H - 22}" fill="${MUTE}" font-size="10">Green = production-shaped with current evidence. Yellow = implemented but needs live scale, storage, load, or repeated-provider proof before broad claims.</text>`);
+  out.push(`<text x="28" y="${H - 22}" fill="${MUTE}" font-size="10">Green = production-shaped. Yellow = implemented but needs live scale/storage/repeated-provider proof. Red = declared gap; manual/missing checks render as gaps.</text>`);
   return `${out.join("")}</svg>`;
 }
 

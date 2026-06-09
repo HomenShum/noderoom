@@ -1,0 +1,13 @@
+{
+  "schema": 1,
+  "runId": "20260609T060128Z",
+  "startedAt": "2026-06-09T06:01:28.821Z",
+  "updatedAt": "2026-06-09T06:01:28.821Z",
+  "until": "2026-06-09T17:00:00.000Z",
+  "sleepMinutes": 30,
+  "dryRun": true,
+  "once": false,
+  "cycle": 0,
+  "state": "started",
+  "summaryPath": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\halo-runs\\20260609T060128Z\\summary.jsonl"
+}

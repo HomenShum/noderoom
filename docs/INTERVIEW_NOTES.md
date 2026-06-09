@@ -519,11 +519,11 @@ Scheduler fallback versus Workflow/Workpool:
 - Scheduler continuation remains only as a compatibility fallback for legacy `runtime="scheduler"` jobs.
 - `agentJobs` stays the user-facing system of record either way; Workflow ids are runtime metadata, not the durable product identity.
 
-Remaining `/free` reliability layer:
+Remaining reliability layer:
 
 - **Duplicate enqueue idempotency:** a lease prevents two workers from running the same job, but it does not stop a double-click from creating two independent jobs.
 - **Budget clamp + per-tool abort:** defaults are safe; production hardening should clamp misconfiguration and pass deadline abort signals into tools, not only model calls.
-- **Durable provider-step journal:** the runtime has a tested `StepJournal`, but the Convex `/free` runner still needs a durable journal keyed by job/slice/step before claiming exactly-once provider billing.
+- **Provider request idempotency:** the Convex model-step journal replays completed provider responses after a crash, but provider-level idempotency keys would further reduce duplicate billing if a process dies before the response is committed.
 - **Model health/quarantine:** current free-auto routing has static ranking and fallback, not a `modelHealth` table with latency, failure, rate-limit, fallback, and quarantine windows.
 - **Job-runner evals:** add forced multi-slice, crash-after-provider-call replay, stale lease, retry backoff, duplicate enqueue, and resolved-model failure-path assertions.
 
@@ -553,7 +553,7 @@ Interviewer challenge:
 
 Answer:
 
-> A workflow can resume from checkpoints, but exact-once provider side effects need a journal at the model-step boundary. NodeRoom's runtime has a tested `StepJournal` that replays completed model steps instead of re-calling the provider. The remaining production wiring is to persist that journal in Convex for `/free`, keyed by a stable job/slice/step id, so a crash after a provider call does not re-bill on retry.
+> A workflow can resume from checkpoints, but exact-once provider side effects need a journal at the model-step boundary. NodeRoom persists completed model steps in `agentModelStepJournal`, keyed by job id, stable slice key, and step index. On retry, `runAgent` checks the journal before calling the provider; if the step is present, it replays the recorded `AgentStep`, does not call the model, and does not count new tokens. The honest boundary is a crash before the provider response is committed; for that, provider request idempotency keys are the next adapter-level hardening where supported.
 
 Interviewer challenge:
 
@@ -590,7 +590,7 @@ Built:
 
 Roadmap:
 
-- `/free` production hardening: duplicate enqueue idempotency, stricter budget clamps, per-tool abort propagation, durable provider-step journal, model health/quarantine, and forced multi-slice Convex job-runner tests.
+- Production hardening: stricter budget clamps, per-tool abort propagation, provider request idempotency keys where supported, model health/quarantine, and forced multi-slice Convex job-runner tests.
 - Convex File Storage as the full raw-file system of record for all uploads.
 - Long-lived provider Files API uploads behind the same adapter when reuse/retention justifies it.
 - Provider-specific Convex Storage -> provider Files API binary upload actions for PDFs/images/decks.

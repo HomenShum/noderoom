@@ -6,6 +6,10 @@
  *   npm run ladder:real -- gpt-5.4-nano,gemini-3.1-flash-lite
  */
 import "../scripts/benchmark/loadEnv";
+import { mkdirSync, writeFileSync } from "node:fs";
+import { execSync } from "node:child_process";
+import { appendEvalRuns, DEFAULT_STORE, runKey, type EvalRunRecord } from "./evalStore";
+import { dirname, join, relative, resolve } from "node:path";
 import { z } from "zod";
 import { RoomEngine } from "../src/engine/roomEngine";
 import { buildDemoRoom } from "../src/engine/demoRoom";
@@ -17,6 +21,8 @@ import type { AgentMessage, AgentModel, AgentResult, AgentTool, AgentTraceEvent,
 import { scriptedModel, type Planner } from "../src/agent/scripted";
 import { recomputeVariancePlan } from "../src/agent/plans";
 import { model as realModel, priceRun } from "../src/agent/model";
+import { selectOpenRouterFreeModels } from "../src/agent/openRouterFreeModels";
+import { stableJournalHash } from "../src/agent/journal";
 
 const CELL = "r_ni__variance";
 const VAL = "+22.4%";
@@ -65,6 +71,24 @@ interface Rung {
 interface RuntimeBudget {
   rungTimeoutMs?: number;
   reserveMs: number;
+}
+
+interface RungResult {
+  pass: boolean;
+  requestedModel: string;
+  resolvedModel: string;
+  resolvedModels: string[];
+  rung: string;
+  level: number;
+  ms: number;
+  tools: number;
+  cost: number;
+  stopReason?: string;
+  handoff?: string;
+  reason?: string;
+  error?: string;
+  checks: Record<string, boolean>;
+  trace: AgentTraceEvent[];
 }
 
 class CountingRoomTools extends InMemoryRoomTools {
@@ -368,18 +392,92 @@ const RUNGS: Rung[] = [
   },
 ];
 
-async function runRung(rung: Rung, maker: (rung: Rung) => AgentModel, modelName: string, budget: RuntimeBudget) {
+function rungChecks(rung: Rung, result: AgentResult, env: Env): Record<string, boolean> {
+  switch (rung.id) {
+    case "L1_read":
+      return {
+        readTarget: readRangeIncludes(result, CELL),
+        noMutation: successfulEdits(result).length === 0,
+        notExhausted: !result.exhausted,
+      };
+    case "L2_edit":
+      return {
+        targetValue: cellValue(env, CELL) === VAL,
+        readBeforeWrite: editReadProvenance(result),
+        notExhausted: !result.exhausted,
+      };
+    case "L3_conflict":
+      return {
+        targetValue: cellValue(env, CELL) === VAL,
+        conflictObserved: conflicts(result) >= 1,
+        noClobber: editReadProvenance(result),
+        notExhausted: !result.exhausted,
+      };
+    case "L4_blocked":
+      return {
+        draftWhenLocked: draftIncludes(result, CELL, VAL),
+        noDirectWriteWhileLocked: !successfulEdits(result).some((t) => (t.args as { elementId?: string }).elementId === CELL),
+        notExhausted: !result.exhausted,
+      };
+    case "L5_large_range":
+      return {
+        targetValue: cellValue(env, "lr_0420__variance") === "+8.2%",
+        noFullSnapshot: env.stats.snapshotCalls === 0,
+        boundedContext: env.stats.contextChars > 0 && env.stats.contextChars < 4_000,
+        noFullSheetTool: !used(result, "read_full_sheet"),
+        touchedOnlyTarget: onlyTouched(result, new Set(["lr_0420__variance"])),
+        readBeforeWrite: editReadProvenance(result),
+        notExhausted: !result.exhausted,
+      };
+    case "L6_long_horizon":
+      return {
+        allTargetsSet: allTargetsSet(env, L6_TARGETS),
+        conflictRecovery: conflicts(result) >= 3,
+        compactionUsed: used(result, "compaction"),
+        noLockShortcut: !used(result, "propose_lock"),
+        noClobber: editReadProvenance(result),
+        readImmediatelyBeforeWrite: readImmediatelyBeforeEdits(result),
+        touchedOnlyTargets: onlyTouched(result, new Set(Object.keys(L6_TARGETS))),
+        notExhausted: !result.exhausted,
+      };
+    default:
+      return {
+        completed: rung.check(result, env),
+        notExhausted: !result.exhausted,
+      };
+  }
+}
+
+function scoreChecks(checks: Record<string, boolean>): number {
+  const values = Object.values(checks);
+  if (values.length === 0) return 0;
+  return Number((values.filter(Boolean).length / values.length).toFixed(4));
+}
+
+async function runRung(rung: Rung, maker: (rung: Rung) => AgentModel, modelName: string, budget: RuntimeBudget): Promise<RungResult> {
   const env = (rung.makeEnv ?? demoEnv)();
   rung.setup?.(env);
   const rt = new CountingRoomTools(env.engine, env.roomId, env.artifactId, env.actor, env.sessionId, env.stats);
   const contextBuilder = rung.contextBuilder ? (tools: RoomTools, goal: string) => rung.contextBuilder!(tools, goal, env) : undefined;
+  const baseModel = maker(rung);
+  const resolvedModels: string[] = [];
+  const trackedModel: AgentModel = {
+    get name() {
+      return baseModel.name;
+    },
+    async next(input) {
+      const step = await baseModel.next(input);
+      resolvedModels.push(baseModel.name);
+      return step;
+    },
+  };
   const t0 = Date.now();
   const deadlineAt = budget.rungTimeoutMs ? t0 + budget.rungTimeoutMs : undefined;
   try {
     const result = await runAgent({
       rt,
       goal: rung.goal,
-      model: maker(rung),
+      model: trackedModel,
       tools: rung.tools ?? ROOM_TOOLS,
       maxSteps: rung.maxSteps ?? 18,
       contextBuilder,
@@ -388,18 +486,41 @@ async function runRung(rung: Rung, maker: (rung: Rung) => AgentModel, modelName:
       reserveMs: budget.reserveMs,
       onTrace: (event) => rung.onTrace?.(event, env),
     });
-    const pass = rung.check(result, env);
+    const resolvedModel = resolvedModels.at(-1) ?? trackedModel.name;
+    const checks = rungChecks(rung, result, env);
+    const pass = rung.check(result, env) && Object.values(checks).every(Boolean);
     return {
       pass,
+      requestedModel: modelName,
+      resolvedModel,
+      resolvedModels: [...new Set(resolvedModels)],
+      rung: rung.id,
+      level: rung.level,
       ms: Date.now() - t0,
       tools: result.trace.filter((t) => t.tool !== "compaction").length,
-      cost: result.usage ? priceRun(modelName, result.usage.inputTokens, result.usage.outputTokens) : 0,
+      cost: result.usage ? priceRun(resolvedModel, result.usage.inputTokens, result.usage.outputTokens) : 0,
       stopReason: result.stopReason,
       handoff: result.handoff?.summary,
       reason: pass ? "" : rung.diagnose?.(result, env) ?? result.handoff?.summary ?? "failed",
+      checks,
+      trace: result.trace,
     };
   } catch (error) {
-    return { pass: false, ms: Date.now() - t0, tools: 0, cost: 0, error: error instanceof Error ? error.message : String(error) };
+    const resolvedModel = resolvedModels.at(-1) ?? trackedModel.name;
+    return {
+      pass: false,
+      requestedModel: modelName,
+      resolvedModel,
+      resolvedModels: [...new Set(resolvedModels)],
+      rung: rung.id,
+      level: rung.level,
+      ms: Date.now() - t0,
+      tools: 0,
+      cost: 0,
+      error: error instanceof Error ? error.message : String(error),
+      checks: { completed: false },
+      trace: [],
+    };
   }
 }
 
@@ -434,34 +555,199 @@ function parseRuntimeBudget(): RuntimeBudget {
   };
 }
 
+function unique(items: string[]): string[] {
+  return [...new Set(items.filter(Boolean))];
+}
+
+function parseRungFilter(): Set<string> | undefined {
+  const raw = optionValue("--rungs") ?? optionValue("--levels");
+  if (!raw) return undefined;
+  const wanted = new Set<string>();
+  const parts = raw.split(",").flatMap((part) => {
+    const trimmed = part.trim();
+    const match = trimmed.match(/^L?(\d+)-L?(\d+)$/i);
+    if (!match) return [trimmed];
+    const start = Number(match[1]);
+    const end = Number(match[2]);
+    if (!Number.isInteger(start) || !Number.isInteger(end) || start > end) return [trimmed];
+    return Array.from({ length: end - start + 1 }, (_, i) => String(start + i));
+  });
+  for (const part of parts.map((s) => s.trim()).filter(Boolean)) {
+    const normalized = part.toLowerCase();
+    for (const rung of RUNGS) {
+      if (normalized === rung.id.toLowerCase() || normalized === `l${rung.level}` || normalized === String(rung.level)) {
+        wanted.add(rung.id);
+      }
+    }
+  }
+  if (wanted.size === 0) throw new Error(`No ladder rungs matched ${raw}`);
+  return wanted;
+}
+
+async function parseModelRoutes(): Promise<string[]> {
+  let routes = parseRealModels();
+  const freeAutoTop = optionNumber("--free-auto-top", "LADDER_FREE_AUTO_TOP") ?? 0;
+  if (freeAutoTop > 0) {
+    const candidates = await selectOpenRouterFreeModels({
+      mode: "agent",
+      limit: freeAutoTop,
+      forceRefresh: process.argv.includes("--free-auto-refresh"),
+    });
+    routes = unique([...routes, "openrouter/free-auto", ...candidates.map((m) => m.id)]);
+  }
+  return routes;
+}
+
+function writeJsonReport(results: RungResult[], selectedRungs: Rung[], requestedRoutes: string[]): void {
+  const outPath = optionValue("--json-out");
+  if (!outPath) return;
+  const absolute = resolve(process.cwd(), outPath);
+  mkdirSync(dirname(absolute), { recursive: true });
+  writeFileSync(
+    absolute,
+    JSON.stringify({
+      generatedAt: new Date().toISOString(),
+      requestedRoutes,
+      rungs: selectedRungs.map((r) => ({ id: r.id, level: r.level, label: r.label })),
+      results: results.map(publicResult),
+    }, null, 2),
+  );
+  console.log(`\nwrote ${outPath}`);
+}
+
+function publicResult(result: RungResult): Omit<RungResult, "trace"> {
+  const { trace, ...publicRow } = result;
+  void trace;
+  return publicRow;
+}
+
+/** Append each rung result to the durable eval store (gated by --record) so cross-commit regression
+ *  diffs work — see evals/evalStore.ts + `npm run eval:diff`. The producer side of the HALO substrate. */
+function recordRunsToStore(results: RungResult[]): void {
+  if (!process.argv.includes("--record")) return;
+  const identity = readGitIdentity();
+  const ts = Date.now();
+  const store = optionValue("--eval-store") ?? DEFAULT_STORE;
+  const identityKey = runKey({
+    ts,
+    commitSha: identity.commitSha,
+    worktreeHash: identity.worktreeHash,
+    gitDirty: identity.gitDirty,
+    suite: "ladder",
+    caseId: "identity",
+    status: "skip",
+  });
+  const traceDir = optionValue("--trace-dir") ?? join(
+    "docs",
+    "eval",
+    "traces",
+    "ladder",
+    `${new Date(ts).toISOString().replace(/[-:.]/g, "").replace("Z", "Z")}-${safeSegment(identityKey)}`,
+  );
+  const records: EvalRunRecord[] = results.map((r) => ({
+    ts,
+    commitSha: identity.commitSha,
+    worktreeHash: identity.worktreeHash,
+    gitDirty: identity.gitDirty,
+    suite: "ladder",
+    caseId: `ladder:${r.rung}:${r.requestedModel}`,
+    model: r.resolvedModel,
+    status: r.pass ? "pass" : "fail",
+    score: scoreChecks(r.checks),
+    checks: r.checks,
+    failureSummary: r.pass ? undefined : (r.reason || r.error || r.stopReason || "failed"),
+    traceRef: writeTraceArtifact(r, identity, traceDir, ts),
+    harnessVersion: "ladder-v1",
+  }));
+  appendEvalRuns(records, store);
+  console.log(`\nrecorded ${records.length} rung result(s) to ${store} (${runKey(records[0])}). Diff: npm run eval:diff`);
+}
+
+type GitIdentity = {
+  commitSha: string;
+  worktreeHash?: string;
+  gitDirty: boolean;
+};
+
+function readGitIdentity(): GitIdentity {
+  let commitSha = "nocommit";
+  let status = "";
+  let diff = "";
+  try { commitSha = execSync("git rev-parse --short HEAD", { stdio: ["ignore", "pipe", "ignore"] }).toString().trim(); } catch { /* not a git repo */ }
+  try { status = execSync("git status --porcelain=v1", { stdio: ["ignore", "pipe", "ignore"] }).toString(); } catch { /* not a git repo */ }
+  try { diff = execSync("git diff --no-ext-diff --binary HEAD --", { stdio: ["ignore", "pipe", "ignore"], maxBuffer: 16 * 1024 * 1024 }).toString(); } catch { /* large or unavailable diff */ }
+  const gitDirty = status.trim().length > 0;
+  return {
+    commitSha,
+    gitDirty,
+    worktreeHash: gitDirty ? stableJournalHash({ status, diff }) : undefined,
+  };
+}
+
+function writeTraceArtifact(result: RungResult, identity: GitIdentity, traceDir: string, ts: number): string {
+  mkdirSync(traceDir, { recursive: true });
+  const caseId = `ladder:${result.rung}:${result.requestedModel}`;
+  const file = join(traceDir, `${safeSegment(caseId)}.json`);
+  writeFileSync(file, JSON.stringify({
+    schema: 1,
+    generatedAt: new Date(ts).toISOString(),
+    commitSha: identity.commitSha,
+    worktreeHash: identity.worktreeHash,
+    gitDirty: identity.gitDirty,
+    suite: "ladder",
+    caseId,
+    score: scoreChecks(result.checks),
+    checks: result.checks,
+    result: publicResult(result),
+    trace: result.trace,
+  }, null, 2));
+  return normalizePath(relative(process.cwd(), file));
+}
+
+function safeSegment(value: string): string {
+  return value.replace(/[^a-zA-Z0-9._-]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 180) || "run";
+}
+
+function normalizePath(value: string): string {
+  return value.replace(/\\/g, "/");
+}
+
 async function main() {
-  const realModels = parseRealModels();
+  const realModels = await parseModelRoutes();
   const budget = parseRuntimeBudget();
   const models: { name: string; maker: (rung: Rung) => AgentModel }[] = realModels.length
     ? realModels.map((id) => ({ name: id, maker: () => realModel(id) }))
     : [{ name: "scripted", maker: (rung) => rung.scripted() }];
 
+  const rungFilter = parseRungFilter();
+  const selectedRungs = rungFilter ? RUNGS.filter((r) => rungFilter.has(r.id)) : RUNGS;
+
   const grid: Record<string, Record<string, boolean>> = {};
+  const results: RungResult[] = [];
   for (const model of models) {
     grid[model.name] = {};
-    for (const rung of RUNGS) {
+    for (const rung of selectedRungs) {
       process.stdout.write(`  ${model.name} · ${rung.id} ... `);
       const res = await runRung(rung, model.maker, model.name, budget);
+      results.push(res);
       grid[model.name][rung.id] = res.pass;
       const stop = "stopReason" in res && res.stopReason !== "done" ? `, ${res.stopReason}` : "";
-      console.log(`${res.pass ? "PASS" : "FAIL"} (${res.tools} tools, ${(res.ms / 1000).toFixed(1)}s, $${res.cost.toFixed(4)}${stop}${"error" in res && res.error ? `, ${res.error.slice(0, 80)}` : ""})`);
+      const resolved = res.resolvedModel !== model.name ? `, resolved=${res.resolvedModel}` : "";
+      console.log(`${res.pass ? "PASS" : "FAIL"} (${res.tools} tools, ${(res.ms / 1000).toFixed(1)}s, $${res.cost.toFixed(4)}${resolved}${stop}${"error" in res && res.error ? `, ${res.error.slice(0, 80)}` : ""})`);
       if (!res.pass && "reason" in res && res.reason) console.log(`        ${res.reason}`);
       if (!res.pass && "handoff" in res && res.handoff) console.log(`        handoff: ${res.handoff}`);
     }
   }
 
   console.log("\nFAILURE HEATMAP (model x level)\n" + "-".repeat(72));
-  console.log("model".padEnd(30) + RUNGS.map((r) => `L${r.level}`).join("  "));
+  console.log("model".padEnd(30) + selectedRungs.map((r) => `L${r.level}`).join("  "));
   for (const model of models) {
-    console.log(model.name.padEnd(30) + RUNGS.map((r) => (grid[model.name][r.id] ? "OK" : "--")).join("  "));
+    console.log(model.name.padEnd(30) + selectedRungs.map((r) => (grid[model.name][r.id] ? "OK" : "--")).join("  "));
   }
   console.log("-".repeat(72));
-  console.log("legend: " + RUNGS.map((r) => `L${r.level}=${r.label}`).join(" | "));
+  console.log("legend: " + selectedRungs.map((r) => `L${r.level}=${r.label}`).join(" | "));
+  writeJsonReport(results, selectedRungs, models.map((m) => m.name));
+  recordRunsToStore(results);
 
   if (Object.values(grid).some((row) => Object.values(row).some((ok) => !ok))) process.exitCode = 1;
 }

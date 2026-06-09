@@ -235,9 +235,15 @@ The key insight: the agent **saw Priya's value before overwriting it.** That's t
 
 ---
 
-## 7. The injectable model: scripted vs real Anthropic (seam 1)
+## 7. The injectable model: scripted vs real providers (seam 1)
 
 Both implementations live in `src/agent/model.ts`, behind the same `AgentModel` interface.
+
+Current production model wiring is provider-agnostic: `model(modelId)` routes through the catalog and
+AI SDK adapters for OpenAI, Gemini, Anthropic, and OpenRouter, while `convexModel(modelId)` provides
+the Convex action variant. Provider SDK tools are still declared without `execute`; the model returns
+tool calls and NodeRoom runs them against `RoomTools`. `openrouter/free-auto` is explicit for the
+long-running `/free` lane and records the concrete resolved model for audit.
 
 **`anthropicModel`** (`model.ts:21-41`) is the real model — a thin adapter over the Vercel AI SDK's `generateText` (`model.ts:26`) with `anthropic(modelId)`, defaulting to `'claude-haiku-4-5'` (`model.ts:21`). The critical detail: the SDK tools are defined **without an `execute` function** (`model.ts:25`). So the SDK only *returns* the tool calls — it doesn't run them. NodeRoom's runtime runs them against `RoomTools`. It also deliberately omits `maxSteps` (`model.ts:31`) so each call is exactly one model turn. The division of labor: the AI SDK owns provider plumbing, streaming, and retries; the harness owns the loop, the context, and the backend.
 
@@ -248,6 +254,9 @@ Why this seam earns its keep: the demo and tests use the scripted model so they 
 ---
 
 ## 8. Production wiring: `convex/agent.ts` runs the same loop
+
+Current production wiring uses `convexModel(process.env.AGENT_MODEL ?? "gemini-3.5-flash")`, so
+provider keys depend on the selected model route rather than being Anthropic-only.
 
 `convex/agent.ts` is the production entry point. It's a `"use node"` action (`agent.ts:18`) — it needs Node so the AI SDK can run, and it needs `ANTHROPIC_API_KEY` in the Convex env. `runRoomAgent` (`agent.ts:29-50`) is intentionally tiny:
 

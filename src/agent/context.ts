@@ -77,27 +77,3 @@ export async function buildResearchContext(rt: RoomTools, goal: string): Promise
   return [{ role: "user", content }];
 }
 
-/** Legacy one-source prompt retained for comparison docs. */
-export async function buildResearchContextLegacy(rt: RoomTools, goal: string): Promise<AgentMessage[]> {
-  const [snap, aware] = await Promise.all([rt.snapshot(), rt.awareness()]);
-  const table = snap.rows.map((r) => {
-    const company = r.cells.company?.value || r.rowId;
-    const status = r.cells.status?.value || "pending";
-    const sv = r.cells.summary?.version ?? 0;
-    const locked = r.cells.status?.locked || r.cells.summary?.locked;
-    return `  ${r.rowId.padEnd(8)} ${company.padEnd(22)} status=${status.padEnd(9)} summary=${(r.cells.summary?.value ? "[set]" : "(empty)").padEnd(8)} [summary v${sv}]${locked ? "  <LOCKED>" : ""}`;
-  }).join("\n");
-  const locks = aware.activeLocks.length ? aware.activeLocks.map((l) => `  - ${l.holder} holds [${l.elementIds.join(", ")}] — ${l.reason}`).join("\n") : "  (none)";
-  const content = [
-    `YOUR TASK: ${goal}`,
-    ``,
-    `COMPANY RESEARCH SHEET (artifact "${snap.artifactId}", v${snap.version}). Per company, editable cells are \`{rowId}__status\`, \`{rowId}__summary\`, \`{rowId}__source\`:`,
-    table,
-    ``,
-    `Process ONLY rows whose status is "pending". For each: propose_lock its cells, set status to "running", fetch_source a real page for evidence, write a sourced summary + the citation into __source, set status to "complete", then release the lock. CITE only sources you actually fetched — never invent one.`,
-    ``,
-    `ACTIVE LOCKS (read-only held by others):`,
-    locks,
-  ].filter((l) => l !== "").join("\n");
-  return [{ role: "user", content }];
-}

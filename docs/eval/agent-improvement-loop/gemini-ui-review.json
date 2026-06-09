@@ -1,0 +1,45 @@
+{
+  "generatedAt": "2026-06-09T06:13:11.728Z",
+  "model": "gemini-3.5-flash",
+  "mediaPath": "docs/eval/ui-recordings/live-ui-walkthrough-20260608.mp4",
+  "mediaType": "video/mp4",
+  "scoreScale": "0-5; model 0-10 outputs are normalized",
+  "review": {
+    "overall": "pass",
+    "summary": "The workspace demonstrates robust multi-artifact integration including a financial spreadsheet, a company research database table, a sync reliability notes page, a post-it board, and a live room assistant with an active Auto-Allow toggle. Presence indicators show multiple users in different status states, and logs track changes across the room.",
+    "scores": {
+      "filesAndSpreadsheet": 5,
+      "publicPrivateChatAgent": 4,
+      "convexLiveState": 4,
+      "traceAcceptAllAutoAccept": 4,
+      "notesWikiSpreadsheet": 3,
+      "wallPostIts": 4,
+      "multiUserSignals": 4,
+      "evidenceCitations": 2
+    },
+    "observedEvidence": [
+      "Spreadsheet tab showing REVENUE, FY23, FY24, VARIANCE, and RATE with financial metrics",
+      "Database view under 'Company research' showing Anthropic, Stripe, Figma, OpenAI",
+      "Notes editor showing 'Sync reliability - diligence note' referencing spreadsheet values",
+      "Diligence wall with active post-it cards (blue and green) with matching logs for post-it actions",
+      "Presence sidebar showing three distinct users (Piya, alien, hassan) with colored status indicators",
+      "Auto-allow toggle checked next to the room assistant pane"
+    ],
+    "missingEvidence": [
+      "Explicit interactive evidence citations or clickable badges linking the spreadsheet cells directly to wiki/note references",
+      "Direct messaging / private chat between two specific users, separate from room chat and the room assistant"
+    ],
+    "workflowPainPoints": [
+      {
+        "user": "finance_banking",
+        "painPoint": "Reconciling deletion behavior and null cell values when syncing synthetic financial audits to the validation sheet.",
+        "observed": true,
+        "note": "The finance user raises a sync reliability note explicitly questioning whether null calls should survive synchronization instead of being deleted."
+      }
+    ],
+    "recommendedEvalAdditions": [
+      "Verify user-to-user private chat workflows separate from room chat",
+      "Test actual citation linkage clickability to see if it focuses the corresponding spreadsheet cell"
+    ]
+  }
+}

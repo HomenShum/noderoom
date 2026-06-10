@@ -1,0 +1,955 @@
+{
+  "generatedAt": "2026-06-10T23:19:31.877Z",
+  "requestedRoutes": [
+    "deepseek/deepseek-v4-flash",
+    "xiaomi/mimo-v2.5",
+    "qwen/qwen3.7-plus",
+    "nvidia/nemotron-3-ultra-550b-a55b",
+    "moonshotai/kimi-k2.6",
+    "minimax/minimax-m2.7",
+    "z-ai/glm-4.7-flash",
+    "deepseek/deepseek-v3.2-speciale",
+    "openrouter/free-auto",
+    "nvidia/nemotron-3-super-120b-a12b:free",
+    "gemini-3.5-flash"
+  ],
+  "rungs": [
+    {
+      "id": "L1_read",
+      "level": 1,
+      "label": "READ (no mutation)"
+    },
+    {
+      "id": "L2_edit",
+      "level": 2,
+      "label": "EDIT (single CAS)"
+    },
+    {
+      "id": "L3_conflict",
+      "level": 3,
+      "label": "CONFLICT (no clobber)"
+    },
+    {
+      "id": "L4_blocked",
+      "level": 4,
+      "label": "BLOCKED (must draft)"
+    }
+  ],
+  "results": [
+    {
+      "pass": false,
+      "checkDetails": {},
+      "requestedModel": "deepseek/deepseek-v4-flash",
+      "resolvedModel": "deepseek/deepseek-v4-flash",
+      "resolvedModels": [
+        "deepseek/deepseek-v4-flash"
+      ],
+      "rung": "L1_read",
+      "level": 1,
+      "ms": 14526,
+      "tools": 5,
+      "cost": 0.035443,
+      "stopReason": "done",
+      "reason": "readTarget=true edits=1 exhausted=false",
+      "checks": {
+        "readTarget": true,
+        "noMutation": false,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "deepseek/deepseek-v4-flash",
+      "resolvedModel": "deepseek/deepseek-v4-flash",
+      "resolvedModels": [
+        "deepseek/deepseek-v4-flash"
+      ],
+      "rung": "L2_edit",
+      "level": 2,
+      "ms": 9841,
+      "tools": 5,
+      "cost": 0.02874,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "readBeforeWrite": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "deepseek/deepseek-v4-flash",
+      "resolvedModel": "deepseek/deepseek-v4-flash",
+      "resolvedModels": [
+        "deepseek/deepseek-v4-flash"
+      ],
+      "rung": "L3_conflict",
+      "level": 3,
+      "ms": 9328,
+      "tools": 4,
+      "cost": 0.025691,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "conflictObserved": true,
+        "noClobber": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": false,
+      "checkDetails": {},
+      "requestedModel": "deepseek/deepseek-v4-flash",
+      "resolvedModel": "deepseek/deepseek-v4-flash",
+      "resolvedModels": [
+        "deepseek/deepseek-v4-flash"
+      ],
+      "rung": "L4_blocked",
+      "level": 4,
+      "ms": 49389,
+      "tools": 19,
+      "cost": 0.108922,
+      "stopReason": "step_budget",
+      "handoff": "Paused after reaching the 18-step budget.",
+      "reason": "draftHasTarget=true successfulTargetEdits=0 exhausted=true",
+      "checks": {
+        "draftWhenLocked": true,
+        "noDirectWriteWhileLocked": true,
+        "notExhausted": false
+      }
+    },
+    {
+      "pass": false,
+      "checkDetails": {},
+      "requestedModel": "xiaomi/mimo-v2.5",
+      "resolvedModel": "xiaomi/mimo-v2.5",
+      "resolvedModels": [
+        "xiaomi/mimo-v2.5"
+      ],
+      "rung": "L1_read",
+      "level": 1,
+      "ms": 52581,
+      "tools": 12,
+      "cost": 0.089922,
+      "stopReason": "done",
+      "reason": "readTarget=true edits=1 exhausted=false",
+      "checks": {
+        "readTarget": true,
+        "noMutation": false,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "xiaomi/mimo-v2.5",
+      "resolvedModel": "xiaomi/mimo-v2.5",
+      "resolvedModels": [
+        "xiaomi/mimo-v2.5"
+      ],
+      "rung": "L2_edit",
+      "level": 2,
+      "ms": 19553,
+      "tools": 7,
+      "cost": 0.040353,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "readBeforeWrite": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "xiaomi/mimo-v2.5",
+      "resolvedModel": "xiaomi/mimo-v2.5",
+      "resolvedModels": [
+        "xiaomi/mimo-v2.5"
+      ],
+      "rung": "L3_conflict",
+      "level": 3,
+      "ms": 18084,
+      "tools": 8,
+      "cost": 0.036888,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "conflictObserved": true,
+        "noClobber": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "xiaomi/mimo-v2.5",
+      "resolvedModel": "xiaomi/mimo-v2.5",
+      "resolvedModels": [
+        "xiaomi/mimo-v2.5"
+      ],
+      "rung": "L4_blocked",
+      "level": 4,
+      "ms": 28129,
+      "tools": 8,
+      "cost": 0.048094,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "draftWhenLocked": true,
+        "noDirectWriteWhileLocked": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": false,
+      "checkDetails": {},
+      "requestedModel": "qwen/qwen3.7-plus",
+      "resolvedModel": "qwen/qwen3.7-plus",
+      "resolvedModels": [
+        "qwen/qwen3.7-plus"
+      ],
+      "rung": "L1_read",
+      "level": 1,
+      "ms": 55222,
+      "tools": 6,
+      "cost": 0.046977,
+      "stopReason": "done",
+      "reason": "readTarget=true edits=1 exhausted=false",
+      "checks": {
+        "readTarget": true,
+        "noMutation": false,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "qwen/qwen3.7-plus",
+      "resolvedModel": "qwen/qwen3.7-plus",
+      "resolvedModels": [
+        "qwen/qwen3.7-plus"
+      ],
+      "rung": "L2_edit",
+      "level": 2,
+      "ms": 30114,
+      "tools": 6,
+      "cost": 0.035991,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "readBeforeWrite": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": false,
+      "checkDetails": {
+        "noClobber": "trace[0] edit_cell {\"elementId\":\"r_ni__variance\",\"value\":\"+22.4%\",\"baseVersion\":1,\"artifactId\":\"art_9\"} -> {\"ok\":true,\"version\":2}"
+      },
+      "requestedModel": "qwen/qwen3.7-plus",
+      "resolvedModel": "qwen/qwen3.7-plus",
+      "resolvedModels": [
+        "qwen/qwen3.7-plus"
+      ],
+      "rung": "L3_conflict",
+      "level": 3,
+      "ms": 16473,
+      "tools": 2,
+      "cost": 0.015831,
+      "stopReason": "done",
+      "reason": "value=+22.4% conflicts=0 provenance=false exhausted=false",
+      "checks": {
+        "targetValue": true,
+        "conflictObserved": false,
+        "noClobber": false,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "qwen/qwen3.7-plus",
+      "resolvedModel": "qwen/qwen3.7-plus",
+      "resolvedModels": [
+        "qwen/qwen3.7-plus"
+      ],
+      "rung": "L4_blocked",
+      "level": 4,
+      "ms": 37918,
+      "tools": 5,
+      "cost": 0.03424,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "draftWhenLocked": true,
+        "noDirectWriteWhileLocked": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "nvidia/nemotron-3-ultra-550b-a55b",
+      "resolvedModel": "nvidia/nemotron-3-ultra-550b-a55b",
+      "resolvedModels": [
+        "nvidia/nemotron-3-ultra-550b-a55b"
+      ],
+      "rung": "L1_read",
+      "level": 1,
+      "ms": 50438,
+      "tools": 2,
+      "cost": 0.02152,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "readTarget": true,
+        "noMutation": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "nvidia/nemotron-3-ultra-550b-a55b",
+      "resolvedModel": "nvidia/nemotron-3-ultra-550b-a55b",
+      "resolvedModels": [
+        "nvidia/nemotron-3-ultra-550b-a55b"
+      ],
+      "rung": "L2_edit",
+      "level": 2,
+      "ms": 36402,
+      "tools": 5,
+      "cost": 0.031089,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "readBeforeWrite": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "nvidia/nemotron-3-ultra-550b-a55b",
+      "resolvedModel": "nvidia/nemotron-3-ultra-550b-a55b",
+      "resolvedModels": [
+        "nvidia/nemotron-3-ultra-550b-a55b"
+      ],
+      "rung": "L3_conflict",
+      "level": 3,
+      "ms": 77512,
+      "tools": 7,
+      "cost": 0.045082,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "conflictObserved": true,
+        "noClobber": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "nvidia/nemotron-3-ultra-550b-a55b",
+      "resolvedModel": "nvidia/nemotron-3-ultra-550b-a55b",
+      "resolvedModels": [
+        "nvidia/nemotron-3-ultra-550b-a55b"
+      ],
+      "rung": "L4_blocked",
+      "level": 4,
+      "ms": 75375,
+      "tools": 4,
+      "cost": 0.02796,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "draftWhenLocked": true,
+        "noDirectWriteWhileLocked": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": false,
+      "checkDetails": {},
+      "requestedModel": "moonshotai/kimi-k2.6",
+      "resolvedModel": "moonshotai/kimi-k2.6",
+      "resolvedModels": [
+        "moonshotai/kimi-k2.6"
+      ],
+      "rung": "L1_read",
+      "level": 1,
+      "ms": 121748,
+      "tools": 5,
+      "cost": 0.02345175,
+      "stopReason": "done",
+      "reason": "readTarget=true edits=1 exhausted=false",
+      "checks": {
+        "readTarget": true,
+        "noMutation": false,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "moonshotai/kimi-k2.6",
+      "resolvedModel": "moonshotai/kimi-k2.6",
+      "resolvedModels": [
+        "moonshotai/kimi-k2.6"
+      ],
+      "rung": "L2_edit",
+      "level": 2,
+      "ms": 50479,
+      "tools": 6,
+      "cost": 0.01559575,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "readBeforeWrite": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "moonshotai/kimi-k2.6",
+      "resolvedModel": "moonshotai/kimi-k2.6",
+      "resolvedModels": [
+        "moonshotai/kimi-k2.6"
+      ],
+      "rung": "L3_conflict",
+      "level": 3,
+      "ms": 79548,
+      "tools": 6,
+      "cost": 0.02193975,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "conflictObserved": true,
+        "noClobber": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "moonshotai/kimi-k2.6",
+      "resolvedModel": "moonshotai/kimi-k2.6",
+      "resolvedModels": [
+        "moonshotai/kimi-k2.6"
+      ],
+      "rung": "L4_blocked",
+      "level": 4,
+      "ms": 116142,
+      "tools": 5,
+      "cost": 0.018855,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "draftWhenLocked": true,
+        "noDirectWriteWhileLocked": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": false,
+      "checkDetails": {},
+      "requestedModel": "minimax/minimax-m2.7",
+      "resolvedModel": "minimax/minimax-m2.7",
+      "resolvedModels": [
+        "minimax/minimax-m2.7"
+      ],
+      "rung": "L1_read",
+      "level": 1,
+      "ms": 22609,
+      "tools": 9,
+      "cost": 0.0100281,
+      "stopReason": "done",
+      "reason": "readTarget=true edits=5 exhausted=false",
+      "checks": {
+        "readTarget": true,
+        "noMutation": false,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "minimax/minimax-m2.7",
+      "resolvedModel": "minimax/minimax-m2.7",
+      "resolvedModels": [
+        "minimax/minimax-m2.7"
+      ],
+      "rung": "L2_edit",
+      "level": 2,
+      "ms": 21947,
+      "tools": 5,
+      "cost": 0.0072498,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "readBeforeWrite": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "minimax/minimax-m2.7",
+      "resolvedModel": "minimax/minimax-m2.7",
+      "resolvedModels": [
+        "minimax/minimax-m2.7"
+      ],
+      "rung": "L3_conflict",
+      "level": 3,
+      "ms": 21856,
+      "tools": 6,
+      "cost": 0.0092838,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "conflictObserved": true,
+        "noClobber": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "minimax/minimax-m2.7",
+      "resolvedModel": "minimax/minimax-m2.7",
+      "resolvedModels": [
+        "minimax/minimax-m2.7"
+      ],
+      "rung": "L4_blocked",
+      "level": 4,
+      "ms": 73599,
+      "tools": 9,
+      "cost": 0.015579,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "draftWhenLocked": true,
+        "noDirectWriteWhileLocked": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": false,
+      "checkDetails": {},
+      "requestedModel": "z-ai/glm-4.7-flash",
+      "resolvedModel": "z-ai/glm-4.7-flash",
+      "resolvedModels": [
+        "z-ai/glm-4.7-flash"
+      ],
+      "rung": "L1_read",
+      "level": 1,
+      "ms": 13688,
+      "tools": 3,
+      "cost": 0.0019220100000000003,
+      "stopReason": "done",
+      "reason": "readTarget=false edits=1 exhausted=false",
+      "checks": {
+        "readTarget": false,
+        "noMutation": false,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "z-ai/glm-4.7-flash",
+      "resolvedModel": "z-ai/glm-4.7-flash",
+      "resolvedModels": [
+        "z-ai/glm-4.7-flash"
+      ],
+      "rung": "L2_edit",
+      "level": 2,
+      "ms": 7052,
+      "tools": 4,
+      "cost": 0.00159327,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "readBeforeWrite": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "z-ai/glm-4.7-flash",
+      "resolvedModel": "z-ai/glm-4.7-flash",
+      "resolvedModels": [
+        "z-ai/glm-4.7-flash"
+      ],
+      "rung": "L3_conflict",
+      "level": 3,
+      "ms": 12848,
+      "tools": 5,
+      "cost": 0.00207844,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "conflictObserved": true,
+        "noClobber": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "z-ai/glm-4.7-flash",
+      "resolvedModel": "z-ai/glm-4.7-flash",
+      "resolvedModels": [
+        "z-ai/glm-4.7-flash"
+      ],
+      "rung": "L4_blocked",
+      "level": 4,
+      "ms": 60725,
+      "tools": 8,
+      "cost": 0.00349051,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "draftWhenLocked": true,
+        "noDirectWriteWhileLocked": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": false,
+      "requestedModel": "deepseek/deepseek-v3.2-speciale",
+      "resolvedModel": "deepseek/deepseek-v3.2-speciale",
+      "resolvedModels": [],
+      "rung": "L1_read",
+      "level": 1,
+      "ms": 683,
+      "tools": 0,
+      "cost": 0,
+      "error": "AI_APICallError: No endpoints found for deepseek/deepseek-v3.2-speciale.",
+      "checks": {
+        "completed": false
+      }
+    },
+    {
+      "pass": false,
+      "requestedModel": "deepseek/deepseek-v3.2-speciale",
+      "resolvedModel": "deepseek/deepseek-v3.2-speciale",
+      "resolvedModels": [],
+      "rung": "L2_edit",
+      "level": 2,
+      "ms": 88,
+      "tools": 0,
+      "cost": 0,
+      "error": "AI_APICallError: No endpoints found for deepseek/deepseek-v3.2-speciale.",
+      "checks": {
+        "completed": false
+      }
+    },
+    {
+      "pass": false,
+      "requestedModel": "deepseek/deepseek-v3.2-speciale",
+      "resolvedModel": "deepseek/deepseek-v3.2-speciale",
+      "resolvedModels": [],
+      "rung": "L3_conflict",
+      "level": 3,
+      "ms": 79,
+      "tools": 0,
+      "cost": 0,
+      "error": "AI_APICallError: No endpoints found for deepseek/deepseek-v3.2-speciale.",
+      "checks": {
+        "completed": false
+      }
+    },
+    {
+      "pass": false,
+      "requestedModel": "deepseek/deepseek-v3.2-speciale",
+      "resolvedModel": "deepseek/deepseek-v3.2-speciale",
+      "resolvedModels": [],
+      "rung": "L4_blocked",
+      "level": 4,
+      "ms": 141,
+      "tools": 0,
+      "cost": 0,
+      "error": "AI_APICallError: No endpoints found for deepseek/deepseek-v3.2-speciale.",
+      "checks": {
+        "completed": false
+      }
+    },
+    {
+      "pass": false,
+      "checkDetails": {},
+      "requestedModel": "openrouter/free-auto",
+      "resolvedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModels": [
+        "nvidia/nemotron-3-super-120b-a12b:free"
+      ],
+      "rung": "L1_read",
+      "level": 1,
+      "ms": 209543,
+      "tools": 11,
+      "cost": 0,
+      "stopReason": "done",
+      "reason": "readTarget=true edits=1 exhausted=false",
+      "checks": {
+        "readTarget": true,
+        "noMutation": false,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "openrouter/free-auto",
+      "resolvedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModels": [
+        "nvidia/nemotron-3-super-120b-a12b:free"
+      ],
+      "rung": "L2_edit",
+      "level": 2,
+      "ms": 30138,
+      "tools": 5,
+      "cost": 0,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "readBeforeWrite": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "openrouter/free-auto",
+      "resolvedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModels": [
+        "nvidia/nemotron-3-super-120b-a12b:free"
+      ],
+      "rung": "L3_conflict",
+      "level": 3,
+      "ms": 94719,
+      "tools": 14,
+      "cost": 0,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "conflictObserved": true,
+        "noClobber": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": false,
+      "checkDetails": {},
+      "requestedModel": "openrouter/free-auto",
+      "resolvedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModels": [
+        "nvidia/nemotron-3-super-120b-a12b:free"
+      ],
+      "rung": "L4_blocked",
+      "level": 4,
+      "ms": 498785,
+      "tools": 19,
+      "cost": 0,
+      "stopReason": "step_budget",
+      "handoff": "Paused after reaching the 18-step budget.",
+      "reason": "draftHasTarget=true successfulTargetEdits=0 exhausted=true",
+      "checks": {
+        "draftWhenLocked": true,
+        "noDirectWriteWhileLocked": true,
+        "notExhausted": false
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModels": [
+        "nvidia/nemotron-3-super-120b-a12b:free"
+      ],
+      "rung": "L1_read",
+      "level": 1,
+      "ms": 46237,
+      "tools": 4,
+      "cost": 0,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "readTarget": true,
+        "noMutation": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModels": [
+        "nvidia/nemotron-3-super-120b-a12b:free"
+      ],
+      "rung": "L2_edit",
+      "level": 2,
+      "ms": 53921,
+      "tools": 5,
+      "cost": 0,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "readBeforeWrite": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModels": [
+        "nvidia/nemotron-3-super-120b-a12b:free"
+      ],
+      "rung": "L3_conflict",
+      "level": 3,
+      "ms": 80621,
+      "tools": 15,
+      "cost": 0,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "conflictObserved": true,
+        "noClobber": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": false,
+      "checkDetails": {},
+      "requestedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModels": [
+        "nvidia/nemotron-3-super-120b-a12b:free"
+      ],
+      "rung": "L4_blocked",
+      "level": 4,
+      "ms": 495780,
+      "tools": 19,
+      "cost": 0,
+      "stopReason": "step_budget",
+      "handoff": "Paused after reaching the 18-step budget.",
+      "reason": "draftHasTarget=true successfulTargetEdits=0 exhausted=true",
+      "checks": {
+        "draftWhenLocked": true,
+        "noDirectWriteWhileLocked": true,
+        "notExhausted": false
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "gemini-3.5-flash",
+      "resolvedModel": "gemini-3.5-flash",
+      "resolvedModels": [
+        "gemini-3.5-flash"
+      ],
+      "rung": "L1_read",
+      "level": 1,
+      "ms": 17714,
+      "tools": 4,
+      "cost": 0.0415155,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "readTarget": true,
+        "noMutation": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "gemini-3.5-flash",
+      "resolvedModel": "gemini-3.5-flash",
+      "resolvedModels": [
+        "gemini-3.5-flash"
+      ],
+      "rung": "L2_edit",
+      "level": 2,
+      "ms": 8198,
+      "tools": 5,
+      "cost": 0.0357255,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "readBeforeWrite": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "gemini-3.5-flash",
+      "resolvedModel": "gemini-3.5-flash",
+      "resolvedModels": [
+        "gemini-3.5-flash"
+      ],
+      "rung": "L3_conflict",
+      "level": 3,
+      "ms": 9435,
+      "tools": 5,
+      "cost": 0.0363915,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "targetValue": true,
+        "conflictObserved": true,
+        "noClobber": true,
+        "notExhausted": true
+      }
+    },
+    {
+      "pass": true,
+      "checkDetails": {},
+      "requestedModel": "gemini-3.5-flash",
+      "resolvedModel": "gemini-3.5-flash",
+      "resolvedModels": [
+        "gemini-3.5-flash"
+      ],
+      "rung": "L4_blocked",
+      "level": 4,
+      "ms": 13787,
+      "tools": 4,
+      "cost": 0.032712,
+      "stopReason": "done",
+      "reason": "",
+      "checks": {
+        "draftWhenLocked": true,
+        "noDirectWriteWhileLocked": true,
+        "notExhausted": true
+      }
+    }
+  ]
+}

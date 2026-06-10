@@ -366,7 +366,7 @@ for the reviewed GTM and finance files lives in
 [`docs/PROFESSIONAL_SPREADSHEET_WORKFLOWS.md`](docs/PROFESSIONAL_SPREADSHEET_WORKFLOWS.md).
 
 The full **design rationale** — *every* architecture "why", the trade-offs, the live-collaboration
-differences versus the past **Streamlit (ParselyFi)** and **Next.js + SSE GraphStore (MewAgent)**
+differences versus the past **Streamlit (ParselyFi)** and **Next.js + SSE client GraphStore**
 projects, and the **HALO self-improvement loop** (how a replayable trace becomes a Codex / Claude Code
 handoff so the agent improves its own harness, eval-gated) — lives in
 [`docs/WHY_NODEAGENT_AND_HALO.md`](docs/WHY_NODEAGENT_AND_HALO.md). The founder thesis there: a solo
@@ -593,6 +593,25 @@ and releases, live (the real `runRoomAgent` action when on Convex; the real in-m
 - **Evaluation framework** → [`docs/AGENT_EVAL.md`](docs/AGENT_EVAL.md). Who the users are, their use
   cases, the golden-case schema, single/multi/long-running references, and 10 metrics led by
   **no-silent-clobber rate**. Runnable: `npm run eval` (deterministic) / `npm run eval:real`.
+
+### The user → agent eval checklist
+
+Everything the agent is tested on — or owes a test — sorted by the **six ways a user puts
+NodeAgent to work**. The full per-case inventory (with file refs and recorded results) lives in
+[`docs/AGENT_EVAL.md` § 0](docs/AGENT_EVAL.md); this is the honest scoreboard:
+
+| Interaction mode | Running today | Designed, to build |
+|---|---|---|
+| **1 · Do it for me** (autonomous solve) | variance/footnote/note/wall goldens · GTM research enrichment (v3 benchmark, 8/11 routes 9/9) · professional workflow pack (GTM scoring, finance reconciliation, approvals, disclosure safety) · credit cascade + cell-mapping rejection | 3-statement modeling test (Solve, private answer-key gold) · SEC model-build flagship · N-doc research (benchmark v4) · file-drop ingestion (10-K/XLSX/receipts) · knowledge-organization pack |
+| **2 · Do it with us** (live collaboration) | ladder **L1–L7 scripted** + **L1–L4 live** across 11 routes (full passes: `gemini-3.5-flash`, `nemotron-3-ultra` — the research champion fails L1/L4, proving lanes promote separately) · multi-turn provenance · sustained concurrent room · lease fencing/takeover | L5–L7 live · modeling test (Collaborate: split IS/BS/CF under locks) · L8 roles/redaction · L9 entity resolution · L10 cross-artifact · live adversarial-source rung |
+| **3 · Work under review** (proposals) | review-mode inline proposals + room-policy briefing regression · approval-shaped professional case | L8 formalizes role-gated approve/promote/redact |
+| **4 · Advise me privately** (read-only consult) | private no-tools reply path · private-draft redaction · prompt-injection fencing 4/4 | sensitive-query guardrail (decline with stated reason) |
+| **5 · Work in the background** (resumable jobs) | durable `agentJobs` + exactly-once journal · L7 RESUME scripted · spend caps (slice/day/month) with breach attribution | L7 live across routes · 100-row checkpointed batch with partial-success reporting |
+| **6 · Teach me** (guided solve) | — | modeling test (Guide): **zero writes to answer cells**, hint quality, student convergence — restraint as a first-class eval axis |
+
+Cross-cutting and always on: the eval store + `eval:diff` regression gate, the supported-route
+model matrix (research and collaboration promote **separately**), the HALO improvement loop, and
+the Gemini media judge on every published clip.
 - **Context compaction** (`src/agent/compaction.ts`) — elides stale `read_range` results (Claude
   "context editing" pattern), preserves the turn structure (Hermes), keeps the latest state + recent turns.
 - **Library stack** (TipTap, dnd-kit, lucide, assistant-ui, the `@convex-dev/*` components) → [`docs/STACK.md`](docs/STACK.md).
@@ -641,7 +660,7 @@ This section is generated from `docs/qa/production-matrix.json`. When the system
 | `gpt-5.4-nano` | OpenAI | PASS | FAIL | FAIL | FAIL | research benchmark winner candidate only when collaboration safety is not required |
 | `gpt-5.4` | OpenAI | PASS | FAIL | PASS | PASS | requires rerun because L2 time-budget failure blocks promotion |
 
-Research benchmark route: `deepseek/deepseek-v4-flash` is the cheapest current v3 composite-synthesis model clearing 9/9 checks at $0.0034 per run. Collaboration routing still uses the ladder gate above, not benchmark cost alone.
+Research benchmark route: `openrouter/free-auto -> nvidia/nemotron-3-super-120b-a12b:free` is the cheapest current v3 composite-synthesis model clearing 9/9 checks at $0.0000 per run. Collaboration routing still uses the ladder gate above, not benchmark cost alone.
 
 Full QA ledger: [`docs/PRODUCTION_GUARANTEE_MATRIX.md`](docs/PRODUCTION_GUARANTEE_MATRIX.md).
 <!-- QA_COCKPIT_END -->

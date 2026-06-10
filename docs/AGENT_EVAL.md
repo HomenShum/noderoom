@@ -15,7 +15,8 @@ Professional workflow evals are tracked separately in
 `docs/eval/PROFESSIONAL_WORKFLOW_EVALS.md` and
 `evals/professionalWorkflows.ts`. That suite converts real reviewed CSV/XLSX
 workflow shapes into redacted GTM, finance, parsing, wiki, and long-running
-cases without committing private rows.
+cases without committing private rows. Private gold packs such as the
+three-statement modeling test run only when the local workbook path is provided.
 
 The live company-research benchmark is a separate router/cost harness:
 
@@ -32,7 +33,7 @@ npm run eval:model-matrix:live
 ```
 
 `docs/eval/MODEL_EVAL_MATRIX.md` defines the supported OpenRouter/native routes
-and the scenario split: v3 research synthesis plus L1-L4 collaboration safety.
+and the scenario split: v3 research synthesis plus L1-L7 collaboration safety.
 Passing one lane is not promotion for the other lane.
 
 Its current verified artifact is `docs/eval/results.json`
@@ -46,14 +47,76 @@ floor in `STRUCTURED_FIELDS` rejects disclaimer-shaped non-answers and
 from-memory text with no derivation from the fetched evidence — the two
 strategies that gamed earlier generations (v2's "9/9" was a deterministic
 template grading itself and was invalidated on review; see the README's
-"Why v3 exists"). Latest verified v3 run: `deepseek/deepseek-v4-flash` 9/9 at
-$0.0034/run with real grounded synthesis; `openrouter/free-auto` 7/9, failing
-exactly the content floor + judge. Treat a 9/9 as proof for the background
-research workflow only. Interactive collaboration still needs the L1-L7
+"Why v3 exists"). Latest verified v3 run: 8 of 11 supported research routes
+cleared 9/9, including `deepseek/deepseek-v4-flash` at $0.0029/run and
+`openrouter/free-auto` at $0. That saturation is useful routing evidence but no
+longer discriminates deep workflow competence. Treat a 9/9 as proof for the
+background research workflow only. Interactive collaboration still needs the L1-L7
 lock/CAS/draft ladder below — L7 (RESUME) is the rung that gates checkpointed
 background jobs: a forced slice death mid-task, a human revision landing while
 the agent is dead, and a cold-context continuation that must finish only the
 remaining targets without touching completed or human-revised cells.
+
+---
+
+## 0. The user → agent case checklist
+
+Every eval in this repo serves one of **six interaction modes** — the distinct ways a user puts
+NodeAgent to work. ✅ = running and recorded today. 🔜 = designed, sequenced, not yet built.
+This is the single inventory; if a case isn't on this list, we don't claim coverage of it.
+
+### Mode 1 — "Do it for me" (autonomous solve)
+
+- ✅ Recompute the variance column with lock → CAS → release (`evals/cases.ts` S1)
+- ✅ Selective footnote — touch only matching cells, argument correctness (S2)
+- ✅ Note resolution + wall sticky through the same CAS path (use cases 6–7)
+- ✅ GTM tabular research enrichment — pending rows, sourced, status-gated (`tests/researchHarness.test.ts` + the v3 benchmark, 8/11 routes 9/9, content floor + judge)
+- ✅ Professional workflow pack — GTM account scoring vs a reusable rubric, finance reconciliation, contractor-time approval, activity summary with disclosure safety (`evals/professionalWorkflows.ts`)
+- ✅ Credit analysis — MM-banking ratio cascade + **cell-mapping rejection** (misbound inputs must be refused, `evals/creditEval.ts`)
+- 🔜 **3-statement modeling test · Solve mode** — per-cell value *and* formula gold from a private answer-key workbook (private gold pack: runs only when the local workbook is present, never committed)
+- 🔜 **SEC model build flagship** — tiered: XBRL fact tie-out → derived ratios with formulas → statement linkage + cited assumptions page
+- 🔜 Benchmark v4 — N-document targeted research with the comprehensive company-profile field set (business model, moat, SWOT, funding)
+- 🔜 File-drop ingestion — 10-K PDF / XLSX dropped in the room → extracted to the sheet with per-cell citations; receipts → formatted expense report
+- 🔜 Knowledge-organization pack — find / link / move / restructure notes and wiki nodes (feeds L9 entity resolution)
+
+### Mode 2 — "Do it with us" (live collaboration)
+
+- ✅ Ladder L1–L7 scripted (read-only · CAS edit · conflict re-read · blocked→draft · large-range discipline · long-horizon compaction · **resume after slice death**)
+- ✅ Ladder L1–L4 **live** across 11 supported routes (`docs/eval/model-ladder-supported.json`): full passes are `gemini-3.5-flash` and `nvidia/nemotron-3-ultra-550b`; the research champion `deepseek-v4-flash` fails L1/L4 — **proof the two lanes promote separately**
+- ✅ Multi-turn refinement with fresh-read provenance (M1) + sustained concurrent room (golden L1)
+- ✅ Lock lease fencing, expiry, janitor sweep, host takeover (`tests/lockFencing.test.ts` et al.)
+- 🔜 Ladder L5–L7 live across supported routes (config landed at `--levels=1-7`; next matrix run)
+- 🔜 **Modeling test · Collaborate mode** — agent + scripted teammates split IS/BS/CF sections under locks/drafts on shared linkage rows
+- 🔜 L8 multi-role + redaction · L9 entity resolution · L10 cross-artifact grounded update
+- 🔜 Live adversarial-source rung — hostile instructions inside a fetched page during a real route's run (deterministic fence already proven: `tests/promptInjection.test.ts` 4/4)
+
+### Mode 3 — "Work under review" (proposals & approval)
+
+- ✅ Review-mode proposals — auto-allow off → inline cell proposals; room-policy briefing regression (born from a real dogfood bug, `docs/dogfood/FRICTION_LOG.md`)
+- ✅ Approval-shaped professional case — contractor-time review
+- 🔜 L8 formalizes role-gated approve/promote/redact as a graded rung
+
+### Mode 4 — "Advise me privately" (read-only consult)
+
+- ✅ Private NodeAgent reply — one call, **no tools**, never mutates canonical state; private until promoted
+- ✅ Privacy boundaries — private draft ops redacted from non-owners; fenced untrusted room content (prompt injection 4/4)
+- 🔜 Sensitive-query guardrail — decline specific financial/medical advice **with a stated reason**, routed through the safety lane
+
+### Mode 5 — "Work in the background" (jobs: long-running, resumable, budgeted)
+
+- ✅ Durable job lifecycle — `agentJobs` checkpointing, exactly-once journal replay, `/free` lane smoke (`tests/agentJobsRuntime.test.ts` et al.)
+- ✅ L7 RESUME scripted — forced slice death + human revision while dead + cold continuation
+- ✅ Spend governance — per-slice / per-room-day / global-monthly USD caps with breach attribution (`tests/productionGates.test.ts`)
+- 🔜 L7 live across supported routes
+- 🔜 Checkpointed batch eval — a 100-row research job as resumable per-row units with partial-success reporting
+
+### Mode 6 — "Teach me" (guided solve) — *entirely to build*
+
+- 🔜 **Modeling test · Guide mode** — the agent must coach a scripted student through the model **with zero writes to answer cells** (mechanically checkable), hints graded for referencing the right cell/concept, convergence measured. Restraint as a first-class eval axis — no framework benchmark measures it.
+
+**Cross-cutting gates (all running):** eval store + `eval:diff` regression gate (degraded/removed
+fail CI) · supported-route model matrix (research v3 + collab ladder, separate promotions) · HALO
+improvement loop · Gemini media judge on every published clip.
 
 ---
 
@@ -157,6 +220,12 @@ Outcome metrics say *what* happened; trajectory metrics say *how*. A planning ag
 **CI gate:** a golden PASSES only if task completion = 1.0 **and** every required invariant holds **and** `exhausted = false`. No-silent-clobber failing is an automatic fail regardless of task completion — *completing by clobbering is the worst outcome, not a partial win.*
 
 `evals/runEval.ts` runs **6 golden cases** deterministically and scores task completion + the protocol invariants. It executes all three shapes: **single-turn** (S1-style lock/CAS), **multi-turn** (M1 — runs each turn on the same room and asserts the shared cell's version strictly increases per turn, proving fresh re-reads), and **long-running** (L1 — a property test that runs N interleavings of an injected concurrent edit and asserts no-silent-clobber holds for *every* ordering). It grows toward the full metric table above.
+
+Private answer-key workbooks are handled separately from committed goldens.
+`eval:finance-model-private` validates a local three-statement modeling workbook
+and its answer-key formulas without storing the workbook or expected values in
+git. That eval has three modes: solve the model, guide the user without writing
+answer cells, and collaborate by statement section under locks/CAS.
 
 ---
 

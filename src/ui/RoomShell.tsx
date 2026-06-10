@@ -28,7 +28,11 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
   // QA P0: below 981px the side panels render as fixed overlays over chat (styles.css), so they
   // start CLOSED — chat is the default single pane and the top-bar toggles are the panel switcher.
   const isCompact = typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(max-width: 980px)").matches;
-  const [show, setShow] = useState({ left: live && !isCompact, artifact: live && !isCompact, priv: live && !isCompact });
+  // Panels are a VIEWPORT decision, not a role/mode decision. The old `live && !isCompact` init read
+  // `live` (= isHost via canRunCollab) at mount — still false on a RELOAD while Convex queries load —
+  // so every returning visitor (tour already seen, nothing to force panels open) landed in a chat-only
+  // layout. Caught by the walkthrough capturer's reload path; see FRICTION_LOG 2026-06-09.
+  const [show, setShow] = useState({ left: !isCompact, artifact: !isCompact, priv: !isCompact });
   const [layout, setLayout] = useState({ left: 224, center: 1.15, artifact: 1.35, right: 320 });
   const arts = store.listArtifacts(roomId);
   const [artId, setArtId] = useState(() => arts.find((a) => a.kind === "sheet")?.id ?? arts[0]?.id ?? "");

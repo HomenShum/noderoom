@@ -12,7 +12,7 @@ through the same versioned concurrency control.**
 
 [Lessons](#lessons-from-building-noderoom) · [Why & HALO](docs/WHY_NODEAGENT_AND_HALO.md) · [Quickstart](#quickstart) · [Agent runtime](docs/AGENT_RUNTIME.md) · [Agent eval](docs/AGENT_EVAL.md) · [Agent wiki](docs/AGENT_WIKI.md) · [Design](docs/DESIGN.md) · [Stack](docs/STACK.md) · [Walkthrough](docs/WALKTHROUGH.md) · [Architecture](docs/ARCHITECTURE.md) · [Open gaps](docs/GAPS_NOT_DONE.md)
 
-[Interview notes](docs/INTERVIEW_NOTES.md) · [Over-engineering audit](docs/OVERENGINEERING_AUDIT.md)
+[Interview notes](docs/INTERVIEW_NOTES.md) · [Over-engineering audit](docs/OVERENGINEERING_AUDIT.md) · [Improvement roadmap](docs/IMPROVEMENT_ROADMAP.md)
 
 </div>
 
@@ -41,6 +41,35 @@ spreadsheet</b> with the live-collab bar and the <b>Room trace</b> inside · you
 Here the real agent has filled the variance column live on Convex.</sub>
 
 </div>
+
+## Watch it work — live walkthroughs
+
+Every clip below is a **captured walkthrough of the real production app** (noderoom.live, live
+Convex backend, real agent runs) — not a staged hero shot. You see the empty state, the cursor
+glide to each click (with a ripple), the loading state, and the result, with step captions and a
+progress bar. Regenerate any time with `npm run walkthroughs` (capture) + `npm run walkthroughs:render`.
+
+### Join a live room & chat
+![Join a live room and chat — walkthrough](docs/walkthroughs/chat.gif)
+
+### Edit the sheet — and take it back (Undo / Ctrl+Z)
+![Spreadsheet edit and undo — walkthrough](docs/walkthroughs/sheet-undo.gif)
+
+### Ask the Room agent to do the work (`/ask`)
+![Room agent fills the variance column — walkthrough](docs/walkthroughs/ask-agent.gif)
+
+### GTM research import — updates, never duplicates
+![CRM-style research import upsert — walkthrough](docs/walkthroughs/research-upsert.gif)
+
+### Review mode — approve agent edits at the cell
+![Review-mode inline proposal approve — walkthrough](docs/walkthroughs/review-approve.gif)
+<sub>This clip runs the deterministic in-browser demo engine at the same URL (`?mode=memory`) — identical UI flow; the agent is scripted so the walkthrough reproduces exactly. All other clips are real live-backend runs.</sub>
+
+<sub>Method: Playwright drives the live app through a versioned spec
+([`scripts/walkthroughs/specs.ts`](scripts/walkthroughs/specs.ts)), captures clean per-state frames +
+cursor targets into `remotion/walkthrough.data.js`, and a Remotion composition overlays the animated
+cursor, captions, and progress bar. Packaged as a reusable skill:
+[`.claude/skills/readme-walkthroughs`](.claude/skills/readme-walkthroughs/SKILL.md).</sub>
 
 ## Workflow Skill Previews
 

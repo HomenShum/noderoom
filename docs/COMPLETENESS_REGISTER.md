@@ -1,6 +1,14 @@
 <!-- Provenance: completeness-audit workflow wf_5f78c0e2-e83 (2026-06-09, 5 agents, 439k tokens), GROUND-TRUTH CORRECTED same session: the auditors flagged 3 items from stale plan docs that are actually DONE in the tree (mobile overlay fix + responsive 4/4; eval-gate removed-class + tamper guard; WHY free-auto rewrite). Those are struck from the register. REAL items fixed immediately after the audit: production-claim relabel + user CTA + privacy disclosure (README), 4 dangling rules links, l5-large-range.gif rendered, priceStep wired into both Convex lanes (USD ceiling now reachable). -->
 
-# NodeRoom Completeness Verdict — Audience Fit, Doc Currency, and Open Register
+# NodeRoom Completeness Verdict — Historical Audit Snapshot
+
+> Current status lives in [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) and
+> [GAPS_NOT_DONE.md](GAPS_NOT_DONE.md). This file is retained as the historical
+> June 9 audit input, not as the current open-register source of truth. Several
+> items below were subsequently closed, including the README beta relabel,
+> public CTA/privacy disclosure, mobile overlay gate, eval tamper/case-set
+> hardening, USD ceilings, prompt-injection fencing, anon join caps, retention
+> cron, CI, and the L5/failure-replay media artifacts.
 
 Synthesized 2026-06-09 from four parallel audits (README/docs, audience-fit, feature-coverage inventory, production-gap/roadmap verification) against the noderoom repo (read-only). Spot-verified directly: README:47 \"real production app\" wording, missing `l5-large-range.gif` (l1-l4 + l6 exist), and the absent `.claude/rules/` directory behind 4 README links.
 

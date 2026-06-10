@@ -24,6 +24,9 @@ jobs:
       - name: Check QA matrix docs
         run: npm run qa:matrix:check
 
+      - name: Check commit message accuracy
+        run: npm run commit:check
+
       - name: Typecheck app
         run: npm run typecheck -- --pretty false
 

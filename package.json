@@ -48,6 +48,8 @@
     "qa:matrix": "tsx scripts/qa-matrix.ts",
     "qa:matrix:check": "tsx scripts/qa-matrix.ts --check",
     "content:fluency:check": "tsx scripts/content-fluency-check.ts",
+    "commit:summary": "tsx scripts/commit-message.ts",
+    "commit:check": "tsx scripts/commit-message.ts --check-last",
     "eval:professional": "vitest run tests/professionalWorkflows.test.ts",
     "eval:credit": "tsx evals/creditEval.ts",
     "ladder": "tsx evals/ladder.ts",

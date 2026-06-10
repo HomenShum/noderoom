@@ -1,0 +1,72 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-research-upsert",
+    "class": "readme_walkthrough",
+    "title": "Research Upsert",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\research-upsert.gif",
+    "relPath": "docs/walkthroughs/research-upsert.gif",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:research-upsert"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-walkthroughs-research-upsert.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/walkthroughs/research-upsert.gif",
+  "bytes": 1136892,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough clearly demonstrates the research upsert feature, showing how importing an existing account updates the row instead of duplicating it.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Demonstrates importing a new account and then updating it with new details."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Shows the initial state, the import action, the result, and the subsequent update action."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark UI with clear highlights on interactive elements."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Consistent with NodeRoom's GTM research and spreadsheet-like interface."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Captured directly from the working web application with real-time updates."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Text in the import box is small but readable at standard zoom levels."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for GTM operations and CRM data hygiene workflows."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately depicts the upsert logic without artificial cuts."
+      }
+    },
+    "observedEvidence": [
+      "Import modal interaction",
+      "Row addition to the GTM research sheet",
+      "Row update on duplicate import"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:05",
+        "severity": "P2",
+        "observed": "The text pasted into the import box is quite small and slightly hard to read.",
+        "fix": "Increase the font size or contrast of the placeholder and input text in the import modal."
+      }
+    ],
+    "suggestedReadmeCaption": "NodeRoom's smart import automatically upserts existing accounts to prevent duplicates while preserving data history."
+  },
+  "score": 8,
+  "maxScore": 16
+}

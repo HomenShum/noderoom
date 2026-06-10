@@ -108,6 +108,88 @@ The action can return a quick summary to the caller, but that return value is
 not the source of truth. The source of truth is the job row, the durable steps,
 the mutation receipts, and the canonical domain rows.
 
+## Live Multi-User / Multi-Agent Sequence Diagrams
+
+The full reader-facing version lives in
+[`LIVE_COLLABORATION_SEQUENCES.md`](LIVE_COLLABORATION_SEQUENCES.md). The
+contract below is the implementation-level summary.
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant BrowserA as "User A browser"
+  participant BrowserB as "User B browser"
+  participant Queries as "Convex queries"
+  participant Mutations as "Convex mutations"
+  participant Agent as "NodeAgent action"
+  participant Workflow as "Workflow / Workpool"
+  participant Provider as "Model provider"
+  participant DB as "Convex DB"
+
+  BrowserA->>Queries: subscribe rooms.full, messages, jobs
+  BrowserB->>Queries: subscribe same room
+  Queries->>DB: read authorized artifacts and collaboration state
+  DB-->>BrowserA: canonical room snapshot
+  DB-->>BrowserB: same public state
+
+  BrowserA->>Mutations: human edit with baseVersion
+  Mutations->>DB: require member proof, lock check, CAS check
+  alt write accepted
+    Mutations->>DB: patch element, receipt, version++
+    DB-->>BrowserA: reactive confirmation
+    DB-->>BrowserB: live update
+  else blocked
+    Mutations-->>BrowserA: conflict/locked result
+  end
+
+  BrowserA->>Agent: /ask or private-agent command
+  Agent->>Mutations: agentJobs.createOrReuse(idempotencyKey)
+  Mutations->>DB: durable job root + operation event
+  Agent->>DB: hydrate context and prior cursor
+  Agent->>DB: replay model-step journal if present
+  alt journal miss
+    Agent->>Provider: bounded model/tool request
+    Provider-->>Agent: tool calls
+    Agent->>DB: journal model output
+  else journal hit
+    DB-->>Agent: replay prior output
+  end
+  Agent->>Mutations: checked tool mutation
+  Mutations->>DB: lock/CAS/proposal/draft/receipt
+  DB-->>BrowserA: artifact + trace + job status
+  DB-->>BrowserB: authorized artifact + trace + job status
+  alt budget exhausted
+    Agent->>Mutations: checkpoint cursor and handoff
+    Mutations->>Workflow: start/sleep/resume continuation
+    Workflow->>Agent: run next bounded slice
+  else complete
+    Agent->>Mutations: mark completed
+  end
+```
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant User as "Uploader"
+  participant Storage as "Convex File Storage"
+  participant Artifact as "NodeRoom artifact"
+  participant Adapter as "Parser/provider adapter"
+  participant Provider as "Gemini / OpenAI / Claude / OpenRouter"
+  participant DB as "Convex DB"
+
+  User->>Storage: upload raw file
+  Storage-->>Artifact: Convex file id
+  Artifact->>DB: durable artifact row and room permission
+  Adapter->>Storage: read raw file under routing policy
+  Adapter->>Provider: provider upload/cache or multimodal request
+  Provider-->>Adapter: extracted text, tables, boxes, citations
+  Adapter->>DB: provider file id as cache metadata
+  Adapter->>Artifact: CellPayload/evidence writes
+```
+
+Raw Convex file ids and NodeRoom artifact ids are durable. Provider file ids are
+cache metadata only.
+
 ## Request Envelope
 
 `NodeAgentRequest` is the user intent captured before side effects.

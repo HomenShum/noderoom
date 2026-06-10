@@ -1,0 +1,72 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l2-edit",
+    "class": "workflow_preview",
+    "title": "L2 Edit",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l2-edit.gif",
+    "relPath": "docs/eval/workflow-previews/l2-edit.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-l2-edit.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l2-edit.gif",
+  "bytes": 73284,
+  "judge": {
+    "verdict": "publish",
+    "summary": "A clear, well-paced step-by-step visualization of an AI agent performing a Compare-And-Set (CAS) edit on a spreadsheet cell, demonstrating locking, versioning, and committing.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.2,
+        "evidence": "Clearly demonstrates the CAS flow, showing cell selection, locking, writing, and version incrementing."
+      },
+      "workflowCompleteness": {
+        "score": 1.3,
+        "evidence": "Shows the complete sequence from initial state to lock, write, commit, and release."
+      },
+      "visualDesign": {
+        "score": 1.2,
+        "evidence": "Clean dark-themed UI with clear row highlighting and step progress indicators."
+      },
+      "consistency": {
+        "score": 1.1,
+        "evidence": "Aligns well with the spreadsheet and agent execution trace paradigm."
+      },
+      "evidenceQuality": {
+        "score": 1.2,
+        "evidence": "High-fidelity step-by-step trace representation of agent actions."
+      },
+      "legibility": {
+        "score": 1.3,
+        "evidence": "High contrast text and clear layout make it highly readable."
+      },
+      "professionalRelevance": {
+        "score": 1.2,
+        "evidence": "Relevant for demonstrating safe multi-agent database/spreadsheet writes."
+      },
+      "productionHonesty": {
+        "score": 1.1,
+        "evidence": "Accurately represents the logical steps of a CAS transaction."
+      }
+    },
+    "observedEvidence": [
+      "Step-by-step progress bar",
+      "Spreadsheet UI with versioning (V1, V2)",
+      "Locking status indicator ('LOCKED', 'COMMITTED')",
+      "AI agent action captions"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:02",
+        "severity": "P2",
+        "observed": "The 'say' step at step 2/7 and 6/7 has no accompanying text or dialogue bubble.",
+        "fix": "Add placeholder text or remove the empty 'say' steps to streamline the sequence."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch an AI agent safely update a spreadsheet cell using Compare-And-Set (CAS) protocol to prevent write collisions."
+  },
+  "score": 9.6,
+  "maxScore": 16
+}

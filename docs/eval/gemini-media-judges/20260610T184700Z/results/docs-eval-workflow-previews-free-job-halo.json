@@ -1,0 +1,77 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-free-job-halo",
+    "class": "workflow_preview",
+    "title": "Free Job Halo",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\free-job-halo.gif",
+    "relPath": "docs/eval/workflow-previews/free-job-halo.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-free-job-halo.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/free-job-halo.gif",
+  "bytes": 108016,
+  "judge": {
+    "verdict": "fix-then-publish",
+    "summary": "The workflow preview demonstrates collaborative spreadsheet updates via agents, but the rapid transition speed and dense text layout make it difficult to fully digest the sequence of events.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Demonstrates agent-driven spreadsheet updates, though the dense UI makes the exact feature interaction slightly difficult to isolate immediately."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Shows the initial state, user request, agent execution, and final spreadsheet update, but the transition is extremely rapid."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "The dark-themed UI is modern and structured, but the high density of panels and text elements creates visual clutter."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns well with the NodeRoom paradigm of spreadsheets, chat, and agent execution traces."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Appears to be a genuine UI capture of the application, showing realistic data and logs."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Small font sizes in the chat and trace logs are difficult to read at standard preview resolutions."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant to financial analysts and operations teams looking at automated diligence workflows."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately represents the UI state changes and execution logs without artificial overlays."
+      }
+    },
+    "observedEvidence": [
+      "Public chat panel with user 'Homen' requesting variance recomputation",
+      "Spreadsheet panel showing formula updates and variance calculations",
+      "NodeAgent trace logs updating in real-time at the bottom"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:01",
+        "severity": "P1",
+        "observed": "The transition from the user request to the agent execution and spreadsheet update happens too quickly to follow comfortably.",
+        "fix": "Increase the delay between frames or slow down the GIF playback speed to allow users to read the chat and trace logs."
+      },
+      {
+        "ts": "00:00",
+        "severity": "P2",
+        "observed": "Small text in the 'Your NodeAgent' and 'Public Chat' panels is hard to read without zooming in.",
+        "fix": "Slightly increase the font size or crop the preview to focus on the active panels."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch NodeRoom's agent automatically recompute and sync GS variance across the shared workspace upon user request."
+  },
+  "score": 8,
+  "maxScore": 16
+}

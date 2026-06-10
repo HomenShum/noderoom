@@ -35,11 +35,11 @@ Do not claim a feature is production-complete until it has:
 
 | Gap | Current state | Needed proof | Acceptance gate |
 |---|---|---|---|
-| Atomic continuation | Jobs checkpoint and schedule follow-up slices. A crash between checkpoint and scheduling can still strand work unless watchdog coverage is proven. | Move next-slice scheduling into the same durable mutation or add a watchdog scanner over due jobs. | Forced crash-after-checkpoint test resumes without operator intervention. |
-| Idempotent enqueue | `/free` can create durable job rows. | Prevent duplicate user clicks from creating duplicate final writes or duplicate billing paths. | Same room/request id enqueues once or dedupes safely. |
-| Stale lease handling | Leases exist. | Prove two workers cannot both own the same slice result. | Duplicate scheduled slice with stale lease exits without writes. |
-| Slice budget clamps | Budgeted slices exist. | Clamp model/tool budgets well under Convex action limits and reserve time for checkpointing. | Multi-slice test with tiny budgets completes through resume, not timeout. |
-| Provider-step journal | Attempts are persisted. | Record provider call intents/results before and after external calls to avoid duplicate paid calls after crashes. | Crash-after-provider-call recovery does not call the provider again unless the previous call is marked retryable. |
+| Atomic continuation | `/free` starts through `@convex-dev/workflow`/Workpool, interactive `/ask` pauses can start the same continuation runner, and legacy scheduler fallback remains for old jobs. | Prove a forced crash/cancel between checkpoint and continuation still resumes, including the legacy scheduler fallback path or a watchdog for due jobs. | Forced crash-after-checkpoint test resumes without operator intervention. |
+| Idempotent enqueue | `agentJobs` and `agentRuns` idempotency keys exist and are covered by runtime/source tests. | Browser double-click/live retry smoke that proves no duplicate final writes or duplicate billing paths. | Same room/request id enqueues once or dedupes safely in the live UI. |
+| Stale lease handling | Job slice leases are checked before `finishSlice`, with unit coverage. | Live duplicate-worker simulation at the workflow boundary. | Duplicate scheduled slice with stale lease exits without writes. |
+| Slice budget clamps | Per-run/per-slice token and USD clamps exist with reserve time for checkpointing. | Live tiny-budget multi-slice smoke through Workflow/Workpool. | Multi-slice test with tiny budgets completes through resume, not timeout. |
+| Provider-step journal | `agentModelStepJournal` records and replays completed model steps. | Adapter-level idempotency keys where providers support them, plus crash-before-record behavior documented as retryable. | Crash-after-provider-call recovery does not call the provider again when a completed response was journaled. |
 | Model health/quarantine | Free-auto discovery and fallback exist. | Track latency, rate limits, failures, fallback count, and quarantine unhealthy free models. | Router avoids unhealthy free models and records why. |
 | Live `/free` eval | Manual live ladder evidence exists. | Add a polling evaluator that starts a real `/free` job, polls attempts, and asserts terminal state plus trace evidence. | Live `openrouter/free-auto` smoke records resolved model, attempts, final artifact state, and no clobber. |
 
@@ -110,6 +110,7 @@ deployment is clean.
 | Interview notes freshness | Interview notes and README are strong learning artifacts. | Keep new production lessons appended as the system evolves. | Every major harness/context engineering change updates README, interview notes, or the gap register. |
 | Architecture diagram freshness | Architecture docs and diagrams exist. | Keep diagrams regenerated when provider/parser/job architecture changes. | README architecture stays accurate after code changes. |
 | Audience-fluency proof artifacts | Audience context YAML, an affluent/private-investment episode brief, and a deterministic content-fluency gate exist. | Render the audience-specific episode from fixture data, run Gemini/video content review, and keep the trust-signal checklist in the generated QA matrix. | `npm run content:fluency:check` passes, the private-investment episode is rendered, and judge output verifies context accuracy, restraint, discretion, provenance, and proof quality. |
+| Demo/media evidence quality | Episode-level Gemini judges exist, and a batch media judge now covers README GIFs, workflow previews, and episode renders. | Run the batch judge after every capture/render refresh and feed P0/P1 findings into the QA matrix or gap register. | `npm run media:gemini-judge -- --all` produces a current `docs/eval/MEDIA_JUDGE.md` with no unresolved P0 media defects. |
 
 ## Release Checklist
 
@@ -119,6 +120,7 @@ deployment is clean.
 - Run `npm test`.
 - Run `npm run ladder`.
 - Run `npm run build`.
+- Run `npm run media:gemini-judge -- --all` when walkthrough/demo media changes.
 - Run a secret scan excluding ignored local files.
 - Verify public repo contents from a clean clone.
 - Run a live Convex smoke before claiming production deployment.

@@ -1,0 +1,70 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l4-draft",
+    "class": "workflow_preview",
+    "title": "L4 Draft",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l4-draft.gif",
+    "relPath": "docs/eval/workflow-previews/l4-draft.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-l4-draft.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l4-draft.gif",
+  "bytes": 74842,
+  "judge": {
+    "verdict": "fix-then-publish",
+    "summary": "The workflow preview clearly outlines the step-by-step logic of drafting when a range is locked. However, there is a logical repetition in the steps where the agent locks the range twice (at step 1/5 and 3/5), which should be corrected before publishing.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.2,
+        "evidence": "The goal and steps of drafting changes on a locked range are clearly stated in the bottom caption bar and top header."
+      },
+      "workflowCompleteness": {
+        "score": 1.1,
+        "evidence": "Shows a step-by-step progression from goal to completion, though it functions more like a sequenced slideshow than a live UI capture."
+      },
+      "visualDesign": {
+        "score": 1.2,
+        "evidence": "Clean dark-mode aesthetic with consistent typography and clear highlighting of the active row."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with the versioning and locking concepts of NodeRoom, but lacks richer trace or spreadsheet context."
+      },
+      "evidenceQuality": {
+        "score": 0.9,
+        "evidence": "Feels somewhat simulated or simplified rather than showing a rich, interactive product environment."
+      },
+      "legibility": {
+        "score": 1.4,
+        "evidence": "High contrast text and clean layout make it very easy to read even at smaller sizes."
+      },
+      "professionalRelevance": {
+        "score": 1.1,
+        "evidence": "Demonstrates a useful multi-agent coordination feature for financial modeling and collaborative spreadsheets."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Clearly presented as a step-by-step conceptual sequence without pretending to be a fully fluid live recording."
+      }
+    },
+    "observedEvidence": [
+      "Step-by-step sequence showing agent actions on a locked spreadsheet row",
+      "Status indicators showing 'LOCKED' and version changes"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:03",
+        "severity": "P1",
+        "observed": "The sequence repeats the 'locks the affected range' action at step 3/5, which was already executed at step 1/5.",
+        "fix": "Revise the step sequence to ensure each step represents a unique, logical progression in the workflow."
+      }
+    ],
+    "suggestedReadmeCaption": "Workflow preview demonstrating how NodeRoom agents safely draft edits on locked ranges to prevent overwrites."
+  },
+  "score": 8.9,
+  "maxScore": 16
+}

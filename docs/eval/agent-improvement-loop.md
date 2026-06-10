@@ -1,12 +1,12 @@
 # Agent Improvement Loop
 
-Generated: 2026-06-10T08:54:24.877Z
+Generated: 2026-06-10T18:39:57.762Z
 
 Source pattern: https://developers.openai.com/cookbook/examples/agents_sdk/agent_improvement_loop
 
 NodeRoom adapts the cookbook loop as: traces -> human/model feedback -> reusable evals -> gate -> Codex handoff -> next harness change.
 
-Latest run artifact: `docs/eval/agent-improvement-loop/20260610T085408Z.json`
+Latest run artifact: `docs/eval/agent-improvement-loop/20260610T183945Z.json`
 
 Summary: 7 pass, 0 fail, 6 skip.
 
@@ -14,13 +14,13 @@ Summary: 7 pass, 0 fail, 6 skip.
 
 | Step | Lane | Status | Duration | Command |
 |---|---|---:|---:|---|
-| Professional workflow catalog | deterministic | PASS | 2.8s | `npm run eval:professional` |
-| GTM/finance workflow evals | deterministic | PASS | 4.6s | `npx vitest run tests/workflowEvals.test.ts` |
-| Collaboration ladder L1-L6 | deterministic | PASS | 2.8s | `npm run ladder -- --record` |
-| MM-banking credit decision evals | deterministic | PASS | 1.6s | `npm run eval:credit -- --record` |
-| Eval regression diff | deterministic | PASS | 1.3s | `npm run eval:diff` |
-| Convex query/action/mutation boundaries | deterministic | PASS | 2.4s | `npm run convex:boundaries` |
-| Architecture budget review | deterministic | PASS | 1.2s | `npm run architecture:budget` |
+| Professional workflow catalog | deterministic | PASS | 1.6s | `npm run eval:professional` |
+| GTM/finance workflow evals | deterministic | PASS | 2.5s | `npx vitest run tests/workflowEvals.test.ts` |
+| Collaboration ladder L1-L6 | deterministic | PASS | 2.5s | `npm run ladder -- --record` |
+| MM-banking credit decision evals | deterministic | PASS | 2.3s | `npm run eval:credit -- --record` |
+| Eval regression diff | deterministic | PASS | 0.8s | `npm run eval:diff` |
+| Convex query/action/mutation boundaries | deterministic | PASS | 1.5s | `npm run convex:boundaries` |
+| Architecture budget review | deterministic | PASS | 0.8s | `npm run architecture:budget` |
 | OpenRouter free-auto discovery | live | SKIP | 0.0s | `npm run openrouter:free -- --limit=5` |
 | Provider parser live smoke | live | SKIP | 0.0s | `npm run provider-parser:smoke` |
 | Convex /free job smoke | live | SKIP | 0.0s | `npm run free-job:smoke` |

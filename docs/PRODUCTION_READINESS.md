@@ -9,6 +9,25 @@ gate is only as proven as its strongest evidence. This matrix is the honest acco
 ships but its proof needs a live deployment), and what still **NEEDS A LIVE AUDIT** (cannot be
 settled in `convex-test` alone). NodeRoom is **live beta** until every NEEDS-LIVE-AUDIT row clears.
 
+## Scope of this audit
+
+This file covers the public-room production safety spine: no-clobber writes,
+agent job reliability, public abuse controls, and deployment-only audit gates.
+It does **not** claim that every product surface is production-complete. Broader
+workflow gaps such as upload/view E2E, parser/OCR routing policy, resizable
+panels, full browser privacy specs, professional spreadsheet eval expansion,
+and SLO dashboards remain tracked in [`GAPS_NOT_DONE.md`](GAPS_NOT_DONE.md).
+
+## Still open outside the core public-room gates
+
+| Area | Status |
+|---|---|
+| Files, parser, OCR, and provider file cache adapters | Designed and partially tested; not yet fully live-audited across PDF, DOCX/PPTX, images, screenshots, OCR, layout, and bounding boxes. |
+| Full browser E2E for every surface | Some browser specs exist; the red QA row stays until public/private chat, files, spreadsheet, wall, proposals, and job controls are covered together. |
+| Long-running job operations | Workflow/Workpool continuation exists; operator controls, live `/free` polling evals, model quarantine, and provider request-idempotency hardening still need expansion. |
+| Professional GTM/finance scale | Fixture catalog exists; more row-level evals and one live provider smoke per critical workflow are still needed. |
+| Production observability | Retention exists; dashboards, trace export, trace-size caps, and SLO alerting are not yet complete. |
+
 ## The no-clobber spine — PROVEN
 
 | Gate | Evidence |
@@ -21,7 +40,7 @@ settled in `convex-test` alone). NodeRoom is **live beta** until every NEEDS-LIV
 | Draft-for-merge / proposal review (host-gated approval, cross-room blocked) | `convex/artifacts.ts` `resolveProposal` (`requireActorProof` + host role) |
 | Private-draft `ops` redaction (no cross-member leak) | `convex/rooms.ts` `full`; `tests/lockFencing.test.ts` |
 
-## Agent reliability — PROVEN
+## Core agent reliability — PROVEN offline
 
 | Gate | Evidence |
 |---|---|
@@ -30,6 +49,10 @@ settled in `convex-test` alone). NodeRoom is **live beta** until every NEEDS-LIV
 | Per-run + per-slice token **and** USD spend ceilings | `src/agent/runtime.ts` `priceStep` wired into `convex/agent.ts` + `agentJobRunner.ts`; `tests/gatewayAndJournal.test.ts` |
 | Error-path handoff preserves unexecuted tool calls (resume-cursor integrity) | `src/agent/runtime.ts`; `tests/gatewayAndJournal.test.ts` |
 | PII/secret outbound redaction | `src/agent/gateway.ts`; tested |
+
+These are offline or deterministic proofs of the core mechanisms. They do not
+replace live provider/load evidence for OpenRouter data policy, high-concurrency
+lease races, cron SLA, or public abuse behavior under real traffic.
 
 ## Abuse & safety surface (public, anonymously-joinable) — PROVEN
 

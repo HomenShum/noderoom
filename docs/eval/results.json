@@ -1,6 +1,6 @@
 {
   "benchmarkVersion": "company-research-v2-9checks-router",
-  "generatedAt": "2026-06-09T15:41:15.227Z",
+  "generatedAt": "2026-06-10T18:38:26.008Z",
   "task": "company-research",
   "companies": 3,
   "judge": "gemini-3.1-flash-lite",
@@ -180,12 +180,12 @@
       },
       "passed": 0,
       "total": 9,
-      "inputTokens": 4181,
-      "outputTokens": 1410,
+      "inputTokens": 40726,
+      "outputTokens": 5743,
       "costUsd": 0,
-      "ms": 165007,
-      "steps": 2,
-      "toolCalls": 2
+      "ms": 165015,
+      "steps": 9,
+      "toolCalls": 9
     },
     {
       "benchmarkVersion": "company-research-v2-9checks-router",
@@ -204,17 +204,17 @@
         "STRUCTURED_FIELDS": false,
         "FRESHNESS_WRITTEN": true,
         "COMPLETED_IN_BUDGET": true,
-        "NO_FABRICATION": false,
+        "NO_FABRICATION": true,
         "RIGHT_ENTITY": true
       },
-      "passed": 4,
+      "passed": 5,
       "total": 9,
-      "inputTokens": 113483,
-      "outputTokens": 3592,
-      "costUsd": 0.027186600000000002,
-      "ms": 60880,
-      "steps": 25,
-      "toolCalls": 58
+      "inputTokens": 81591,
+      "outputTokens": 3741,
+      "costUsd": 0.02099445,
+      "ms": 50459,
+      "steps": 14,
+      "toolCalls": 65
     },
     {
       "benchmarkVersion": "company-research-v2-9checks-router",
@@ -238,12 +238,12 @@
       },
       "passed": 1,
       "total": 9,
-      "inputTokens": 47254,
-      "outputTokens": 690,
-      "costUsd": 0.0128485,
-      "ms": 10024,
-      "steps": 13,
-      "toolCalls": 12
+      "inputTokens": 85618,
+      "outputTokens": 1006,
+      "costUsd": 0.0229135,
+      "ms": 16353,
+      "steps": 20,
+      "toolCalls": 19
     },
     {
       "benchmarkVersion": "company-research-v2-9checks-router",
@@ -267,12 +267,12 @@
       },
       "passed": 1,
       "total": 9,
-      "inputTokens": 16267,
-      "outputTokens": 1253,
-      "costUsd": 0.01783875,
-      "ms": 11580,
-      "steps": 5,
-      "toolCalls": 24
+      "inputTokens": 22864,
+      "outputTokens": 1023,
+      "costUsd": 0.0217515,
+      "ms": 11524,
+      "steps": 6,
+      "toolCalls": 15
     },
     {
       "benchmarkVersion": "company-research-v2-9checks-router",
@@ -284,22 +284,22 @@
       ],
       "ok": false,
       "checks": {
-        "ALL_COMPLETE": true,
-        "EVERY_ROW_SOURCED": true,
-        "EVERY_ROW_MULTI_SOURCE": true,
+        "ALL_COMPLETE": false,
+        "EVERY_ROW_SOURCED": false,
+        "EVERY_ROW_MULTI_SOURCE": false,
         "SOURCES_FETCHED": false,
-        "STRUCTURED_FIELDS": true,
-        "FRESHNESS_WRITTEN": true,
+        "STRUCTURED_FIELDS": false,
+        "FRESHNESS_WRITTEN": false,
         "COMPLETED_IN_BUDGET": false,
         "NO_FABRICATION": false,
         "RIGHT_ENTITY": true
       },
-      "passed": 6,
+      "passed": 1,
       "total": 9,
-      "inputTokens": 727333,
-      "outputTokens": 4473,
-      "costUsd": 1.1312565,
-      "ms": 147939,
+      "inputTokens": 711966,
+      "outputTokens": 3490,
+      "costUsd": 1.099359,
+      "ms": 144072,
       "steps": 60,
       "toolCalls": 61
     },
@@ -313,24 +313,24 @@
       ],
       "ok": false,
       "checks": {
-        "ALL_COMPLETE": true,
-        "EVERY_ROW_SOURCED": true,
-        "EVERY_ROW_MULTI_SOURCE": true,
+        "ALL_COMPLETE": false,
+        "EVERY_ROW_SOURCED": false,
+        "EVERY_ROW_MULTI_SOURCE": false,
         "SOURCES_FETCHED": false,
-        "STRUCTURED_FIELDS": true,
-        "FRESHNESS_WRITTEN": true,
+        "STRUCTURED_FIELDS": false,
+        "FRESHNESS_WRITTEN": false,
         "COMPLETED_IN_BUDGET": true,
         "NO_FABRICATION": false,
-        "RIGHT_ENTITY": true
+        "RIGHT_ENTITY": false
       },
-      "passed": 7,
+      "passed": 1,
       "total": 9,
-      "inputTokens": 229667,
-      "outputTokens": 7341,
-      "costUsd": 0.266372,
-      "ms": 61397,
-      "steps": 24,
-      "toolCalls": 57
+      "inputTokens": 48967,
+      "outputTokens": 1457,
+      "costUsd": 0.056252,
+      "ms": 21418,
+      "steps": 8,
+      "toolCalls": 10
     },
     {
       "benchmarkVersion": "company-research-v2-9checks-router",
@@ -342,7 +342,7 @@
       ],
       "ok": false,
       "checks": {
-        "ALL_COMPLETE": true,
+        "ALL_COMPLETE": false,
         "EVERY_ROW_SOURCED": true,
         "EVERY_ROW_MULTI_SOURCE": true,
         "SOURCES_FETCHED": false,
@@ -352,14 +352,14 @@
         "NO_FABRICATION": false,
         "RIGHT_ENTITY": true
       },
-      "passed": 6,
+      "passed": 5,
       "total": 9,
-      "inputTokens": 208539,
-      "outputTokens": 11130,
-      "costUsd": 0.792567,
+      "inputTokens": 224146,
+      "outputTokens": 10798,
+      "costUsd": 0.834408,
       "ms": 165045,
-      "steps": 21,
-      "toolCalls": 77
+      "steps": 20,
+      "toolCalls": 79
     },
     {
       "benchmarkVersion": "company-research-v2-9checks-router",
@@ -376,10 +376,10 @@
       "inputTokens": 0,
       "outputTokens": 0,
       "costUsd": 0,
-      "ms": 15496,
+      "ms": 17846,
       "steps": 0,
       "toolCalls": 0,
-      "error": "AI_APICallError: Item 'fc_04ed435a34e12b13006a28341aefd4819b85574574b2529b33' of type 'function_call' was provided witho"
+      "error": "AI_APICallError: Item 'fc_0f2954667a95be4e006a29af20812c8198bef4be119ec9c12f' of type 'function_call' was provided witho"
     }
   ]
 }

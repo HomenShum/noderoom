@@ -1,0 +1,72 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-wiki-note-grounding",
+    "class": "workflow_preview",
+    "title": "Wiki Note Grounding",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\wiki-note-grounding.gif",
+    "relPath": "docs/eval/workflow-previews/wiki-note-grounding.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-wiki-note-grounding.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/wiki-note-grounding.gif",
+  "bytes": 97733,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The workflow preview successfully demonstrates the integration of collaborative notes, spreadsheets, and multi-agent execution traces within the NodeRoom environment, showing the grounding of wiki notes into structured spreadsheet data.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.3,
+        "evidence": "Shows the transition from a text-based diligence note to a structured spreadsheet sync, though the transition is rapid."
+      },
+      "workflowCompleteness": {
+        "score": 1.4,
+        "evidence": "Captures the initial note state, the agent interaction, and the resulting spreadsheet updates with trace logs."
+      },
+      "visualDesign": {
+        "score": 1.4,
+        "evidence": "Clean dark-mode UI with consistent panel layouts, though dense with information."
+      },
+      "consistency": {
+        "score": 1.5,
+        "evidence": "Perfectly aligns with NodeRoom's core concepts of public/private agents, spreadsheets, notes, and execution traces."
+      },
+      "evidenceQuality": {
+        "score": 1.4,
+        "evidence": "Authentic UI capture showing realistic financial data, agent logs, and system traces."
+      },
+      "legibility": {
+        "score": 1.1,
+        "evidence": "Small font sizes in the chat and trace logs may be difficult to read on smaller screens without zooming."
+      },
+      "professionalRelevance": {
+        "score": 1.4,
+        "evidence": "Highly relevant for financial analysts and developers building multi-agent collaborative workflows."
+      },
+      "productionHonesty": {
+        "score": 1.3,
+        "evidence": "Accurately represents the system's state transitions and trace outputs without artificial embellishments."
+      }
+    },
+    "observedEvidence": [
+      "Diligence note tab showing sync reliability guidelines",
+      "Spreadsheet tab showing financial rows (Revenue, COGS, Gross Profit)",
+      "Room trace panel displaying agent execution logs",
+      "Public and private agent chat panels"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:01",
+        "severity": "P2",
+        "observed": "Dense text in the Room Trace and chat panels is hard to read at standard README display resolutions.",
+        "fix": "Increase the default zoom level of the browser during capture to make text elements larger."
+      }
+    ],
+    "suggestedReadmeCaption": "NodeRoom's Wiki Note Grounding workflow: seamlessly syncing unstructured diligence notes into structured, version-controlled spreadsheets with full agent execution traces."
+  },
+  "score": 10.8,
+  "maxScore": 16
+}

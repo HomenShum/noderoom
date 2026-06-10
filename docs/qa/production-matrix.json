@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updatedAt": "2026-06-09",
+  "updatedAt": "2026-06-10",
   "sourceOfTruth": "Append new product or runtime guarantees to features[] and rerun npm run qa:matrix.",
   "releaseRule": "A feature is production-ready only when deterministic tests, live/backend smoke where applicable, traceability, privacy boundaries, and documented failure behavior are all present.",
   "features": [
@@ -287,6 +287,25 @@
         { "type": "media", "ref": "docs/eval/ui-recordings/live-ui-walkthrough-20260608.mp4" }
       ],
       "nextReview": "Record full live provider benchmark, free-auto ladder, and Gemini-reviewed UI recording before marking green."
+    },
+    {
+      "id": "demo_media_evidence_quality",
+      "area": "Demo/media evidence quality",
+      "claim": "README walkthrough GIFs, workflow previews, and narrated episodes are judged as product evidence, not just attractive demos.",
+      "status": "yellow",
+      "productionGate": "Gemini 3.5 Flash batch-judges every GIF/MP4 after capture/render refresh; P0 defects block publishing and P1 defects stay visible until fixed.",
+      "deterministicChecks": [
+        "npm run media:gemini-judge -- --dry-run --all"
+      ],
+      "liveChecks": [
+        "npm run media:gemini-judge -- --all"
+      ],
+      "evidence": [
+        { "type": "script", "ref": "scripts/gemini-demo-media-judge.ts" },
+        { "type": "doc", "ref": "docs/eval/MEDIA_JUDGE.md" },
+        { "type": "data", "ref": "docs/eval/gemini-media-judges/latest.json" }
+      ],
+      "nextReview": "Fix the three remaining P1 media defects called out by Gemini: ask-spreadsheet-cas pacing, free-job-halo pacing/density, and L4 draft's repeated lock step; then rerun the batch judge."
     },
     {
       "id": "audience_fluency_content",

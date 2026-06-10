@@ -1,0 +1,73 @@
+{
+  "asset": {
+    "id": "episodes-noderoom-live-collab-v1-renders-short",
+    "class": "episode",
+    "title": "Noderoom Live Collab V1",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\episodes\\noderoom-live-collab-v1\\renders\\short.mp4",
+    "relPath": "episodes/noderoom-live-collab-v1/renders/short.mp4",
+    "purpose": "Narrated explainer episode. Judge story clarity, visual design, proof quality, and whether it fits the README claim."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "episodes/noderoom-live-collab-v1/renders/short.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 11911131,
+  "judge": {
+    "verdict": "fix-then-publish",
+    "summary": "The video demonstrates multiplayer collaboration between humans and AI agents on a shared spreadsheet, highlighting conflict resolution and review workflows, though some technical slides pass too quickly.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "The UI shows spreadsheet cells being edited by both a human and an agent, though the transition between modes is rapid."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Shows the setup, conflict occurrence, code/architecture solution, and resolved state, but at a very fast pace."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Dark mode UI is clean and modern, but the text overlay and code slides have contrasting densities."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with the NodeRoom concept of shared files, agents, and versioned cell edits."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Shows actual UI interactions and code, though some parts feel highly produced or simulated."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Most UI elements are readable, but the code snippet at 00:18 is quite small."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for developers building multi-agent collaborative systems and transactional workspaces."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Clearly states the transition from a simple demo to a complex collaboration substrate, showing the underlying code logic."
+      }
+    },
+    "observedEvidence": [
+      "Multiplayer spreadsheet UI with active cell edits",
+      "Code snippet showing conflict resolution logic",
+      "Diagram explaining lock/draft/review workflow",
+      "Review mode toggle and proposal approval flow"
+    ],
+    "missingEvidence": [
+      "Direct console or network logs showing the WebSocket sync events during conflict resolution."
+    ],
+    "defects": [
+      {
+        "ts": "00:18",
+        "severity": "P2",
+        "observed": "The code snippet is displayed with small text and is difficult to read within the short duration.",
+        "fix": "Increase the font size of the code block or extend the slide duration."
+      }
+    ],
+    "suggestedReadmeCaption": "Noderoom Live Collab demonstrates real-time multiplayer coordination between human users and AI agents editing a shared spreadsheet substrate with built-in conflict resolution."
+  },
+  "score": 8,
+  "maxScore": 16
+}

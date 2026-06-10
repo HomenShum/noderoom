@@ -62,7 +62,7 @@ async function createRoom(ctx: BrowserContext, code: string): Promise<Page> {
   await page.locator('.r-panel.center [data-testid="chat-composer"]').waitFor({ timeout: 60_000 });
   await page.getByTestId("tour-skip").click({ timeout: 8000 }).catch(() => {});
   await page.locator('[data-cell-key="r_rev__variance"]').waitFor({ timeout: 30_000 });
-  await page.addStyleTag({ content: "*::-webkit-scrollbar{display:none!important} .r-tour{display:none!important}" });
+  await page.addStyleTag({ content: "*::-webkit-scrollbar{display:none!important} .r-tour{display:none!important} body{zoom:1.15}" });
   await settle(page, 800);
   return page;
 }
@@ -95,7 +95,7 @@ async function seedResearch(page: Page, code: string, companies = DEFAULT_SEED_C
   } catch {
     await page.locator('[data-testid="artifact-tabs"] button', { hasText: /research/i }).first().click({ timeout: 10_000 });
   }
-  await page.addStyleTag({ content: "*::-webkit-scrollbar{display:none!important} .r-tour{display:none!important}" });
+  await page.addStyleTag({ content: "*::-webkit-scrollbar{display:none!important} .r-tour{display:none!important} body{zoom:1.15}" });
   await page.locator(".r-research").waitFor({ timeout: 15_000 });
   await settle(page, 800);
 }
@@ -108,14 +108,14 @@ async function memoryDemo(ctx: BrowserContext): Promise<Page> {
   await page.getByRole("button", { name: /Enter the Q3 diligence room/i }).click({ timeout: 30_000 });
   await page.locator('.r-panel.center [data-testid="chat-composer"]').waitFor({ timeout: 30_000 });
   await page.getByTestId("tour-skip").click({ timeout: 5000 }).catch(() => {});
-  await page.addStyleTag({ content: "*::-webkit-scrollbar{display:none!important} .r-tour{display:none!important}" });
+  await page.addStyleTag({ content: "*::-webkit-scrollbar{display:none!important} .r-tour{display:none!important} body{zoom:1.15}" });
   await settle(page, 800);
   return page;
 }
 
 async function runFeature(spec: FeatureSpec, attempt: number): Promise<FeatureOut> {
   const browser = await chromium.launch();
-  const ctx = await browser.newContext({ viewport: VIEW, deviceScaleFactor: 1 });
+  const ctx = await browser.newContext({ viewport: VIEW, deviceScaleFactor: 2 });
   const code = `GIF-${spec.id.slice(0, 4).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
   const dir = spec.id;
   rmSync(join(PUB, "frames", dir), { recursive: true, force: true });
@@ -125,6 +125,13 @@ async function runFeature(spec: FeatureSpec, attempt: number): Promise<FeatureOu
   try {
     const page = spec.setup === "memoryDemo" ? await memoryDemo(ctx) : await createRoom(ctx, code);
     if (spec.setup === "seedResearchRoom") await seedResearch(page, code, spec.seedCompanies);
+    // Close panels the story doesn't use — the remaining panels (and their text) render larger.
+    // Top-bar toggle order matches RoomShell's show state: [left, artifact, priv].
+    if (spec.closePanels?.length) {
+      const idx = { left: 0, artifact: 1, priv: 2 } as const;
+      for (const p of spec.closePanels) await page.locator(".r-toggle-group button").nth(idx[p]).click();
+      await settle(page, 500);
+    }
 
     for (const step of spec.steps) {
       if (step.kind === "state") {

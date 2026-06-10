@@ -23,6 +23,16 @@ import { buildResearchContext } from "../../src/agent/context";
 import { fetchSourceReal } from "../../src/agent/fetchSource";
 import type { AgentModel } from "../../src/agent/types";
 import { selectOpenRouterFreeModels } from "../../src/agent/openRouterFreeModels";
+import {
+  canonicalSourceKey,
+  evidenceText,
+  extractUrl as extractSourceUrl,
+  fetchEvidenceFromTrace,
+  isSourceUrlCoveredByFetch,
+  judgeCompanyWith,
+  matchedEvidenceForSources,
+  type CompanyJudgeResult,
+} from "./harness";
 
 const BENCHMARK_VERSION = "company-research-v2-9checks-router";
 const CHECKS = [
@@ -39,25 +49,8 @@ const CHECKS = [
 
 // Fixed cheap judge (isolated yes/no per the grounded-eval rule — low variance, not a holistic grade).
 const JUDGE = process.env.JUDGE_MODEL || "gemini-3.1-flash-lite";
-async function judgeCompany(company: string, summary: string, evidence: string): Promise<{ grounded: boolean; rightEntity: boolean }> {
-  if (!summary) return { grounded: false, rightEntity: false };
-  // Calibrated per grounded_eval: flag ONLY fabricated SPECIFICS (invented numbers/dates/names).
-  // Synthesis + directional descriptions ("an AI safety company") are the product, NOT hallucination.
-  const prompt = `You are a diligence fact-checker. Flag fabrication ONLY when the summary states a specific
-fact — a number, date, funding amount, headcount, or a named person/product — that is NOT present in the
-evidence. General/directional/synthesis descriptions are fine and are NOT fabrication.
-Company: "${company}"
-Summary: "${summary}"
-Evidence (fetched from real sources):
-${evidence.slice(0, 3500) || "(none)"}
-
-JSON only, no prose:
-{"grounded": <false ONLY if the summary asserts a specific fact absent from the evidence; true otherwise>, "rightEntity": <true if the summary describes "${company}", not a different same-name company>}`;
-  try {
-    const t = await judge(JUDGE, prompt);
-    const j = JSON.parse(t.match(/\{[\s\S]*\}/)![0]);
-    return { grounded: !!j.grounded, rightEntity: !!j.rightEntity };
-  } catch { return { grounded: false, rightEntity: false }; }
+async function scoreJudgeCompany(company: string, summary: string, evidence: string): Promise<CompanyJudgeResult> {
+  return judgeCompanyWith(judge, JUDGE, company, summary, evidence);
 }
 
 // Latest models across the cost spectrum (probe-verified 2026-06-06).
@@ -66,7 +59,6 @@ const DEFAULT_MODELS = [
   "gpt-5.4-nano", "gemini-3.1-flash-lite", "gpt-5.4-mini", "gemini-3.5-flash", // cheap → mid (latest)
   "claude-haiku-4-5", "claude-sonnet-4-6", "gpt-5.5", // anchor → flagship (latest)
 ];
-const MODELS = DEFAULT_MODELS;
 const COMPANIES = RESEARCH_COMPANIES.slice(0, 3); // bound the spend
 
 const GOAL =
@@ -78,7 +70,7 @@ const GOAL =
 interface Row {
   benchmarkVersion: string; model: string; requestedModel: string; resolvedModel: string; resolvedModels: string[];
   ok: boolean; checks: Record<string, boolean>; passed: number; total: number;
-  inputTokens: number; outputTokens: number; costUsd: number; ms: number; steps: number; toolCalls: number; error?: string;
+  inputTokens: number; outputTokens: number; costUsd: number; ms: number; steps: number; toolCalls: number; error?: string; judgeErrors?: string[];
 }
 
 interface RunModelOptions {
@@ -204,20 +196,6 @@ function cellText(artifact: { elements: Record<string, { value: unknown }> }, el
   return String(cellScalar(artifact.elements[elementId]?.value) ?? "");
 }
 
-function extractUrl(value: string): string {
-  return value.match(/https?:\/\/[^\s)]+/i)?.[0] ?? "";
-}
-
-function normalizeUrl(value: string): string {
-  try {
-    const url = new URL(value);
-    url.hash = "";
-    return url.toString().replace(/\/$/, "");
-  } catch {
-    return value.replace(/\/$/, "");
-  }
-}
-
 async function runModel(modelId: string, options: RunModelOptions = {}): Promise<Row> {
   const engine = new RoomEngine();
   const d = buildDemoRoom(engine);
@@ -258,19 +236,18 @@ async function runModel(modelId: string, options: RunModelOptions = {}): Promise
     const ms = Date.now() - t0;
     const art = engine.getArtifact(d.researchId)!;
     const ids = COMPANIES.map((c) => c.id);
-    const fetchedResults = r.trace.filter((t) => t.tool === "fetch_source" && (t.result as { ok?: boolean })?.ok).map((t) => t.result as { title?: string; snippet?: string; url?: string });
-    const fetchedUrls = new Set(fetchedResults.map((x) => normalizeUrl(String(x.url ?? ""))).filter(Boolean));
+    const fetchedResults = fetchEvidenceFromTrace(r.trace);
     const rowSourceUrls = (id: string) => [
-      extractUrl(cellText(art, `${id}__source`)),
-      extractUrl(cellText(art, `${id}__source2`)),
-    ].map(normalizeUrl).filter(Boolean);
+      extractSourceUrl(cellText(art, `${id}__source`)),
+      extractSourceUrl(cellText(art, `${id}__source2`)),
+    ].filter(Boolean);
     const checks: Record<string, boolean> = {
       ALL_COMPLETE: ids.every((id) => cellText(art, `${id}__status`) === "complete"),
       EVERY_ROW_SOURCED: ids.every((id) => rowSourceUrls(id).length >= 1),
-      EVERY_ROW_MULTI_SOURCE: ids.every((id) => new Set(rowSourceUrls(id)).size >= 2),
+      EVERY_ROW_MULTI_SOURCE: ids.every((id) => new Set(rowSourceUrls(id).map(canonicalSourceKey)).size >= 2),
       SOURCES_FETCHED: ids.every((id) => {
         const urls = rowSourceUrls(id);
-        return urls.length >= 1 && urls.every((url) => fetchedUrls.has(url));
+        return urls.length >= 1 && urls.every((url) => isSourceUrlCoveredByFetch(url, fetchedResults));
       }),
       STRUCTURED_FIELDS: ids.every((id) => ["summary", "funding", "headcount", "recent_signal"].every((c) => cellText(art, `${id}__${c}`).length > 0)),
       FRESHNESS_WRITTEN: ids.every((id) => /^\d{4}-\d{2}-\d{2}/.test(cellText(art, `${id}__last_researched`))),
@@ -278,18 +255,19 @@ async function runModel(modelId: string, options: RunModelOptions = {}): Promise
     };
     // LLM-judge content checks — these DIFFERENTIATE models (a cheap one may fabricate or pad).
     let grounded = true, rightEntity = true;
+    const judgeErrors: string[] = [];
     for (const c of COMPANIES) {
-      const rowUrls = new Set(rowSourceUrls(c.id));
-      const evidence = fetchedResults
-        .filter((x) => rowUrls.has(normalizeUrl(String(x.url ?? ""))))
-        .map((x) => `${x.title}: ${x.snippet}`)
-        .join("\n");
-      const v = await judgeCompany(c.company, cellText(art, `${c.id}__summary`), evidence);
+      const evidence = evidenceText(matchedEvidenceForSources(rowSourceUrls(c.id), fetchedResults));
+      const v = await scoreJudgeCompany(c.company, cellText(art, `${c.id}__summary`), evidence);
+      if (!v.judgeOk) {
+        judgeErrors.push(`${c.company}: ${v.error}`);
+        continue;
+      }
       if (!v.grounded) grounded = false;
       if (!v.rightEntity) rightEntity = false;
     }
-    checks.NO_FABRICATION = grounded;
-    checks.RIGHT_ENTITY = rightEntity;
+    checks.NO_FABRICATION = judgeErrors.length === 0 && grounded;
+    checks.RIGHT_ENTITY = judgeErrors.length === 0 && rightEntity;
     const passed = Object.values(checks).filter(Boolean).length;
     const resolvedModel = resolved();
     return {
@@ -298,7 +276,7 @@ async function runModel(modelId: string, options: RunModelOptions = {}): Promise
       requestedModel: modelId,
       resolvedModel,
       resolvedModels: unique(route.resolvedModels),
-      ok: passed === Object.keys(checks).length,
+      ok: judgeErrors.length === 0 && passed === Object.keys(checks).length,
       checks,
       passed,
       total: Object.keys(checks).length,
@@ -308,6 +286,7 @@ async function runModel(modelId: string, options: RunModelOptions = {}): Promise
       ms,
       steps: r.steps,
       toolCalls: r.trace.length,
+      ...(judgeErrors.length ? { error: `judge failed for ${judgeErrors.length} row(s)`, judgeErrors } : {}),
     };
   } catch (e) {
     return fail(e instanceof Error ? e.message.slice(0, 120) : String(e));

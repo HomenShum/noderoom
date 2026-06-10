@@ -1,0 +1,65 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l6-long-horizon",
+    "class": "workflow_preview",
+    "title": "L6 Long Horizon",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l6-long-horizon.gif",
+    "relPath": "docs/eval/workflow-previews/l6-long-horizon.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-l6-long-horizon.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l6-long-horizon.gif",
+  "bytes": 252349,
+  "judge": {
+    "verdict": "publish",
+    "summary": "An excellent, highly legible step-by-step trace replay demonstrating an AI agent resolving write conflicts on a financial table using CAS and context compaction.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.4,
+        "evidence": "Shows step-by-step execution of an AI agent resolving conflicts and writing to a financial table."
+      },
+      "workflowCompleteness": {
+        "score": 1.5,
+        "evidence": "Demonstrates the entire sequence from initial state through multiple read/conflict/write cycles to completion."
+      },
+      "visualDesign": {
+        "score": 1.4,
+        "evidence": "Clean dark UI with clear row highlights and a progress indicator at the bottom."
+      },
+      "consistency": {
+        "score": 1.3,
+        "evidence": "Aligns with the spreadsheet/table interface and AI agent execution trace concept."
+      },
+      "evidenceQuality": {
+        "score": 1.4,
+        "evidence": "High-fidelity trace replay showing actual state transitions and agent logs."
+      },
+      "legibility": {
+        "score": 1.5,
+        "evidence": "High contrast text and clear labels make it easy to follow the sequence."
+      },
+      "professionalRelevance": {
+        "score": 1.4,
+        "evidence": "Highly relevant for demonstrating robust multi-agent coordination over financial models."
+      },
+      "productionHonesty": {
+        "score": 1.5,
+        "evidence": "Clearly displays conflicts and CAS retries rather than a perfect happy path."
+      }
+    },
+    "observedEvidence": [
+      "Step-by-step agent execution trace",
+      "Financial table with Revenue, COGS, Gross Profit, Net Income",
+      "Conflict resolution and CAS write retries",
+      "Context compaction events"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Watch NodeRoom's AI agent navigate a long-horizon task, resolving edit conflicts on a financial model using CAS (Compare-And-Swap) and context compaction without locking the sheet."
+  },
+  "score": 11.4,
+  "maxScore": 16
+}

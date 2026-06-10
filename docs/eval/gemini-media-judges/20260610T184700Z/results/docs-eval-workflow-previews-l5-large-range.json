@@ -1,0 +1,65 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l5-large-range",
+    "class": "workflow_preview",
+    "title": "L5 Large Range",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l5-large-range.gif",
+    "relPath": "docs/eval/workflow-previews/l5-large-range.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-l5-large-range.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l5-large-range.gif",
+  "bytes": 69550,
+  "judge": {
+    "verdict": "publish",
+    "summary": "A clear, step-by-step workflow preview demonstrating concurrency control and range locking on a 5-row window. The visual style is clean and legible, though highly schematic.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Demonstrates the 5-row window locking, reading, writing, and releasing sequence clearly."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Shows the full progression from goal loading to lock release across 5 steps."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark mode layout with clear step indicators, though highly simplified."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with the agent-based row-level locking and versioning story."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Functions well as a conceptual trace replay, though it leans toward a schematic mock."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Text and status indicators are readable, though font sizes are small."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for developers understanding concurrency and CAS in large datasets."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately represents a simulated step-by-step trace without overclaiming."
+      }
+    },
+    "observedEvidence": [
+      "Step-by-step progress indicator (0/5 to 5/5)",
+      "Row locking state change on Line 420",
+      "CAS write (+8.2%) and commit to V2",
+      "Lock release state"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Step-by-step execution of the L5 Large Range workflow, demonstrating row-level locking, CAS write, and version commitment within a 5-row window."
+  },
+  "score": 8,
+  "maxScore": 16
+}

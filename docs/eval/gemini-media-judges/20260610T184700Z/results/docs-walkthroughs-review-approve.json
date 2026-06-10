@@ -1,0 +1,73 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-review-approve",
+    "class": "readme_walkthrough",
+    "title": "Review Approve",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\review-approve.gif",
+    "relPath": "docs/walkthroughs/review-approve.gif",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:review-approve"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-walkthroughs-review-approve.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/walkthroughs/review-approve.gif",
+  "bytes": 920336,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough clearly demonstrates the 'Review mode' feature where agent edits become proposals requiring manual approval. The workflow is complete, showing the toggle, the command execution, and the inline cell approval.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Shows the transition from auto-allow to review mode, though the dense UI requires close attention to follow the toggle state."
+      },
+      "workflowCompleteness": {
+        "score": 2,
+        "evidence": "Captures the entire loop: disabling auto-allow, sending a command, viewing proposed cell values, and approving them."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Consistent dark theme and layout, though the interface is highly packed with multiple panels."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with the NodeRoom paradigm of spreadsheet cells, chat, and agent execution traces."
+      },
+      "evidenceQuality": {
+        "score": 2,
+        "evidence": "Authentic screen recording showing real-time UI updates, cursor interactions, and state changes."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Small font sizes in the spreadsheet cells and chat panel are slightly hard to read at standard README scale."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for financial and data operations where automated edits require human-in-the-loop verification."
+      },
+      "productionHonesty": {
+        "score": 2,
+        "evidence": "Accurately depicts the proposal state and the manual click required to commit changes."
+      }
+    },
+    "observedEvidence": [
+      "Auto-allow toggle interaction",
+      "Review mode status banner",
+      "Agent proposal highlights on spreadsheet cells",
+      "Inline approval checkmark interaction"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:02",
+        "severity": "P2",
+        "observed": "The 'Review mode ON' banner at the bottom briefly overlaps with other UI elements.",
+        "fix": "Adjust banner positioning or padding to avoid overlapping the lower chat input area."
+      }
+    ],
+    "suggestedReadmeCaption": "Enable Review Mode to turn agent edits into inline proposals, allowing you to inspect and approve changes cell-by-cell."
+  },
+  "score": 11,
+  "maxScore": 16
+}

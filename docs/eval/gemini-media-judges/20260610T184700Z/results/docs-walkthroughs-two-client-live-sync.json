@@ -1,0 +1,79 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-two-client-live-sync",
+    "class": "readme_walkthrough",
+    "title": "Two Client Live Sync",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\two-client-live-sync.gif",
+    "relPath": "docs/walkthroughs/two-client-live-sync.gif",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:two-client-live-sync"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-walkthroughs-two-client-live-sync.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/walkthroughs/two-client-live-sync.gif",
+  "bytes": 427166,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough effectively demonstrates real-time synchronization between two clients and a server-led agent performing spreadsheet reconciliation. The workflow is complete and highly relevant to collaborative financial operations.",
+    "scores": {
+      "featureClarity": {
+        "score": 2,
+        "evidence": "Clearly shows Client A and Client B updating in real-time as messages are sent and agent actions occur."
+      },
+      "workflowCompleteness": {
+        "score": 2,
+        "evidence": "Captures the entire sequence from initial message, instant sync, agent trigger, to live cell updates."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark-mode interface, though the sudden zoom transitions at 00:05 are slightly jarring."
+      },
+      "consistency": {
+        "score": 2,
+        "evidence": "Perfectly aligns with NodeRoom's core elements: spreadsheets, chat, and server-led agents."
+      },
+      "evidenceQuality": {
+        "score": 2,
+        "evidence": "Shows actual UI interactions, side-by-side client states, and live agent execution traces."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Zoomed-out views make small text and numbers in the spreadsheet columns difficult to read."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for collaborative finance and operations teams needing multi-user spreadsheet sync."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately depicts live sync latency and agent execution steps, though heavily edited for pacing."
+      }
+    },
+    "observedEvidence": [
+      "Dual-client side-by-side view",
+      "Real-time message synchronization",
+      "Server-led agent triggering and cell locking",
+      "Live spreadsheet variance updates"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:05",
+        "severity": "P2",
+        "observed": "Sudden zoom-in transition is disorienting and disrupts the visual flow.",
+        "fix": "Soften the transition with a smoother ease-in-out animation or maintain a consistent crop."
+      },
+      {
+        "ts": "00:00",
+        "severity": "P2",
+        "observed": "Spreadsheet cell values are too small to read in the default dual-client view.",
+        "fix": "Increase the default font size of the spreadsheet component or use a slightly tighter side-by-side layout."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch NodeRoom's live sync in action: Client A triggers a server-led agent to reconcile Q3 revenue, instantly updating cells and locking states across both clients without page refreshes."
+  },
+  "score": 12,
+  "maxScore": 16
+}

@@ -112,11 +112,13 @@ publishing (Gemini watches the actual render; see `episodes/*/judge.md`).
 | [![I tried to make a demo GIF — it turned into a multiplayer AI workspace](episodes/noderoom-live-collab-v1/poster.jpg)](https://noderoom.live/episodes/noderoom-live-collab-v1.mp4) | [![Before Monday's IC meeting — who changed what, and can you trust it?](episodes/private-investment-room-v1/poster.jpg)](https://noderoom.live/episodes/private-investment-room-v1.mp4) |
 | Naive agent clobbers a human → the code that fixes it → review mode live | A private investment team's room: provenance, proposals, versioned history — fictional data only |
 
-**Media QA.** The README GIFs, workflow previews, and episode renders are now
-batch-judgeable with Gemini video understanding: `npm run media:gemini-judge --
---all`. GIFs are converted to temporary MP4 with ffmpeg, then each asset gets a
-concrete verdict for clarity, visual design, consistency, evidence quality,
-legibility, and professional-workflow relevance. Latest aggregate:
+**Media QA.** The tracked README GIFs, workflow previews, and episode renders are
+now batch-judgeable with Gemini video understanding: `npm run
+media:gemini-judge -- --all`. GIFs are converted to temporary MP4 with ffmpeg,
+then each asset gets a concrete verdict for clarity, visual design, consistency,
+evidence quality, legibility, and professional-workflow relevance. Use
+`--include-ignored` only when intentionally judging local capture intermediates.
+Latest aggregate:
 [`docs/eval/MEDIA_JUDGE.md`](docs/eval/MEDIA_JUDGE.md).
 
 ## Workflow Skill Previews
@@ -584,7 +586,7 @@ and releases, live (the real `runRoomAgent` action when on Convex; the real in-m
 
 This section is generated from `docs/qa/production-matrix.json`. When the system grows, append or update a matrix row, then run `npm run qa:matrix`; CI can run `npm run qa:matrix:check` to catch stale docs.
 
-<sub>14 feature guarantees tracked | 5 green | 8 yellow | 1 red | 1 live model route(s) cleared L1-L4 in the latest recorded ladder.</sub>
+<sub>15 feature guarantees tracked | 5 green | 9 yellow | 1 red | 1 live model route(s) cleared L1-L4 in the latest recorded ladder.</sub>
 
 ![QA coverage graph](docs/eval/qa-coverage.svg)
 
@@ -605,7 +607,7 @@ This section is generated from `docs/qa/production-matrix.json`. When the system
 | Browser E2E dogfood | Red | Playwright or equivalent real-browser specs for two-context cell edits, optimistic chat failure/retry, public/private leak checks, wall CRUD, job controls, and proposal conflict feedback. |
 | Unified NodeAgent jobs | Yellow | Interactive /ask and /free both create or reuse agentJobs, artifact writes emit receipts, job details are browser-visible, notebook graph mutations enqueue embeddings, and live browser/backend smoke proves linked runs/steps. |
 | Agent improvement loop | Yellow | Deterministic loop passes, live provider/Convex/UI media lanes run when keys are present, and failures generate a handoff before chart promotion. |
-| Audience fluency content | Yellow | Audience context YAML, scenario brief, trust-signal checklist, deterministic content-fluency gate, rendered audience-specific episode, and video/content judge evidence. |
+| Demo/media evidence quality | Yellow | Gemini 3.5 Flash batch-judges every GIF/MP4 after capture/render refresh; P0 defects block publishing and P1 defects stay visible until fixed. |
 
 | Live route | Provider | L1 | L2 | L3 | L4 | Promotion call |
 |---|---|---:|---:|---:|---:|---|
@@ -623,7 +625,7 @@ This section is generated from `docs/qa/production-matrix.json`. When the system
 | `gpt-5.4-nano` | OpenAI | PASS | FAIL | FAIL | FAIL | research benchmark winner candidate only when collaboration safety is not required |
 | `gpt-5.4` | OpenAI | PASS | FAIL | PASS | PASS | requires rerun because L2 time-budget failure blocks promotion |
 
-Research benchmark route: current v2 router-aware results are recorded for 13 route(s), but no route cleared the 9-check gate. Best recorded row was `claude-haiku-4-5` at 7/9. Budget: `{"modelTimeoutMs":180000,"reserveMs":15000,"rowHardTimeoutMs":210000}`.
+Research benchmark route: current v2 router-aware results are recorded for 13 route(s), but no route cleared the 9-check gate. Best recorded row was `gpt-5.4-nano` at 5/9. Budget: `{"modelTimeoutMs":180000,"reserveMs":15000,"rowHardTimeoutMs":210000}`.
 
 Full QA ledger: [`docs/PRODUCTION_GUARANTEE_MATRIX.md`](docs/PRODUCTION_GUARANTEE_MATRIX.md).
 <!-- QA_COCKPIT_END -->

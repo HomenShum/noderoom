@@ -1,0 +1,64 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l3-no-clobber",
+    "class": "workflow_preview",
+    "title": "L3 No Clobber",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l3-no-clobber.gif",
+    "relPath": "docs/eval/workflow-previews/l3-no-clobber.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-l3-no-clobber.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l3-no-clobber.gif",
+  "bytes": 83208,
+  "judge": {
+    "verdict": "publish",
+    "summary": "A clear, step-by-step visualization of a concurrent write conflict (CAS) and agent recovery. The workflow is easy to follow and highly relevant for multi-agent systems.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.4,
+        "evidence": "Demonstrates CAS conflict and resolution step-by-step with clear state changes."
+      },
+      "workflowCompleteness": {
+        "score": 1.4,
+        "evidence": "Shows the initial state, human intervention, conflict rejection, and final successful write."
+      },
+      "visualDesign": {
+        "score": 1.3,
+        "evidence": "Clean dark-mode table layout with clear row highlighting and status indicators."
+      },
+      "consistency": {
+        "score": 1.3,
+        "evidence": "Aligns with the spreadsheet-like data view and agent execution trace paradigm."
+      },
+      "evidenceQuality": {
+        "score": 1.2,
+        "evidence": "Provides a high-fidelity mock/trace of concurrent agent execution."
+      },
+      "legibility": {
+        "score": 1.4,
+        "evidence": "All text, version numbers, and status chips are highly legible."
+      },
+      "professionalRelevance": {
+        "score": 1.3,
+        "evidence": "Directly addresses concurrency and data integrity concerns for enterprise workflows."
+      },
+      "productionHonesty": {
+        "score": 1.3,
+        "evidence": "Accurately depicts the step-by-step mechanics of a CAS failure and retry."
+      }
+    },
+    "observedEvidence": [
+      "Step-by-step CAS conflict visualization",
+      "Agent execution log at the bottom",
+      "Version tracking (V1, V2, V3) on the table rows"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Watch how NodeRoom's CAS mechanism prevents agents from overwriting human edits mid-write, forcing a re-read and safe commit."
+  },
+  "score": 10.6,
+  "maxScore": 16
+}

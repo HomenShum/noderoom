@@ -1,0 +1,74 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-app-research-enrich",
+    "class": "workflow_preview",
+    "title": "App Research Enrich",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\app-research-enrich.gif",
+    "relPath": "docs/eval/workflow-previews/app-research-enrich.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-app-research-enrich.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/app-research-enrich.gif",
+  "bytes": 54697,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The workflow preview clearly demonstrates the account enrichment process with a before-and-after state transition and corresponding trace log updates.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.4,
+        "evidence": "Shows transition from pending accounts to enriched research data."
+      },
+      "workflowCompleteness": {
+        "score": 1.5,
+        "evidence": "Demonstrates the before, action, and after states of the enrichment process."
+      },
+      "visualDesign": {
+        "score": 1.3,
+        "evidence": "Clean dark-themed spreadsheet interface with structured columns."
+      },
+      "consistency": {
+        "score": 1.5,
+        "evidence": "Integrates spreadsheet view, agent sessions, and real-time trace logs."
+      },
+      "evidenceQuality": {
+        "score": 1.4,
+        "evidence": "Authentic UI capture showing live trace updates and state changes."
+      },
+      "legibility": {
+        "score": 1.2,
+        "evidence": "Text is legible, though some cell contents are truncated."
+      },
+      "professionalRelevance": {
+        "score": 1.4,
+        "evidence": "Highly relevant for automated GTM research and data enrichment workflows."
+      },
+      "productionHonesty": {
+        "score": 1.3,
+        "evidence": "Accurately represents the execution trace and data population."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet interface with account list",
+      "Enrich button triggering agent execution",
+      "Status transition from PENDING to COMPLETE",
+      "Room trace log updating from 5 to 57 events"
+    ],
+    "missingEvidence": [
+      "Hover state or expanded view of the truncated research text"
+    ],
+    "defects": [
+      {
+        "ts": "00:01",
+        "severity": "P2",
+        "observed": "Research column text is truncated with ellipses.",
+        "fix": "Expand column width or provide a tooltip hover state to show full text."
+      }
+    ],
+    "suggestedReadmeCaption": "Automate account research by triggering NodeAgents to enrich pending CRM records with real-time company data and tracking the execution in the live room trace."
+  },
+  "score": 11,
+  "maxScore": 16
+}

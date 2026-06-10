@@ -1,10 +1,16 @@
 # NodeAgent Workflow Previews
 
 These are product-facing previews of the workflows HALO is allowed to improve.
-They are generated with:
+Room/trace previews are generated with:
 
 ```bash
 npm run workflow:previews
+```
+
+The heavier app-capture previews are refreshed with:
+
+```bash
+npm run workflow:previews:all
 ```
 
 The GIFs are built from live NodeRoom screenshots and the live UI recording in
@@ -13,6 +19,8 @@ The GIFs are built from live NodeRoom screenshots and the live UI recording in
 browser E2E, agent improvement loop, eval diff, QA matrix, Convex boundaries,
 OpenRouter smoke, provider parser smoke, Convex `/free` smoke, and the V2
 benchmark all completed in cycle 1 before the free-auto ladder step.
+Media quality is separately judged with Gemini video understanding in
+[`docs/eval/MEDIA_JUDGE.md`](eval/MEDIA_JUDGE.md).
 
 ## HALO Workflow Rule
 
@@ -104,6 +112,8 @@ promoted:
 ![L3 no-clobber preview](eval/workflow-previews/l3-no-clobber.gif)
 
 ![L4 draft preview](eval/workflow-previews/l4-draft.gif)
+
+![L5 large-range preview](eval/workflow-previews/l5-large-range.gif)
 
 ![L6 long-horizon preview](eval/workflow-previews/l6-long-horizon.gif)
 

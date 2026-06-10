@@ -37,6 +37,9 @@ export type FeatureSpec = {
   /** seedResearchRoom only: override the seeded accounts (episodes for high-trust audiences use
    *  FICTIONAL companies — that restraint is itself the trust signal). */
   seedCompanies?: Array<{ company: string; website?: string; tier?: string; owner?: string }>;
+  /** Close panels the story doesn't use — fewer panels = the feature renders larger (the judge's
+   *  systemic "text too small at phone size" finding). Order: [left rail, artifact, private]. */
+  closePanels?: Array<"left" | "artifact" | "priv">;
   steps: Step[];
 };
 
@@ -46,6 +49,7 @@ const COMPOSER = `${CENTER} [data-testid="chat-composer"]`;
 export const FEATURES: FeatureSpec[] = [
   {
     id: "chat",
+    closePanels: ["artifact", "priv"],
     title: "Join a live room & chat",
     setup: "createRoom",
     steps: [
@@ -61,6 +65,7 @@ export const FEATURES: FeatureSpec[] = [
   },
   {
     id: "sheet-undo",
+    closePanels: ["left", "priv"],
     title: "Edit the sheet — and take it back",
     setup: "createRoom",
     steps: [
@@ -81,6 +86,7 @@ export const FEATURES: FeatureSpec[] = [
   },
   {
     id: "ask-agent",
+    closePanels: ["left", "priv"],
     title: "Ask the Room agent to do the work",
     setup: "createRoom",
     retries: 2,
@@ -98,6 +104,7 @@ export const FEATURES: FeatureSpec[] = [
   },
   {
     id: "research-upsert",
+    closePanels: ["left", "priv"],
     title: "GTM research import — updates, never duplicates",
     setup: "seedResearchRoom",
     steps: [
@@ -128,6 +135,7 @@ export const FEATURES: FeatureSpec[] = [
   },
   {
     id: "ic-room",
+    closePanels: ["left", "priv"],
     title: "A private investment team's research room",
     // Episode capture (private-investment-room-v1, family-office audience). Fictional companies
     // only — per episodes/_audiences/family-office.yaml trust_signals_required. Not a README
@@ -183,6 +191,7 @@ export const FEATURES: FeatureSpec[] = [
   },
   {
     id: "review-approve",
+    closePanels: ["left", "priv"],
     title: "Review mode — approve agent edits at the cell",
     // LIVE again: the 0/3 review-mode behavior was root-caused (the model was never told review
     // mode exists, so pendingApproval results read as failures → budget-burn or wander-and-quit)

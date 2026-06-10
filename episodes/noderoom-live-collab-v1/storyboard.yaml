@@ -1,0 +1,59 @@
+# Episode manifest — the single source every render derives from.
+# Scene types: app_capture (walkthrough pipeline, EXISTS) · failure_capture (staged: needs v0 tag)
+#             code_diff (staged: code-zoom skill) · motion_canvas (staged) · title_card (Remotion, trivial)
+# Rule: no scene ships without its evidence field pointing at something real in this repo.
+
+episode:
+  id: noderoom-live-collab-v1
+  title: "I Tried to Make a Demo GIF for a Spreadsheet Agent. It Turned Into a Multiplayer AI Workspace."
+  thesis: "The spreadsheet agent was easy. The hard part was letting humans and agents collaborate over shared state."
+  outputs: [readme_gif, youtube_short, linkedin_post]
+
+scenes:
+  - id: cold-open
+    type: app_capture
+    status: ready
+    narration: "I only wanted a clean README GIF for a spreadsheet agent."
+    source: docs/walkthroughs/ask-agent.mp4          # live capture, real LLM, loading beat included
+    evidence: scripts/walkthroughs/specs.ts#ask-agent
+
+  - id: naive-problem
+    type: failure_capture
+    status: staged                                    # needs v0-naive tag or staged fixture room
+    narration: "But the moment a human and an agent edit the same artifact, the demo stops being simple."
+    plan: replay same-cell concurrent edit WITHOUT CAS (worktree at a pre-CAS commit, or fixture flag)
+    evidence: e2e/three-user-collab.spec.ts#act-4     # the CONVERGING version exists; the clobbering one is the staged shot
+
+  - id: code-before-after
+    type: code_diff
+    status: staged                                    # code-zoom skill not built
+    narration: "The write path stopped assuming the agent owns the latest state."
+    code:
+      file: convex/artifacts.ts
+      anchor: applyCellEditCore                       # lock gate -> CAS gate -> proposal branch
+    callouts: ["affected-range lock", "per-element version check", "draft / proposal on conflict"]
+
+  - id: mental-model
+    type: motion_canvas
+    status: staged
+    narration: "Treat the room as a collaboration substrate, not a spreadsheet."
+    concepts: [lock, draft, smart-merge, proposal review, trace receipt]
+
+  - id: review-mode
+    type: app_capture
+    status: ready
+    narration: "Don't trust the agent yet? Its writes become proposals you approve at the cell."
+    source: docs/walkthroughs/review-approve.mp4      # live LLM; capturing this found + fixed a real agent bug
+    evidence: docs/dogfood/FRICTION_LOG.md#0-3-review-mode
+
+  - id: multiplayer-proof
+    type: app_capture
+    status: ready
+    narration: "Two humans and an agent in one room — same-cell edits converge, nobody clobbers anybody."
+    source: docs/walkthroughs/sheet-undo.mp4
+    evidence: docs/eval/THREE_USER_COLLAB.md
+
+  - id: closing-thesis
+    type: title_card
+    status: ready
+    narration: "The agent was not the product. The collaboration substrate was — and this video was rendered from the repo that proves it."

@@ -10,7 +10,7 @@
  * Run:  npx tsx scripts/walkthroughs/render.ts [featureIds…]
  */
 import { execSync } from "node:child_process";
-import { mkdirSync, rmSync, statSync } from "node:fs";
+import { mkdirSync, statSync } from "node:fs";
 import { join } from "node:path";
 
 const ROOT = process.cwd();
@@ -36,10 +36,11 @@ const run = async () => {
     const gif = join("docs", "walkthroughs", `${f.id}.gif`);
     console.log(`[render] ${f.id} → ${gif}`);
     if (ffmpeg) {
-      const mp4 = join("docs", "walkthroughs", `.tmp-${f.id}.mp4`);
+      // The MP4 is a first-class output (episode/social cuts, 60–90% smaller than the GIF),
+      // not a temp file — kept beside the GIF, gitignored (regenerable).
+      const mp4 = join("docs", "walkthroughs", `${f.id}.mp4`);
       execSync(`npx remotion render remotion/index.ts ${f.id} ${mp4} --codec=h264 --crf=16`, { stdio: "inherit" });
       execSync(`ffmpeg -y -i ${mp4} -vf "${FILTER}" -loop 0 ${gif}`, { stdio: "inherit" });
-      rmSync(join(ROOT, mp4), { force: true });
     } else {
       execSync(`npx remotion render remotion/index.ts ${f.id} ${gif} --codec=gif --every-nth-frame=2 --scale=0.7`, { stdio: "inherit" });
     }

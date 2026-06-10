@@ -1,0 +1,22 @@
+{
+  "cold-open": {
+    "narrationSec": 7,
+    "chars": 110,
+    "status": "ready"
+  },
+  "provenance": {
+    "narrationSec": 7.1,
+    "chars": 110,
+    "status": "ready"
+  },
+  "continuity": {
+    "narrationSec": 6.9,
+    "chars": 111,
+    "status": "ready"
+  },
+  "closing": {
+    "narrationSec": 7.2,
+    "chars": 120,
+    "status": "ready"
+  }
+}

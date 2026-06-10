@@ -1,0 +1,39 @@
+# Episode 2 — the family-office / private-investment audience (see brief.md + _audiences yaml).
+# Voice: quiet competence. Every scene answers a question this audience already asks.
+
+episode:
+  id: private-investment-room-v1
+  title: "Before Monday's IC meeting: who changed what, and can you trust it?"
+  thesis: "An AI agent belongs in an investment room only if every output has a trace, every edit has an owner, and every change can be reviewed before it becomes part of the decision."
+  outputs: [youtube_short, linkedin_post]
+
+scenes:
+  - id: cold-open
+    type: app_capture
+    status: ready
+    narration: "A private investment team is preparing for Monday's committee meeting. Targets, owners, and status — one room."
+    source: docs/walkthroughs/ic-room.mp4
+    evidence: scripts/walkthroughs/specs.ts#ic-room
+
+  - id: provenance
+    type: app_capture
+    status: ready
+    narration: "The agent can draft, but it cannot decide. Its changes arrive as proposals — you approve them where they land."
+    source: docs/walkthroughs/review-approve.mp4
+    evidence: docs/dogfood/FRICTION_LOG.md
+
+  - id: continuity
+    type: app_capture
+    status: ready
+    narration: "Every figure is versioned. Where did this number come from, what changed since last week — the room can answer."
+    source: docs/walkthroughs/sheet-undo.mp4
+    evidence: docs/eval/THREE_USER_COLLAB.md
+
+  - id: closing
+    type: title_card
+    status: ready
+    narration: "Discretion, provenance, and review are not features. They are the conditions for trusting AI with decisions that matter."
+    codeTitle: "Built for high-trust work"
+    callout: "every edit carries an owner and a version"
+    callout: "agent changes are reviewable before they count"
+    callout: "fictional data in every demo — discretion is the default"

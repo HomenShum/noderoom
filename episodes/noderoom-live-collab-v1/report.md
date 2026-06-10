@@ -23,9 +23,11 @@ system; assembled by `scripts/walkthroughs/episode.ts` → `remotion/Episode.tsx
 - Verified via ffprobe (streams/duration) + two rendered stills (video scene + card scene) ✅
 
 ## Machine judge (Gemini 3.5 Flash video understanding)
-**Cut 2 (with failure-replay): verdict publish · 16/16** ([judge.md](./judge.md)) — perfect
-across all 8 dimensions; the prior legibility P2 resolved itself once the conflict arc gave the
-vertical format a story structure the judge could follow. (Cut 1 scored 15/16.)
+**Cut 3 (real code panel + animated diagram): verdict publish · 16/16** ([judge.md](./judge.md)).
+The last two text-card scenes became real visuals: the code scene shows the ACTUAL guard lines
+extracted from `convex/artifacts.ts` at assemble time (it can never drift from the repo), and the
+mental-model scene is an animated diagram (human + agent reach the same cell → lock → draft →
+review → merge). Cut 2 scored 16/16 with the failure footage; cut 1 scored 15/16.
 
 ## Failure-replay — DONE (the missing "pain" beat)
 Branch `demo/v0-naive-agent` (pushed, **never merged, never deployed**): agents skip locks, CAS,

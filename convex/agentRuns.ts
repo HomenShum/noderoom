@@ -86,6 +86,30 @@ export const roomSpendSince = internalQuery({
   },
 });
 
+/** Experiment gate: total agent spend across ALL rooms since `since`, with distinct-room attribution
+ *  so a cap breach is diagnosable as growth (many rooms) vs runaway (one room). Bounded read: takes at
+ *  most MAX_GLOBAL_SPEND_ROWS newest-first; if the window holds more rows than that, `truncated:true`
+ *  is returned and the caller must FAIL CLOSED (treat as breached) — an undercounted sum silently
+ *  waving runs through would defeat the cap (HONEST_STATUS). 5000 runs/month at even free-route scale
+ *  means the experiment phase is over anyway. */
+const MAX_GLOBAL_SPEND_ROWS = 5000;
+export const globalSpendSince = internalQuery({
+  args: { since: v.number() },
+  handler: async (ctx, { since }) => {
+    const rows = await ctx.db.query("agentRuns")
+      .withIndex("by_creation_time", (q) => q.gte("_creationTime", since))
+      .order("desc")
+      .take(MAX_GLOBAL_SPEND_ROWS);
+    const distinct = new Set(rows.map((r) => String(r.roomId)));
+    return {
+      totalUsd: rows.reduce((sum, r) => sum + (r.costUsd ?? 0), 0),
+      runCount: rows.length,
+      distinctRooms: distinct.size,
+      truncated: rows.length === MAX_GLOBAL_SPEND_ROWS,
+    };
+  },
+});
+
 export const list = query({
   args: { roomId: v.id("rooms"), requester: actorProofV },
   handler: async (ctx, { roomId, requester }) => {

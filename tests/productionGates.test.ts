@@ -36,6 +36,34 @@ test("cumulative daily USD cap: roomSpendSince sums only today's runs for the ro
   // The gate compares this against ROOM_MAX_USD_PER_DAY (default 10) before starting a run.
 });
 
+test("global monthly cap: globalSpendSince sums across rooms with distinct-room attribution", async () => {
+  // The $100-experiment gate. Scenario: 3 real rooms spend within the month; the breach report must
+  // (a) sum across ALL rooms (unlike roomSpendSince), (b) count distinct rooms so a breach is
+  // diagnosable as growth (many rooms) vs runaway (one room), (c) report truncated:false at sane scale.
+  // convex-test rejects injected _creationTime, so all rows land "now" — inside any month window.
+  const t = convexTest(schema, modules);
+  const now = Date.now();
+  await t.run(async (ctx) => {
+    const mkRoom = (code: string) => ctx.db.insert("rooms", { code, title: code, hostId: "h", autoAllow: true, status: "live" as const, createdAt: now });
+    const r1 = await mkRoom("GLOB01"), r2 = await mkRoom("GLOB02"), r3 = await mkRoom("GLOB03");
+    const run = (rid: typeof r1, costUsd: number) => ctx.db.insert("agentRuns", { roomId: rid, agentId: AGENT.id, model: "m", goal: "g", steps: 1, toolCalls: 1, conflictsSurvived: 0, inputTokens: 1, outputTokens: 1, costUsd, ms: 1, exhausted: false, createdAt: now });
+    await run(r1, 20.0); await run(r1, 10.0);  // growth-pattern spend across rooms
+    await run(r2, 30.0);
+    await run(r3, 15.5);
+  });
+
+  const monthly = await t.query(internal.agentRuns.globalSpendSince, { since: now - 30 * 24 * 60 * 60 * 1000 });
+  expect(monthly.totalUsd).toBeCloseTo(75.5, 5);  // 20+10+30+15.5 — would trip GLOBAL_MAX_USD_PER_MONTH=75
+  expect(monthly.distinctRooms).toBe(3);          // breach reads as GROWTH (many rooms), not runaway
+  expect(monthly.runCount).toBe(4);
+  expect(monthly.truncated).toBe(false);          // fail-closed flag only at 5000-row saturation
+
+  // Deep-future `since` → empty window → $0 (the gate lets runs through on a fresh month).
+  const fresh = await t.query(internal.agentRuns.globalSpendSince, { since: now + 60_000 });
+  expect(fresh.totalUsd).toBe(0);
+  expect(fresh.distinctRooms).toBe(0);
+});
+
 test("retention prune: targets telemetry by age window, never product data", async () => {
   // convex-test won't let us inject a backdated _creationTime, so we prove the prune by CUTOFF
   // DIRECTION: a future cutoff matches every existing row (so telemetry prunes, product data does

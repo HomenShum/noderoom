@@ -50,6 +50,7 @@ const agentRunsClaimOrReuseRef = makeFunctionReference<"mutation">("agentRuns:cl
 const agentRunsFinishRef = makeFunctionReference<"mutation">("agentRuns:finish") as any;
 const agentStepsRecordRef = makeFunctionReference<"mutation">("agentSteps:record") as any;
 const roomSpendSinceRef = makeFunctionReference<"query">("agentRuns:roomSpendSince") as any;
+const globalSpendSinceRef = makeFunctionReference<"query">("agentRuns:globalSpendSince") as any;
 const postPrivateReplyRef = makeFunctionReference<"mutation">("messages:postPrivateAgentReply") as any;
 const ensurePersonalPublicSessionRef = makeFunctionReference<"mutation">("collab:ensurePersonalPublicSession") as any;
 
@@ -99,6 +100,16 @@ export const runRoomAgent = action({
     const dailyCapUsd = envNumber("ROOM_MAX_USD_PER_DAY", 10, 0.1, 10_000);
     const spentToday: number = await ctx.runQuery(roomSpendSinceRef, { roomId: a.roomId, since: t0 - 24 * 60 * 60 * 1000 });
     if (spentToday >= dailyCapUsd) throw new Error("room_daily_spend_cap");
+    // Experiment gate — global monthly budget across ALL rooms ($100 experiment: $75 LLM envelope).
+    // The error carries distinct-room attribution so a breach is diagnosable at a glance:
+    // many rooms = real-user growth (the signal we WANT — raise budget / start charging);
+    // one room = runaway (the daily cap above should have contained it first — investigate).
+    // truncated:true fails closed: an undercounted window must not wave runs through.
+    const monthlyCapUsd = envNumber("GLOBAL_MAX_USD_PER_MONTH", 75, 1, 1_000_000);
+    const monthly = await ctx.runQuery(globalSpendSinceRef, { since: t0 - 30 * 24 * 60 * 60 * 1000 });
+    if (monthly.truncated || monthly.totalUsd >= monthlyCapUsd) {
+      throw new Error(`global_monthly_spend_cap:spentUsd=${monthly.totalUsd.toFixed(2)}:rooms=${monthly.distinctRooms}:runs=${monthly.runCount}`);
+    }
     const model = agentModel(process.env.AGENT_MODEL ?? "gemini-3.5-flash"); // current recorded L1-L4 collaboration-safe fallback; override via AGENT_MODEL.
     const requestedSteps = a.maxSteps ?? (a.mode === "research" ? 60 : 10);
     const maxSteps = Math.max(1, Math.min(requestedSteps, a.mode === "research" ? 80 : 24));

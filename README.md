@@ -42,6 +42,16 @@ Here the real agent has filled the variance column live on Convex.</sub>
 
 </div>
 
+<div align="center">
+
+### The headline, shown literally — two clients, one room, live
+
+![Two browser clients side by side: a message posted in Client A appears live in Client B with no refresh](docs/walkthroughs/two-client-live-sync.gif)
+
+<sub>Two <b>independent</b> browser clients in the same room, side by side — a message posted in <b>Client&nbsp;A</b> appears in <b>Client&nbsp;B</b> with no refresh (Convex reactive <code>useQuery</code>), in both directions. Captured <b>multi-pane</b> (one browser context per client) with the <a href="https://github.com/HomenShum/feature-walkthrough-gif#live-collaboration-multi-pane"><code>feature-walkthrough-gif</code></a> skill — single-cursor capture can't show cross-client sync; this can.</sub>
+
+</div>
+
 ## Watch it work — live walkthroughs
 
 **Try it yourself → [noderoom.live](https://noderoom.live)** — join with a room code or start a

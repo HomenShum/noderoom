@@ -1,0 +1,46 @@
+# Audience context — loaded by produce-episode Stage 0 before any scene is written.
+audience:
+  name: "Family office / private investment team"
+  cultural_values:
+    - discretion
+    - continuity
+    - provenance
+    - long-term orientation
+    - advisor coordination
+    - next-generation education
+  repeated_questions:
+    - "Where did this number come from?"
+    - "Who reviewed this?"
+    - "Can this be shared with the principal?"
+    - "What changed since last week?"
+    - "Is the source reliable?"
+    - "Can the next generation understand the thesis without reading everything?"
+  recognizable_artifacts:
+    - investment memo
+    - diligence spreadsheet
+    - IC notes
+    - advisor comments
+    - portfolio review
+    - family wiki
+  product_mapping:
+    shared_room: "coordination across advisors"
+    traces: "source accountability"
+    proposal_review: "control before mutation"
+    summary: "principal-ready briefing"
+    permissions: "discretion"
+    undo_versions: "nothing is ever silently lost"
+  lexicon_use:
+    [principal, advisor, investment committee, diligence memo, family governance,
+     liquidity event, private markets, provenance, discretion, continuity, audit trail]
+  lexicon_avoid:
+    [elite, premium, exclusive, VIP, luxury AI, disrupting wealth]
+  trust_signals_required:
+    - source provenance visible in the demo
+    - review-before-action shown, not narrated
+    - sensitive-context awareness (fresh fixture data, never real names/figures)
+    - restraint: no overclaiming, no spectacle
+  sources:
+    - "UBS Global Family Office Report 2025 — structural growth, yield, diversification, gen-AI interest"
+    - "Bank of America 2025 Family Office study — AI, cybersecurity, governance, next-gen transition"
+    - "RBC North America Family Office Report 2025 — private markets ~29% of portfolios; ~90% philanthropic"
+    - "Altagamma 2025 — top 0.1% ≈ 37% of market value; intimacy, excellence, personalization"

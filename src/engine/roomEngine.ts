@@ -247,6 +247,11 @@ export class RoomEngine {
   }
 
   proposeLock(args: { roomId: string; artifactId: string; elementIds: string[]; holder: Actor; sessionId: string; reason: string }): LockResult {
+    // NAIVE-DEMO (demo/v0-naive-agent): the naive agent does not claim affected ranges — its
+    // "lock" is a no-op that is never stored, so no badges render and nothing is read-only.
+    if (args.holder.kind === "agent") {
+      return { ok: true, lock: { id: this.id("lock"), roomId: args.roomId, artifactId: args.artifactId, elementIds: [...args.elementIds], holder: args.holder, sessionId: args.sessionId, reason: args.reason, status: "active", createdAt: this.now() } };
+    }
     const conflicting: Array<{ elementId: string; by: Actor; lockId: string }> = [];
     for (const eid of args.elementIds) {
       const existing = this.lockFor(args.artifactId, eid);
@@ -347,8 +352,9 @@ export class RoomEngine {
       return { ok: true, element: { ...created }, fromVersion: 0, toVersion: 1 };
     }
     if (!el) return { ok: false, reason: "not_found" };
-    // Optimistic concurrency: stale base → conflict (returned as data, never thrown).
-    if (el.version !== op.baseVersion) return { ok: false, reason: "conflict", expected: op.baseVersion, actual: el.version };
+    // NAIVE-DEMO: the agent write path assumes it owns the latest state — NO version check for
+    // agents (a stale agent write silently replaces whatever a human committed). Humans keep CAS.
+    if (actor.kind !== "agent" && el.version !== op.baseVersion) return { ok: false, reason: "conflict", expected: op.baseVersion, actual: el.version };
 
     const from = el.version;
     if (op.kind === "delete") {
@@ -363,7 +369,8 @@ export class RoomEngine {
     el.updatedAt = now;
     el.updatedBy = actor;
     art.version++; art.updatedAt = now; this.appliedOps.add(op.opId);
-    this.trace(art.roomId, actor, "edit_applied", `${actor.name} set ${op.elementId} = ${fmt(op.value)}`, { artifactId: art.id }, `edit_cell · ${op.elementId} = ${fmt(op.value)} · v${from} → v${el.version}`);
+    // NAIVE-DEMO: agent writes leave NO trace — the overwrite is invisible in the activity log.
+    if (actor.kind !== "agent") this.trace(art.roomId, actor, "edit_applied", `${actor.name} set ${op.elementId} = ${fmt(op.value)}`, { artifactId: art.id }, `edit_cell · ${op.elementId} = ${fmt(op.value)} · v${from} → v${el.version}`);
     return { ok: true, element: { ...el }, fromVersion: from, toVersion: el.version };
   }
 

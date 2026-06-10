@@ -46,11 +46,19 @@ Here the real agent has filled the variance column live on Convex.</sub>
 
 ### The headline, shown literally — two clients, one room, live
 
-![Two browser clients side by side: a chat message syncs from Client A to Client B, then a /ask agent run reconciles the sheet and broadcasts to both](docs/walkthroughs/two-client-live-sync.gif)
-
-<sub>Two <b>independent</b> browser clients in the same room, side by side. First a chat message posted in <b>Client&nbsp;A</b> lands in <b>Client&nbsp;B</b> with no refresh (Convex reactive <code>useQuery</code>); then Client&nbsp;A runs the <b>Room NodeAgent</b> (<code>/ask reconcile Q3 revenue</code>, a real LLM run) and its work — the reconciled variance + an explanation note — <b>broadcasts to both clients at once</b> (server-led). Captured <b>multi-pane</b> (one browser context per client) with the <a href="https://github.com/HomenShum/feature-walkthrough-gif#live-collaboration-multi-pane"><code>feature-walkthrough-gif</code></a> skill — a single cursor can't show cross-client sync or a server-led agent reaching every client; this can.</sub>
-
 </div>
+
+A change in one client appears in the other **with no refresh**, and a **server-led agent**'s work reaches **every** client. Captured **multi-pane** — one browser context per client — with the [`feature-walkthrough-gif`](https://github.com/HomenShum/feature-walkthrough-gif#live-collaboration-multi-pane) skill (a single cursor can't show cross-client sync; this can). Two angles:
+
+**① A fresh room, from empty.** Client&nbsp;A creates a brand-new room — a Q3 sheet with an **empty variance column** — and Client&nbsp;B joins. Client&nbsp;A runs the real Room NodeAgent (`/ask reconcile Q3 revenue`); the agent fills the empty variance **live on both clients** — the clean empty→reconciled reveal:
+
+![Fresh room, two clients side by side: the Room NodeAgent fills an empty Q3 variance column live on both, ending with green +$2,400 / +24% values and a reconciliation note](docs/walkthroughs/two-client-fresh-room.gif)
+
+**② The busy shared room.** The same capability in the live `Q3DEMO` room (with dozens of real guests already present): a human chat message syncs A→B, then `/ask reconcile Q3 revenue` runs and its result broadcasts to all — authentic, amid real concurrent activity:
+
+![Busy shared room, two clients side by side: a chat message syncs from Client A to Client B, then a /ask agent run reconciles the sheet and broadcasts to both](docs/walkthroughs/two-client-live-sync.gif)
+
+<sub>Both: <b>independent</b> browser clients (separate Convex sessions) side by side; sync is Convex reactive <code>useQuery</code>, the agent is server-led (<code>internalMutation</code> + scheduler) so its writes land on every client at once. A single-cursor screen capture can show neither — multi-pane is the only honest way to film a collaborative app.</sub>
 
 ## Watch it work — live walkthroughs
 

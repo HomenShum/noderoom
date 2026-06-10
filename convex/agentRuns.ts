@@ -72,6 +72,20 @@ export const record = internalMutation({
   },
 });
 
+/** Production gate: a room's total agent spend (USD) since `since`. Bounded read — the by_room index
+ *  is [roomId, createdAt], so a rolling-day window scans only that room's recent runs. The cross-run
+ *  cumulative cap that the per-run/per-slice ceilings cannot provide (one run is bounded; the SUM
+ *  across many /ask runs on a public surface is what this bounds). */
+export const roomSpendSince = internalQuery({
+  args: { roomId: v.id("rooms"), since: v.number() },
+  handler: async (ctx, { roomId, since }) => {
+    const rows = await ctx.db.query("agentRuns")
+      .withIndex("by_room", (q) => q.eq("roomId", roomId).gte("createdAt", since))
+      .collect();
+    return rows.reduce((sum, r) => sum + (r.costUsd ?? 0), 0);
+  },
+});
+
 export const list = query({
   args: { roomId: v.id("rooms"), requester: actorProofV },
   handler: async (ctx, { roomId, requester }) => {

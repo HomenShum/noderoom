@@ -17,6 +17,9 @@ export type OpenRouterModelInfo = {
   };
   pricing?: Record<string, string | undefined>;
   supported_parameters?: string[];
+  /** OpenRouter data-policy metadata (shape best-effort — see permitsTraining + the production-
+   *  readiness note: whether this field is reliably present per-model needs LIVE verification). */
+  data_policy?: { training?: boolean; canTrain?: boolean; [k: string]: unknown };
   top_provider?: {
     context_length?: number;
     max_completion_tokens?: number;
@@ -29,6 +32,13 @@ export type RankedOpenRouterModel = OpenRouterModelInfo & {
 };
 
 type ModelsResponse = { data?: OpenRouterModelInfo[] };
+
+/** A route DECLARES it trains on prompts. Conservative: only excludes on an explicit positive flag,
+ *  so absence of the field (the common case today) does not silently drop every model. */
+export function permitsTraining(model: OpenRouterModelInfo): boolean {
+  const dp = model.data_policy;
+  return dp?.training === true || dp?.canTrain === true;
+}
 
 let cachedModels: { fetchedAt: number; models: OpenRouterModelInfo[] } | null = null;
 
@@ -118,7 +128,13 @@ export async function discoverOpenRouterFreeModels(options: {
     });
     if (!res.ok) throw new Error(`OpenRouter models request failed: ${res.status}`);
     const json = await res.json() as ModelsResponse;
-    const models = (json.data ?? []).filter(isFreeTextModel);
+    let models = (json.data ?? []).filter(isFreeTextModel);
+    // Free-route data-policy filter (privacy gate). Backs the README's /free privacy disclosure with
+    // enforcement when OPENROUTER_REQUIRE_NO_TRAINING=1: exclude any route that DECLARES it trains on
+    // prompts. Default off because the per-model flag's availability is unconfirmed — turning it on
+    // without the field present would filter everything. Treated as NEEDS-LIVE-AUDIT in
+    // docs/PRODUCTION_READINESS.md (confirm OpenRouter exposes + honors the flag before claiming proven).
+    if (process.env.OPENROUTER_REQUIRE_NO_TRAINING === "1") models = models.filter((m) => !permitsTraining(m));
     if (models.length === 0) throw new Error("OpenRouter returned no free text models");
     cachedModels = { fetchedAt: now, models };
     return models;

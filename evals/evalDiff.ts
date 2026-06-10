@@ -25,7 +25,8 @@ function tamperIssues(storePath: string): string[] {
   try {
     const headCopy = execSync(`git show HEAD:"${storePath.replace(/\\/g, "/")}"`, { stdio: ["ignore", "pipe", "ignore"], maxBuffer: 64 * 1024 * 1024 }).toString();
     const working = existsSync(storePath) ? readFileSync(storePath, "utf8") : "";
-    if (!working.startsWith(headCopy)) issues.push(`${storePath} is not append-only vs HEAD — committed eval history was rewritten or deleted`);
+    const normalizeNewlines = (value: string) => value.replace(/\r\n/g, "\n");
+    if (!normalizeNewlines(working).startsWith(normalizeNewlines(headCopy))) issues.push(`${storePath} is not append-only vs HEAD — committed eval history was rewritten or deleted`);
   } catch { /* store not tracked at HEAD yet — nothing to guard */ }
   if (process.argv.includes("--tamper-strict")) {
     const guarded = ["evals/evalDiff.ts", "evals/evalStore.ts", "evals/cases.ts"];

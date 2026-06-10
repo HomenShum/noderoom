@@ -1,6 +1,6 @@
 # HALO Overnight Run
 
-Last updated: 2026-06-10T07:11Z.
+Last updated: 2026-06-10T08:50Z.
 
 Target deadline: 2026-06-10 10:00 AM PT.
 
@@ -39,8 +39,8 @@ Live status:
 - Status file: `docs/eval/halo-runs/20260609T183814Z/status.json`
 - Step log stream: `docs/eval/halo-runs/20260609T183814Z/summary.jsonl`
 - Active lock: `docs/eval/halo-runs/.active-run.json`
-- Current step at this update: `sleeping` after cycle 25.
-- Current wake: `2026-06-10T07:21:21.464Z`.
+- Current step at this update: `sleeping` after cycle 28.
+- Current wake: `2026-06-10T08:53:26.732Z`.
 - Current output status: `docs/eval/free-auto-router-ladder.json` exists
   (12,291 bytes). The latest full-live router ladder completed and failed
   overall.
@@ -55,7 +55,7 @@ The active lock points at the currently running process. A second
 `halo:overnight` runner exits before writing run artifacts while that process is
 alive.
 
-Latest active deterministic continuation evidence in `20260609T183814Z`, cycle 25:
+Latest active deterministic continuation evidence in `20260609T183814Z`, cycle 28:
 
 - `typecheck`: pass
 - `unit-tests`: pass, 31 files / 195 tests
@@ -63,18 +63,29 @@ Latest active deterministic continuation evidence in `20260609T183814Z`, cycle 2
 - `agent:improve`: pass; internal professional catalog, workflow evals,
   collaboration ladder, credit evals, eval diff, Convex boundaries, and
   architecture-budget steps all completed. It wrote
-  `docs/eval/agent-improvement-loop/20260610T065104Z.json`.
+  `docs/eval/agent-improvement-loop/20260610T082310Z.json`.
 - `eval:diff`: pass, 0 degraded / 0 removed / 0 improved / 5 new / 0 same
-- `qa:matrix:check`: pass, 13 features / 13 model routes current
+- `qa:matrix:check`: pass, 13 features / 13 model routes current at cycle time
 - `convex:boundaries`: pass
-- `architecture:budget`: advisory pass; stdout still reports review-required
-  dirty surfaces. Current missing/unowned evidence includes
-  `convex/agentJobRunner.ts`, `docs/WHY_NODEAGENT_AND_HALO.md`,
-  `e2e/three-user-collab.spec.ts`, `scripts/agent-improvement-loop.ts`,
-  `scripts/render-workflow-preview.ts`, `src/app/styles.css`,
-  `convex/crons.ts`, `docs/COMPLETENESS_REGISTER.md`,
-  `docs/IMPROVEMENT_ROADMAP.md`, `docs/QA_UI_FIX_PLAN.md`, and
-  `e2e/responsive-qa.spec.ts`.
+- `architecture:budget`: advisory pass, but stdout still reported
+  `missing behavior evidence: convex/rooms.ts`.
+
+Cycle 27/28 recovery proof:
+
+- `evals/evalDiff.ts` now normalizes CRLF to LF only for the append-only prefix
+  comparison, preserving the committed-history rewrite guard while avoiding a
+  Windows line-ending false positive.
+- `npm run qa:matrix` refreshed generated QA matrix artifacts.
+- `architecture:budget` now infers changed `tests/**`, `evals/**`, and
+  `docs/eval/**` files as behavior evidence, which cleared the cycle-28
+  `convex/rooms.ts` false positive after the prompt-injection/abuse-cap tests
+  landed.
+- Manual recovery commands passed after those changes: `npm run eval:diff`,
+  `npm run qa:matrix:check` (now 14 features / 13 model routes),
+  `npm run architecture:budget`, `npm run typecheck -- --pretty false`,
+  `npx tsc --noEmit --project convex\tsconfig.json --pretty false`,
+  `npm test` (33 files / 204 tests), `npm run content:fluency:check`, and
+  `npm run build`.
 
 Cycle 8 incident and recovery:
 
@@ -175,7 +186,7 @@ Run-control QA:
   and `.active-run.json` every 30s.
 - Sleeping states publish `sleepUntil` in `status.json`; `halo:status` and
   `halo:snapshots` render it when available. Latest active continuation wake:
-  `2026-06-10T07:21:21.464Z`.
+  `2026-06-10T08:53:26.732Z`.
 - `npm run halo:status` gives the lock, PID liveness, current step, latest
   events, and router ladder artifact state for each heartbeat/handoff.
 - `npm run halo:status` now reports `supervisor-state.json`, latest
@@ -188,8 +199,8 @@ Run-control QA:
   complete status report to `docs/eval/halo-runs/status-snapshots.jsonl`.
 - `npm run halo:snapshots` renders the JSONL trail into
   `docs/eval/halo-runs/status-snapshots.md` for a quick morning handoff read.
-  Latest generated report parses 61 snapshots, shows active deterministic runner
-  `20260609T183814Z` sleeping after cycle 25, records the router JSON artifact,
+  Latest generated report parses 64 snapshots, shows active deterministic runner
+  `20260609T183814Z` sleeping after cycle 28, records the router JSON artifact,
   and records the earlier duplicate/missing-supervisor anomalies that have
   since been closed.
 - A scheduled-task fire created a second supervisor at 2026-06-09T00:05 PT.

@@ -1,6 +1,6 @@
 # Gaps Not Yet Done
 
-Last updated: 2026-06-08
+Last updated: 2026-06-10
 
 NodeRoom is production-shaped, but it is not yet fully production-proven. The
 core harness exists: versioned room artifacts, bounded agent tools, lock/CAS
@@ -88,7 +88,7 @@ deployment is clean.
 
 | Gap | Current state | Needed proof | Acceptance gate |
 |---|---|---|---|
-| Trace size limits | Traces exist. | Add trace size caps, summarization/compaction, retention policy, and export hooks. | Long jobs do not bloat Convex documents or UI payloads. |
+| Trace size limits | Traces exist, and a bounded telemetry-retention cron now prunes old `traces`, `agentSteps`, and `agentOperationEvents` without touching product data or spend ledgers. | Add per-run trace size caps, summarization/compaction for oversized payloads, and export hooks. | Long jobs do not bloat Convex documents or UI payloads, and retained/exported traces remain explainable. |
 | Provider telemetry | Resolved model is recorded in key paths. | Track attempted models, final model, latency, token/cost, fallback count, error class, and retry reason. | Model routing decisions can be audited after the fact. |
 | Provenance fields | Evidence direction exists. | Add `valueBefore`, `contextSnapshotRef`, `promptHash`, `modelVersion`, and `harnessVersion` where appropriate. | A disputed cell can be traced back to source, prompt, model, and room state. |
 | SLO dashboard | QA matrix has visual docs. | Add operational dashboard for pass rate, p95 latency, job completion, provider health, and queue age. | Demo and production health are visible without opening logs. |
@@ -109,6 +109,7 @@ deployment is clean.
 | Self-updating wiki | Deterministic wiki/update rules and skill docs exist. | LLM-backed wiki agent that updates only from room-visible evidence and preserves a fixed TOC. | Wiki update eval proves stable TOC, clickable artifact refs, and no private leakage. |
 | Interview notes freshness | Interview notes and README are strong learning artifacts. | Keep new production lessons appended as the system evolves. | Every major harness/context engineering change updates README, interview notes, or the gap register. |
 | Architecture diagram freshness | Architecture docs and diagrams exist. | Keep diagrams regenerated when provider/parser/job architecture changes. | README architecture stays accurate after code changes. |
+| Audience-fluency proof artifacts | Audience context YAML, an affluent/private-investment episode brief, and a deterministic content-fluency gate exist. | Render the audience-specific episode from fixture data, run Gemini/video content review, and keep the trust-signal checklist in the generated QA matrix. | `npm run content:fluency:check` passes, the private-investment episode is rendered, and judge output verifies context accuracy, restraint, discretion, provenance, and proof quality. |
 
 ## Release Checklist
 

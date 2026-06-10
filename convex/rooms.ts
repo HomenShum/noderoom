@@ -7,12 +7,24 @@ import { actorProofV, hashToken, requireActorProof } from "./lib";
 
 const palette = ["#d97757", "#5b9bf5", "#7bd089", "#a78bfa", "#e4c567", "#e8845f"];
 
+// ── Production abuse gates (anon-join surface) ──────────────────────────────────────────────────
+// VITE_CONVEX_URL ships in the public bundle, so every mutation is directly callable by a scripted
+// client. These deterministic caps bound the blast radius: code entropy stops enumeration, the
+// member cap stops room flooding, the join-rate window stops scripted mass-joins.
+const ROOM_CODE_RE = /^[A-Z0-9]{6,12}$/; // ≥6 of [A-Z0-9] → 36^6 ≈ 2.2B codes; enumeration is impractical
+const MAX_MEMBERS_PER_ROOM = 32;
+const MAX_JOINS_PER_MINUTE = 10;
+const MAX_NAME_LEN = 40;
+const MAX_TITLE_LEN = 80;
+
 export const create = mutation({
   args: { code: v.string(), title: v.string(), hostName: v.string(), authToken: v.string(), autoAllow: v.optional(v.boolean()) },
   handler: async (ctx, a) => {
     const now = Date.now();
     const identity = await ctx.auth.getUserIdentity();
     const code = a.code.toUpperCase();
+    if (!ROOM_CODE_RE.test(code)) throw new Error("weak_room_code"); // server-enforced entropy floor
+    if (a.title.length > MAX_TITLE_LEN || a.hostName.length > MAX_NAME_LEN) throw new Error("field_too_long");
     const existing = await ctx.db.query("rooms").withIndex("by_code", (q) => q.eq("code", code)).first();
     if (existing) throw new Error("room_code_taken");
     const roomId = await ctx.db.insert("rooms", { code, title: a.title, hostId: "", autoAllow: a.autoAllow ?? false, status: "live", createdAt: now });
@@ -33,7 +45,13 @@ export const joinAnonymous = mutation({
     const identity = await ctx.auth.getUserIdentity();
     const now = Date.now();
     const anon = a.anon ?? true;
-    const count = (await ctx.db.query("members").withIndex("by_room", (q) => q.eq("roomId", room._id)).collect()).length;
+    if (a.name.length > MAX_NAME_LEN) throw new Error("field_too_long");
+    const existing = await ctx.db.query("members").withIndex("by_room", (q) => q.eq("roomId", room._id)).collect();
+    // Abuse gates: room capacity + join-rate window (joins are members created in the last 60s).
+    if (existing.length >= MAX_MEMBERS_PER_ROOM) return { error: "room_full" as const };
+    const recentJoins = existing.filter((m) => m._creationTime > now - 60_000).length;
+    if (recentJoins >= MAX_JOINS_PER_MINUTE) return { error: "join_rate_limited" as const };
+    const count = existing.length;
     const memberId = await ctx.db.insert("members", { roomId: room._id, name: a.name, role: "member", anon, color: palette[count % palette.length], authTokenHash: await hashToken(a.authToken), authSubject: identity?.subject, lastSeenAt: now });
     await ctx.db.insert("traces", { roomId: room._id, ts: now, actor: { kind: "user", id: memberId, name: a.name }, type: "member_joined", summary: `${a.name} joined${anon ? " (anon)" : ""}` });
     return { roomId: room._id, memberId };

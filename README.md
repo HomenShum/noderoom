@@ -10,7 +10,7 @@ through the same versioned concurrency control.**
 
 `multi-panel room` · `public + private agents` · `affected-range lock` · `draft-for-merge` · `per-room traces` · `live Convex + real LLM`
 
-[Why Convex](#why-convex-and-why-not) · [Lessons](#lessons-from-building-noderoom) · [Why & HALO](docs/WHY_NODEAGENT_AND_HALO.md) · [Quickstart](#quickstart) · [Agent runtime](docs/AGENT_RUNTIME.md) · [Agent eval](docs/AGENT_EVAL.md) · [Agent wiki](docs/AGENT_WIKI.md) · [Design](docs/DESIGN.md) · [Stack](docs/STACK.md) · [Walkthrough](docs/WALKTHROUGH.md) · [Architecture](docs/ARCHITECTURE.md) · [Open gaps](docs/GAPS_NOT_DONE.md)
+[Why Convex](#why-convex-and-why-not) · [Audience fluency](#audience-world-proof-artifacts) · [Lessons](#lessons-from-building-noderoom) · [Why & HALO](docs/WHY_NODEAGENT_AND_HALO.md) · [Quickstart](#quickstart) · [Agent runtime](docs/AGENT_RUNTIME.md) · [Agent eval](docs/AGENT_EVAL.md) · [Agent wiki](docs/AGENT_WIKI.md) · [Design](docs/DESIGN.md) · [Stack](docs/STACK.md) · [Walkthrough](docs/WALKTHROUGH.md) · [Architecture](docs/ARCHITECTURE.md) · [Open gaps](docs/GAPS_NOT_DONE.md)
 
 [Interview notes](docs/INTERVIEW_NOTES.md) · [Over-engineering audit](docs/OVERENGINEERING_AUDIT.md) · [Improvement roadmap](docs/IMPROVEMENT_ROADMAP.md)
 
@@ -45,8 +45,13 @@ Here the real agent has filled the variance column live on Convex.</sub>
 ## Watch it work — live walkthroughs
 
 **Try it yourself → [noderoom.live](https://noderoom.live)** — join with a room code or start a
-room; no account needed. **Status: live beta** on a dev Convex deployment — production-*shaped*,
-not production-*proven*; the honest boundary lives in [`docs/GAPS_NOT_DONE.md`](docs/GAPS_NOT_DONE.md).
+room; no account needed. **Status: live beta** on a dev Convex deployment. Production-readiness is
+tracked **gate by gate** in [`docs/PRODUCTION_READINESS.md`](docs/PRODUCTION_READINESS.md): the
+no-clobber spine, agent reliability, and the public-app abuse surface (prompt-injection fencing,
+join rate-limits + caps, cumulative daily spend cap, telemetry retention) are **proven by tests**;
+OpenRouter's live data policy, rate-limiting + lock fencing under real concurrency, and cron SLA are
+**honestly marked "needs a live audit,"** which is what keeps "beta" on
+([`docs/GAPS_NOT_DONE.md`](docs/GAPS_NOT_DONE.md) has the narrative).
 One privacy note before you bring real data: `/free` routes work through community free-tier
 models whose providers may log prompts — keep sensitive GTM/finance figures out of `/free` runs
 (the paid interactive lane does not use those routes).
@@ -127,6 +132,36 @@ handoff evidence.
 The HALO ladder also renders trace-replayed skill previews from real ladder JSON
 (`l1-read` through `l6-long-horizon`) in `docs/eval/workflow-previews/`, so a
 workflow change has a small visual proof, not only a text score.
+
+## Audience-World Proof Artifacts
+
+NodeRoom's distribution story should not be "look at this AI workspace." The stronger proof is:
+**here is what happens when high-trust teams need to coordinate research, decisions, documents,
+spreadsheets, advisors, and AI without losing discretion, accuracy, provenance, or control.**
+That matters for GTM sales teams and finance/banker workflows, and it matters even more for
+private-client contexts where the buyer recognizes the operating texture before they trust the
+software.
+
+The repo now treats that as an eval surface, not marketing copy:
+
+- Audience research lives in [`episodes/_audiences/`](episodes/_audiences/). The current canonical
+  lane is [`family-office.yaml`](episodes/_audiences/family-office.yaml), which captures values,
+  repeated questions, recognizable artifacts, product mappings, trust signals, and source notes.
+- The reusable agent contract is [`docs/skills/audience-fluency/SKILL.md`](docs/skills/audience-fluency/SKILL.md):
+  audience research → client-world map → scenario translation → lexicon mining → trust-signal check
+  → cultural-fluency eval.
+- The first affluent/private-investment scenario is
+  [`episodes/private-investment-room-v1/brief.md`](episodes/private-investment-room-v1/brief.md):
+  a private investment team preparing for an IC meeting, where the product proof is not "AI fills
+  cells" but "who changed what, from which source, and what can the principal safely review?"
+- The already-rendered generic engineering explainer is
+  [`episodes/noderoom-live-collab-v1/report.md`](episodes/noderoom-live-collab-v1/report.md), with
+  Gemini video-understanding judge evidence at
+  [`episodes/noderoom-live-collab-v1/judge.md`](episodes/noderoom-live-collab-v1/judge.md).
+
+Run `npm run content:fluency:check` to keep this layer honest. Current status is **yellow**:
+the audience context and private-investment brief are present and checked, but the audience-specific
+episode still needs to be rendered and judged before it can be called production-proven.
 
 ## Why Convex (and why not)
 
@@ -440,7 +475,7 @@ and releases, live (the real `runRoomAgent` action when on Convex; the real in-m
 
 This section is generated from `docs/qa/production-matrix.json`. When the system grows, append or update a matrix row, then run `npm run qa:matrix`; CI can run `npm run qa:matrix:check` to catch stale docs.
 
-<sub>13 feature guarantees tracked | 5 green | 7 yellow | 1 red | 1 live model route(s) cleared L1-L4 in the latest recorded ladder.</sub>
+<sub>14 feature guarantees tracked | 5 green | 8 yellow | 1 red | 1 live model route(s) cleared L1-L4 in the latest recorded ladder.</sub>
 
 ![QA coverage graph](docs/eval/qa-coverage.svg)
 
@@ -461,6 +496,7 @@ This section is generated from `docs/qa/production-matrix.json`. When the system
 | Browser E2E dogfood | Red | Playwright or equivalent real-browser specs for two-context cell edits, optimistic chat failure/retry, public/private leak checks, wall CRUD, job controls, and proposal conflict feedback. |
 | Unified NodeAgent jobs | Yellow | Interactive /ask and /free both create or reuse agentJobs, artifact writes emit receipts, job details are browser-visible, notebook graph mutations enqueue embeddings, and live browser/backend smoke proves linked runs/steps. |
 | Agent improvement loop | Yellow | Deterministic loop passes, live provider/Convex/UI media lanes run when keys are present, and failures generate a handoff before chart promotion. |
+| Audience fluency content | Yellow | Audience context YAML, scenario brief, trust-signal checklist, deterministic content-fluency gate, rendered audience-specific episode, and video/content judge evidence. |
 
 | Live route | Provider | L1 | L2 | L3 | L4 | Promotion call |
 |---|---|---:|---:|---:|---:|---|

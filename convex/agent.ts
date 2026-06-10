@@ -49,6 +49,7 @@ const agentJobsFinishInteractiveRef = makeFunctionReference<"mutation">("agentJo
 const agentRunsClaimOrReuseRef = makeFunctionReference<"mutation">("agentRuns:claimOrReuse") as any;
 const agentRunsFinishRef = makeFunctionReference<"mutation">("agentRuns:finish") as any;
 const agentStepsRecordRef = makeFunctionReference<"mutation">("agentSteps:record") as any;
+const roomSpendSinceRef = makeFunctionReference<"query">("agentRuns:roomSpendSince") as any;
 const postPrivateReplyRef = makeFunctionReference<"mutation">("messages:postPrivateAgentReply") as any;
 const ensurePersonalPublicSessionRef = makeFunctionReference<"mutation">("collab:ensurePersonalPublicSession") as any;
 
@@ -92,6 +93,12 @@ export const runRoomAgent = action({
       actor = { kind: "agent", id: session.agentId, name: session.agentName, scope: "public" };
       sessionId = String(session.id);
     }
+    // Production gate — cumulative daily spend cap. Per-run/slice ceilings bound ONE run; this bounds
+    // the SUM across runs so a public /ask surface can't be driven into runaway cost (the cross-run
+    // gap the spend ceilings cannot cover). Substrate: agentRuns.costUsd + the by_room index.
+    const dailyCapUsd = envNumber("ROOM_MAX_USD_PER_DAY", 10, 0.1, 10_000);
+    const spentToday: number = await ctx.runQuery(roomSpendSinceRef, { roomId: a.roomId, since: t0 - 24 * 60 * 60 * 1000 });
+    if (spentToday >= dailyCapUsd) throw new Error("room_daily_spend_cap");
     const model = agentModel(process.env.AGENT_MODEL ?? "gemini-3.5-flash"); // current recorded L1-L4 collaboration-safe fallback; override via AGENT_MODEL.
     const requestedSteps = a.maxSteps ?? (a.mode === "research" ? 60 : 10);
     const maxSteps = Math.max(1, Math.min(requestedSteps, a.mode === "research" ? 80 : 24));

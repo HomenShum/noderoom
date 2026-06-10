@@ -27,6 +27,7 @@ import type * as lib from "../lib.js";
 import type * as locks from "../locks.js";
 import type * as messages from "../messages.js";
 import type * as notebookGraph from "../notebookGraph.js";
+import type * as retention from "../retention.js";
 import type * as rooms from "../rooms.js";
 import type * as seed from "../seed.js";
 import type * as spreadsheetIndexLib from "../spreadsheetIndexLib.js";
@@ -57,6 +58,7 @@ declare const fullApi: ApiFromModules<{
   locks: typeof locks;
   messages: typeof messages;
   notebookGraph: typeof notebookGraph;
+  retention: typeof retention;
   rooms: typeof rooms;
   seed: typeof seed;
   spreadsheetIndexLib: typeof spreadsheetIndexLib;

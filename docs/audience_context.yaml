@@ -1,0 +1,137 @@
+audiences:
+  - id: single_family_office
+    label: Single-family office (CIO / COO / principal's chief of staff)
+    cultural_values:
+      - Provenance over polish — they need to know where a number came from before they act on it.
+      - Discretion is the product. The family's name, holdings, and intentions never leave the room unredacted.
+      - Control before speed — an unreviewed change to an allocation memo is worse than a slow one.
+      - In-house by default. Per UBS GFO 2025, two-thirds run most functions in-house, citing operational control and privacy (63%).
+    repeated_questions:
+      - "Who touched this figure, and can I see the source row?"
+      - "Did anything get sent to a third-party model that shouldn't have?"
+      - "Can the family see a clean briefing without seeing the raw working notes?"
+    recognizable_artifacts:
+      - IC pre-read with allocation deltas vs last quarter
+      - Manager/fund tracker with commitment, NAV, and a 'who updated this' column
+      - Private-markets pacing model (private markets ~29% of NA portfolios per RBC 2025)
+    product_mapping:
+      - feature: Per-room traces (every edit writes type+summary+detail receipt)
+        pain: "Numbers appear in a model with no chain of custody; nobody can say who changed the pacing assumption."
+      - feature: Private-draft ops redaction ([private draft] in public traces; evidencePolicy mixed_requires_redaction)
+        pain: "Working notes and the family's raw figures leak into shared/agent-visible surfaces."
+      - feature: summarizeRoomForPrivate (bounded, read-only room briefing)
+        pain: "Principal wants a decision-ready summary, not the messy spreadsheet underneath it."
+
+  - id: founder_operator
+    label: Founder / operating executive coordinating advisors
+    cultural_values:
+      - Decisions before meetings — the work should be settled in the room, not re-litigated live.
+      - One source of truth across a lawyer, banker, and accountant who don't share a tool.
+      - Reviewable AI assistance — happy to let an agent draft, not to let it commit unchecked.
+    repeated_questions:
+      - "What changed since I last looked, and who changed it?"
+      - "Can my advisor edit the same sheet without overwriting my version?"
+      - "If the AI fills this in, do I approve before it's final?"
+    recognizable_artifacts:
+      - Cap-table / scenario sheet shared with counsel and a banker
+      - Diligence checklist with owners and status
+      - Board pre-read assembled from several contributors
+    product_mapping:
+      - feature: Affected-range lock + per-element CAS (lock to draft to smart-merge)
+        pain: "Two advisors edit the same model and one silently clobbers the other's work."
+      - feature: Review mode (autoAllow off makes agent writes pending proposals; resolveProposal gate)
+        pain: "An AI agent commits a change to a live document with no human approval step."
+      - feature: Host takeover (hostForceReleaseLock, host-only moderation)
+        pain: "An agent or contributor holds a stuck lock and freezes the room before a deadline."
+
+  - id: wealth_advisor
+    label: Private wealth advisor / multi-family office relationship lead
+    cultural_values:
+      - Defensible advice — every recommendation traces to a source and a timestamp.
+      - Client confidentiality is a regulatory and trust obligation, not a preference.
+      - Coordinated, not duplicated — enriching a client record should update, never re-create it.
+    repeated_questions:
+      - "Can I show the client exactly how we got to this recommendation?"
+      - "Is client data being kept off models that might train on it?"
+      - "When I import new research, does it update the existing record cleanly?"
+    recognizable_artifacts:
+      - Household balance sheet across entities and custodians
+      - Manager research / due-diligence enrichment with citations
+      - Suitability and review documentation trail
+    product_mapping:
+      - feature: Evidence-bearing cells (ENRICH/CLASSIFY writes value+status+confidence+source)
+        pain: "Advice rests on numbers with no citation; a regulator or client asks 'says who?' and there's no answer."
+      - feature: Research upsert (import updates rows, never duplicates)
+        pain: "Re-running research spawns duplicate client/account rows and corrupts the record."
+      - feature: Permissions + evidencePolicy (public_only / private_allowed / mixed_requires_redaction; /free routing warning)
+        pain: "Sensitive client figures pass through community free-tier models whose providers may log prompts."
+
+  - id: boutique_ma
+    label: Boutique M&A / advisory deal team
+    cultural_values:
+      - Deal-room discretion — the wrong figure in the wrong pane ends a process.
+      - Provenance for every comp and adjustment — diligence is the deliverable.
+      - Speed under deadline without losing the audit trail.
+    repeated_questions:
+      - "Who changed this comp, off what source, and when?"
+      - "Can buy-side and the analyst edit the model without a merge accident?"
+      - "Can I redact the working layer before this leaves the room?"
+    recognizable_artifacts:
+      - Comps and precedent-transactions workbook
+      - Reconciliation / quality-of-earnings worksheet
+      - Process tracker across bidders with owners
+    product_mapping:
+      - feature: Per-element CAS + lock fencing + lease/janitor
+        pain: "A concurrent edit overwrites a reconciled cell mid-deal and nobody notices until the read-out."
+      - feature: Per-room traces + full_operation_ledger trace level
+        pain: "Diligence needs a defensible record of every adjustment; ad-hoc spreadsheets have none."
+      - feature: Private-draft redaction + summarizeRoomForPrivate
+        pain: "Working adjustments must stay internal; only a clean summary goes to the principal."
+
+  - id: next_gen_wealth
+    label: Next-generation principal / family successor
+    cultural_values:
+      - Continuity — the reasoning behind a decision must survive the person who made it.
+      - Transparency with discretion — they want to see the work without exposing it.
+      - Values and philanthropy as a coordination surface (RBC 2025 — ~90% give, philanthropy bridges generations).
+    repeated_questions:
+      - "Why was this decided this way before I was involved?"
+      - "Can I review what the family agreed to without re-opening every thread?"
+      - "Can advisors and family edit the same plan without chaos?"
+    recognizable_artifacts:
+      - Family governance / succession plan (only 53% of FOs have a formal one per UBS 2025)
+      - Philanthropic allocation tracker with rationale
+      - Shared decision log across generations and advisors
+    product_mapping:
+      - feature: Per-room traces (append-only decision receipts)
+        pain: "Institutional memory lives in one person's head; when they leave, the 'why' is gone."
+      - feature: summarizeRoomForPrivate (read-only briefing)
+        pain: "The successor wants the decision, not a re-derivation through raw working files."
+      - feature: Smart-merge draft model (revise around a lock, never clobber)
+        pain: "Multiple generations and advisors touching one plan overwrite each other's intent."
+
+  - id: private_client_operator
+    label: Private-client operator (concierge / discretion-first service lead)
+    cultural_values:
+      - Quiet excellence — the system should feel like a trusted back office, not a dashboard.
+      - Personalization with restraint — the top 0.1% of clients (Bain/Altagamma 2025 — 37% of luxury value) expect intimacy and discretion, not display.
+      - Coordination behind the scenes so the principal never sees the seams.
+    repeated_questions:
+      - "Can my team coordinate on this without the client ever seeing the plumbing?"
+      - "If I let an assistant or agent help, does anything leave our control?"
+      - "Can I hand the principal one clean view?"
+    recognizable_artifacts:
+      - Cross-vendor coordination tracker (counsel, custodian, accountant)
+      - Confidential request/decision log
+      - Principal-facing one-page brief
+    product_mapping:
+      - feature: Review mode + host takeover (control-before-mutation, host-only override)
+        pain: "Assistance helps until an unreviewed or stuck action embarrasses the operator in front of the principal."
+      - feature: Private-draft redaction + permissions/evidencePolicy
+        pain: "Behind-the-scenes coordination must never surface in a client-visible layer."
+      - feature: summarizeRoomForPrivate (principal-ready briefing)
+        pain: "Hours of coordination must resolve into one calm, defensible page."
+
+notes:
+  - Every product_mapping feature is verified in code: traces (convex/locks.ts, drafts.ts, artifacts.ts), proposals/review (convex/artifacts.ts resolveProposal + autoAllow gate), private-draft redaction (convex/drafts.ts:33,71; evidencePolicy in schema.ts:37/agentJobs.ts:12), host takeover (convex/locks.ts:142-166 hostForceReleaseLock), summary (convex/agent.ts:341 summarizeRoomForPrivate; traceLevel summary), permissions (convex/rooms.ts roles + requireActorProof).
+  - Voice: quiet competence. No yachts/jets/luxury/VIP/elite language. Recognition of the buyer's operating reality, not aesthetic cosplay.

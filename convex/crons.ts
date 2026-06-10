@@ -11,4 +11,9 @@ const crons = cronJobs();
 
 crons.interval("sweep expired lock leases", { minutes: 1 }, internal.locks.sweepExpiredLocks, {});
 
+// Production gate: bound telemetry growth. Prunes traces/agentSteps/agentOperationEvents older than
+// the retention window in bounded batches (convex/retention.ts) so a live deployment's storage can't
+// grow without ceiling. Product data, chat, and the spend ledger are intentionally untouched.
+crons.interval("prune old telemetry", { hours: 6 }, internal.retention.pruneOldTelemetry, {});
+
 export default crons;

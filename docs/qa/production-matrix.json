@@ -287,6 +287,28 @@
         { "type": "media", "ref": "docs/eval/ui-recordings/live-ui-walkthrough-20260608.mp4" }
       ],
       "nextReview": "Record full live provider benchmark, free-auto ladder, and Gemini-reviewed UI recording before marking green."
+    },
+    {
+      "id": "audience_fluency_content",
+      "area": "Audience fluency content",
+      "claim": "README, video, and interview proof artifacts translate NodeRoom features into researched high-trust professional workflow scenes instead of generic AI demos.",
+      "status": "yellow",
+      "productionGate": "Audience context YAML, scenario brief, trust-signal checklist, deterministic content-fluency gate, rendered audience-specific episode, and video/content judge evidence.",
+      "deterministicChecks": [
+        "npm run content:fluency:check"
+      ],
+      "liveChecks": [
+        "npx tsx scripts/walkthroughs/judge-video.ts noderoom-live-collab-v1",
+        "missing: render and judge episodes/private-investment-room-v1 before marking green"
+      ],
+      "evidence": [
+        { "type": "doc", "ref": "docs/skills/audience-fluency/SKILL.md" },
+        { "type": "data", "ref": "episodes/_audiences/family-office.yaml" },
+        { "type": "doc", "ref": "episodes/_audiences/README.md" },
+        { "type": "doc", "ref": "episodes/private-investment-room-v1/brief.md" },
+        { "type": "doc", "ref": "episodes/noderoom-live-collab-v1/report.md" }
+      ],
+      "nextReview": "Render the private-investment-room episode with fixture data, run Gemini video review plus a content-fluency rubric, then promote only if proof quality and discretion pass."
     }
   ],
   "modelLadder": {
@@ -413,7 +435,7 @@
     ]
   },
   "readme": {
-    "maxFeatureRows": 13,
+    "maxFeatureRows": 14,
     "summaryTitle": "Production QA cockpit"
   }
 }

@@ -7,7 +7,7 @@ const manifest: ArchitectureOwnershipManifest = {
     { id: "agent-runtime", patterns: ["src/agent/**"] },
     { id: "nodeagent-jobs", patterns: ["convex/agentJobs.ts"] },
     { id: "graph-wiki-embedding-experimental", patterns: ["convex/schema.ts", "convex/notebookGraph.ts"] },
-    { id: "qa-improvement-loop", patterns: ["tests/**", "docs/eval/**"] },
+    { id: "qa-improvement-loop", patterns: ["tests/**", "docs/eval/**", "docs/qa/**"] },
   ],
 };
 
@@ -21,6 +21,26 @@ describe("architecture budget", () => {
 
     expect(result.changedFilesWithoutEvidence).toEqual([]);
     expect(result.unownedFiles).toEqual([]);
+    expect(result.requiresHumanApproval).toBe(false);
+  });
+
+  it("infers changed tests as behavior evidence for automated HALO runs", () => {
+    const result = checkArchitectureBudget({
+      changedFiles: ["src/agent/context.ts", "tests/promptInjection.test.ts"],
+      ownershipManifest: manifest,
+    });
+
+    expect(result.changedFilesWithoutEvidence).toEqual([]);
+    expect(result.requiresHumanApproval).toBe(false);
+  });
+
+  it("allows production matrix edits only when the changed set contains evidence", () => {
+    const result = checkArchitectureBudget({
+      changedFiles: ["docs/qa/production-matrix.json", "tests/qaMatrix.test.ts"],
+      ownershipManifest: manifest,
+    });
+
+    expect(result.forbiddenFiles).toEqual([]);
     expect(result.requiresHumanApproval).toBe(false);
   });
 

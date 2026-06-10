@@ -1,0 +1,63 @@
+<!-- Provenance: production-readiness audit + research/judge workflow wf_ac097fb8-b4d (2026-06-10),
+     ground-truthed against the tree. The honest answer to "are we production-proven end to end?" -->
+
+# Production readiness — gate by gate
+
+"Production-proven end to end" is not a badge you self-award; it is a **per-gate** claim, and each
+gate is only as proven as its strongest evidence. This matrix is the honest accounting: what is
+**PROVEN** (a deterministic test exercises the failure mode), what is **IMPLEMENTED** (the control
+ships but its proof needs a live deployment), and what still **NEEDS A LIVE AUDIT** (cannot be
+settled in `convex-test` alone). NodeRoom is **live beta** until every NEEDS-LIVE-AUDIT row clears.
+
+## The no-clobber spine — PROVEN
+
+| Gate | Evidence |
+|---|---|
+| Per-element CAS (no silent overwrite) | `convex/artifacts.ts` `applyCellEditCore`; ladder L2/L3 + `tests/lockFencing.test.ts` |
+| Affected-range locks, read-only for non-holders | `convex/locks.ts`; ladder L4 |
+| Lease-epoch fencing (TTL < slice budget) + renewal | `convex/artifacts.ts`, `convex/lib.ts`; `tests/lockFencing.test.ts` (6/6) |
+| Lock TTL janitor (status + session + smart-merge) | `convex/crons.ts` → `locks.sweepExpiredLocks`; tested |
+| Host lock takeover (host-only) | `convex/locks.ts` `hostForceReleaseLock`; tested |
+| Draft-for-merge / proposal review (host-gated approval, cross-room blocked) | `convex/artifacts.ts` `resolveProposal` (`requireActorProof` + host role) |
+| Private-draft `ops` redaction (no cross-member leak) | `convex/rooms.ts` `full`; `tests/lockFencing.test.ts` |
+
+## Agent reliability — PROVEN
+
+| Gate | Evidence |
+|---|---|
+| Durable slices + exactly-once journal (no double-bill on retry) | `tests/gatewayAndJournal.test.ts`, `tests/agentJobsRuntime.test.ts` |
+| Idempotency (no concurrent double-run) | `tests/idempotencyRuntime.test.ts` |
+| Per-run + per-slice token **and** USD spend ceilings | `src/agent/runtime.ts` `priceStep` wired into `convex/agent.ts` + `agentJobRunner.ts`; `tests/gatewayAndJournal.test.ts` |
+| Error-path handoff preserves unexecuted tool calls (resume-cursor integrity) | `src/agent/runtime.ts`; `tests/gatewayAndJournal.test.ts` |
+| PII/secret outbound redaction | `src/agent/gateway.ts`; tested |
+
+## Abuse & safety surface (public, anonymously-joinable) — PROVEN
+
+| Gate | Evidence |
+|---|---|
+| **Prompt injection** — room content reaches the model as fenced DATA, never instructions; forged fence-close neutralized | `src/agent/context.ts` `fenceUntrusted` + `systemPrompt.ts` TRUST BOUNDARY; `tests/promptInjection.test.ts` (4/4, incl. a behavioral "agent touches only its target despite a hostile sibling cell") |
+| **Join rate limit + member cap** (10 joins/min sliding, 32 members/room) | `convex/rooms.ts` |
+| **Room-code entropy floor** (server-enforced `[A-Z0-9]{6,12}`, ≈2.2B space) | `convex/rooms.ts` |
+| **Cumulative daily USD cap per room** (bounds the SUM across `/ask` runs, not just one run) | `convex/agentRuns.ts` `roomSpendSince` + gate in `convex/agent.ts`; `tests/productionGates.test.ts` |
+| **Telemetry retention** (traces/agentSteps/operation-events pruned past the window, product data untouched) | `convex/retention.ts` + `convex/crons.ts`; `tests/productionGates.test.ts` |
+| Field-length caps (name/title) | `convex/rooms.ts` |
+
+## IMPLEMENTED — control ships, proof needs the live deployment
+
+| Gate | What ships | Why not yet PROVEN |
+|---|---|---|
+| Free-route data-policy filter | `OPENROUTER_REQUIRE_NO_TRAINING=1` excludes routes that *declare* training (`src/agent/openRouterFreeModels.ts` `permitsTraining`) | Whether OpenRouter reliably exposes a per-model training flag — and honors it — is **unconfirmed**; default off so it doesn't filter every model on a missing field. Confirm with OpenRouter, then flip on + prove. |
+
+## NEEDS A LIVE AUDIT — cannot be settled offline
+
+1. **OpenRouter's actual data policy** — confirm the `/free` lane's providers honor a no-training flag; until then the README privacy note (keep sensitive data out of `/free`) is the real control.
+2. **Rate-limiting under real concurrency** — Convex doesn't expose client IP, so the cap keys on actor/room; a load test on staging (many concurrent anon joins) must confirm buckets hold.
+3. **Cost-injection under live models** — a hostile prompt ("emit 250k tokens") is bounded by the per-run cap, but the cumulative daily cap needs a live run to confirm it trips.
+4. **Lock fencing under high concurrency** — 100+ agents racing the same lock at the 5-min TTL boundary needs a load test, not just the isolated unit proofs.
+5. **Cron SLA** — the retention + janitor crons assume reliable execution; production must monitor success + alert on a missed run.
+
+## Bottom line
+
+Every gate that *can* be proven offline **is** proven (tests above). The remaining work to retire
+"beta" is a live security audit + load test of the five rows in the last section — not new
+features. When those clear, this file's header line is the only thing that changes.

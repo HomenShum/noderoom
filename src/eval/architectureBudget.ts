@@ -48,18 +48,20 @@ export const DEFAULT_ARCHITECTURE_BUDGET: ArchitectureBudget = {
   ],
 };
 
-const forbiddenPatterns: Array<{ pattern: RegExp; reason: string }> = [
+const forbiddenPatterns: Array<{ pattern: RegExp; reason: string; allowWithEvidence?: boolean }> = [
   { pattern: /^convex\/schema\.ts$/, reason: "schema/table changes need explicit approval or a failing workflow eval" },
   { pattern: /^src\/ui\//, reason: "new or changed UI surfaces need explicit approval from the handoff evidence" },
   { pattern: /^convex\/(notebookGraph|embeddings|embeddingRunner)\.ts$/, reason: "graph/wiki/embedding expansion needs a failing workflow eval" },
-  { pattern: /^docs\/qa\/production-matrix\.json$/, reason: "production guarantee changes must be backed by a recorded run" },
+  { pattern: /^docs\/qa\/production-matrix\.json$/, reason: "production guarantee changes must be backed by a recorded run", allowWithEvidence: true },
 ];
 
 export function checkArchitectureBudget(input: ArchitectureBudgetCheckInput): ArchitectureBudgetCheckResult {
   const normalizedChanged = unique(input.changedFiles.map(normalizePath).filter(Boolean));
-  const evidenceFiles = unique((input.evidenceFiles ?? []).map(normalizePath).filter(Boolean));
+  const explicitEvidenceFiles = unique((input.evidenceFiles ?? []).map(normalizePath).filter(Boolean));
+  const inferredEvidenceFiles = normalizedChanged.filter(isEvidenceFile);
+  const evidenceFiles = unique([...explicitEvidenceFiles, ...inferredEvidenceFiles]);
   const validEvidenceFiles = evidenceFiles.filter(isEvidenceFile);
-  const invalidEvidenceFiles = evidenceFiles.filter((file) => normalizedChanged.includes(file) && !isEvidenceFile(file));
+  const invalidEvidenceFiles = explicitEvidenceFiles.filter((file) => normalizedChanged.includes(file) && !isEvidenceFile(file));
   const changedFilesWithoutEvidence =
     validEvidenceFiles.length === 0 ? normalizedChanged.filter((file) => !isEvidenceFile(file)) : [];
   const ownership = input.ownershipManifest ? ownershipFor(normalizedChanged, input.ownershipManifest) : new Map<string, string[]>();
@@ -75,6 +77,7 @@ export function checkArchitectureBudget(input: ArchitectureBudgetCheckInput): Ar
   const forbiddenFiles = normalizedChanged.flatMap((file) =>
     forbiddenPatterns
       .filter(({ pattern }) => pattern.test(file))
+      .filter(({ allowWithEvidence }) => !(allowWithEvidence && validEvidenceFiles.length > 0))
       .map(({ reason }) => ({ file, reason })),
   );
 

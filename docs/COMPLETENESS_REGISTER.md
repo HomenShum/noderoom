@@ -59,7 +59,7 @@ Synthesized 2026-06-09 from four parallel audits (README/docs, audience-fit, fea
 | # | Item | Audience | Evidence / source |
 |---|---|---|---|
 | 19 | Drag-to-chat artifact-refs GIF (~20s; fully implemented at LeftRail.tsx:68-69 + src/ui/artifactRefs.ts, zero visual demo) and mobile panel-toggle GIF after #3 lands — the only 2 implemented-but-invisible affordances of 39 features | user, engineer | Feature-coverage audit |
-| 20 | Q4 retention policy + export cadence (unbounded traces); Q6 capacity ceilings + pagination (unbounded `.collect()`); Q7 `valueBefore` persistence + restore runbook (the documented lower-altitude alternative to the denylisted full agent-run revert) | engineer | IMPROVEMENT_ROADMAP Q4/Q6/Q7 |
+| 20 | Q4 retention is partially landed (bounded telemetry prune exists); remaining Q4 export cadence/trace caps, Q6 capacity ceilings + pagination (unbounded `.collect()`), and Q7 `valueBefore` persistence + restore runbook (the documented lower-altitude alternative to the denylisted full agent-run revert) | engineer | IMPROVEMENT_ROADMAP Q4/Q6/Q7 |
 | 21 | Doc bookkeeping: mark roadmap P0-3 (`--strict`) as verified wired; add diagram-freshness keep-alive line to README (`npm run architecture:budget`) | engineer | Roadmap verification; GAPS_NOT_DONE P2-1 |
 
 ## Sequencing note (from the roadmap-verification audit)

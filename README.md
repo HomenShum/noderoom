@@ -28,8 +28,9 @@ the draft **smart-merges** and can never clobber committed work.
 It runs in **two modes from the same code**:
 
 - **No keys** — a deterministic in-memory engine + scripted agents. `npm run demo` / `npm run dev`.
-- **Live** — a real **Convex** backend (reactive, optimistic) + a real **Anthropic** agent running
-  server-side. Verified end-to-end: the agent locks → CAS-edits → releases on real infra and the UI
+- **Live** — a real **Convex** backend (reactive, optimistic) + a server-side model-routed LLM
+  agent selected by `AGENT_MODEL`. Routes are promoted by ladder evidence, not provider brand.
+  Verified end-to-end: the agent locks → CAS-edits → releases on real infra and the UI
   syncs reactively.
 
 <div align="center">
@@ -103,9 +104,10 @@ cursor, captions, and progress bar. Packaged as a reusable skill:
 
 ### Watch the narrated episodes (click a poster — plays in your browser, with sound)
 
-Two fully-produced explainer videos, assembled from the live captures above + real code panels +
-an animated mental-model diagram + ElevenLabs narration — each machine-judged 16/16 before
-publishing (Gemini watches the actual render; see `episodes/*/judge.md`).
+Three rendered explainers are linked below, assembled from the live captures above + real code
+panels, an animated mental-model diagram, and ElevenLabs narration. Current batch media QA is
+tracked in `docs/eval/MEDIA_JUDGE.md`; it is publishing evidence for the assets, not a replacement
+for production gates.
 
 | The builder story (58s) | The investment-room story (42s) | The two-stacks story (50s) |
 |---|---|---|
@@ -124,10 +126,18 @@ Latest aggregate:
 ## Workflow Skill Previews
 
 HALO is only useful if it changes the actual user-agent interaction, not just a
-score file. Each workflow below has a live preview, the user contract it must
+score file. Each workflow below has a visual preview, the user contract it must
 preserve, and the eval/trace evidence that gates promotion. Refresh them with
-`npm run workflow:previews`. Full evidence and research links:
+`npm run workflow:previews`. Evidence levels are explicit:
+`workflow-preview-gifs.ts` produces screenshot-composed workflow cards,
+`render-workflow-preview.ts` produces trace replays, and `workflow:app-previews`
+captures the real DOM in memory mode. A GIF is visual evidence, not a production
+gate. Full evidence and research links:
 [`docs/WORKFLOW_PREVIEWS.md`](docs/WORKFLOW_PREVIEWS.md).
+
+Current media QA marks the public `/ask` spreadsheet preview and proposal/wall
+preview as visual `fix-then-publish`; the workflow contracts remain documented,
+but those GIFs should be rerendered before being treated as showcase assets.
 
 ### Public `/ask` Spreadsheet Reconciliation
 
@@ -728,9 +738,9 @@ from each conflict, never locking, all inside a wall-clock budget.
 the orchestrator-workers pattern,
 the layered-memory pattern; Anthropic *Effective context engineering*.
 
-> The previews replay genuine agent-runtime traces (the tool protocol + CAS results are real). The
-> overnight [HALO loop](#agent-improvement-loop) also exercises these same rungs against **live** free
-> models (`ladder:free`), so each workflow runs end-to-end on real providers, not just fixtures.
+> The previews replay genuine agent-runtime traces (the tool protocol + CAS results are real).
+> Live provider evidence exists for selected L1-L4 routes; the free-auto/top-5 router ladder
+> failed overall. L5-L6 preview evidence is deterministic unless a separate live run is recorded.
 
 ## Agent improvement loop
 
@@ -798,12 +808,14 @@ The full founder-level rationale, past-project comparison, and HALO handoff cont
 [`docs/WHY_NODEAGENT_AND_HALO.md`](docs/WHY_NODEAGENT_AND_HALO.md).
 Architecture ownership/budget gate: `npm run architecture:budget -- --strict`.
 
-## Multi-model benchmark
+## Benchmark Harness / Latest Free-Auto Composite Run
 
-The agent is model-agnostic (one `AgentModel` seam), so the diligence-research task runs across
+The agent is model-agnostic (one `AgentModel` seam), so the diligence-research task can run across
 providers and the cheapest model that clears the **boolean gate** wins. Providers are routed by
 **NodeBench's `modelCatalog.ts`** (copied verbatim — reuse, not reinvent), reaching cheap + free
-models through OpenRouter's OpenAI-compatible endpoint.
+models through OpenRouter's OpenAI-compatible endpoint. The checked-in `docs/eval/results.json`
+is the latest verified free-auto composite run, not proof that all models and all scenarios were
+rerun.
 
 **The charts are downstream of a real run — never hand-drawn.** `npm run benchmark` writes
 `docs/eval/results.json` (real $/latency/tokens from `agentRuns`, real pass% from deterministic

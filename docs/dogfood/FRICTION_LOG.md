@@ -1,5 +1,17 @@
 # Friction log — append-only
 
+## 2026-06-09 - The 0/3 review-mode agent, root-caused and fixed (found by the walkthrough capturer)
+
+| Stoplight | Moment | What happened | Root cause (server-side step logs, not guesses) | Fix |
+|---|---|---|---|---|
+| 🔴 | `/ask` with auto-allow OFF | 0/3 capture runs + 2/7 eval runs produced proposals; agent ran, then nothing | TWO modes: (1) the model was never told review mode exists — `pendingApproval` tool results read as failures → budget burned re-fumbling cells; (2) in rooms with the full artifact trio, the model fell into a read-only research loop (`list_artifacts → read_range×4 → search×4 → done`, zero writes, empty finalText) | Room-policy briefing in the agent context (`autoAllow` now flows through awareness → context builders; pendingApproval = SUCCESS, move on) + edit_cell tool doc + TWO harness guards in `runtime.ts`: a read-loop breaker (3 pure-read turns → one steering note, placed after tool results to keep history well-formed) and a done-without-writes bounce (one redirect, then accept). Step-status mapper no longer labels pendingApproval as error. |
+
+Verified: direct-API diag 2/2 (5–10 proposals), then the EXACT failing case — UI path, trio room —
+`propose_lock → edit_cell×5 → release → done`, 5 pending proposals, 35s. The review-approve README
+walkthrough now captures the live LLM end-to-end. Diagnostic method lesson: the run row is a
+placeholder until terminal (poll for `stopReason`, not `runs.length`), and the per-step tool log
+(`agentJobs.detail.latestSteps`) ends hypothesis ping-pong in one read.
+
 ## 2026-06-09 - Walkthrough capturer found a real returning-visitor bug
 
 | Stoplight | Moment | Expected | What happened | Disposition |

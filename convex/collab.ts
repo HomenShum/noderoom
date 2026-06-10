@@ -10,10 +10,14 @@ export const awareness = internalQuery({
     const locks = await ctx.db.query("locks").withIndex("by_room_status", (q) => q.eq("roomId", roomId).eq("status", "active")).collect();
     const sessions = await ctx.db.query("agentSessions").withIndex("by_room", (q) => q.eq("roomId", roomId)).collect();
     const traces = await ctx.db.query("traces").withIndex("by_room", (q) => q.eq("roomId", roomId)).order("desc").take(6);
+    const room = await ctx.db.get(roomId);
     return {
       activeLocks: locks.filter((l) => l.holder.id !== excludeAgentId).map((l) => ({ lockId: l._id, elementIds: l.elementIds, holder: l.holder.name, reason: l.reason })),
       agents: sessions.filter((s) => s.agentId !== excludeAgentId).map((s) => ({ name: s.agentName, scope: s.scope, status: s.status })),
       recentTrace: traces.reverse().map((t) => `${t.type}: ${t.summary}`),
+      // Surfaced so the agent's context can explain REVIEW MODE — without it the model reads
+      // pendingApproval tool results as failures (live 0/3 incident: budget-burn or wander-and-quit).
+      autoAllow: room?.autoAllow,
     };
   },
 });

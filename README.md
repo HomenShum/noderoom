@@ -44,7 +44,14 @@ Here the real agent has filled the variance column live on Convex.</sub>
 
 ## Watch it work — live walkthroughs
 
-Every clip below is a **captured walkthrough of the real production app** (noderoom.live, live
+**Try it yourself → [noderoom.live](https://noderoom.live)** — join with a room code or start a
+room; no account needed. **Status: live beta** on a dev Convex deployment — production-*shaped*,
+not production-*proven*; the honest boundary lives in [`docs/GAPS_NOT_DONE.md`](docs/GAPS_NOT_DONE.md).
+One privacy note before you bring real data: `/free` routes work through community free-tier
+models whose providers may log prompts — keep sensitive GTM/finance figures out of `/free` runs
+(the paid interactive lane does not use those routes).
+
+Every clip below is a **captured walkthrough of the real running app** (noderoom.live, live
 Convex backend, real agent runs) — not a staged hero shot. You see the empty state, the cursor
 glide to each click (with a ripple), the loading state, and the result, with step captions and a
 progress bar. Regenerate any time with `npm run walkthroughs` (capture) + `npm run walkthroughs:render`.
@@ -63,7 +70,7 @@ progress bar. Regenerate any time with `npm run walkthroughs` (capture) + `npm r
 
 ### Review mode — approve agent edits at the cell
 ![Review-mode inline proposal approve — walkthrough](docs/walkthroughs/review-approve.gif)
-<sub>This clip runs the deterministic in-browser demo engine at the same URL (`?mode=memory`) — identical UI flow; the agent is scripted so the walkthrough reproduces exactly. All other clips are real live-backend runs.</sub>
+<sub>Live run, real LLM: with auto-allow off the agent's writes become inline proposals you approve at the cell. (Capturing this walkthrough originally exposed a real agent bug — the model was never told review mode existed and either burned its budget or quit without writing; fixed with a room-policy briefing + two harness guards. See <code>docs/dogfood/FRICTION_LOG.md</code>.)</sub>
 
 <sub>Method: Playwright drives the live app through a versioned spec
 ([`scripts/walkthroughs/specs.ts`](scripts/walkthroughs/specs.ts)), captures clean per-state frames +
@@ -474,7 +481,7 @@ re-verifies every cycle. The rungs L1–L6 are the [`evals/ladder.ts`](evals/lad
 The agent reports a cell's value and changes nothing. The discipline is *not writing*: read the exact
 cell, return it, stop.
 **Research / repo:** just-in-time context + read-before-write — Anthropic, *Effective context
-engineering for AI agents*; [`.claude/rules/scratchpad_first.md`](.claude/rules/scratchpad_first.md).
+engineering for AI agents*; the scratchpad-first pattern.
 
 ### L2 · Edit with CAS — claim, read the version, compare-and-set
 
@@ -494,7 +501,7 @@ A human edits the same cell while the agent is working. The agent's stale-baseli
 is never overwritten.
 **Research / repo:** conflict-as-data + retry — Convex transactional OCC is necessary but not sufficient;
 the per-element CAS check is what prevents the clobber.
-[`.claude/rules/async_reliability.md`](.claude/rules/async_reliability.md).
+the conflict-as-data / async-reliability pattern.
 
 ### L4 · Draft when blocked — the range is locked
 
@@ -503,8 +510,17 @@ the per-element CAS check is what prevents the clobber.
 Another agent holds an affected-range lock. Instead of forcing, the agent **drafts** its change
 (`create_draft`) for smart-merge on unlock, and never writes directly through the lock.
 **Research / repo:** propose/draft + smart-merge over force-write — proposal/draft tables in
-[`convex/schema.ts`](convex/schema.ts); [`.claude/rules/scratchpad_first.md`](.claude/rules/scratchpad_first.md),
+[`convex/schema.ts`](convex/schema.ts); the scratchpad-first pattern,
 Anthropic *Building Effective Agents*.
+
+### L5 · Large range — 600 rows, load only the window
+
+![Large-range workflow](docs/eval/workflow-previews/l5-large-range.gif)
+
+A 600-row operating model; the agent loads only the 5-row window around the target, never the full
+sheet, touches only the allowed cell, and stays inside a bounded context budget.
+**Research / repo:** just-in-time context windows over full-snapshot loading — `rangeContext` in
+[`evals/ladder.ts`](evals/ladder.ts); Anthropic *Effective context engineering*.
 
 ### L6 · Long horizon — many cells, repeated conflicts, compaction
 
@@ -513,8 +529,8 @@ Anthropic *Building Effective Agents*.
 Fill five cells under repeated concurrent edits, **compacting context** as the window fills, recovering
 from each conflict, never locking, all inside a wall-clock budget.
 **Research / repo:** orchestrator durability + context compaction —
-[`.claude/rules/orchestrator_workers.md`](.claude/rules/orchestrator_workers.md),
-[`.claude/rules/layered_memory.md`](.claude/rules/layered_memory.md); Anthropic *Effective context engineering*.
+the orchestrator-workers pattern,
+the layered-memory pattern; Anthropic *Effective context engineering*.
 
 > The previews replay genuine agent-runtime traces (the tool protocol + CAS results are real). The
 > overnight [HALO loop](#agent-improvement-loop) also exercises these same rungs against **live** free

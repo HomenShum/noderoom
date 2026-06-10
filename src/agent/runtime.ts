@@ -188,6 +188,14 @@ export async function runAgent(opts: {
     messages.push({ role: "tool", toolCallId: call.id, toolName: call.tool, content: JSON.stringify(result) });
   };
 
+  // Goal-progress accounting for the two harness guards (read-loop breaker + done-without-writes
+  // bounce). Counts WRITE-intent tool calls across the whole run; each guard fires at most once.
+  const WRITE_TOOLS = new Set(["edit_cell", "create_draft", "update_wiki", "write_cell_result"]);
+  let writeCalls = 0;
+  let lockCalls = 0;
+  let readNudged = false;
+  let doneNudged = false;
+
   try {
     if (opts.initialMessages?.length) messages.push(...opts.initialMessages);
     else messages.push(...await (opts.contextBuilder ?? buildContext)(rt, goal));
@@ -264,11 +272,26 @@ export async function runAgent(opts: {
       if (out.text) finalText = out.text;
 
       if (out.done || out.toolCalls.length === 0) {
+        // Goal-completion guard: a run that ends with ZERO writes (no edit/draft/wiki/result calls)
+        // almost certainly wandered — observed live: gemini-flash spent 9 read-only calls hunting
+        // source data across artifacts, then declared done with no proposals (the trio-room 0/3
+        // incident). Bounce ONCE with a redirect; accept whatever it decides next (termination safe).
+        if (writeCalls === 0 && lockCalls === 0 && !doneNudged && step < maxSteps - 1) {
+          doneNudged = true;
+          if (out.text) messages.push({ role: "assistant", content: out.text });
+          messages.push({ role: "user", content: "HARNESS NOTE: this run cannot be complete — no cells were written or proposed. You already have the data you need in context. Finish the task now: propose_lock the target cells, then edit_cell each of them with the values implied by what you read (batch the edit_cell calls in one turn; a pendingApproval result is SUCCESS — never retry it)." });
+          continue;
+        }
         if (out.text) messages.push({ role: "assistant", content: out.text });
         return finish("done", step + 1, false);
       }
 
       messages.push({ role: "assistant", content: out.text ?? "", toolCalls: out.toolCalls });
+
+      for (const c of out.toolCalls) {
+        if (WRITE_TOOLS.has(c.tool)) writeCalls++;
+        else if (c.tool === "propose_lock") lockCalls++;
+      }
 
       for (const call of out.toolCalls) {
         if (shouldHandoffForTime()) {
@@ -281,6 +304,15 @@ export async function runAgent(opts: {
         await executeCall(call, step);
       }
       pendingToolCalls = [];
+
+      // Read-loop breaker: 3+ full turns of pure reads with no lock/write yet → ONE steering note,
+      // appended AFTER this turn's tool results so the tool_use/tool_result pairing stays intact.
+      // The harness owns the budget; a model deep in research-mode reliably burns all 10 steps
+      // re-reading otherwise (the trio-room 0/3 incident's other half).
+      if (step >= 2 && writeCalls === 0 && lockCalls === 0 && !readNudged) {
+        readNudged = true;
+        messages.push({ role: "user", content: "HARNESS NOTE: every tool call so far has been a read. The table in your context already holds the data — stop reading. Next turn: propose_lock the target cells, then edit_cell each of them (batch multiple edit_cell calls in one turn; pendingApproval results are SUCCESS)." });
+      }
     }
 
     const handoff = emitHandoff(maxSteps, "step_budget", maxSteps);
@@ -291,7 +323,7 @@ export async function runAgent(opts: {
     // checkpointed cursor held an assistant message whose trailing tool_use blocks had no paired
     // tool_results — every durable-lane resume then 400'd at the provider until maxAttempts killed
     // the job. Resume replays these via resumeToolCalls, completing the pairs before the next model call.
-    const handoff = makeHandoff("error", attemptedSteps, pendingToolCalls);
+    const handoff = emitHandoff(attemptedSteps, "error", attemptedSteps, pendingToolCalls);
     throw new AgentRunError(error, finish("error", attemptedSteps, false, handoff));
   }
 }

@@ -123,23 +123,29 @@ export const FEATURES: FeatureSpec[] = [
   {
     id: "review-approve",
     title: "Review mode — approve agent edits at the cell",
-    // Deterministic demo engine at the prod URL: live-LLM agents under review mode are too
-    // nondeterministic to walk through reliably (observed 0/3 proposal runs); the scripted agent
-    // exercises the IDENTICAL UI flow (toggle → /ask → chips → inline approve) every time.
-    setup: "memoryDemo",
+    // LIVE again: the 0/3 review-mode behavior was root-caused (the model was never told review
+    // mode exists, so pendingApproval results read as failures → budget-burn or wander-and-quit)
+    // and fixed via the room-policy briefing in the agent context. Diag: 2/2 runs file all
+    // variance proposals. Retries stay as the flake net for raw LLM slowness.
+    setup: "createRoom",
+    retries: 2,
     steps: [
       { kind: "state", caption: "Don't trust the agent yet? Flip off auto-allow", holdMs: 1800 },
       { kind: "click", sel: ".r-pill-auto .r-switch", caption: "Review mode ON — agents must propose, not write" },
       {
-        kind: "type", sel: COMPOSER, text: "/ask reconcile Q3 revenue", caption: "Same ask — but now every edit needs your sign-off", pressEnter: true,
+        kind: "type", sel: COMPOSER, text: "/ask reconcile Q3 revenue and fill the variance cells",
+        caption: "Same ask — but now every edit needs your sign-off", pressEnter: true,
       },
-      { kind: "waitResult", predicate: "chipsVisible", caption: "Proposals appear ON the cells — like suggestions in Docs", timeoutMs: 30_000 },
+      { kind: "loading", sel: `${CENTER} .r-typing`, caption: "The agent works — but writes become proposals", timeoutMs: 30_000 },
+      { kind: "waitResult", predicate: "chipsVisible", caption: "Proposals appear ON the cells — like suggestions in Docs", timeoutMs: 150_000 },
       {
+        // No after-wait: the agent files proposals for EVERY variance cell, so "first approve button
+        // hidden" never resolves (the others remain). The optimistic update paints the approved cell
+        // in the same frame; the default settle captures it.
         kind: "click", sel: '[data-testid="proposal-inline-approve"]', caption: "Approve right where the change lands",
         afterCaption: "Applied via the same no-clobber CAS path — synced to everyone",
-        after: { textSel: '[data-cell-key="r_rev__variance"]', includes: "%", timeoutMs: 15_000 },
       },
-      { kind: "state", caption: "Human-in-the-loop, one click, in context", holdMs: 2400 },
+      { kind: "state", caption: "Human-in-the-loop, one click, in context", settleMs: 1200, holdMs: 2400 },
     ],
   },
 ];

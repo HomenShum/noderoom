@@ -67,6 +67,7 @@ export class InMemoryRoomTools implements RoomTools {
       activeLocks: a.activeLocks.map((l) => ({ lockId: l.id, elementIds: l.elementIds, holder: l.holder.name, reason: l.reason })),
       agents: a.sessions.map((s) => ({ name: s.agentName, scope: s.scope, status: s.status })),
       recentTrace: a.recentTraces.slice(-6).map((t) => `${t.type}: ${t.summary}`),
+      autoAllow: this.engine.getRoom(this.roomId)?.autoAllow,
     };
   }
 

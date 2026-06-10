@@ -10,7 +10,19 @@
  * (versions for CAS, lock flags for the protocol) and what we leave out (noise).
  */
 
-import type { RoomTools, AgentMessage } from "./types";
+import type { RoomTools, AgentMessage, AwarenessView } from "./types";
+
+/** One-line room-policy briefing. In REVIEW MODE the model MUST know that pendingApproval results
+ *  are SUCCESS — without this line the live agent read them as failures and either burned its step
+ *  budget re-fumbling one cell or wandered off exploring and quit with zero writes (the 0/3 incident). */
+function policyLine(aware: AwarenessView): string {
+  if (aware.autoAllow !== false) return "";
+  return [
+    `ROOM POLICY — REVIEW MODE (auto-allow is OFF): every edit_cell you make files a PROPOSAL for the host to approve.`,
+    `A result of {ok:false, pendingApproval:true, proposalId} is SUCCESS — the proposal is filed. NEVER retry that write.`,
+    `Move straight to the next cell and file proposals for ALL target cells (you may batch several edit_cell calls in one turn).`,
+  ].join(" ");
+}
 
 export async function buildContext(rt: RoomTools, goal: string): Promise<AgentMessage[]> {
   const [snap, aware] = await Promise.all([rt.snapshot(), rt.awareness()]);
@@ -31,6 +43,7 @@ export async function buildContext(rt: RoomTools, goal: string): Promise<AgentMe
     `SPREADSHEET (artifact "${snap.artifactId}", v${snap.version}). Editable cells are addressed \`{rowId}__variance\` and \`{rowId}__note\`:`,
     table,
     ``,
+    policyLine(aware),
     `ACTIVE LOCKS (held read-only by others — you can still read them):`,
     locks,
     ``,
@@ -39,6 +52,7 @@ export async function buildContext(rt: RoomTools, goal: string): Promise<AgentMe
     aware.recentTrace.length ? `\nRECENT ACTIVITY:\n${aware.recentTrace.map((t) => "  - " + t).join("\n")}` : "",
     ``,
     `Claim the cells you need, edit them with the versions shown (CAS), then release. If a cell you need is LOCKED, draft around it instead.`,
+    `Your run is COMPLETE only when the target cells have values (or filed proposals). The table above is your context — do not browse other artifacts unless the task names them.`,
   ]
     .filter((l) => l !== "")
     .join("\n");
@@ -104,6 +118,7 @@ export async function buildNoteContext(rt: RoomTools, goal: string): Promise<Age
     others.length ? `\nOther editable elements: ${others.map((e) => `${e.id} (v${e.version})`).join(", ")}.` : "",
     ``,
     `To update the note: edit the \`${docId}\` element with kind "set" and the new full HTML, using version ${doc?.version ?? 0} for CAS — or use update_wiki (it appends a Sources footer for grounding). Preserve existing structure unless asked to rewrite. If \`${docId}\` is LOCKED, create_draft instead.`,
+    policyLine(aware),
     locks ? `\nACTIVE LOCKS:\n${locks}` : "",
   ].filter((l) => l !== "").join("\n");
   return [{ role: "user", content }];
@@ -127,6 +142,7 @@ export async function buildWallContext(rt: RoomTools, goal: string): Promise<Age
     ``,
     `To ADD a post-it: edit_cell with a NEW elementId (e.g. "s_idea1"), kind "create", baseVersion 0, value { "text": "…", "x": <40–560>, "y": <40–360>, "color": "#FDE68A" }. Vary x/y by ~120px so notes don't overlap.`,
     `To EDIT an existing post-it: edit_cell on its id with kind "set" and the version shown (CAS). To REMOVE one: kind "delete". If a post-it is LOCKED, create_draft instead.`,
+    policyLine(aware),
   ].filter((l) => l !== "").join("\n");
   return [{ role: "user", content }];
 }

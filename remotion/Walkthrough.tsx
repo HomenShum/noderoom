@@ -72,16 +72,35 @@ export const Walkthrough: React.FC<{ feature: Feature }> = ({ feature }) => {
     ? { x: b.from.x + (b.to.x - b.from.x) * glideT, y: b.from.y + (b.to.y - b.from.y) * glideT }
     : (b.from ?? PARK);
 
-  // click moment = end of glide; ripple + cursor dip + subtle zoom toward the click
+  // click moment = end of glide; ripple + cursor dip
   const sinceClick = b.seg.click ? local - b.glide : -1;
   const rippleOn = sinceClick >= 0 && sinceClick <= RIPPLE;
   const rippleScale = rippleOn ? interpolate(sinceClick, [0, RIPPLE], [0.25, 4]) : 0;
   const rippleOpacity = rippleOn ? interpolate(sinceClick, [0, RIPPLE], [0.45, 0]) : 0;
   const dip = sinceClick >= 0 ? interpolate(Math.min(sinceClick, 5), [0, 2.5, 5], [1, 0.85, 1]) : 1;
-  const zoom = b.seg.click && sinceClick >= 0
-    ? 1 + 0.045 * Math.sin(Math.min(Math.max(sinceClick / 24, 0), 1) * Math.PI)
-    : 1;
-  const origin = b.to ? `${(b.to.x / 1280) * 100}% ${(b.to.y / 800) * 100}%` : "50% 50%";
+
+  // Arcade-style camera (ported from HomenShum/feature-walkthrough-gif): zoom IN toward the click
+  // on action beats (1.30x), pull back through the result beat (1.12x → 1.0), flat on states.
+  // Origin is the click point, edge-clamped so the zoom never reveals canvas edges; the scale
+  // interpolates from the PREVIOUS beat's target with a cubic ease for cross-beat continuity.
+  const clamp = (v: number) => Math.min(85, Math.max(15, v));
+  const targetScaleOf = (beat: Beat | undefined): number =>
+    !beat ? 1 : beat.seg.click ? 1.3 : beat.seg.kind === "result" ? 1.12 : 1;
+  const originOf = (beat: Beat | undefined): { x: number; y: number } =>
+    beat?.to ? beat.to : beat?.from ?? { x: 640, y: 400 };
+  const prevScale = targetScaleOf(prev);
+  const myScale = targetScaleOf(b);
+  // result beats relax toward 1.0 across their hold; others ease to target over the first 12 frames
+  const easeT = Math.min(1, local / 12);
+  const cubic = easeT < 0.5 ? 4 * easeT ** 3 : 1 - Math.pow(-2 * easeT + 2, 3) / 2;
+  // GIF-friendly camera: ease over a FIXED short window then hold static — a continuous relax
+  // across the whole beat changes every pixel of every frame and triples GIF size (inter-frame
+  // delta is the entire size budget; zoom is cheap in H.264, brutal in GIF).
+  const zoom = b.seg.kind === "result"
+    ? interpolate(Math.min(1, local / 14), [0, 1], [Math.max(prevScale, 1.12), 1], { easing: (t) => 1 - Math.pow(1 - t, 3) })
+    : prevScale + (myScale - prevScale) * cubic;
+  const oPt = originOf(b.seg.click || b.seg.kind === "result" ? b : prev ?? b);
+  const origin = `${clamp((oPt.x / 1280) * 100)}% ${clamp((oPt.y / 800) * 100)}%`;
 
   // crossfade into this beat's frame over the previous one
   const fade = prev ? Math.min(1, local / XFADE) : 1;

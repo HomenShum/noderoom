@@ -30,3 +30,6 @@ playwright/.cache/
 
 # local scratch
 .tmp-qa/
+
+# Walkthrough capture intermediates (regenerable: npm run walkthroughs)
+remotion/public/frames/

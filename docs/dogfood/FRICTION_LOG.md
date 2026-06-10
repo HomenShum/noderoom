@@ -1,11 +1,22 @@
 # Friction log — append-only
 
+## 2026-06-09 - Walkthrough capturer found a real returning-visitor bug
+
+| Stoplight | Moment | Expected | What happened | Disposition |
+|---|---|---|---|---|
+| 🔴 | Reload (or revisit) a live room after the tour was already seen | The 4-panel workspace | **Chat-only layout** — panels initialized from `live && !isCompact` where `live` (=isHost) is still false at mount while Convex queries load; only the first-run tour ever forced panels open, so every RETURNING visitor got chat-only | Fixed same day: panels now init from viewport only (`RoomShell.tsx`); deployed + live-verified |
+
+Found mechanically by the README-walkthrough capturer's reload path (`scripts/walkthroughs/capture.ts`,
+seedResearchRoom) — a state no demo run or first-visit eval ever exercised. The capture pipeline is
+itself a dogfood instrument: it walks cold-user paths frame by frame and freezes the UI state on
+every failure (`zz-fail.png` forensics).
+
 ## 2026-06-09 - LIVE verification of the three red fixes (noderoom.live + deployed Convex)
 
 | Fix | Live evidence | Status |
 |---|---|---|
 | Undo (Ctrl/Cmd+Z) | Two SEPARATE browser contexts, fresh prod room: hand edit → Undo → reverted in the host **and** in the member view (member sheet presence-asserted before the claim) — real CAS round-trip, not memory mode. | ✅ proven |
-| In-cell approve/reject | Live `/ask` with auto-allow off: 2 inline chips rendered at the cells, **coalesced (no duplicate chips per cell)**, inline approve applied `+24.0%` host-side. Member-view chip fan-out encoded as eval Act 9 (rides the same `listProposals` subscription proven cross-view in Acts 2–4). | ✅ proven host-side · Act 9 covers cross-view |
+| In-cell approve/reject | Live `/ask` with auto-allow off: 2 inline chips rendered at the cells, **coalesced (no duplicate chips per cell)**, inline approve applied `+24.0%` host-side. Strict live Act 9 then passed in room `EVAL-MQ7DB1BZ`: all three browsers saw the `r_rev__note` proof proposal, Dev/Sam had view-only `host` chips, and Maya's inline approval cleared/applied the value everywhere. | ✅ proven cross-browser live |
 | Re-import upsert | Deterministic mutations on the deployed backend: add "Acme Corp" → set sourced `summary` → re-import same company/domain → **1 row group** (no `acme_1`), `owner` updated to the new value, **sourced summary survived**. | ✅ proven |
 
 Probe lessons (so the next run doesn't repeat them): use one browser context per persona (shared

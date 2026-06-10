@@ -1,2 +1,11 @@
+# Normalize line endings to LF in the repo (stops the per-commit CRLF warning flood on Windows).
+# Existing files keep CRLF in the working tree until a one-time `git add --renormalize .` — run that
+# in a quiet moment (it produces a large eol-only diff) to clear the warnings for good.
+* text=auto eol=lf
+# Binaries: never touch.
+*.png binary
+*.gif binary
+*.webm binary
+*.mp4 binary
 README.md text eol=lf
 docs/PRODUCTION_GUARANTEE_MATRIX.md text eol=lf

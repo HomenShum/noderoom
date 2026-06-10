@@ -164,6 +164,7 @@ export const FEATURES: FeatureSpec[] = [
   },
   {
     id: "naive-overwrite",
+    closePanels: ["left", "priv"],
     title: "Failure replay — the naive agent clobbers a human",
     // FAILURE-REPLAY (episode scene `naive-problem`). Runs ONLY against the deliberately-naive
     // build (branch demo/v0-naive-agent: agents skip locks, CAS, and traces — never merged,

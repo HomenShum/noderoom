@@ -37,7 +37,7 @@ function committedCells(msgs: AgentMessage[]): Set<string> {
   const out = new Set<string>();
   for (const m of msgs) if (m.role === "tool" && (m.toolName === "edit_cell" || m.toolName === "write_cell_result")) {
     const r = parse(m.content);
-    if (r && r.ok) { const id = editTargetFor(msgs, m.toolCallId); if (id) out.add(id); }
+    if (r && (r.ok || r.pendingApproval)) { const id = editTargetFor(msgs, m.toolCallId); if (id) out.add(id); }
   }
   return out;
 }
@@ -47,7 +47,12 @@ function lastTool(msgs: AgentMessage[]): { name?: string; result: AnyResult; cal
 }
 const isReleased = (msgs: AgentMessage[]) => msgs.some((m) => m.role === "tool" && m.toolName === "release_lock");
 const hasDrafted = (msgs: AgentMessage[]) => msgs.some((m) => m.role === "tool" && m.toolName === "create_draft");
-const summarize = (t: Record<string, string>) => "Committed " + Object.entries(t).map(([id, val]) => `${id.replace("__variance", "")} ${val}`).join(", ") + ".";
+const hasPendingApprovals = (msgs: AgentMessage[]) => msgs.some((m) => {
+  if (m.role !== "tool" || (m.toolName !== "edit_cell" && m.toolName !== "write_cell_result")) return false;
+  const r = parse(m.content);
+  return !!r?.pendingApproval;
+});
+const summarize = (t: Record<string, string>, verb = "Committed") => verb + " " + Object.entries(t).map(([id, val]) => `${id.replace("__variance", "")} ${val}`).join(", ") + ".";
 
 /** Read-or-edit the next uncommitted cell, re-reading on a CAS conflict. null when all committed. */
 function nextEditStep(msgs: AgentMessage[], ids: string[], targets: Record<string, string>, committed: Set<string>): ScriptStep | null {
@@ -71,7 +76,7 @@ function callArgsFor(msgs: AgentMessage[], callId: string | undefined, tool: str
 function completedCompanies(msgs: AgentMessage[]): Set<string> {
   const out = new Set<string>();
   for (const m of msgs) if (m.role === "tool" && (m.toolName === "edit_cell" || m.toolName === "write_cell_result")) {
-    const r = parse(m.content); if (!r || !r.ok) continue;
+    const r = parse(m.content); if (!r || (!r.ok && !r.pendingApproval)) continue;
     const args = callArgsFor(msgs, m.toolCallId, m.toolName);
     if (args && String(args.elementId).endsWith("__status") && args.value === "complete") out.add(String(args.elementId).split("__")[0]);
   }
@@ -119,7 +124,7 @@ function cellWasSet(msgs: AgentMessage[], elementId: string, value: unknown): bo
     if (m.role !== "tool" || (m.toolName !== "edit_cell" && m.toolName !== "write_cell_result")) return false;
     const r = parse(m.content);
     const args = callArgsFor(msgs, m.toolCallId, m.toolName);
-    return !!r?.ok && args?.elementId === elementId && args.value === value;
+    return !!(r?.ok || r?.pendingApproval) && args?.elementId === elementId && args.value === value;
   });
 }
 function fetchResultsFor(msgs: AgentMessage[], urls: string[]): { title: string; url: string }[] {
@@ -213,7 +218,7 @@ export function recomputeVariancePlan(targets: Record<string, string>, opts: { r
   const useLock = opts.lock !== false;
   const ids = Object.keys(targets);
   return ({ messages }) => {
-    if (isReleased(messages)) return { say: summarize(targets) + " Lock released.", done: true };
+    if (isReleased(messages)) return { say: hasPendingApprovals(messages) ? summarize(targets, "Proposed") + " Waiting for host approval." : summarize(targets) + " Lock released.", done: true };
     if (hasDrafted(messages)) return { say: "Drafted — it will smart-merge when the lock releases.", done: true };
     const committed = committedCells(messages);
 

@@ -9,7 +9,7 @@
  * App picks the provider based on whether VITE_CONVEX_URL is set.
  */
 
-import { createContext, useContext, useMemo, type ReactNode } from "react";
+import { createContext, useContext, useMemo, useRef, type ReactNode } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { engine, demo, useEngineRev, runDemo } from "./roomStore";
@@ -27,7 +27,8 @@ import type { ArtifactRef } from "../ui/artifactRefs";
 /** The canonical Q3 variance the Room Agent computes (used by the no-keys /ask + collab). */
 const VARIANCE: Record<string, string> = { r_rev: "+24%", r_cogs: "+27.5%", r_gp: "+21.7%", r_ni: "+22.4%" };
 
-export type EditFeedback = { ok: boolean; reason?: string };
+export type EditFeedback = { ok: boolean; reason?: string; version?: number };
+type UndoEntry = { roomId: string; op: ChangeOp };
 export type AgentRunTelemetry = { model: string; steps: number; toolCalls: number; inputTokens: number; outputTokens: number; costUsd: number; ms: number };
 export type AgentJobTelemetry = {
   id: string;
@@ -98,6 +99,8 @@ export interface RoomStore {
   awareness(roomId: string, agentId?: string): { activeLocks: Lock[] };
   /** Apply a hand edit (CAS). Returns feedback so the UI can surface a conflict honestly. */
   applyEdit(args: { roomId: string; op: ChangeOp; actor: Actor }): Promise<EditFeedback>;
+  canUndo(roomId: string): boolean;
+  undoLastEdit(roomId: string, actor: Actor): Promise<EditFeedback>;
   /** Send a chat message. Returns feedback so the UI can surface a failed send (and offer retry) instead of letting the optimistic bubble silently vanish. */
   postMessage(args: { roomId: string; channel: Channel; author: Actor; text: string; clientMsgId: string; kind?: Message["kind"] }): Promise<EditFeedback>;
   /** Edit your own already-sent message in place. Returns feedback so a rejected edit reverts visibly, not silently. */
@@ -197,9 +200,35 @@ function withReferenceContext(goal: string, refs?: ArtifactRef[]): string {
   return `${goal}\n\nStructured references: ${context}`;
 }
 
+function makeUndoEntry(roomId: string, art: Artifact | undefined, op: ChangeOp, appliedVersion?: number): UndoEntry | null {
+  const before = art?.elements[op.elementId];
+  if (op.kind === "create") {
+    return { roomId, op: { opId: crypto.randomUUID(), artifactId: op.artifactId, elementId: op.elementId, kind: "delete", value: null, baseVersion: appliedVersion ?? 1 } };
+  }
+  if (!before) return null;
+  if (op.kind === "delete") {
+    return { roomId, op: { opId: crypto.randomUUID(), artifactId: op.artifactId, elementId: op.elementId, kind: "create", value: before.value, baseVersion: 0 } };
+  }
+  return { roomId, op: { opId: crypto.randomUUID(), artifactId: op.artifactId, elementId: op.elementId, kind: "set", value: before.value, baseVersion: appliedVersion ?? before.version + 1 } };
+}
+
+function pushUndo(stack: Map<string, UndoEntry[]>, entry: UndoEntry | null) {
+  if (!entry) return;
+  const rows = stack.get(entry.roomId) ?? [];
+  rows.push(entry);
+  if (rows.length > 50) rows.splice(0, rows.length - 50);
+  stack.set(entry.roomId, rows);
+}
+
+function withAppliedVersion(entry: UndoEntry | null, version?: number): UndoEntry | null {
+  if (!entry || version === undefined || entry.op.kind === "create") return entry;
+  return { ...entry, op: { ...entry.op, baseVersion: version } };
+}
+
 /* ── in-memory (RoomEngine) ── */
 export function EngineStoreProvider({ roomId, children }: { roomId: string; me: Actor; children: ReactNode }) {
   const rev = useEngineRev();
+  const undoStack = useRef(new Map<string, UndoEntry[]>());
   const store = useMemo<RoomStore>(() => ({
     mode: "memory",
     getRoom: (id) => engine.getRoom(id),
@@ -213,11 +242,31 @@ export function EngineStoreProvider({ roomId, children }: { roomId: string; me: 
     listProposals: (id) => engine.listProposals(id),
     lockFor: (aid, eid) => engine.lockFor(aid, eid),
     awareness: (id, aid) => engine.awareness(id, aid),
-    applyEdit: async (args) => { const r = engine.applyEdit(args); return r.ok ? { ok: true } : { ok: false, reason: r.reason }; },
+    applyEdit: async (args) => {
+      const undo = makeUndoEntry(args.roomId, engine.getArtifact(args.op.artifactId), args.op);
+      const r = engine.applyEdit(args);
+      if (r.ok) pushUndo(undoStack.current, withAppliedVersion(undo, r.toVersion));
+      return r.ok ? { ok: true, version: r.toVersion } : { ok: false, reason: r.reason };
+    },
+    canUndo: (id) => (undoStack.current.get(id)?.length ?? 0) > 0,
+    undoLastEdit: async (id, actor) => {
+      const stack = undoStack.current.get(id) ?? [];
+      const entry = stack.pop();
+      if (!entry) return { ok: false, reason: "nothing_to_undo" };
+      const r = engine.applyEdit({ roomId: id, op: entry.op, actor });
+      if (!r.ok) stack.push(entry);
+      return r.ok ? { ok: true, version: r.toVersion } : { ok: false, reason: r.reason };
+    },
     postMessage: async (args) => { engine.postMessage(args); return { ok: true }; },
     editMessage: async (id, text) => { engine.updateMessage(id, { text }); return { ok: true }; },
     toggleAutoAllow: (id, actor) => { engine.toggleAutoAllow(id, actor); },
-    resolveProposal: async (id, approve, actor) => { engine.resolveProposal(id, approve, actor); return { ok: true }; },
+    resolveProposal: async (id, approve, actor) => {
+      const proposal = [...engine.listProposals(roomId)].find((p) => p.id === id);
+      const undo = proposal ? makeUndoEntry(proposal.roomId, engine.getArtifact(proposal.artifactId), proposal.op) : null;
+      const r = engine.resolveProposal(id, approve, actor);
+      if (approve && r?.ok) pushUndo(undoStack.current, withAppliedVersion(undo, r.toVersion));
+      return r ? (r.ok ? { ok: true, version: r.toVersion } : { ok: false, reason: r.reason }) : { ok: false, reason: "not_found" };
+    },
     addResearchRows: async ({ roomId, artifactId, rows, actor }) => engine.addResearchRows({ roomId, artifactId, rows, by: actor }).length,
     uploadArtifact: async ({ roomId, artifact, actor }) => engine.createArtifact({ roomId, kind: artifact.kind, title: artifact.title, seed: artifact.seed, meta: artifact.meta, by: actor }).id,
     canRunCollab: roomId === demo.roomId,
@@ -347,8 +396,41 @@ function defaultWebsiteClient(company: string): string {
   const host = company.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 32);
   return host ? `https://www.${host}.com` : "";
 }
+function normalizeResearchIdentityClient(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+function normalizeResearchDomainClient(value?: string): string {
+  if (!value) return "";
+  const raw = value.trim();
+  if (!raw) return "";
+  try {
+    const url = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
+    return url.hostname.toLowerCase().replace(/^www\./, "");
+  } catch {
+    return raw.toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split(/[/?#]/)[0];
+  }
+}
+function rowIdsFromOrderClient(order: string[]): string[] {
+  return [...new Set(order.map((id) => id.split("__")[0]))];
+}
+function cellStringClient(art: Artifact, rid: string, col: string): string {
+  const raw = art.elements[`${rid}__${col}`]?.value;
+  if (raw === null || raw === undefined) return "";
+  return typeof raw === "string" ? raw : String(raw);
+}
+function findExistingResearchRowClient(art: Artifact, row: ResearchRowInput): string | null {
+  const wantedCompany = normalizeResearchIdentityClient(row.company);
+  const wantedDomain = normalizeResearchDomainClient(row.website);
+  return rowIdsFromOrderClient(art.order).find((rid) => {
+    const company = normalizeResearchIdentityClient(cellStringClient(art, rid, "company"));
+    if (wantedCompany && company === wantedCompany) return true;
+    const domain = normalizeResearchDomainClient(cellStringClient(art, rid, "website"));
+    return !!wantedDomain && domain === wantedDomain;
+  }) ?? null;
+}
 
 export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: string; me: Actor; proof: ActorProof; children: ReactNode }) {
+  const undoStack = useRef(new Map<string, UndoEntry[]>());
   const rid = roomId as never;
   const data = useQuery(api.rooms.full, { roomId: rid, requester: proof });
   const pubQuery = { roomId: rid, channel: "public", requester: proof };
@@ -428,25 +510,50 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
       for (const row of args.rows as ResearchRowInput[]) {
         const company = row.company.trim();
         if (!company) continue;
+        let rowChanged = false;
         const base = slugResearchRowClient(company);
-        let rowId = base, suffix = 1;
-        while (nextOrder.some((id) => id.startsWith(`${rowId}__`))) rowId = `${base}_${suffix++}`;
+        const existing = findExistingResearchRowClient({ ...a, order: nextOrder, elements } as Artifact, row);
+        let rowId = existing ?? base, suffix = 1;
+        while (!existing && nextOrder.some((id) => id.startsWith(`${rowId}__`))) rowId = `${base}_${suffix++}`;
         const vals: Record<(typeof RESEARCH_COLS)[number], string> = {
           company,
           website: row.website?.trim() || defaultWebsiteClient(company),
-          status: "pending",
+          status: existing ? cellStringClient({ ...a, elements } as Artifact, rowId, "status") || "pending" : "pending",
           tier: row.tier?.trim() || "B",
           intent: row.intent?.trim() ?? "",
           owner: row.owner?.trim() || args.requester.actor.name,
           crm_status: row.crmStatus?.trim() || "Research",
-          summary: "", funding: "", headcount: "", recent_signal: "", source: "", source2: "", last_researched: "",
+          summary: existing ? cellStringClient({ ...a, elements } as Artifact, rowId, "summary") : "",
+          funding: existing ? cellStringClient({ ...a, elements } as Artifact, rowId, "funding") : "",
+          headcount: existing ? cellStringClient({ ...a, elements } as Artifact, rowId, "headcount") : "",
+          recent_signal: existing ? cellStringClient({ ...a, elements } as Artifact, rowId, "recent_signal") : "",
+          source: existing ? cellStringClient({ ...a, elements } as Artifact, rowId, "source") : "",
+          source2: existing ? cellStringClient({ ...a, elements } as Artifact, rowId, "source2") : "",
+          last_researched: existing ? cellStringClient({ ...a, elements } as Artifact, rowId, "last_researched") : "",
         };
-        for (const col of RESEARCH_COLS) {
+        const writableCols = existing ? ["company", "website", "tier", "intent", "owner", "crm_status"] as const : RESEARCH_COLS;
+        for (const col of writableCols) {
           const elementId = `${rowId}__${col}`;
-          nextOrder.push(elementId);
-          elements[elementId] = { id: elementId, value: vals[col], version: 1, updatedAt: now, updatedBy: args.requester.actor } as Artifact["elements"][string];
+          const prev = elements[elementId];
+          if (prev) {
+            if (Object.is(prev.value, vals[col])) continue;
+            elements[elementId] = { ...prev, value: vals[col], version: prev.version + 1, updatedAt: now, updatedBy: args.requester.actor } as Artifact["elements"][string];
+          } else {
+            nextOrder.push(elementId);
+            elements[elementId] = { id: elementId, value: vals[col], version: 1, updatedAt: now, updatedBy: args.requester.actor } as Artifact["elements"][string];
+          }
+          rowChanged = true;
         }
-        changed = true;
+        if (!existing) {
+          for (const col of RESEARCH_COLS) {
+            const elementId = `${rowId}__${col}`;
+            if (elements[elementId]) continue;
+            nextOrder.push(elementId);
+            elements[elementId] = { id: elementId, value: vals[col], version: 1, updatedAt: now, updatedBy: args.requester.actor } as Artifact["elements"][string];
+            rowChanged = true;
+          }
+        }
+        changed = changed || rowChanged;
       }
       return changed ? { ...a, order: nextOrder, elements, version: a.version + 1, updatedAt: now } : a;
     });
@@ -520,8 +627,24 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
       lockFor: (aid, eid) => locks.find((l) => l.artifactId === aid && l.elementIds.includes(eid)),
       awareness: (_id, aid) => ({ activeLocks: locks.filter((l) => l.holder.id !== aid) }),
       applyEdit: async ({ op }) => {
+        const undo = makeUndoEntry(roomId, artifacts.find((a) => a.id === op.artifactId), op);
         const r = await applyCellEdit({ roomId: rid, artifactId: op.artifactId as never, elementId: op.elementId, kind: op.kind, value: op.value, baseVersion: op.baseVersion, proof });
-        return r.ok ? { ok: true } : { ok: false, reason: r.reason };
+        if (r.ok) pushUndo(undoStack.current, withAppliedVersion(undo, r.version));
+        return r.ok ? { ok: true, version: r.version } : { ok: false, reason: r.reason };
+      },
+      canUndo: (id) => (undoStack.current.get(id)?.length ?? 0) > 0,
+      undoLastEdit: async (id) => {
+        const stack = undoStack.current.get(id) ?? [];
+        const entry = stack.pop();
+        if (!entry) return { ok: false, reason: "nothing_to_undo" };
+        try {
+          const r = await applyCellEdit({ roomId: rid, artifactId: entry.op.artifactId as never, elementId: entry.op.elementId, kind: entry.op.kind, value: entry.op.value, baseVersion: entry.op.baseVersion, proof });
+          if (!r.ok) stack.push(entry);
+          return r.ok ? { ok: true, version: r.version } : { ok: false, reason: r.reason };
+        } catch (e) {
+          stack.push(entry);
+          return { ok: false, reason: e instanceof Error ? e.message : "undo_failed" };
+        }
       },
       postMessage: async ({ channel, text, clientMsgId }) => {
         try { await sendMsg({ roomId: rid, channel: chanStr(channel), proof, text, clientMsgId }); return { ok: true }; }
@@ -533,7 +656,14 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
       },
       toggleAutoAllow: () => { void toggle({ roomId: rid, requester: proof }); },
       resolveProposal: async (proposalId, approve) => {
-        try { const r = await resolveProposalMutation({ proposalId: proposalId as never, approve, requester: proof }); return r.ok ? { ok: true } : { ok: false, reason: r.reason }; }
+        const proposal = (proposals as unknown as Proposal[]).find((p) => p.id === proposalId);
+        const undo = proposal ? makeUndoEntry(roomId, artifacts.find((a) => a.id === proposal.artifactId), proposal.op) : null;
+        try {
+          const r = await resolveProposalMutation({ proposalId: proposalId as never, approve, requester: proof });
+          const version = r.ok && "version" in r ? r.version : undefined;
+          if (approve && r.ok) pushUndo(undoStack.current, withAppliedVersion(undo, version));
+          return r.ok ? { ok: true, version } : { ok: false, reason: r.reason };
+        }
         catch (e) { return { ok: false, reason: e instanceof Error ? e.message : "resolve_failed" }; }
       },
       addResearchRows: async ({ artifactId, rows }) => {
@@ -690,7 +820,7 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
         catch (e) { return { ok: false, reason: e instanceof Error ? e.message : "retry_failed" }; }
       },
     };
-  }, [data, pub, priv, traces, runs, jobs, jobAttempts, jobDetail, proposals, applyCellEdit, sendMsg, toggle, editMsg, resolveProposalMutation, addResearchRowsMutation, createArtifactMutation, runAgent, startFreeAutoJob, cancelFreeAutoJob, retryFreeAutoJob, rid, proof, me.id]);
+  }, [data, pub, priv, traces, runs, jobs, jobAttempts, jobDetail, proposals, applyCellEdit, sendMsg, toggle, editMsg, resolveProposalMutation, addResearchRowsMutation, createArtifactMutation, runAgent, startFreeAutoJob, cancelFreeAutoJob, retryFreeAutoJob, rid, roomId, proof, me.id]);
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }

@@ -86,8 +86,20 @@ export const full = query({
       .map((l) => ({ id: l._id, roomId: l.roomId, artifactId: l.artifactId, elementIds: l.elementIds, holder: l.holder, sessionId: l.sessionId, reason: l.reason, status: l.status, createdAt: l._creationTime }));
     const sessions = (await ctx.db.query("agentSessions").withIndex("by_room", (q) => q.eq("roomId", roomId)).collect())
       .map((s) => ({ id: s._id, roomId: s.roomId, agentId: s.agentId, agentName: s.agentName, scope: s.scope, ownerId: s.ownerId, status: s.status, heldLockId: s.heldLockId, lastAction: s.lastAction, updatedAt: s.updatedAt }));
+    // P1-1: a private-scoped draft must redact its OPS too, not just the note — `ops` carries the
+    // actual cell edits (elementId + value), which previously leaked verbatim to every member.
+    // The draft's owner still sees their own ops; everyone else gets [] + an opsRedacted count.
     const drafts = (await ctx.db.query("drafts").withIndex("by_room_status", (q) => q.eq("roomId", roomId).eq("status", "pending")).collect())
-      .map((d) => ({ id: d._id, roomId: d.roomId, artifactId: d.artifactId, author: d.author, ops: d.ops, note: d.author.scope === "private" ? "[private draft]" : d.note, blockedByLockId: d.blockedByLockId, status: d.status, createdAt: d.createdAt, resolvedAt: d.resolvedAt }));
+      .map((d) => {
+        const redact = d.author.scope === "private" && !(d.author.ownerId !== undefined && d.author.ownerId === requester.actor.id);
+        return {
+          id: d._id, roomId: d.roomId, artifactId: d.artifactId, author: d.author,
+          ops: redact ? [] : d.ops,
+          opsRedacted: redact ? d.ops.length : undefined,
+          note: redact ? "[private draft]" : d.note,
+          blockedByLockId: d.blockedByLockId, status: d.status, createdAt: d.createdAt, resolvedAt: d.resolvedAt,
+        };
+      });
     return {
       room: { id: room._id, code: room.code, title: room.title, hostId: room.hostId, autoAllow: room.autoAllow, status: room.status, createdAt: room.createdAt },
       members, artifacts, locks, sessions, drafts,

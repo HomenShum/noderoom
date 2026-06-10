@@ -75,6 +75,7 @@ export class ConvexRoomTools implements RoomTools {
     if (r.ok) return { ok: true, version: r.version, mutationReceiptId: r.mutationReceiptId ? String(r.mutationReceiptId) : undefined };
     if (r.reason === "conflict") return { ok: false, conflict: true, expected: r.expected, actual: r.actual };
     if (r.reason === "locked") return { ok: false, locked: true, holder: r.by };
+    if (r.reason === "pending_approval") return { ok: false, pendingApproval: true, proposalId: r.proposalId ? String(r.proposalId) : undefined };
     return { ok: false, error: r.reason };
   }
 

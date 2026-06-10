@@ -115,6 +115,7 @@ export class InMemoryRoomTools implements RoomTools {
     if (res.ok) return { ok: true, version: res.toVersion };
     if (res.reason === "conflict") return { ok: false, conflict: true, expected: res.expected, actual: res.actual };
     if (res.reason === "locked") return { ok: false, locked: true, holder: res.by.name };
+    if (res.reason === "pending_approval") return { ok: false, pendingApproval: true, proposalId: res.proposalId };
     return { ok: false, error: res.reason };
   }
 

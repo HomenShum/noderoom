@@ -114,6 +114,7 @@ export type EditOutcome =
   | { ok: true; version: number; mutationReceiptId?: string }
   | { ok: false; conflict: true; expected: number; actual: number }
   | { ok: false; locked: true; holder: string }
+  | { ok: false; pendingApproval: true; proposalId?: string }
   | { ok: false; error: string };
 export interface MergeView { draftId: string; verdict: string; note: string; applied: number; conflicts: number; }
 

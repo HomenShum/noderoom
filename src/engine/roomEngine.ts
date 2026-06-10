@@ -42,6 +42,23 @@ export interface MergeOutcome {
   resolution: MergeResolution;
 }
 
+function stableValueKey(value: unknown): string {
+  try { return JSON.stringify(value); }
+  catch { return String(value); }
+}
+
+function samePendingProposal(p: Proposal, roomId: string, op: ChangeOp, actor: Actor): boolean {
+  return p.status === "pending"
+    && p.roomId === roomId
+    && p.artifactId === op.artifactId
+    && p.author.kind === actor.kind
+    && p.author.id === actor.id
+    && p.op.elementId === op.elementId
+    && p.op.kind === op.kind
+    && p.op.baseVersion === op.baseVersion
+    && stableValueKey(p.op.value) === stableValueKey(op.value);
+}
+
 export class RoomEngine {
   private rooms = new Map<string, Room>();
   private membersByRoom = new Map<string, Member[]>();
@@ -149,37 +166,63 @@ export class RoomEngine {
     if (!art || art.roomId !== args.roomId) return [];
     const now = this.now();
     const rowIds: string[] = [];
+    let added = 0;
+    let updated = 0;
+    let changed = false;
     for (const row of args.rows) {
       const company = row.company.trim();
       if (!company) continue;
-      const rowId = this.uniqueResearchRowId(art, company);
+      const { rowId, existing } = this.researchRowIdForImport(art, row);
       rowIds.push(rowId);
       const vals: Record<(typeof RESEARCH_ROW_COLS)[number], string> = {
         company,
-        website: row.website?.trim() ?? "",
-        status: "pending",
+        website: row.website?.trim() || this.defaultResearchWebsite(company),
+        status: existing ? displayResearchValue(art, rowId, "status") || "pending" : "pending",
         tier: row.tier?.trim() || "B",
         intent: row.intent?.trim() ?? "",
         owner: row.owner?.trim() ?? args.by.name,
         crm_status: row.crmStatus?.trim() || "Research",
-        summary: "",
-        funding: "",
-        headcount: "",
-        recent_signal: "",
-        source: "",
-        source2: "",
-        last_researched: "",
+        summary: existing ? displayResearchValue(art, rowId, "summary") : "",
+        funding: existing ? displayResearchValue(art, rowId, "funding") : "",
+        headcount: existing ? displayResearchValue(art, rowId, "headcount") : "",
+        recent_signal: existing ? displayResearchValue(art, rowId, "recent_signal") : "",
+        source: existing ? displayResearchValue(art, rowId, "source") : "",
+        source2: existing ? displayResearchValue(art, rowId, "source2") : "",
+        last_researched: existing ? displayResearchValue(art, rowId, "last_researched") : "",
       };
-      for (const col of RESEARCH_ROW_COLS) {
+      const writableCols = existing ? ["company", "website", "tier", "intent", "owner", "crm_status"] as const : RESEARCH_ROW_COLS;
+      for (const col of writableCols) {
         const elementId = `${rowId}__${col}`;
-        art.elements[elementId] = { id: elementId, version: 1, value: vals[col], updatedAt: now, updatedBy: args.by };
-        art.order.push(elementId);
+        const prev = art.elements[elementId];
+        if (prev) {
+          if (Object.is(prev.value, vals[col])) continue;
+          prev.value = vals[col];
+          prev.version++;
+          prev.updatedAt = now;
+          prev.updatedBy = args.by;
+        } else {
+          art.elements[elementId] = { id: elementId, version: 1, value: vals[col], updatedAt: now, updatedBy: args.by };
+          art.order.push(elementId);
+        }
+        changed = true;
+      }
+      if (!existing) {
+        added++;
+        for (const col of RESEARCH_ROW_COLS) {
+          const elementId = `${rowId}__${col}`;
+          if (art.elements[elementId]) continue;
+          art.elements[elementId] = { id: elementId, version: 1, value: vals[col], updatedAt: now, updatedBy: args.by };
+          art.order.push(elementId);
+        }
+        changed = true;
+      } else {
+        updated++;
       }
     }
-    if (rowIds.length) {
+    if (rowIds.length && changed) {
       art.version++;
       art.updatedAt = now;
-      this.trace(args.roomId, args.by, "edit_applied", `${args.by.name} added ${rowIds.length} research row(s)`, { artifactId: art.id }, `add_research_rows ${rowIds.join(", ")}`);
+      this.trace(args.roomId, args.by, "edit_applied", `${args.by.name} imported ${rowIds.length} research row(s)`, { artifactId: art.id }, `add_research_rows added=${added} updated=${updated} rows=${rowIds.join(", ")}`);
       this.emit();
     }
     return rowIds;
@@ -274,6 +317,8 @@ export class RoomEngine {
     // Auto-allow: agent edits become proposals when auto-allow is OFF.
     const room = this.rooms.get(roomId);
     if (actor.kind === "agent" && room && !room.autoAllow) {
+      const existing = [...this.proposals.values()].find((p) => samePendingProposal(p, roomId, op, actor));
+      if (existing) return { ok: false, reason: "pending_approval", proposalId: existing.id };
       const proposal: Proposal = { id: this.id("prop"), roomId, artifactId: op.artifactId, op, author: actor, status: "pending", createdAt: this.now() };
       this.proposals.set(proposal.id, proposal);
       this.trace(roomId, actor, "edit_proposed", `${actor.name} proposed an edit to ${op.elementId} (awaiting approval)`, { proposalId: proposal.id });
@@ -442,12 +487,32 @@ export class RoomEngine {
     return `r-${n.toString(36)}${((n * 31) % 1296).toString(36).padStart(2, "0")}`;
   }
 
-  private uniqueResearchRowId(art: Artifact, company: string): string {
-    const base = "rc_" + company.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 28);
+  private researchRowIdForImport(art: Artifact, row: ResearchRowInput): { rowId: string; existing: boolean } {
+    const company = row.company.trim();
+    const existing = this.findResearchRowId(art, company, row.website);
+    if (existing) return { rowId: existing, existing: true };
+    const base = researchRowSlug(company);
     let rowId = base === "rc_" ? this.id("rc") : base;
     let suffix = 1;
     while (art.order.some((id) => id.startsWith(`${rowId}__`))) rowId = `${base}_${suffix++}`;
-    return rowId;
+    return { rowId, existing: false };
+  }
+
+  private findResearchRowId(art: Artifact, company: string, website?: string): string | null {
+    const wantedCompany = normalizeResearchIdentity(company);
+    const wantedDomain = normalizeResearchDomain(website);
+    const rowIds = [...new Set(art.order.map((id) => id.split("__")[0]))];
+    return rowIds.find((rid) => {
+      const existingCompany = normalizeResearchIdentity(displayResearchValue(art, rid, "company"));
+      if (wantedCompany && existingCompany === wantedCompany) return true;
+      const existingDomain = normalizeResearchDomain(displayResearchValue(art, rid, "website"));
+      return !!wantedDomain && existingDomain === wantedDomain;
+    }) ?? null;
+  }
+
+  private defaultResearchWebsite(company: string): string {
+    const host = company.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 32);
+    return host ? `https://www.${host}.com` : "";
   }
 }
 
@@ -460,4 +525,30 @@ function channelEq(a: Channel, b: Channel): boolean {
 function fmt(v: unknown): string {
   if (v && typeof v === "object") return JSON.stringify(v).slice(0, 40);
   return String(v).slice(0, 40);
+}
+
+function researchRowSlug(company: string): string {
+  return "rc_" + company.toLowerCase().replace(/[^a-z0-9]+/g, "_").replace(/^_+|_+$/g, "").slice(0, 28);
+}
+
+function normalizeResearchIdentity(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+
+function normalizeResearchDomain(value?: string): string {
+  if (!value) return "";
+  const raw = value.trim();
+  if (!raw) return "";
+  try {
+    const url = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
+    return url.hostname.toLowerCase().replace(/^www\./, "");
+  } catch {
+    return raw.toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split(/[/?#]/)[0];
+  }
+}
+
+function displayResearchValue(art: Artifact, rowId: string, col: string): string {
+  const raw = art.elements[`${rowId}__${col}`]?.value;
+  if (raw === null || raw === undefined) return "";
+  return typeof raw === "string" ? raw : String(raw);
 }

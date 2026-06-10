@@ -157,7 +157,30 @@ test("three users chat, edit the same sheet concurrently, and run the public age
   } catch { allArtifacts = "tabs-not-all-visible"; }
   await shoot(pages, "act8-all-artifacts");
 
+  // ── Act 9: REVIEW MODE (auto-allow OFF) — the agent files proposals instead of editing; inline
+  //    approve/reject chips render AT the affected cells (Docs convention, friction fix F6) in EVERY
+  //    view; the host's inline approve applies via CAS and the value fans out to Dev & Sam.
+  //    Real-LLM dependent → best-effort like Acts 5/7.
+  let reviewMode = "not-run";
+  try {
+    const sw = maya.locator(".r-pill-auto .r-switch");
+    if ((await sw.getAttribute("data-on")) === "true") { await sw.click(); await maya.waitForTimeout(500); }
+    await say(maya, "/ask reconcile Q3 revenue and fill the remaining variance cells");
+    // chips must appear in a NON-host view too — proposal fan-out, not just local render
+    await expect(dev.locator('[data-testid="proposal-inline"]').first()).toBeVisible({ timeout: 150_000 });
+    await maya.waitForTimeout(2000);
+    const keys = await maya.locator('[data-testid="proposal-inline"]').evaluateAll((els) => els.map((e) => e.closest("[data-cell-key]")?.getAttribute("data-cell-key")));
+    expect(new Set(keys).size).toBe(keys.length); // coalesced: never two chips on one cell
+    const targetKey = keys[0]!;
+    await maya.locator('[data-testid="proposal-inline-approve"]').first().click();
+    for (const p of [dev, sam]) {
+      await expect.poll(async () => (await cellText(p, targetKey)).length > 0, { timeout: 20_000 }).toBeTruthy();
+    }
+    reviewMode = `approved-${targetKey}-visible-to-all`;
+  } catch { reviewMode = "no-proposals-within-150s (real-LLM dependent)"; }
+  await shoot(pages, "act9-review-mode");
+
   // eslint-disable-next-line no-console
-  console.log(JSON.stringify({ room: CODE, sameCellWinner: winner, agent, privateAgent, personalPublic, allArtifacts }, null, 2));
+  console.log(JSON.stringify({ room: CODE, sameCellWinner: winner, agent, privateAgent, personalPublic, allArtifacts, reviewMode }, null, 2));
   for (const p of all) await p.context().close();
 });

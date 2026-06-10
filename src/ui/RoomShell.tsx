@@ -25,7 +25,10 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
   const store = useStore();
   const room = store.getRoom(roomId);
   const live = store.canRunCollab;
-  const [show, setShow] = useState({ left: live, artifact: live, priv: live });
+  // QA P0: below 981px the side panels render as fixed overlays over chat (styles.css), so they
+  // start CLOSED — chat is the default single pane and the top-bar toggles are the panel switcher.
+  const isCompact = typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(max-width: 980px)").matches;
+  const [show, setShow] = useState({ left: live && !isCompact, artifact: live && !isCompact, priv: live && !isCompact });
   const [layout, setLayout] = useState({ left: 224, center: 1.15, artifact: 1.35, right: 320 });
   const arts = store.listArtifacts(roomId);
   const [artId, setArtId] = useState(() => arts.find((a) => a.kind === "sheet")?.id ?? arts[0]?.id ?? "");
@@ -44,8 +47,10 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
     let seen = false;
     try { seen = localStorage.getItem(TOUR_KEY) === "done"; } catch { /* ignore */ }
     tourAutoStarted.current = true;
-    if (!seen) { setShow({ left: true, artifact: true, priv: true }); setTourOpen(true); }
-  }, [isDemoRoom]);
+    // On compact screens panels are stacked fixed overlays — opening all three would bury the chat
+    // the tour is pointing at, so the tour starts from the chat-only default there.
+    if (!seen) { if (!isCompact) setShow({ left: true, artifact: true, priv: true }); setTourOpen(true); }
+  }, [isDemoRoom, isCompact]);
   if (!room) return <div className="r-app"><div className="r-screen"><div style={{ margin: "auto" }} className="muted">Loading room…</div></div></div>;
 
   const members = store.listMembers(roomId);
@@ -172,9 +177,9 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
         {store.mode === "memory" && <span className="r-tag r-demo-badge" title="Scripted demo — no backend or API keys needed; everything runs locally and offline.">● demo</span>}
         <span className="r-spacer" />
         <div className="r-toggle-group">
-          <button className="r-iconbtn" data-on={String(show.left)} title="Files & people" onClick={() => setShow((s) => ({ ...s, left: !s.left }))}><PanelLeft size={16} /></button>
-          <button className="r-iconbtn" data-on={String(show.artifact)} title="Artifact" onClick={() => setShow((s) => ({ ...s, artifact: !s.artifact }))}><Table2 size={16} /></button>
-          <button className="r-iconbtn" data-on={String(show.priv)} title="Private agent" onClick={() => setShow((s) => ({ ...s, priv: !s.priv }))}><PanelRight size={16} /></button>
+          <button className="r-iconbtn" data-on={String(show.left)} title="Files & people" aria-label="Toggle files & people panel" aria-pressed={show.left} onClick={() => setShow((s) => ({ ...s, left: !s.left }))}><PanelLeft size={16} /></button>
+          <button className="r-iconbtn" data-on={String(show.artifact)} title="Artifact" aria-label="Toggle artifact panel" aria-pressed={show.artifact} onClick={() => setShow((s) => ({ ...s, artifact: !s.artifact }))}><Table2 size={16} /></button>
+          <button className="r-iconbtn" data-on={String(show.priv)} title="Private agent" aria-label="Toggle private agent panel" aria-pressed={show.priv} onClick={() => setShow((s) => ({ ...s, priv: !s.priv }))}><PanelRight size={16} /></button>
         </div>
         <div className="r-pill-auto">
           Auto-allow
@@ -186,7 +191,7 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
         </div>
         <button className="r-iconbtn" title="Take the guided tour" aria-label="Take the guided tour" data-testid="tour-button" onClick={startTour}><HelpCircle size={16} /></button>
         <ThemeToggle />
-        <button className="r-iconbtn" title="Leave room" onClick={onLeave}><LogOut size={16} /></button>
+        <button className="r-iconbtn" title="Leave room" aria-label="Leave room" onClick={onLeave}><LogOut size={16} /></button>
       </div>
 
       <div className="r-workspace">

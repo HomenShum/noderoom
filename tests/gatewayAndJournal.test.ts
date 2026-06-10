@@ -57,6 +57,59 @@ describe("gateway spend ceiling wired into the runtime", () => {
     expect(r.usage.inputTokens + r.usage.outputTokens).toBeLessThanOrEqual(300); // didn't run away past the cap
     expect(calls).toBeLessThanOrEqual(2);                                   // only 2 billable calls before the cap fired
   });
+
+  it("P0-4: the DOLLAR ceiling fires via priceStep (was dead surface — costUsd hardcoded 0)", async () => {
+    const engine = new RoomEngine();
+    const d = buildDemoRoom(engine);
+    const rt = new InMemoryRoomTools(engine, d.roomId, d.sheetId, d.agents.room, d.sessions.room);
+    let calls = 0;
+    const spender: AgentModel = {
+      get name() { return "paid-model"; },
+      next: async () => { calls++; return { text: "", toolCalls: [{ id: "c" + calls, tool: "read_range", args: { elementIds: [CELL] } }], done: false, usage: { inputTokens: 1000, outputTokens: 500 } }; },
+    };
+    // $0.10/step, $0.25 cap, generous token cap → the DOLLAR limit must be the binding constraint.
+    const r = await runAgent({
+      rt, goal: "read repeatedly", model: spender, tools: ROOM_TOOLS, maxSteps: 20,
+      spendLimits: { maxCostUsd: 0.25, maxTokens: 1_000_000 },
+      priceStep: () => 0.10,
+    });
+    expect(r.stopReason).toBe("spend_budget");   // stopped by DOLLARS, not tokens/steps
+    expect(calls).toBeLessThanOrEqual(3);        // ~3 steps x $0.10 crosses $0.25; never ran to maxSteps
+    expect(r.handoff).toBeTruthy();              // resumable, same as the token path
+  });
+});
+
+describe("P1-3: error-path handoff preserves unexecuted tool calls (resume-cursor integrity)", () => {
+  it("a mid-turn tool throw hands off the REMAINING calls — no unpaired tool_use blocks on resume", async () => {
+    const engine = new RoomEngine();
+    const d = buildDemoRoom(engine);
+    const rt = new InMemoryRoomTools(engine, d.roomId, d.sheetId, d.agents.room, d.sessions.room);
+    const { z } = await import("zod");
+    const bomb = { name: "bomb", description: "throws", schema: z.object({}), execute: () => { throw new Error("tool exploded"); } };
+    // One model turn issues THREE calls; the 2nd throws → the 3rd is unexecuted.
+    const model: AgentModel = {
+      get name() { return "three-calls"; },
+      next: async () => ({ text: "", done: false, usage: { inputTokens: 10, outputTokens: 5 }, toolCalls: [
+        { id: "c1", tool: "read_range", args: { elementIds: [CELL] } },
+        { id: "c2", tool: "bomb", args: {} },
+        { id: "c3", tool: "read_range", args: { elementIds: [CELL] } },
+      ] }),
+    };
+    let thrown: unknown;
+    try {
+      await runAgent({ rt, goal: "boom mid-turn", model, tools: [...ROOM_TOOLS, bomb], maxSteps: 4 });
+    } catch (e) { thrown = e; }
+    const err = thrown as import("../src/agent/runtime").AgentRunError;
+    expect(err?.name).toBe("AgentRunError");
+    const handoff = err.partial.handoff!;
+    expect(handoff.reason).toBe("error");
+    expect(handoff.remainingToolCalls.map((c) => c.id)).toEqual(["c3"]); // ← the unexecuted call rides the handoff
+    // And the message stream is PAIRED: the assistant turn lists 3 calls, results exist for c1+c2
+    // (the thrower records its error result), and c3's pairing completes on resume via resumeToolCalls.
+    const toolResults = err.partial.messages.filter((m) => m.role === "tool").map((m) => (m as { toolCallId?: string }).toolCallId);
+    expect(toolResults).toContain("c1");
+    expect(toolResults).toContain("c2");
+  });
 });
 
 describe("exactly-once journal (no double-bill on slice retry)", () => {

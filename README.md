@@ -10,7 +10,7 @@ through the same versioned concurrency control.**
 
 `multi-panel room` · `public + private agents` · `affected-range lock` · `draft-for-merge` · `per-room traces` · `live Convex + real LLM`
 
-[Why Convex](#why-convex-and-why-not) · [Audience fluency](#audience-world-proof-artifacts) · [Lessons](#lessons-from-building-noderoom) · [Why & HALO](docs/WHY_NODEAGENT_AND_HALO.md) · [Quickstart](#quickstart) · [Agent runtime](docs/AGENT_RUNTIME.md) · [Agent eval](docs/AGENT_EVAL.md) · [Agent wiki](docs/AGENT_WIKI.md) · [Design](docs/DESIGN.md) · [Stack](docs/STACK.md) · [Walkthrough](docs/WALKTHROUGH.md) · [Architecture](docs/ARCHITECTURE.md) · [Open gaps](docs/GAPS_NOT_DONE.md)
+[Why Convex](#why-convex-and-why-not) · [Audience fluency](#audience-world-proof-artifacts) · [Lessons](#lessons-from-building-noderoom) · [Sequences](#live-collaboration-sequence) · [Why & HALO](docs/WHY_NODEAGENT_AND_HALO.md) · [Quickstart](#quickstart) · [Agent runtime](docs/AGENT_RUNTIME.md) · [Agent eval](docs/AGENT_EVAL.md) · [Agent wiki](docs/AGENT_WIKI.md) · [Design](docs/DESIGN.md) · [Stack](docs/STACK.md) · [Walkthrough](docs/WALKTHROUGH.md) · [Architecture](docs/ARCHITECTURE.md) · [Open gaps](docs/GAPS_NOT_DONE.md)
 
 [Interview notes](docs/INTERVIEW_NOTES.md) · [Over-engineering audit](docs/OVERENGINEERING_AUDIT.md) · [Improvement roadmap](docs/IMPROVEMENT_ROADMAP.md)
 
@@ -92,6 +92,24 @@ progress bar. Regenerate any time with `npm run walkthroughs` (capture) + `npm r
 cursor targets into `remotion/walkthrough.data.js`, and a Remotion composition overlays the animated
 cursor, captions, and progress bar. Packaged as a reusable skill:
 [`.claude/skills/readme-walkthroughs`](.claude/skills/readme-walkthroughs/SKILL.md).</sub>
+
+### Watch the narrated episodes (click a poster — plays in your browser, with sound)
+
+Two fully-produced explainer videos, assembled from the live captures above + real code panels +
+an animated mental-model diagram + ElevenLabs narration — each machine-judged 16/16 before
+publishing (Gemini watches the actual render; see `episodes/*/judge.md`).
+
+| The builder story (58s) | The investment-room story (42s) |
+|---|---|
+| [![I tried to make a demo GIF — it turned into a multiplayer AI workspace](episodes/noderoom-live-collab-v1/poster.jpg)](https://noderoom.live/episodes/noderoom-live-collab-v1.mp4) | [![Before Monday's IC meeting — who changed what, and can you trust it?](episodes/private-investment-room-v1/poster.jpg)](https://noderoom.live/episodes/private-investment-room-v1.mp4) |
+| Naive agent clobbers a human → the code that fixes it → review mode live | A private investment team's room: provenance, proposals, versioned history — fictional data only |
+
+**Media QA.** The README GIFs, workflow previews, and episode renders are now
+batch-judgeable with Gemini video understanding: `npm run media:gemini-judge --
+--all`. GIFs are converted to temporary MP4 with ffmpeg, then each asset gets a
+concrete verdict for clarity, visual design, consistency, evidence quality,
+legibility, and professional-workflow relevance. Latest aggregate:
+[`docs/eval/MEDIA_JUDGE.md`](docs/eval/MEDIA_JUDGE.md).
 
 ## Workflow Skill Previews
 
@@ -278,11 +296,13 @@ and [`evals/professionalWorkflows.ts`](evals/professionalWorkflows.ts).
 7. **Single action -> durable sliced workflow.** Every agent command creates or
    reuses a durable `agentJobs` row. `/ask` runs the first slice immediately for
    responsive UX; if it exhausts step or time budget, it checkpoints cursor state
-   and resumes through the same Workflow/Workpool slice runner. `/free` is a
-   model-policy shortcut that forces `openrouter/free-auto`, not a second agent
-   architecture. The remaining production hardening is stricter deadline/tool
-   abort behavior, provider request idempotency where available, and model
-   health/quarantine. See
+   and resumes through the same Workflow/Workpool slice runner. The continuation
+   function is still named `freeAutoWorkflow` from its first use case, but it
+   preserves the job's model policy, so `/ask` and `/free` share the durable
+   contract. `/free` is a model-policy shortcut that forces
+   `openrouter/free-auto`, not a second agent architecture. The remaining
+   production hardening is stricter deadline/tool abort behavior, provider
+   request idempotency where available, and model health/quarantine. See
    [`docs/LONG_RUNNING_AGENTS.md`](docs/LONG_RUNNING_AGENTS.md).
 
 8. **Model benchmark -> model routing gate.** The cheapest model that passes a
@@ -464,6 +484,77 @@ flowchart LR
   untouched elements, no-ops if already equal, and **flags-without-applying if diverged**. Committed work is never clobbered.
 - **Auto-allow** — when OFF, agent edits become proposals for host approve/reject; humans always apply directly.
 
+## Live collaboration sequence
+
+This is the actual multi-user path readers should hold in their head. The
+browser may paint optimistically, but Convex mutations own durable writes, the
+NodeAgent writes through the same checked mutations as humans, and Workflow /
+Workpool only continues a checkpointed job; it is not the source of truth.
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant Host as "Host browser"
+  participant Peer as "Peer browser"
+  participant Store as "React useStore"
+  participant Query as "Convex reactive queries"
+  participant Mutation as "Convex mutations"
+  participant Agent as "NodeAgent action"
+  participant Flow as "Workflow / Workpool"
+  participant LLM as "Gemini / OpenAI / Claude / OpenRouter"
+  participant DB as "Convex DB"
+
+  Host->>Query: subscribe room, artifacts, messages, jobs
+  Peer->>Query: subscribe same room with member proof
+  Query->>DB: read authorized room state
+  DB-->>Host: files, spreadsheet, note, wall, trace
+  DB-->>Peer: same public state, private data redacted
+
+  Host->>Store: edit spreadsheet cell
+  Store-->>Host: optimistic paint
+  Store->>Mutation: applyCellEdit(elementId, baseVersion, value)
+  Mutation->>DB: check member proof, lock, CAS version
+  alt current and unlocked
+    Mutation->>DB: write element, increment version, receipt
+    DB-->>Host: confirmed canonical state
+    DB-->>Peer: live reactive update
+  else stale or locked
+    Mutation-->>Host: conflict/locked result as data
+    Host->>Mutation: draft or proposal path, no silent overwrite
+  end
+
+  Host->>Mutation: send public "/ask" command
+  Mutation->>DB: append message and create/reuse agentJobs row
+  Host->>Agent: runRoomAgent(goal, artifact, requester proof)
+  Agent->>DB: hydrate context from room state
+  Agent->>Agent: fence untrusted data, compact context, derive slice key
+  Agent->>DB: check model-step journal
+  alt no journaled step
+    Agent->>LLM: bounded model call with tools
+    LLM-->>Agent: assistant text and tool calls
+    Agent->>DB: record model-step journal
+  else retry of completed step
+    DB-->>Agent: replay model output, no provider call
+  end
+  Agent->>Mutation: propose_lock / read_range / edit_cell / release_lock
+  Mutation->>DB: permission, schema, lock, CAS, evidence checks
+  Mutation->>DB: commit safe write or create proposal/draft
+  DB-->>Host: inline chips, trace, job status
+  DB-->>Peer: same public receipts
+  alt budget remains and goal is done
+    Agent->>Mutation: finish job with run + steps + cost
+  else budget exhausted
+    Agent->>Mutation: checkpoint cursor and handoff
+    Mutation->>Flow: start continuation workflow
+    Flow->>Agent: resume bounded slice from durable state
+  end
+```
+
+The long form, including file/provider extraction and architecture alternatives
+against client-side SSE, REST polling, CRDT/local-first, and worker-queue
+designs, lives in
+[`docs/LIVE_COLLABORATION_SEQUENCES.md`](docs/LIVE_COLLABORATION_SEQUENCES.md).
+
 ## The agent — runtime, context, eval
 
 The agent is the centerpiece, built to be *explained* and *trusted*. **Type `/ask <goal>`
@@ -554,6 +645,20 @@ The per-rung previews below are **trace replays** — the same agent-runtime too
 visual of the `lock → CAS → draft → smart-merge` protocol the [HALO loop](#agent-improvement-loop)
 re-verifies every cycle. The rungs L1–L6 are the [`evals/ladder.ts`](evals/ladder.ts) bar that turns
 "completed" into "right tool, no clobber, in budget."
+
+### Evidence levels
+
+The README uses four evidence labels deliberately:
+
+| Label | Meaning |
+|---|---|
+| DOM preview | Playwright captured the real NodeRoom UI, usually in memory mode, to verify the visible workflow. |
+| Deterministic replay | A scripted or fixture trace replayed through the real harness without provider nondeterminism. |
+| Live provider | A real model/provider produced the agent trace or media judge result. |
+| Live Convex | The path crossed the deployed Convex backend and reactive clients, not only the in-memory engine. |
+
+Promotion claims require the level named in the QA matrix; a nice GIF is not a
+production gate by itself.
 
 ### L1 · Read — answer without touching
 

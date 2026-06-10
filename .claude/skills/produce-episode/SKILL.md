@@ -65,6 +65,17 @@ narrated). Aesthetic rule: quiet competence, not loud wealth.
 9. Write `episodes/$ARGUMENTS/report.md`: which scenes rendered, which are staged and why, sizes,
    evidence links, trust/fluency scores.
 
+## Distribution (learned the hard way)
+**GitHub cannot inline-play an MP4 you committed** — a blob link opens a download page, which is
+a dead-end handoff. Ship episodes as: (1) copy the MP4 into the app's `public/episodes/`
+(gitignored — the deploy uploads it, the repo doesn't double-store it) so it plays at
+`https://noderoom.live/episodes/<id>.mp4` in any browser with sound; (2) commit a small
+`poster.jpg` (~30KB, ffmpeg frame grab at 540w) and embed it in the README as a click-through
+link to that URL. The only way to get a TRUE inline player in a README is manually drag-dropping
+the MP4 into GitHub's web editor (not automatable) — the poster+link pattern is the automated
+equivalent. GIFs stay the inline format for the short walkthroughs; episodes keep audio, so they
+ship as MP4 links.
+
 ## Staged stages (interfaces defined, NOT yet built — do not pretend they ran)
 - `failure-replay`: drive the SAME spec against a `v0-*` git tag in a worktree to record the
   naive version failing. Needs tags or a fixture flag that disables the guard being demoed.

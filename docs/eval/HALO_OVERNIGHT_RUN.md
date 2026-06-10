@@ -1,6 +1,6 @@
 # HALO Overnight Run
 
-Last updated: 2026-06-09T19:09Z.
+Last updated: 2026-06-10T07:11Z.
 
 Target deadline: 2026-06-10 10:00 AM PT.
 
@@ -39,8 +39,8 @@ Live status:
 - Status file: `docs/eval/halo-runs/20260609T183814Z/status.json`
 - Step log stream: `docs/eval/halo-runs/20260609T183814Z/summary.jsonl`
 - Active lock: `docs/eval/halo-runs/.active-run.json`
-- Current step at this update: `sleeping` after cycle 2.
-- Current wake: `2026-06-09T19:39:17.507Z`.
+- Current step at this update: `sleeping` after cycle 25.
+- Current wake: `2026-06-10T07:21:21.464Z`.
 - Current output status: `docs/eval/free-auto-router-ladder.json` exists
   (12,291 bytes). The latest full-live router ladder completed and failed
   overall.
@@ -55,17 +55,35 @@ The active lock points at the currently running process. A second
 `halo:overnight` runner exits before writing run artifacts while that process is
 alive.
 
-Active deterministic continuation evidence in `20260609T183814Z`, cycle 2:
+Latest active deterministic continuation evidence in `20260609T183814Z`, cycle 25:
 
 - `typecheck`: pass
-- `unit-tests`: pass, 29 files / 173 tests
+- `unit-tests`: pass, 31 files / 195 tests
 - `test:e2e`: skipped by `--skip-e2e`
-- `agent:improve`: pass, wrote
-  `docs/eval/agent-improvement-loop/20260609T190903Z.json`
-- `eval:diff`: pass, 0 degraded / 0 improved / 0 new / 9 same
+- `agent:improve`: pass; internal professional catalog, workflow evals,
+  collaboration ladder, credit evals, eval diff, Convex boundaries, and
+  architecture-budget steps all completed. It wrote
+  `docs/eval/agent-improvement-loop/20260610T065104Z.json`.
+- `eval:diff`: pass, 0 degraded / 0 removed / 0 improved / 5 new / 0 same
 - `qa:matrix:check`: pass, 13 features / 13 model routes current
 - `convex:boundaries`: pass
-- `architecture:budget`: advisory pass with the same review-required surfaces
+- `architecture:budget`: advisory pass; stdout still reports review-required
+  dirty surfaces. Current missing/unowned evidence includes
+  `convex/agentJobRunner.ts`, `docs/WHY_NODEAGENT_AND_HALO.md`,
+  `e2e/three-user-collab.spec.ts`, `scripts/agent-improvement-loop.ts`,
+  `scripts/render-workflow-preview.ts`, `src/app/styles.css`,
+  `convex/crons.ts`, `docs/COMPLETENESS_REGISTER.md`,
+  `docs/IMPROVEMENT_ROADMAP.md`, `docs/QA_UI_FIX_PLAN.md`, and
+  `e2e/responsive-qa.spec.ts`.
+
+Cycle 8 incident and recovery:
+
+- Cycle 8 failed `typecheck` and `unit-tests` because `src/agent/runtime.ts`
+  referenced `pendingToolCalls` before the current declaration was present in
+  that runner snapshot.
+- Manual recovery proof after cycle 8 passed: `npm run typecheck -- --pretty
+  false`, plus targeted runtime/workflow Vitest coverage (5 files / 28 tests).
+- Cycle 9 then proved the recovery inside the active HALO runner.
 
 Prior full-live run: `20260609T060208Z` completed six cycles and ended after the
 June 9 cutoff with failure status because at least one cycle contained failed
@@ -140,8 +158,13 @@ Model/router QA:
 
 UI/browser QA:
 
-- Current E2E proves memory-mode chat; live Convex/browser two-context specs remain the main red gap.
-- Missing stable selectors and backend harness pieces still block production claims for file upload/view, private chat, proposals, auto-accept, spreadsheet CAS, and wall conflicts.
+- Current E2E proves memory-mode chat; strict live three-user Convex/browser
+  proof also passed for shared chat/edit convergence, private agent isolation,
+  personal-agent room action, all-artifact tab presence, and review-mode
+  proposal fan-out/inline approval (`EVAL-MQ7DB1BZ`).
+- Remaining red/yellow browser-production claims: file upload/view,
+  auto-accept preference/modal, full wall conflict behavior, and broader
+  multi-user production load still need dedicated live fixtures.
 
 Run-control QA:
 
@@ -152,7 +175,7 @@ Run-control QA:
   and `.active-run.json` every 30s.
 - Sleeping states publish `sleepUntil` in `status.json`; `halo:status` and
   `halo:snapshots` render it when available. Latest active continuation wake:
-  `2026-06-09T19:08:51.474Z`.
+  `2026-06-10T07:21:21.464Z`.
 - `npm run halo:status` gives the lock, PID liveness, current step, latest
   events, and router ladder artifact state for each heartbeat/handoff.
 - `npm run halo:status` now reports `supervisor-state.json`, latest
@@ -165,10 +188,10 @@ Run-control QA:
   complete status report to `docs/eval/halo-runs/status-snapshots.jsonl`.
 - `npm run halo:snapshots` renders the JSONL trail into
   `docs/eval/halo-runs/status-snapshots.md` for a quick morning handoff read.
-  Latest generated report parses 39 snapshots, shows active deterministic runner
-  `20260609T183814Z` sleeping, records the router JSON artifact, and records
-  the earlier duplicate/missing-supervisor anomalies that have since been
-  closed.
+  Latest generated report parses 61 snapshots, shows active deterministic runner
+  `20260609T183814Z` sleeping after cycle 25, records the router JSON artifact,
+  and records the earlier duplicate/missing-supervisor anomalies that have
+  since been closed.
 - A scheduled-task fire created a second supervisor at 2026-06-09T00:05 PT.
   The duplicate was stopped, `scripts/halo-supervise-until.ps1` now exits if an
   existing supervisor process is active. Later, after the first full-live runner
@@ -186,8 +209,12 @@ Run-control QA:
   `npm run qa:matrix:check`,
   `npm run halo:snapshots`,
   `npx vitest run tests/qaMatrix.test.ts`,
-  `npm run typecheck -- --pretty false`, `npm test` (29 files / 173 tests), and
-  `git diff --check` all pass for the current HALO run-control changes.
+  `npm run typecheck -- --pretty false`, targeted runtime/workflow Vitest
+  coverage (5 files / 28 tests), and `git diff --check` all pass for the
+  current HALO run-control changes. Cycle 9 confirmed the cycle 8
+  `pendingToolCalls` recovery under the active runner; later focused checks
+  also tightened error-path handoff trace/callback assertions and the phone
+  responsive overlay gate.
 - `scripts/halo-supervise-until.ps1` and `scripts/halo-cron.cmd` now target the
   June 10 handoff window instead of the original June 9 cutoff.
 

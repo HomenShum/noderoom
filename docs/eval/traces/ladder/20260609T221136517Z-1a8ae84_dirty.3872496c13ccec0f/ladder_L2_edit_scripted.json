@@ -1,0 +1,31 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-09T22:11:36.517Z",
+  "commitSha": "1a8ae84",
+  "worktreeHash": "3872496c13ccec0f",
+  "gitDirty": true,
+  "suite": "ladder",
+  "caseId": "ladder:L2_edit:scripted",
+  "score": 0,
+  "checks": {
+    "completed": false
+  },
+  "result": {
+    "pass": false,
+    "requestedModel": "scripted",
+    "resolvedModel": "scripted",
+    "resolvedModels": [
+      "scripted"
+    ],
+    "rung": "L2_edit",
+    "level": 2,
+    "ms": 0,
+    "tools": 0,
+    "cost": 0,
+    "error": "pendingToolCalls is not defined",
+    "checks": {
+      "completed": false
+    }
+  },
+  "trace": []
+}

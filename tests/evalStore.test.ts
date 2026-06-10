@@ -37,7 +37,7 @@ describe("eval store — cross-commit regression attribution (what describe() ca
     expect(byCase["ladder:L3"].verdict).toBe("new");
     // Degraded sorts first — what a human / coding agent must look at.
     expect(diffs[0].caseId).toBe("ladder:L6");
-    expect(summarizeDiff(diffs)).toEqual({ improved: 0, degraded: 1, same: 1, new: 1 });
+    expect(summarizeDiff(diffs)).toEqual({ improved: 0, degraded: 1, same: 1, new: 1, removed: 0 });
   });
 
   it("reports improved when a previously-failing case now passes", () => {
@@ -48,6 +48,55 @@ describe("eval store — cross-commit regression attribution (what describe() ca
     const d = diffByCase(records)[0];
     expect(d.verdict).toBe("improved");
     expect(d.scoreDelta).toBe(1);
+  });
+
+  it("P0-1: a case deleted from the suite surfaces as REMOVED — never silently vanishes", () => {
+    // The canonical gamed-loop move: a failing case is deleted instead of fixed. Before P0-1,
+    // diffByCase iterated only the after-run's cases, so the deletion looked like a clean diff.
+    const records: EvalRunRecord[] = [
+      rec({ ts: 100, commitSha: A, caseId: "ladder:L2", status: "pass", score: 1 }),
+      rec({ ts: 101, commitSha: A, caseId: "ladder:L6", status: "fail", score: 0.4 }), // failing...
+      rec({ ts: 200, commitSha: B, caseId: "ladder:L2", status: "pass", score: 1 }),   // ...and gone at B
+    ];
+    const diffs = diffByCase(records);
+    const removed = diffs.find((d) => d.verdict === "removed");
+    expect(removed?.caseId).toBe("ladder:L6");
+    expect(removed?.before?.status).toBe("fail"); // the evidence of what was being hidden
+    expect(summarizeDiff(diffs).removed).toBe(1);
+    // removed sorts right after degraded — ahead of new/improved/same.
+    expect(diffs.findIndex((d) => d.verdict === "removed")).toBeLessThan(diffs.findIndex((d) => d.verdict === "same"));
+  });
+
+  it("P0-1: a suite that did not run at all is 'not measured', NOT a wall of removed cases", () => {
+    // Real incident from this repo's store: a credit-only --record after a ladder run produced
+    // 6 false 'REMOVED' ladder cases. Removal is judged within suites measured on BOTH sides.
+    const records: EvalRunRecord[] = [
+      rec({ ts: 100, commitSha: A, suite: "ladder", caseId: "ladder:L2", status: "pass", score: 1 }),
+      rec({ ts: 101, commitSha: A, suite: "credit", caseId: "credit:cascade", status: "pass", score: 1 }),
+      rec({ ts: 200, commitSha: B, suite: "credit", caseId: "credit:cascade", status: "pass", score: 1 }), // credit-only run at B
+    ];
+    const diffs = diffByCase(records);
+    expect(summarizeDiff(diffs).removed).toBe(0);            // ladder wasn't measured at B — not "removed"
+    expect(diffs.find((d) => d.caseId === "ladder:L2")).toBeUndefined();
+  });
+
+  it("P0-1: a model swap is annotated modelChanged — the delta is not attributed to code alone", () => {
+    const records: EvalRunRecord[] = [
+      rec({ ts: 100, commitSha: A, caseId: "ladder:L3", status: "pass", score: 1, model: "gemini-3.5-flash" }),
+      rec({ ts: 200, commitSha: B, caseId: "ladder:L3", status: "fail", score: 0.5, model: "qwen3-coder:free" }),
+    ];
+    const d = diffByCase(records)[0];
+    expect(d.verdict).toBe("degraded");
+    expect(d.modelChanged).toBe(true); // fallback-route swap, not necessarily a code regression
+  });
+
+  it("P0-1: a check-set redefinition is annotated checksRedefined", () => {
+    const records: EvalRunRecord[] = [
+      rec({ ts: 100, commitSha: A, caseId: "ladder:L2", status: "pass", score: 1, checks: { targetValue: true } }),
+      rec({ ts: 200, commitSha: B, caseId: "ladder:L2", status: "fail", score: 0.5, checks: { targetValue: true, readBeforeWrite: false } }),
+    ];
+    const d = diffByCase(records)[0];
+    expect(d.checksRedefined).toBe(true); // the bar moved — check tightening, not a pure code regression
   });
 
   it("distinguishes dirty worktree runs even when HEAD commit is unchanged", () => {

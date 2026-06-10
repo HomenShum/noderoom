@@ -10,7 +10,7 @@ through the same versioned concurrency control.**
 
 `multi-panel room` · `public + private agents` · `affected-range lock` · `draft-for-merge` · `per-room traces` · `live Convex + real LLM`
 
-[Lessons](#lessons-from-building-noderoom) · [Why & HALO](docs/WHY_NODEAGENT_AND_HALO.md) · [Quickstart](#quickstart) · [Agent runtime](docs/AGENT_RUNTIME.md) · [Agent eval](docs/AGENT_EVAL.md) · [Agent wiki](docs/AGENT_WIKI.md) · [Design](docs/DESIGN.md) · [Stack](docs/STACK.md) · [Walkthrough](docs/WALKTHROUGH.md) · [Architecture](docs/ARCHITECTURE.md) · [Open gaps](docs/GAPS_NOT_DONE.md)
+[Why Convex](#why-convex-and-why-not) · [Lessons](#lessons-from-building-noderoom) · [Why & HALO](docs/WHY_NODEAGENT_AND_HALO.md) · [Quickstart](#quickstart) · [Agent runtime](docs/AGENT_RUNTIME.md) · [Agent eval](docs/AGENT_EVAL.md) · [Agent wiki](docs/AGENT_WIKI.md) · [Design](docs/DESIGN.md) · [Stack](docs/STACK.md) · [Walkthrough](docs/WALKTHROUGH.md) · [Architecture](docs/ARCHITECTURE.md) · [Open gaps](docs/GAPS_NOT_DONE.md)
 
 [Interview notes](docs/INTERVIEW_NOTES.md) · [Over-engineering audit](docs/OVERENGINEERING_AUDIT.md) · [Improvement roadmap](docs/IMPROVEMENT_ROADMAP.md)
 
@@ -127,6 +127,41 @@ handoff evidence.
 The HALO ladder also renders trace-replayed skill previews from real ladder JSON
 (`l1-read` through `l6-long-horizon`) in `docs/eval/workflow-previews/`, so a
 workflow change has a small visual proof, not only a text score.
+
+## Why Convex (and why not)
+
+NodeRoom's entire product is one loop: **human edit → optimistic client store → agent action →
+internal mutation → reactive query stream → every screen updates**. Convex is the only piece of
+infrastructure in this repo because that loop is exactly what it sells natively: transactional
+mutations (serializable OCC), reactive subscriptions over WebSockets, and a scheduler — the
+pub/sub, cache-invalidation, and message-broker layers you'd otherwise hand-build. The no-clobber
+spine (per-element CAS + affected-range locks + draft-merge) rides *on top* of Convex's OCC; the
+database's own concurrency control protects transactions, and the app-level versions protect
+*intent* — both layers are needed, and [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) shows where each one catches what.
+
+**The pedigree is real.** Convex was built by Dropbox infrastructure veterans — Jamie Turner
+(ex-Dropbox senior engineering leadership) and James Cowling, the MIT PhD (under Turing-laureate
+Barbara Liskov) who architected **Magic Pocket**, the exabyte-scale storage system that moved
+Dropbox off S3. They built Convex after a decade of watching every team rebuild the same
+sync/invalidation machinery they'd built at Dropbox. The engine is hardened by **deterministic
+simulation testing** — the database, message bus, and runtime execute in a single-threaded
+simulated sandbox where network drops, clock drift, and write collisions are injected millions of
+times, so race conditions are caught deterministically before release.
+
+**And the honest trade-offs** (why it isn't everywhere, and why we accepted them):
+
+| Trade-off | Reality | Why it's acceptable *here* |
+|---|---|---|
+| Runtime coupling | Schema, transactions, and functions are tied to Convex's engine — no lift-and-shift to raw SQL over a weekend | The engine seams (`RoomTools`, the in-memory `RoomEngine`) keep the collaboration logic portable; Convex is the *port*, not the *spine* |
+| OLTP, not OLAP | This is a real-time transactional store; scanning billions of rows for analytics is the wrong tool | NodeRoom is the textbook OLTP case: small hot documents, high-frequency concurrent reads/writes, agents and humans interleaved |
+| Enterprise adoption lag | Conservative stacks take a decade to absorb a new paradigm | A spike that exists to prove agent-collaboration patterns should optimize for iteration speed, not procurement checklists |
+
+What this combination unlocks is the category NodeRoom lives in: **AI-augmented collaborative
+canvases** — where a background agent's mutation and a human's keystroke flow through the same
+transaction log and the same reactive stream, so neither ever waits on (or clobbers) the other.
+The same loop powers the adjacent categories — self-healing QA sandboxes where a human corrects a
+stuck agent mid-run, and multi-agent operational simulations watched by many operators — without
+an enterprise-sized DevOps budget. Full stack rationale: [docs/STACK.md](docs/STACK.md).
 
 ## Lessons From Building NodeRoom
 

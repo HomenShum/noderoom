@@ -1,12 +1,12 @@
 # Agent Improvement Loop
 
-Generated: 2026-06-09T19:09:13.700Z
+Generated: 2026-06-10T07:21:50.783Z
 
 Source pattern: https://developers.openai.com/cookbook/examples/agents_sdk/agent_improvement_loop
 
 NodeRoom adapts the cookbook loop as: traces -> human/model feedback -> reusable evals -> gate -> Codex handoff -> next harness change.
 
-Latest run artifact: `docs/eval/agent-improvement-loop/20260609T190903Z.json`
+Latest run artifact: `docs/eval/agent-improvement-loop/20260610T072140Z.json`
 
 Summary: 7 pass, 0 fail, 6 skip.
 
@@ -14,12 +14,12 @@ Summary: 7 pass, 0 fail, 6 skip.
 
 | Step | Lane | Status | Duration | Command |
 |---|---|---:|---:|---|
-| Professional workflow catalog | deterministic | PASS | 1.5s | `npm run eval:professional` |
-| GTM/finance workflow evals | deterministic | PASS | 2.4s | `npx vitest run tests/workflowEvals.test.ts` |
-| Collaboration ladder L1-L6 | deterministic | PASS | 2.2s | `npm run ladder -- --record` |
-| MM-banking credit decision evals | deterministic | PASS | 0.9s | `npm run eval:credit -- --record` |
+| Professional workflow catalog | deterministic | PASS | 1.6s | `npm run eval:professional` |
+| GTM/finance workflow evals | deterministic | PASS | 2.6s | `npx vitest run tests/workflowEvals.test.ts` |
+| Collaboration ladder L1-L6 | deterministic | PASS | 1.7s | `npm run ladder -- --record` |
+| MM-banking credit decision evals | deterministic | PASS | 1.5s | `npm run eval:credit -- --record` |
 | Eval regression diff | deterministic | PASS | 0.7s | `npm run eval:diff` |
-| Convex query/action/mutation boundaries | deterministic | PASS | 1.4s | `npm run convex:boundaries` |
+| Convex query/action/mutation boundaries | deterministic | PASS | 1.3s | `npm run convex:boundaries` |
 | Architecture budget review | deterministic | PASS | 0.8s | `npm run architecture:budget` |
 | OpenRouter free-auto discovery | live | SKIP | 0.0s | `npm run openrouter:free -- --limit=5` |
 | Provider parser live smoke | live | SKIP | 0.0s | `npm run provider-parser:smoke` |
@@ -78,7 +78,7 @@ Root-cause labels used for HALO diagnosis:
 | Eval candidate | Trust | Gate | Architecture fit | Handoff decision |
 |---|---|---|---|---|
 | candidate-gtm-pitchbook-match | candidate | advisory | existing_capability | more_research: missing research packet evidence; candidate evals are advisory only |
-| research-validated-finance-reconcile | research_validated | advisory | small_gap | implementation |
+| research-validated-finance-reconcile | research_validated | advisory | small_gap | implementation: demoted: architecture budget is red (forbidden surfaces dirty / review required) — human approval before any implementation handoff |
 | contested-eval-harness-expansion | contested | advisory | existing_capability | eval_fixture: contested claims must stay advisory until resolved or explicitly modeled |
 
 ## Codex Handoff
@@ -102,13 +102,14 @@ Forbidden without human approval:
 ### Recommendations
 
 - Resolve architecture budget review items or rerun with explicit handoff evidence before implementation.
-- Implement scoped handoff for eval candidate research-validated-finance-reconcile.
 - Run skipped free-route-discovery once prerequisites are present: pass --live and set OPENROUTER_API_KEY to discover current free-auto candidates.
 - Run skipped provider-parser-smoke once prerequisites are present: pass --live; script will skip providers without keys.
 - Run skipped free-job-smoke once prerequisites are present: pass --live and set CONVEX_URL or VITE_CONVEX_URL.
 - Run skipped gemini-ui-review once prerequisites are present: pass --ui-media=<screenshot-or-video> and set GOOGLE_GENERATIVE_AI_API_KEY.
 - Persist each new live trace into a durable eval fixture before promoting README charts.
 - Keep provider benchmarks behind row-level hard timeouts so one stuck free model cannot block the loop.
+- Add browser-visible multi-user checks for public/private chat, artifact references, proposals, and trace accept-all.
+- No implementation handoff candidates passed trust and architecture-fit policy in this run.
 
 ## Next Live Runs
 

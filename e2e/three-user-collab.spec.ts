@@ -11,6 +11,7 @@ import { test, expect, type Page } from "@playwright/test";
 test.skip(!process.env.E2E_LIVE, "set E2E_LIVE=1 (live Convex backend + keys) to run the multi-user collab eval");
 
 const SHOTS = "docs/eval/three-user-shots";
+const REQUIRE_REVIEW_MODE = process.env.E2E_REQUIRE_REVIEW_MODE === "1";
 const v = (row: string) => `${row}__variance`;
 
 async function dismissTour(p: Page) { await p.getByTestId("tour-skip").click({ timeout: 5000 }).catch(() => {}); }
@@ -29,12 +30,30 @@ async function editCell(p: Page, key: string, value: string) {
 async function cellText(p: Page, key: string) {
   return (await p.locator(`[data-cell-key="${key}"]`).innerText()).trim();
 }
+async function proposalCellKeys(p: Page) {
+  const keys = await p.locator('[data-testid="proposal-inline"]').evaluateAll((els) =>
+    els
+      .map((e) => e.closest("[data-cell-key]")?.getAttribute("data-cell-key"))
+      .filter((key): key is string => !!key)
+      .sort()
+  );
+  return keys;
+}
+async function proposalText(p: Page, key: string) {
+  return (await p.locator(`[data-cell-key="${key}"] [data-testid="proposal-inline"] .r-inline-proposal-text`).innerText()).trim();
+}
+async function setAutoAllow(p: Page, on: boolean) {
+  const sw = p.locator(".r-pill-auto .r-switch");
+  await expect(sw).toBeVisible({ timeout: 10_000 });
+  if ((await sw.getAttribute("data-on")) !== String(on)) await sw.click();
+  await expect(sw).toHaveAttribute("data-on", String(on), { timeout: 10_000 });
+}
 async function shoot(pages: Record<string, Page>, label: string) {
   for (const [name, p] of Object.entries(pages)) await p.screenshot({ path: `${SHOTS}/${label}-${name}.png` });
 }
 
 test("three users chat, edit the same sheet concurrently, and run the public agent", async ({ browser }) => {
-  test.setTimeout(320_000);
+  test.setTimeout(600_000);
   const CODE = "EVAL-" + Date.now().toString(36).toUpperCase();
   const mk = async () => (await browser.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
   const maya = await mk(), dev = await mk(), sam = await mk();
@@ -83,6 +102,7 @@ test("three users chat, edit the same sheet concurrently, and run the public age
   // ── Act 5: public agent (real LLM, best-effort) — Maya runs /ask; effect should reach every view.
   let agent = "not-run";
   try {
+    await setAutoAllow(maya, true);
     // Genuine effect = a NEW agent-authored bubble, or a previously-EMPTY variance cell getting filled
     // (verified in Sam's joiner view). Do NOT match incidental chat text like the word "variance".
     const agentMsgsBefore = await chat(sam).locator('[data-testid="chat-message"].agent').count();
@@ -127,17 +147,17 @@ test("three users chat, edit the same sheet concurrently, and run the public age
   //    "via Maya", visible to Dev & Sam (real LLM, best-effort).
   let personalPublic = "not-run";
   try {
+    await setAutoAllow(maya, true);
     await priv(maya).getByTestId("lane-room").click();
-    const emptyBefore: string[] = [];
-    for (const r of ["r_cogs", "r_ni", "r_opex"]) if (!(await cellText(sam, v(r))).length) emptyBefore.push(r);
+    const personalKey = "r_ni__note";
+    const personalValue = `personal-room proof ${CODE}`;
     const viaBefore = await chat(sam).locator('[data-testid="agent-via"]').count();
-    await priv(maya).getByTestId("chat-composer").fill("Fill any remaining empty variance cells with your best estimate, then post a one-line summary to the room.");
+    await priv(maya).getByTestId("chat-composer").fill(`In the Q3 variance spreadsheet, set ${personalKey} exactly to "${personalValue}", then post a one-line summary to the room.`);
     await priv(maya).getByTestId("chat-send").click();
     await expect.poll(async () => {
       const viaNow = await chat(sam).locator('[data-testid="agent-via"]').count();
-      let filled = false;
-      for (const r of emptyBefore) if ((await cellText(sam, v(r))).length) filled = true;
-      return viaNow > viaBefore || filled;
+      const values = await Promise.all(all.map((p) => cellText(p, personalKey)));
+      return viaNow > viaBefore || values.every((value) => value.includes(personalValue));
     }, { timeout: 150_000, intervals: [3000] }).toBeTruthy();
     personalPublic = "acted-in-room-visible-to-all";
   } catch { personalPublic = "no-visible-effect-within-150s"; }
@@ -163,21 +183,39 @@ test("three users chat, edit the same sheet concurrently, and run the public age
   //    Real-LLM dependent → best-effort like Acts 5/7.
   let reviewMode = "not-run";
   try {
-    const sw = maya.locator(".r-pill-auto .r-switch");
-    if ((await sw.getAttribute("data-on")) === "true") { await sw.click(); await maya.waitForTimeout(500); }
-    await say(maya, "/ask reconcile Q3 revenue and fill the remaining variance cells");
-    // chips must appear in a NON-host view too — proposal fan-out, not just local render
-    await expect(dev.locator('[data-testid="proposal-inline"]').first()).toBeVisible({ timeout: 150_000 });
-    await maya.waitForTimeout(2000);
-    const keys = await maya.locator('[data-testid="proposal-inline"]').evaluateAll((els) => els.map((e) => e.closest("[data-cell-key]")?.getAttribute("data-cell-key")));
-    expect(new Set(keys).size).toBe(keys.length); // coalesced: never two chips on one cell
-    const targetKey = keys[0]!;
-    await maya.locator('[data-testid="proposal-inline-approve"]').first().click();
+    await setAutoAllow(maya, false);
+    const reviewKey = "r_rev__note";
+    const reviewValue = `review-mode proof ${CODE}`;
+    await say(maya, `/ask In the Q3 variance spreadsheet, use the edit_cell tool to set ${reviewKey} exactly to "${reviewValue}". Do not edit any other cells.`);
+    // Chips must converge in EVERY browser, not just render locally in the host view.
+    await expect.poll(async () => {
+      const [mayaKeys, devKeys, samKeys] = await Promise.all(all.map(proposalCellKeys));
+      const coalesced = [mayaKeys, devKeys, samKeys].every((keys) => new Set(keys).size === keys.length);
+      return coalesced && mayaKeys.includes(reviewKey) && JSON.stringify(mayaKeys) === JSON.stringify(devKeys) && JSON.stringify(mayaKeys) === JSON.stringify(samKeys)
+        ? mayaKeys
+        : null;
+    }, { timeout: 150_000, intervals: [3000] }).not.toBeNull();
+    const keys = await proposalCellKeys(maya);
+    expect(keys).toContain(reviewKey);
+    const targetKey = reviewKey;
+    const proposedValue = await proposalText(maya, targetKey);
+    expect(proposedValue).toBe(reviewValue);
     for (const p of [dev, sam]) {
-      await expect.poll(async () => (await cellText(p, targetKey)).length > 0, { timeout: 20_000 }).toBeTruthy();
+      await expect(p.locator(`[data-cell-key="${targetKey}"] [data-testid="proposal-inline"]`)).toContainText("host", { timeout: 10_000 });
+      await expect(p.locator(`[data-cell-key="${targetKey}"] [data-testid="proposal-inline-approve"]`)).toHaveCount(0);
     }
-    reviewMode = `approved-${targetKey}-visible-to-all`;
-  } catch { reviewMode = "no-proposals-within-150s (real-LLM dependent)"; }
+    await shoot(pages, "act9-review-mode-pending");
+    await maya.locator(`[data-cell-key="${targetKey}"] [data-testid="proposal-inline-approve"]`).click();
+    await expect.poll(async () => {
+      const values = await Promise.all(all.map((p) => cellText(p, targetKey)));
+      const chipCounts = await Promise.all(all.map((p) => p.locator(`[data-cell-key="${targetKey}"] [data-testid="proposal-inline"]`).count()));
+      return values.every((value) => value.includes(proposedValue)) && chipCounts.every((count) => count === 0);
+    }, { timeout: 25_000, intervals: [1000] }).toBeTruthy();
+    reviewMode = `approved-${targetKey}-value-fanned-out-to-all`;
+  } catch (error) {
+    reviewMode = "no-proposals-within-150s (real-LLM dependent)";
+    if (REQUIRE_REVIEW_MODE) throw error;
+  }
   await shoot(pages, "act9-review-mode");
 
   // eslint-disable-next-line no-console

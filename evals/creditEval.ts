@@ -16,7 +16,7 @@ import { join, relative } from "node:path";
 import {
   dscr, leverage, ltv, normalizeEbitda, foots, testCovenant, type RatioResult,
 } from "../src/agent/creditRatios";
-import { appendEvalRuns, DEFAULT_STORE, runKey, type EvalRunRecord } from "./evalStore";
+import { appendEvalRuns, computeCaseSetHash, DEFAULT_STORE, runKey, type EvalRunRecord } from "./evalStore";
 import { readGitIdentity } from "./gitIdentity";
 
 type Borrower = {
@@ -103,16 +103,87 @@ function scoreChecks(checks: Record<string, boolean>): number {
   return Number((values.filter(Boolean).length / values.length).toFixed(4));
 }
 
+// ── P1-7: the cell-mapping seam — where production spreading ACTUALLY fails ──────────────────────
+// A mapper (LLM in the live lane; scripted here) proposes cell→argument BINDINGS over a borrower
+// sheet; a deterministic validator scores the mapping as its OWN checks; the math only computes
+// from validated bindings and carries {cellRef, version} provenance — the mapper never authors
+// evidence, and a mis-binding surfaces as data (mapping_rejected), never a silently-wrong ratio.
+type SheetCell = { ref: string; label: string; value: number; version: number };
+type Bindings = Record<string, string>; // ratio argument -> cell ref
+
+const BORROWER_SHEET: SheetCell[] = [
+  { ref: "B2", label: "Total revenue (TTM)", value: 18.2, version: 4 },
+  { ref: "B4", label: "Adjusted EBITDA (TTM)", value: 2.0, version: 3 },
+  { ref: "B7", label: "Total funded debt", value: 6.4, version: 2 },
+  { ref: "B9", label: "Total debt service (P+I)", value: 1.4, version: 5 },
+  { ref: "B11", label: "Cash available for debt service", value: 1.96, version: 1 },
+];
+
+/** Deterministic binding sanity: the bound cell's LABEL must match the argument's required keywords
+ *  (and totalDebt must not grab a "service" or "revenue" line). Keyword rules, not an LLM judge. */
+function validateBindings(sheet: SheetCell[], bindings: Bindings): { ok: boolean; wrong: string[] } {
+  const cell = (ref: string) => sheet.find((c) => c.ref === ref);
+  const rules: Record<string, (label: string) => boolean> = {
+    ebitda: (l) => /ebitda/i.test(l),
+    totalDebt: (l) => /debt/i.test(l) && !/service/i.test(l),
+    cashAvailable: (l) => /cash available/i.test(l),
+    totalDebtService: (l) => /debt service/i.test(l) && !/cash/i.test(l),
+  };
+  const wrong = Object.entries(rules).filter(([arg, rule]) => {
+    const c = cell(bindings[arg] ?? "");
+    return !c || !rule(c.label);
+  }).map(([arg]) => arg);
+  return { ok: wrong.length === 0, wrong };
+}
+
+/** Compute DSCR + leverage FROM the bound cells, attaching per-argument provenance. Refuses to
+ *  compute when the mapping fails validation — mapping_rejected as data. */
+function computeFromBindings(sheet: SheetCell[], bindings: Bindings) {
+  const validation = validateBindings(sheet, bindings);
+  if (!validation.ok) return { ok: false as const, reason: "mapping_rejected" as const, wrong: validation.wrong };
+  const cell = (ref: string) => sheet.find((c) => c.ref === ref)!;
+  const provenance = Object.fromEntries(Object.entries(bindings).map(([arg, ref]) => [arg, { cellRef: ref, version: cell(ref).version }]));
+  return {
+    ok: true as const,
+    dscr: dscr(cell(bindings.cashAvailable).value, cell(bindings.totalDebtService).value),
+    lev: leverage(cell(bindings.totalDebt).value, cell(bindings.ebitda).value),
+    provenance,
+  };
+}
+
+const CORRECT_BINDINGS: Bindings = { ebitda: "B4", totalDebt: "B7", cashAvailable: "B11", totalDebtService: "B9" };
+const MISBOUND_BINDINGS: Bindings = { ebitda: "B2" /* revenue! the classic spreading error */, totalDebt: "B7", cashAvailable: "B11", totalDebtService: "B9" };
+
+function evaluateMappingCases(): Array<{ id: string; expect: string; checks: Record<string, boolean>; detail: unknown; pass: boolean; score: number }> {
+  const good = computeFromBindings(BORROWER_SHEET, CORRECT_BINDINGS);
+  const goodChecks = {
+    bindingsValid: good.ok,
+    dscrCorrect: good.ok && good.dscr.ok && good.dscr.value === 1.4,
+    leverageCorrect: good.ok && good.lev.ok && good.lev.value === 3.2,
+    provenanceCarried: good.ok && Object.values(good.provenance).every((p) => !!p.cellRef && typeof p.version === "number"),
+  };
+  const bad = computeFromBindings(BORROWER_SHEET, MISBOUND_BINDINGS);
+  const badChecks = {
+    misbindDetected: !bad.ok && bad.reason === "mapping_rejected" && bad.wrong.includes("ebitda"),
+    notSilentlyComputed: !bad.ok, // a revenue-as-EBITDA leverage of 0.35x must never exist
+  };
+  return [
+    { id: "mapping-correct", expect: "compute+provenance", checks: goodChecks, detail: good, pass: Object.values(goodChecks).every(Boolean), score: scoreChecks(goodChecks) },
+    { id: "mapping-misbind", expect: "mapping_rejected", checks: badChecks, detail: bad, pass: Object.values(badChecks).every(Boolean), score: scoreChecks(badChecks) },
+  ];
+}
+
 const record = process.argv.includes("--record");
-const results = BORROWERS.map((b) => {
+const borrowerResults = BORROWERS.map((b) => {
   const { checks, detail } = evaluate(b);
   const pass = Object.values(checks).every(Boolean);
-  return { borrower: b, checks, detail, pass, score: scoreChecks(checks) };
+  return { id: b.id, expect: b.expect as string, checks, detail: { borrower: b, ...((detail as object) ?? {}) }, pass, score: scoreChecks(checks) };
 });
+const results = [...borrowerResults, ...evaluateMappingCases()];
 
 for (const r of results) {
   const flags = Object.entries(r.checks).map(([k, v]) => `${v ? "+" : "x"}${k}`).join(" ");
-  console.log(`${r.pass ? "PASS" : "FAIL"} credit:${r.borrower.id.padEnd(18)} expect=${r.borrower.expect.padEnd(17)} ${flags}`);
+  console.log(`${r.pass ? "PASS" : "FAIL"} credit:${r.id.padEnd(18)} expect=${r.expect.padEnd(18)} ${flags}`);
 }
 
 if (record) {
@@ -124,14 +195,15 @@ if (record) {
   const traceDir = join("docs", "eval", "traces", "credit", stamp);
   mkdirSync(traceDir, { recursive: true });
   const records: EvalRunRecord[] = results.map((r) => {
-    const file = join(traceDir, `${r.borrower.id}.json`);
-    writeFileSync(file, JSON.stringify({ schema: 1, generatedAt: new Date(ts).toISOString(), borrower: r.borrower, checks: r.checks, detail: r.detail }, null, 2));
+    const file = join(traceDir, `${r.id}.json`);
+    writeFileSync(file, JSON.stringify({ schema: 1, generatedAt: new Date(ts).toISOString(), checks: r.checks, detail: r.detail }, null, 2));
     return {
       ts, commitSha: identity.commitSha, worktreeHash: identity.worktreeHash, gitDirty: identity.gitDirty,
-      suite: "credit", caseId: `credit:${r.borrower.id}`, model: "deterministic",
+      caseSetHash: computeCaseSetHash(results.map((x) => `credit:${x.id}`)), // P0-1
+      suite: "credit", caseId: `credit:${r.id}`, model: "deterministic",
       status: r.pass ? "pass" : "fail", score: r.score, checks: r.checks,
-      failureSummary: r.pass ? undefined : `expected ${r.borrower.expect}; checks ${JSON.stringify(r.checks)}`,
-      traceRef: relative(process.cwd(), file).replace(/\\/g, "/"), harnessVersion: "credit-v1",
+      failureSummary: r.pass ? undefined : `expected ${r.expect}; checks ${JSON.stringify(r.checks)}`,
+      traceRef: relative(process.cwd(), file).replace(/\\/g, "/"), harnessVersion: "credit-v2",
     };
   });
   appendEvalRuns(records, store);

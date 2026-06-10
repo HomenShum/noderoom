@@ -15,6 +15,7 @@
  */
 import { appendFileSync, readFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
+import { stableJournalHash } from "../src/agent/journal";
 
 export type EvalRunRecord = {
   ts: number;
@@ -22,6 +23,10 @@ export type EvalRunRecord = {
   /** Hash of the dirty worktree content/status when the run was recorded. Clean runs may omit it. */
   worktreeHash?: string;
   gitDirty?: boolean;
+  /** P0-1: sorted-key hash of the suite's full caseId set at record time. Lets the diff tell
+   *  "the code regressed" apart from "the case set changed" (case-removed/-added are different
+   *  classes from regressed — a removed case must surface, not silently vanish from the diff). */
+  caseSetHash?: string;
   /** "ladder" | "workflow" | "credit" | ... */
   suite: string;
   /** Stable id so the same case is comparable across commits, e.g. "ladder:L6:gpt-5.4-mini". */
@@ -55,16 +60,21 @@ export type CaseDelta = {
   caseId: string;
   suite: string;
   beforeCommit?: string;
-  afterCommit: string;
+  afterCommit?: string;
   beforeRunKey?: string;
   afterRunKey: string;
   before?: EvalRunRecord;
-  after: EvalRunRecord;
-  verdict: "improved" | "degraded" | "same" | "new";
+  /** Absent for verdict "removed" — the case existed in the before-run and vanished. */
+  after?: EvalRunRecord;
+  verdict: "improved" | "degraded" | "same" | "new" | "removed";
   /** after.score - before.score (the magnitude). */
   scoreDelta?: number;
   /** Checks that went true → false: the named failure mode the diff surfaces. */
   newlyFailingChecks?: string[];
+  /** P0-1 comparability annotations: a model swap or a check-set redefinition means the delta is
+   *  NOT attributable to the code change alone — the diff must say so instead of mislabeling it. */
+  modelChanged?: boolean;
+  checksRedefined?: boolean;
 };
 
 /**
@@ -107,20 +117,44 @@ export function diffByCase(records: EvalRunRecord[], opts: { from?: string; to?:
       verdict,
       scoreDelta: before ? Number(((after.score ?? 0) - (before.score ?? 0)).toFixed(4)) : undefined,
       newlyFailingChecks: before ? failedChecksDelta(before, after) : undefined,
+      modelChanged: !!(before?.model && after.model && before.model !== after.model) || undefined,
+      checksRedefined: checksRedefined(before, after) || undefined,
     });
   }
-  // degraded first (what a human / coding-agent must look at), then new, improved, same.
+  // P0-1: a case present in the before-run but ABSENT from the after-run must surface as "removed",
+  // not silently vanish (silent case-removal is the canonical way a gamed loop hides a regression).
+  // Scoped per-suite: removal only counts when the SAME suite produced records in the after-run —
+  // a suite that didn't run at all (e.g. a credit-only --record) is "not measured", not "removed".
+  const suitesMeasuredAfter = new Set([...toMap.values()].map((r) => r.suite));
+  for (const [caseId, before] of fromMap) {
+    if (toMap.has(caseId) || !suitesMeasuredAfter.has(before.suite)) continue;
+    out.push({ caseId, suite: before.suite, beforeCommit: before.commitSha, beforeRunKey: from, afterRunKey: to, before, verdict: "removed" });
+  }
+  // degraded first (what a human / coding-agent must look at), then removed, new, improved, same.
   return out.sort((a, b) => verdictOrder(a.verdict) - verdictOrder(b.verdict) || a.caseId.localeCompare(b.caseId));
 }
 
-export function summarizeDiff(diffs: CaseDelta[]): { improved: number; degraded: number; same: number; new: number } {
-  const c = { improved: 0, degraded: 0, same: 0, new: 0 };
+export function summarizeDiff(diffs: CaseDelta[]): { improved: number; degraded: number; same: number; new: number; removed: number } {
+  const c = { improved: 0, degraded: 0, same: 0, new: 0, removed: 0 };
   for (const d of diffs) c[d.verdict]++;
   return c;
 }
 
+/** P0-1: sorted-key hash of a suite's caseId set — producers stamp it on every record so the diff
+ *  can pin which case-set a run measured (DETERMINISTIC: sorted, content-addressed). */
+export function computeCaseSetHash(caseIds: string[]): string {
+  return stableJournalHash([...caseIds].sort());
+}
+
 function statusRank(s: EvalRunRecord["status"]): number { return s === "pass" ? 2 : s === "skip" ? 1 : 0; }
-function verdictOrder(v: CaseDelta["verdict"]): number { return { degraded: 0, new: 1, improved: 2, same: 3 }[v]; }
+function verdictOrder(v: CaseDelta["verdict"]): number { return { degraded: 0, removed: 1, new: 2, improved: 3, same: 4 }[v]; }
+
+function checksRedefined(before: EvalRunRecord | undefined, after: EvalRunRecord): boolean {
+  if (!before?.checks || !after.checks) return false;
+  const a = Object.keys(before.checks).sort().join("|");
+  const b = Object.keys(after.checks).sort().join("|");
+  return a !== b;
+}
 
 export function runKey(record: EvalRunRecord): string {
   return record.gitDirty || record.worktreeHash ? `${record.commitSha}+dirty.${record.worktreeHash ?? "unknown"}` : record.commitSha;

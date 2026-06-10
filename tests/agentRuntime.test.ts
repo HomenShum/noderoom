@@ -257,9 +257,10 @@ describe("agent runtime — collaboration under concurrency", () => {
     };
     const model = scriptedModel(() => ({ toolCalls: [{ tool: "throw_tool", args: {} }] }));
 
+    const handoffs: unknown[] = [];
     let thrown: unknown;
     try {
-      await runAgent({ rt, goal: "fail with trace", model, tools: [throwingTool], maxSteps: 1 });
+      await runAgent({ rt, goal: "fail with trace", model, tools: [throwingTool], maxSteps: 1, onHandoff: (h) => handoffs.push(h) });
     } catch (error) {
       thrown = error;
     }
@@ -267,8 +268,11 @@ describe("agent runtime — collaboration under concurrency", () => {
     expect(thrown).toBeInstanceOf(AgentRunError);
     const error = thrown as AgentRunError;
     expect(error.partial.steps).toBe(1);
-    expect(error.partial.trace).toHaveLength(1);
+    expect(error.partial.trace).toHaveLength(2);
     expect(error.partial.trace[0].tool).toBe("throw_tool");
     expect((error.partial.trace[0].result as { error?: string }).error).toContain("boom");
+    expect(error.partial.trace[1].tool).toBe("handoff");
+    expect(error.partial.handoff?.reason).toBe("error");
+    expect(handoffs).toHaveLength(1);
   });
 });

@@ -11,7 +11,7 @@ import { RoomEngine } from "../src/engine/roomEngine";
 import { buildDemoRoom } from "../src/engine/demoRoom";
 import { InMemoryRoomTools } from "../src/agent/roomTools";
 import { ROOM_TOOLS } from "../src/agent/tools";
-import type { AgentModel } from "../src/agent/types";
+import type { AgentHandoff, AgentModel } from "../src/agent/types";
 
 const CELL = "r_ni__variance";
 const VAL = "+22.4%";
@@ -95,15 +95,19 @@ describe("P1-3: error-path handoff preserves unexecuted tool calls (resume-curso
         { id: "c3", tool: "read_range", args: { elementIds: [CELL] } },
       ] }),
     };
+    const handoffs: AgentHandoff[] = [];
     let thrown: unknown;
     try {
-      await runAgent({ rt, goal: "boom mid-turn", model, tools: [...ROOM_TOOLS, bomb], maxSteps: 4 });
+      await runAgent({ rt, goal: "boom mid-turn", model, tools: [...ROOM_TOOLS, bomb], maxSteps: 4, onHandoff: (h) => handoffs.push(h) });
     } catch (e) { thrown = e; }
     const err = thrown as import("../src/agent/runtime").AgentRunError;
     expect(err?.name).toBe("AgentRunError");
     const handoff = err.partial.handoff!;
     expect(handoff.reason).toBe("error");
     expect(handoff.remainingToolCalls.map((c) => c.id)).toEqual(["c3"]); // ← the unexecuted call rides the handoff
+    expect(err.partial.trace.at(-1)?.tool).toBe("handoff");
+    expect(handoffs.map((h) => h.reason)).toEqual(["error"]);
+    expect(handoffs[0].remainingToolCalls.map((c) => c.id)).toEqual(["c3"]);
     // And the message stream is PAIRED: the assistant turn lists 3 calls, results exist for c1+c2
     // (the thrower records its error result), and c3's pairing completes on resume via resumeToolCalls.
     const toolResults = err.partial.messages.filter((m) => m.role === "tool").map((m) => (m as { toolCallId?: string }).toolCallId);

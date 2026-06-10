@@ -37,6 +37,17 @@ const WORKFLOWS: Workflow[] = [
   { id: "l2-edit", title: "Edit with CAS", badge: "L2 / single write", subtitle: "Claim the cell, read its version, write with compare-and-set", tracePattern: /ladder_L2_edit/, cells: VARIANCE_ROWS },
   { id: "l3-no-clobber", title: "No clobber", badge: "L3 / concurrent", subtitle: "A human edits mid-write; CAS rejects the stale write and the agent re-reads", tracePattern: /ladder_L3_conflict/, cells: VARIANCE_ROWS },
   { id: "l4-draft", title: "Draft when blocked", badge: "L4 / locked range", subtitle: "The range is locked, so the agent drafts the change for smart-merge", tracePattern: /ladder_L4_blocked/, cells: VARIANCE_ROWS },
+  {
+    id: "l5-large-range", title: "Large range", badge: "L5 / 600-row model", subtitle: "Load only the 5-row window around the target — never the full sheet",
+    tracePattern: /ladder_L5_large_range/,
+    cells: [
+      { id: "lr_0418__variance", label: "Line 418 / variance", value: "" },
+      { id: "lr_0419__variance", label: "Line 419 / variance", value: "" },
+      { id: "lr_0420__variance", label: "Line 420 / variance", value: "" },
+      { id: "lr_0421__variance", label: "Line 421 / variance", value: "" },
+      { id: "lr_0422__variance", label: "Line 422 / variance", value: "" },
+    ],
+  },
   { id: "l6-long-horizon", title: "Long horizon", badge: "L6 / multi-cell + recovery", subtitle: "Fill five cells under repeated conflicts, compacting context, never locking", tracePattern: /ladder_L6_long/, cells: VARIANCE_ROWS },
 ];
 

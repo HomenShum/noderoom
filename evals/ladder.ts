@@ -8,7 +8,7 @@
 import "../scripts/benchmark/loadEnv";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { execSync } from "node:child_process";
-import { appendEvalRuns, DEFAULT_STORE, runKey, type EvalRunRecord } from "./evalStore";
+import { appendEvalRuns, computeCaseSetHash, DEFAULT_STORE, runKey, type EvalRunRecord } from "./evalStore";
 import { dirname, join, relative, resolve } from "node:path";
 import { z } from "zod";
 import { RoomEngine } from "../src/engine/roomEngine";
@@ -88,6 +88,8 @@ interface RungResult {
   reason?: string;
   error?: string;
   checks: Record<string, boolean>;
+  /** P1-5: for each FAILING trace-derived check, a pointer at the offending trace event. */
+  checkDetails?: Record<string, string>;
   trace: AgentTraceEvent[];
 }
 
@@ -206,9 +208,13 @@ function allTargetsSet(env: Env, targets: Record<string, string>): boolean {
   return Object.entries(targets).every(([id, value]) => cellValue(env, id) === value);
 }
 
-function editReadProvenance(result: AgentResult): boolean {
+/** P1-5: returns the trace index of the FIRST edit whose baseVersion wasn't read first (null = clean).
+ *  The predicates already walk to the offending event — keep that pointer instead of discarding it,
+ *  so a failing check names "step N: edit_cell used baseVersion X" instead of a bare boolean. */
+function editReadProvenanceViolation(result: AgentResult): number | null {
   const readVersions = new Map<string, number>();
-  for (const event of result.trace) {
+  for (let i = 0; i < result.trace.length; i++) {
+    const event = result.trace[i];
     if (event.tool === "read_range" && Array.isArray(event.result)) {
       for (const cell of event.result as Array<{ id: string; version: number }>) {
         readVersions.set(cell.id, cell.version);
@@ -216,44 +222,55 @@ function editReadProvenance(result: AgentResult): boolean {
     }
     if (isEditTool(event.tool) && (event.result as { ok?: boolean })?.ok) {
       const args = event.args as { elementId?: string; baseVersion?: number };
-      if (!args.elementId || readVersions.get(args.elementId) !== args.baseVersion) return false;
+      if (!args.elementId || readVersions.get(args.elementId) !== args.baseVersion) return i;
     }
   }
-  return true;
+  return null;
+}
+function editReadProvenance(result: AgentResult): boolean {
+  return editReadProvenanceViolation(result) === null;
 }
 
-function readImmediatelyBeforeEdits(result: AgentResult): boolean {
+/** P1-5 variant: index of the first edit NOT immediately preceded by a single-cell read of the same
+ *  element at the same version (null = clean). */
+function readImmediatelyBeforeEditsViolation(result: AgentResult): number | null {
   for (let i = 0; i < result.trace.length; i++) {
     const event = result.trace[i];
     if (!isEditTool(event.tool)) continue;
     const args = event.args as { elementId?: string; baseVersion?: number };
-    if (!args.elementId || args.baseVersion === undefined) return false;
+    if (!args.elementId || args.baseVersion === undefined) return i;
     let prevIndex = i - 1;
     while (prevIndex >= 0 && result.trace[prevIndex].tool === "compaction") prevIndex--;
     const prev = result.trace[prevIndex];
-    if (!prev || prev.tool !== "read_range") return false;
+    if (!prev || prev.tool !== "read_range") return i;
     const ids = (prev.args as { elementIds?: string[] }).elementIds ?? [];
-    if (ids.length !== 1 || ids[0] !== args.elementId) return false;
+    if (ids.length !== 1 || ids[0] !== args.elementId) return i;
     const cells = Array.isArray(prev.result) ? prev.result as Array<{ id: string; version: number }> : [];
     const cell = cells.find((c) => c.id === args.elementId);
-    if (!cell || cell.version !== args.baseVersion) return false;
+    if (!cell || cell.version !== args.baseVersion) return i;
   }
-  return true;
+  return null;
+}
+function readImmediatelyBeforeEdits(result: AgentResult): boolean {
+  return readImmediatelyBeforeEditsViolation(result) === null;
 }
 
-function onlyTouched(result: AgentResult, allowed: Set<string>): boolean {
-  return result.trace.every((event) => {
+/** P1-5 variant: index of the first event touching an element OUTSIDE the allowed set (null = clean). */
+function onlyTouchedViolation(result: AgentResult, allowed: Set<string>): number | null {
+  for (let i = 0; i < result.trace.length; i++) {
+    const event = result.trace[i];
     if (isEditTool(event.tool)) {
-      return allowed.has(String((event.args as { elementId?: string }).elementId ?? ""));
+      if (!allowed.has(String((event.args as { elementId?: string }).elementId ?? ""))) return i;
+    } else if (event.tool === "propose_lock") {
+      if (!((event.args as { elementIds?: string[] }).elementIds ?? []).every((id) => allowed.has(id))) return i;
+    } else if (event.tool === "create_draft") {
+      if (!((event.args as { ops?: Array<{ elementId: string }> }).ops ?? []).every((op) => allowed.has(op.elementId))) return i;
     }
-    if (event.tool === "propose_lock") {
-      return ((event.args as { elementIds?: string[] }).elementIds ?? []).every((id) => allowed.has(id));
-    }
-    if (event.tool === "create_draft") {
-      return ((event.args as { ops?: Array<{ elementId: string }> }).ops ?? []).every((op) => allowed.has(op.elementId));
-    }
-    return true;
-  });
+  }
+  return null;
+}
+function onlyTouched(result: AgentResult, allowed: Set<string>): boolean {
+  return onlyTouchedViolation(result, allowed) === null;
 }
 
 function injectHumanEdit(env: Env, elementId: string, value: string): void {
@@ -454,6 +471,24 @@ function scoreChecks(checks: Record<string, boolean>): number {
   return Number((values.filter(Boolean).length / values.length).toFixed(4));
 }
 
+/** P1-5: for each FAILING trace-derived check, point at the exact offending trace event so the fix
+ *  agent goes straight to the cause instead of grepping full trace JSON. Scope: pointer only for the
+ *  checks whose predicates already locate the event — explicitly NOT a check framework. */
+function checkFailurePointers(rung: Rung, result: AgentResult, checks: Record<string, boolean>): Record<string, string> {
+  const out: Record<string, string> = {};
+  const point = (name: string, i: number | null) => {
+    if (checks[name] !== false || i === null) return;
+    const e = result.trace[i];
+    out[name] = `trace[${i}] ${e.tool} ${JSON.stringify(e.args).slice(0, 140)} -> ${JSON.stringify(e.result).slice(0, 100)}`;
+  };
+  point("readBeforeWrite", editReadProvenanceViolation(result));
+  point("noClobber", editReadProvenanceViolation(result));
+  point("readImmediatelyBeforeWrite", readImmediatelyBeforeEditsViolation(result));
+  if (rung.id === "L5_large_range") point("touchedOnlyTarget", onlyTouchedViolation(result, new Set(["lr_0420__variance"])));
+  if (rung.id === "L6_long_horizon") point("touchedOnlyTargets", onlyTouchedViolation(result, new Set(Object.keys(L6_TARGETS))));
+  return out;
+}
+
 async function runRung(rung: Rung, maker: (rung: Rung) => AgentModel, modelName: string, budget: RuntimeBudget): Promise<RungResult> {
   const env = (rung.makeEnv ?? demoEnv)();
   rung.setup?.(env);
@@ -488,9 +523,11 @@ async function runRung(rung: Rung, maker: (rung: Rung) => AgentModel, modelName:
     });
     const resolvedModel = resolvedModels.at(-1) ?? trackedModel.name;
     const checks = rungChecks(rung, result, env);
+    const checkDetails = checkFailurePointers(rung, result, checks);
     const pass = rung.check(result, env) && Object.values(checks).every(Boolean);
     return {
       pass,
+      checkDetails,
       requestedModel: modelName,
       resolvedModel,
       resolvedModels: [...new Set(resolvedModels)],
@@ -644,18 +681,23 @@ function recordRunsToStore(results: RungResult[]): void {
     "ladder",
     `${new Date(ts).toISOString().replace(/[-:.]/g, "").replace("Z", "Z")}-${safeSegment(identityKey)}`,
   );
+  const caseSetHash = computeCaseSetHash(results.map((r) => `ladder:${r.rung}:${r.requestedModel}`)); // P0-1
   const records: EvalRunRecord[] = results.map((r) => ({
     ts,
     commitSha: identity.commitSha,
     worktreeHash: identity.worktreeHash,
     gitDirty: identity.gitDirty,
+    caseSetHash,
     suite: "ladder",
     caseId: `ladder:${r.rung}:${r.requestedModel}`,
     model: r.resolvedModel,
     status: r.pass ? "pass" : "fail",
     score: scoreChecks(r.checks),
     checks: r.checks,
-    failureSummary: r.pass ? undefined : (r.reason || r.error || r.stopReason || "failed"),
+    failureSummary: r.pass ? undefined : [
+      r.reason || r.error || r.stopReason || "failed",
+      ...Object.entries(r.checkDetails ?? {}).map(([k, v]) => `${k} @ ${v}`), // P1-5 pointers
+    ].join(" | "),
     traceRef: writeTraceArtifact(r, identity, traceDir, ts),
     harnessVersion: "ladder-v1",
   }));
@@ -698,6 +740,7 @@ function writeTraceArtifact(result: RungResult, identity: GitIdentity, traceDir:
     caseId,
     score: scoreChecks(result.checks),
     checks: result.checks,
+    checkDetails: result.checkDetails ?? {}, // P1-5: failing-check -> offending trace event
     result: publicResult(result),
     trace: result.trace,
   }, null, 2));

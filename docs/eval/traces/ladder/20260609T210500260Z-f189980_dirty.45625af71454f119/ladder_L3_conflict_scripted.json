@@ -1,0 +1,105 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-09T21:05:00.260Z",
+  "commitSha": "f189980",
+  "worktreeHash": "45625af71454f119",
+  "gitDirty": true,
+  "suite": "ladder",
+  "caseId": "ladder:L3_conflict:scripted",
+  "score": 1,
+  "checks": {
+    "targetValue": true,
+    "conflictObserved": true,
+    "noClobber": true,
+    "notExhausted": true
+  },
+  "result": {
+    "pass": true,
+    "requestedModel": "scripted",
+    "resolvedModel": "scripted",
+    "resolvedModels": [
+      "scripted"
+    ],
+    "rung": "L3_conflict",
+    "level": 3,
+    "ms": 1,
+    "tools": 4,
+    "cost": 0,
+    "stopReason": "done",
+    "reason": "",
+    "checks": {
+      "targetValue": true,
+      "conflictObserved": true,
+      "noClobber": true,
+      "notExhausted": true
+    }
+  },
+  "trace": [
+    {
+      "step": 0,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "r_ni__variance"
+        ]
+      },
+      "result": [
+        {
+          "id": "r_ni__variance",
+          "value": "",
+          "version": 1,
+          "locked": null
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": 1,
+      "tool": "edit_cell",
+      "args": {
+        "elementId": "r_ni__variance",
+        "value": "+22.4%",
+        "baseVersion": 1
+      },
+      "result": {
+        "ok": false,
+        "conflict": true,
+        "expected": 1,
+        "actual": 2
+      },
+      "ms": 0
+    },
+    {
+      "step": 2,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "r_ni__variance"
+        ]
+      },
+      "result": [
+        {
+          "id": "r_ni__variance",
+          "value": "+19%",
+          "version": 2,
+          "locked": null
+        }
+      ],
+      "ms": 1
+    },
+    {
+      "step": 3,
+      "tool": "edit_cell",
+      "args": {
+        "elementId": "r_ni__variance",
+        "value": "+22.4%",
+        "baseVersion": 2
+      },
+      "result": {
+        "ok": true,
+        "version": 3
+      },
+      "ms": 0
+    }
+  ]
+}

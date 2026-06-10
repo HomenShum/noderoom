@@ -1,0 +1,672 @@
+{
+  "schema": 1,
+  "runId": "20260610T051906Z",
+  "generatedAt": "2026-06-10T05:19:19.632Z",
+  "cookbookSource": "https://developers.openai.com/cookbook/examples/agents_sdk/agent_improvement_loop",
+  "mode": {
+    "live": false,
+    "fullLive": false,
+    "strict": false
+  },
+  "targetUsers": [
+    "GTM sales operators managing account lists, enrichment, and PitchBook-style matching",
+    "Finance and banking analysts reconciling workbooks, exports, timecards, and variance evidence",
+    "Harness engineers converting messy workflow evidence into repeatable eval gates"
+  ],
+  "workflowProfile": {
+    "manifestFiles": 70,
+    "csvFiles": 23,
+    "xlsxFiles": 47,
+    "categoryCounts": {
+      "gtm_company_research": 46,
+      "finance_ops": 11,
+      "eval_harness": 2,
+      "analytics_optimization": 3,
+      "legacy_agent_outputs": 3,
+      "mixed": 5
+    },
+    "piiHeaderSignals": 47,
+    "formulaSampleFiles": 16,
+    "mergedCellFiles": 18,
+    "notes": [
+      "The profile stores only workbook shapes, categories, and header-level signals; raw private rows are not a repo artifact.",
+      "Most files are company research, classification, PitchBook, ParselyFi, or healthtech/JPM workflows.",
+      "Finance and ops files include timecards, timesheets, expense sheets, cost exports, and transaction exports with formula and layout concerns."
+    ]
+  },
+  "workflowCoverage": {
+    "totalCases": 17,
+    "byCategory": {
+      "gtm_company_research": 8,
+      "finance_ops": 4,
+      "eval_harness": 2,
+      "analytics_optimization": 2,
+      "legacy_agent_outputs": 1
+    },
+    "byRequirement": {
+      "artifact_refs": 12,
+      "cell_payload_evidence": 12,
+      "schema_detection": 8,
+      "cross_file_context": 7,
+      "spreadsheet_semantic_index": 7,
+      "privacy_redaction": 13,
+      "human_review": 16,
+      "long_running_free_auto": 4,
+      "workflow_checkpoint_resume": 4,
+      "resolved_model_audit": 4,
+      "wiki_grounded_update": 4,
+      "provider_parser_adapter": 2,
+      "formula_dependency_locks": 3,
+      "liteparse_layout_fallback": 1
+    },
+    "topCases": [
+      {
+        "id": "gtm-healthtech-sector-classification",
+        "category": "gtm_company_research",
+        "persona": "Healthcare investor classifying a large conference or PitchBook export",
+        "requiredHarness": [
+          "cell_payload_evidence",
+          "schema_detection",
+          "spreadsheet_semantic_index",
+          "long_running_free_auto",
+          "workflow_checkpoint_resume",
+          "resolved_model_audit",
+          "wiki_grounded_update",
+          "human_review"
+        ]
+      },
+      {
+        "id": "gtm-pitchbook-company-match-enrich",
+        "category": "gtm_company_research",
+        "persona": "Sales operations analyst preparing a PitchBook upload and match review",
+        "requiredHarness": [
+          "artifact_refs",
+          "cell_payload_evidence",
+          "schema_detection",
+          "cross_file_context",
+          "spreadsheet_semantic_index",
+          "privacy_redaction",
+          "human_review"
+        ]
+      },
+      {
+        "id": "gtm-amo-signal-scorer",
+        "category": "gtm_company_research",
+        "persona": "GTM analyst scoring target accounts against a reusable AMO rubric",
+        "requiredHarness": [
+          "spreadsheet_semantic_index",
+          "cell_payload_evidence",
+          "long_running_free_auto",
+          "workflow_checkpoint_resume",
+          "resolved_model_audit",
+          "privacy_redaction",
+          "human_review"
+        ]
+      },
+      {
+        "id": "finance-timesheet-invoice-review",
+        "category": "finance_ops",
+        "persona": "Ops or finance reviewer approving contractor time",
+        "requiredHarness": [
+          "schema_detection",
+          "formula_dependency_locks",
+          "cell_payload_evidence",
+          "provider_parser_adapter",
+          "liteparse_layout_fallback",
+          "privacy_redaction",
+          "human_review"
+        ]
+      },
+      {
+        "id": "gtm-jpm-market-map-joins",
+        "category": "gtm_company_research",
+        "persona": "Investor building a JPM health market map from multiple workbook tabs",
+        "requiredHarness": [
+          "cross_file_context",
+          "spreadsheet_semantic_index",
+          "cell_payload_evidence",
+          "artifact_refs",
+          "privacy_redaction",
+          "human_review"
+        ]
+      },
+      {
+        "id": "gtm-company-deep-report",
+        "category": "gtm_company_research",
+        "persona": "Account executive or analyst building a company brief for outreach",
+        "requiredHarness": [
+          "artifact_refs",
+          "cross_file_context",
+          "provider_parser_adapter",
+          "wiki_grounded_update",
+          "privacy_redaction",
+          "human_review"
+        ]
+      },
+      {
+        "id": "finance-cost-reconciliation",
+        "category": "finance_ops",
+        "persona": "Finance analyst reconciling model/vendor spend",
+        "requiredHarness": [
+          "cell_payload_evidence",
+          "formula_dependency_locks",
+          "spreadsheet_semantic_index",
+          "cross_file_context",
+          "artifact_refs",
+          "human_review"
+        ]
+      },
+      {
+        "id": "eval-ui-action-execution-map",
+        "category": "eval_harness",
+        "persona": "QA engineer mapping product actions to expected runtime behavior",
+        "requiredHarness": [
+          "artifact_refs",
+          "workflow_checkpoint_resume",
+          "long_running_free_auto",
+          "resolved_model_audit",
+          "privacy_redaction",
+          "human_review"
+        ]
+      }
+    ]
+  },
+  "architectureReview": {
+    "rule": "Research must describe the workflow, architecture gap, and existing capability fit before it proposes evals or code.",
+    "evalTrustLevels": [
+      {
+        "level": "candidate",
+        "meaning": "Generated from traces or research; useful for discussion and advisory runs, not a merge gate."
+      },
+      {
+        "level": "research_validated",
+        "meaning": "Backed by captured sources or online consensus; can create scoped handoffs, still not blocking by default."
+      },
+      {
+        "level": "contested",
+        "meaning": "Credible sources disagree; advisory only, and the eval should check that disagreement is surfaced."
+      },
+      {
+        "level": "human_verified",
+        "meaning": "Reviewed or accepted for critical use; may become blocking when deterministic and safety-safe."
+      }
+    ],
+    "gateModes": [
+      "none",
+      "advisory",
+      "blocking"
+    ],
+    "architectureFitChecks": [
+      "Can existing tools, prompts, context builders, and Convex mutations already handle the case?",
+      "If not, is the missing piece a query, action, mutation, tool schema, validator, or UI review affordance?",
+      "What is the smallest implementation that proves the workflow without a new subsystem?",
+      "What old or proposed layer can be avoided because the existing artifact/job/lock path is enough?"
+    ],
+    "rootCauseCategories": [
+      {
+        "category": "stale_context",
+        "meaning": "The agent acted on old state or missing refreshed context."
+      },
+      {
+        "category": "wrong_tool",
+        "meaning": "The model chose a tool that could not satisfy the workflow contract."
+      },
+      {
+        "category": "missing_read_before_write",
+        "meaning": "A write occurred without a current source read and version."
+      },
+      {
+        "category": "bad_mutation_contract",
+        "meaning": "The server mutation allowed an unsafe or under-specified state change."
+      },
+      {
+        "category": "weak_source_evidence",
+        "meaning": "The output lacked source-backed evidence or cited the wrong evidence."
+      },
+      {
+        "category": "bad_prompt_or_context",
+        "meaning": "Instructions or context did not define the workflow sharply enough."
+      },
+      {
+        "category": "permission_or_visibility",
+        "meaning": "Scope, privacy, or role gating was wrong or underspecified."
+      },
+      {
+        "category": "model_routing_or_budget",
+        "meaning": "The chosen model, budget, or slice policy was unfit for the task."
+      },
+      {
+        "category": "ui_review_friction",
+        "meaning": "The human review or approval surface obscured the right decision."
+      },
+      {
+        "category": "eval_measures_wrong_behavior",
+        "meaning": "The eval target itself is suspect and needs research/calibration."
+      }
+    ]
+  },
+  "steps": [
+    {
+      "id": "professional-catalog",
+      "label": "Professional workflow catalog",
+      "lane": "deterministic",
+      "command": "npm run eval:professional",
+      "status": "pass",
+      "ms": 2024,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 eval:professional\n> vitest run tests/professionalWorkflows.test.ts\n\n\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/professionalWorkflows.test.ts (7 tests) 13ms\n\n Test Files  1 passed (1)\n      Tests  7 passed (7)\n   Start at  22:19:07\n   Duration  927ms (transform 91ms, setup 0ms, collect 155ms, tests 13ms, environment 0ms, prepare 170ms)\n\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "workflow-evals",
+      "label": "GTM/finance workflow evals",
+      "lane": "deterministic",
+      "command": "npx vitest run tests/workflowEvals.test.ts",
+      "status": "pass",
+      "ms": 3246,
+      "exitCode": 0,
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/workflowEvals.test.ts (5 tests) 27ms\n\n Test Files  1 passed (1)\n      Tests  5 passed (5)\n   Start at  22:19:10\n   Duration  1.54s (transform 223ms, setup 0ms, collect 754ms, tests 27ms, environment 0ms, prepare 168ms)\n\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "collaboration-ladder",
+      "label": "Collaboration ladder L1-L6",
+      "lane": "deterministic",
+      "command": "npm run ladder -- --record",
+      "status": "pass",
+      "ms": 2159,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 ladder\n> tsx evals/ladder.ts --record\n\n  scripted · L1_read ... PASS (1 tools, 0.0s, $0.0000, resolved=scripted-read)\n  scripted · L2_edit ... PASS (4 tools, 0.0s, $0.0000)\n  scripted · L3_conflict ... PASS (4 tools, 0.0s, $0.0000)\n  scripted · L4_blocked ... PASS (4 tools, 0.0s, $0.0000)\n  scripted · L5_large_range ... PASS (4 tools, 0.0s, $0.0000)\n  scripted · L6_long_horizon ... PASS (16 tools, 0.0s, $0.0000)\n\nFAILURE HEATMAP (model x level)\n------------------------------------------------------------------------\nmodel                         L1  L2  L3  L4  L5  L6\nscripted                      OK  OK  OK  OK  OK  OK\n------------------------------------------------------------------------\nlegend: L1=READ (no mutation) | L2=EDIT (single CAS) | L3=CONFLICT (no clobber) | L4=BLOCKED (must draft) | L5=LARGE RANGE (no full snapshot) | L6=LONG HORIZON (compaction + recovery)\n\nrecorded 6 rung result(s) to docs/eval/eval-runs.jsonl (e14e016+dirty.0fd8191d58b3f0a6). Diff: npm run eval:diff\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "credit-evals",
+      "label": "MM-banking credit decision evals",
+      "lane": "deterministic",
+      "command": "npm run eval:credit -- --record",
+      "status": "pass",
+      "ms": 1893,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 eval:credit\n> tsx evals/creditEval.ts --record\n\nPASS credit:cascade-healthy    expect=approve            +footsTieOut +dscrPass +leveragePass +ltvPass\nPASS credit:summit-stressed    expect=breach             +ratiosComputed +breachDetected\nPASS credit:delta-incomplete   expect=insufficient_data  +gapSurfaced\nPASS credit:mapping-correct    expect=compute+provenance +bindingsValid +dscrCorrect +leverageCorrect +provenanceCarried\nPASS credit:mapping-misbind    expect=mapping_rejected   +misbindDetected +notSilentlyComputed\n\nrecorded 5 credit case(s) to docs/eval/eval-runs.jsonl (e14e016+dirty.5b774f8e0b912248). Diff: npm run eval:diff\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "eval-diff",
+      "label": "Eval regression diff",
+      "lane": "deterministic",
+      "command": "npm run eval:diff",
+      "status": "pass",
+      "ms": 920,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 eval:diff\n> tsx evals/evalDiff.ts\n\nEval diff  e14e016+dirty.0fd8191d58b3f0a6 -> e14e016+dirty.5b774f8e0b912248   0 degraded · 0 removed · 0 improved · 5 new · 0 same\n\n    new       credit:cascade-healthy        \n    new       credit:delta-incomplete       \n    new       credit:mapping-correct        \n    new       credit:mapping-misbind        \n    new       credit:summit-stressed        \n",
+      "stderrTail": ""
+    },
+    {
+      "id": "convex-boundaries",
+      "label": "Convex query/action/mutation boundaries",
+      "lane": "deterministic",
+      "command": "npm run convex:boundaries",
+      "status": "pass",
+      "ms": 1643,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 convex:boundaries\n> tsx scripts/convex-boundary-check.ts\n\nconvex boundaries: ok\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "architecture-budget",
+      "label": "Architecture budget review",
+      "lane": "deterministic",
+      "command": "npm run architecture:budget",
+      "status": "pass",
+      "ms": 816,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 architecture:budget\n> tsx scripts/architecture-budget-check.ts\n\narchitecture budget: review required\nmissing behavior evidence: convex/agentJobRunner.ts\nmissing behavior evidence: docs/WHY_NODEAGENT_AND_HALO.md\nmissing behavior evidence: e2e/three-user-collab.spec.ts\nmissing behavior evidence: scripts/agent-improvement-loop.ts\nmissing behavior evidence: scripts/render-workflow-preview.ts\nmissing behavior evidence: src/app/styles.css\nmissing behavior evidence: convex/crons.ts\nmissing behavior evidence: docs/COMPLETENESS_REGISTER.md\nmissing behavior evidence: docs/IMPROVEMENT_ROADMAP.md\nmissing behavior evidence: docs/QA_UI_FIX_PLAN.md\nmissing behavior evidence: e2e/responsive-qa.spec.ts\nunowned architecture surface: e2e/three-user-collab.spec.ts\nunowned architecture surface: convex/crons.ts\nunowned architecture surface: docs/COMPLETENESS_REGISTER.md\nunowned architecture surface: docs/IMPROVEMENT_ROADMAP.md\nunowned architecture surface: docs/QA_UI_FIX_PLAN.md\nunowned architecture surface: e2e/responsive-qa.spec.ts\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "free-route-discovery",
+      "label": "OpenRouter free-auto discovery",
+      "lane": "live",
+      "command": "npm run openrouter:free -- --limit=5",
+      "status": "skip",
+      "ms": 0,
+      "exitCode": null,
+      "reason": "pass --live and set OPENROUTER_API_KEY to discover current free-auto candidates"
+    },
+    {
+      "id": "provider-parser-smoke",
+      "label": "Provider parser live smoke",
+      "lane": "live",
+      "command": "npm run provider-parser:smoke",
+      "status": "skip",
+      "ms": 0,
+      "exitCode": null,
+      "reason": "pass --live; script will skip providers without keys"
+    },
+    {
+      "id": "free-job-smoke",
+      "label": "Convex /free job smoke",
+      "lane": "live",
+      "command": "npm run free-job:smoke",
+      "status": "skip",
+      "ms": 0,
+      "exitCode": null,
+      "reason": "pass --live and set CONVEX_URL or VITE_CONVEX_URL"
+    },
+    {
+      "id": "benchmark-v2",
+      "label": "V2 multi-model benchmark",
+      "lane": "full-live",
+      "command": "npm run benchmark -- --model-timeout-ms=180000 --model-reserve-ms=15000 --row-hard-timeout-ms=210000",
+      "status": "skip",
+      "ms": 0,
+      "exitCode": null,
+      "reason": "pass --full-live to spend live provider calls on the full benchmark"
+    },
+    {
+      "id": "free-auto-ladder",
+      "label": "Free-auto router ladder",
+      "lane": "full-live",
+      "command": "npm run ladder:free",
+      "status": "skip",
+      "ms": 0,
+      "exitCode": null,
+      "reason": "pass --full-live and set OPENROUTER_API_KEY; this can take hours"
+    },
+    {
+      "id": "gemini-ui-review",
+      "label": "Gemini UI media review",
+      "lane": "ui",
+      "command": "npx tsx scripts/gemini-ui-review.ts",
+      "status": "skip",
+      "ms": 0,
+      "exitCode": null,
+      "reason": "pass --ui-media=<screenshot-or-video> and set GOOGLE_GENERATIVE_AI_API_KEY"
+    }
+  ],
+  "handoff": {
+    "topRecommendations": [
+      "Resolve architecture budget review items or rerun with explicit handoff evidence before implementation.",
+      "Run skipped free-route-discovery once prerequisites are present: pass --live and set OPENROUTER_API_KEY to discover current free-auto candidates.",
+      "Run skipped provider-parser-smoke once prerequisites are present: pass --live; script will skip providers without keys.",
+      "Run skipped free-job-smoke once prerequisites are present: pass --live and set CONVEX_URL or VITE_CONVEX_URL.",
+      "Run skipped gemini-ui-review once prerequisites are present: pass --ui-media=<screenshot-or-video> and set GOOGLE_GENERATIVE_AI_API_KEY.",
+      "Persist each new live trace into a durable eval fixture before promoting README charts.",
+      "Keep provider benchmarks behind row-level hard timeouts so one stuck free model cannot block the loop.",
+      "Add browser-visible multi-user checks for public/private chat, artifact references, proposals, and trace accept-all."
+    ],
+    "failingEvalEvidence": [],
+    "generatedEvalIdeas": [
+      {
+        "id": "candidate-gtm-pitchbook-match",
+        "title": "GTM PitchBook match with evidence and no CRM clobber",
+        "workflowDomain": "gtm_company_research",
+        "persona": "Sales operations analyst preparing a PitchBook upload and match review",
+        "goal": "For each uploaded company, compare firm name, website, HQ location, and ticker against the matched result row; write match status, confidence, and short evidence without overwriting source CRM fields.",
+        "sourceResearchPacketIds": [],
+        "architectureFit": {
+          "status": "existing_capability",
+          "existingCapabilityNotes": [
+            "Artifact refs, CellPayload evidence, lock/CAS, and workflow eval scaffolds already exist."
+          ],
+          "missingCapabilityNotes": [
+            "Needs a concrete trace fixture before becoming a gate."
+          ],
+          "convexBoundaryNeeds": {
+            "queries": [],
+            "mutations": [],
+            "actions": [],
+            "tools": [],
+            "validators": [
+              "cross-file evidence assertion"
+            ]
+          },
+          "smallestChange": "Add a deterministic fixture and assertions before touching runtime code.",
+          "avoidAdding": [
+            "new GTM service",
+            "new database tables"
+          ],
+          "requiredEvidence": [
+            "Every new match/status cell is a CellPayload with at least one evidence item pointing to a source artifact and row.",
+            "Original firm name, website, HQ, country, and ticker cells are unchanged."
+          ]
+        },
+        "confidenceLevel": "candidate",
+        "gateMode": "advisory",
+        "contestedClaims": [],
+        "assertions": [
+          {
+            "id": "gtm-1",
+            "description": "Every new match/status cell is a CellPayload with at least one evidence item pointing to a source artifact and row.",
+            "evidenceRefs": [
+              "PitchBook_Upload_Template*.csv",
+              "PitchBook_Upload_List_Results_*.csv",
+              "companies*.csv"
+            ]
+          },
+          {
+            "id": "gtm-2",
+            "description": "Original firm name, website, HQ, country, and ticker cells are unchanged.",
+            "evidenceRefs": [
+              "PitchBook_Upload_Template*.csv",
+              "PitchBook_Upload_List_Results_*.csv",
+              "companies*.csv"
+            ]
+          },
+          {
+            "id": "gtm-3",
+            "description": "Ambiguous duplicate-name rows are marked needs_review instead of guessed.",
+            "evidenceRefs": [
+              "PitchBook_Upload_Template*.csv",
+              "PitchBook_Upload_List_Results_*.csv",
+              "companies*.csv"
+            ]
+          }
+        ],
+        "rootCauseCategories": [
+          "weak_source_evidence",
+          "missing_read_before_write"
+        ]
+      },
+      {
+        "id": "research-validated-finance-reconcile",
+        "title": "Finance variance reconciliation with formula-safe writes",
+        "workflowDomain": "finance_ops",
+        "persona": "Finance analyst reconciling model/vendor spend",
+        "goal": "Aggregate spend by date and model/vendor, compare against expected totals, write variance and note cells with evidence, and skip already-correct cells.",
+        "sourceResearchPacketIds": [
+          "professional-workflow-profile-20260608"
+        ],
+        "architectureFit": {
+          "status": "small_gap",
+          "existingCapabilityNotes": [
+            "Formula dependency locks, CellPayload evidence, and no-clobber paths are already part of the harness."
+          ],
+          "missingCapabilityNotes": [
+            "Needs one concrete variance fixture with formula-preservation assertions."
+          ],
+          "convexBoundaryNeeds": {
+            "queries": [
+              "read bounded formula/source ranges"
+            ],
+            "mutations": [
+              "CAS write only changed variance notes"
+            ],
+            "actions": [],
+            "tools": [],
+            "validators": [
+              "formula-preservation assertion",
+              "source-row evidence assertion"
+            ]
+          },
+          "smallestChange": "Add an eval fixture and validator around existing spreadsheet tools before adding any new tool.",
+          "avoidAdding": [
+            "finance workflow service",
+            "new spreadsheet engine"
+          ],
+          "requiredEvidence": [
+            "Already-correct cells are skipped without version bumps.",
+            "Incorrect cells are corrected only after a current read and CAS-protected write."
+          ]
+        },
+        "confidenceLevel": "research_validated",
+        "gateMode": "advisory",
+        "contestedClaims": [],
+        "assertions": [
+          {
+            "id": "finance-1",
+            "description": "Already-correct cells are skipped without version bumps.",
+            "evidenceRefs": [
+              "openai_cost-*.csv",
+              "openai_cost-*_parsely_output.xlsx",
+              "business income & expense sheet.xlsx"
+            ]
+          },
+          {
+            "id": "finance-2",
+            "description": "Incorrect cells are corrected only after a current read and CAS-protected write.",
+            "evidenceRefs": [
+              "openai_cost-*.csv",
+              "openai_cost-*_parsely_output.xlsx",
+              "business income & expense sheet.xlsx"
+            ]
+          },
+          {
+            "id": "finance-3",
+            "description": "Formula children are locked or flagged when parent input cells are edited.",
+            "evidenceRefs": [
+              "openai_cost-*.csv",
+              "openai_cost-*_parsely_output.xlsx",
+              "business income & expense sheet.xlsx"
+            ]
+          }
+        ],
+        "rootCauseCategories": [
+          "bad_mutation_contract",
+          "weak_source_evidence"
+        ]
+      },
+      {
+        "id": "contested-eval-harness-expansion",
+        "title": "Eval harness generated from workflow rubrics",
+        "workflowDomain": "eval_harness",
+        "persona": "Harness engineer converting real workflows into regression tests",
+        "goal": "Read the eval template rows, generate NodeRoom run cases with persona, preconditions, expected artifact state, trace assertions, and cost/runtime budgets.",
+        "sourceResearchPacketIds": [
+          "professional-workflow-profile-20260608"
+        ],
+        "architectureFit": {
+          "status": "existing_capability",
+          "existingCapabilityNotes": [
+            "agent:improve already produces local artifacts and deterministic gates."
+          ],
+          "missingCapabilityNotes": [
+            "Research-derived evals need confidence and gate policy before they can block."
+          ],
+          "convexBoundaryNeeds": {
+            "queries": [],
+            "mutations": [],
+            "actions": [],
+            "tools": [],
+            "validators": [
+              "eval trust policy"
+            ]
+          },
+          "smallestChange": "Keep this as an advisory eval fixture until the rubric is not contested.",
+          "avoidAdding": [
+            "new HALO tables",
+            "new eval service"
+          ],
+          "requiredEvidence": [
+            "Every eval has a starting state, task, allowed tools, expected state, expected trace, and budget.",
+            "Slow/free-auto cases are routed to /free and include checkpoint assertions."
+          ]
+        },
+        "confidenceLevel": "contested",
+        "gateMode": "advisory",
+        "contestedClaims": [
+          "Different teams disagree on how much human review is required before eval promotion."
+        ],
+        "assertions": [
+          {
+            "id": "eval-1",
+            "description": "Every eval has a starting state, task, allowed tools, expected state, expected trace, and budget.",
+            "evidenceRefs": [
+              "nodebench_fast_slow_*.csv",
+              "ui_ux_mapping.csv"
+            ]
+          },
+          {
+            "id": "eval-2",
+            "description": "Slow/free-auto cases are routed to /free and include checkpoint assertions.",
+            "evidenceRefs": [
+              "nodebench_fast_slow_*.csv",
+              "ui_ux_mapping.csv"
+            ]
+          },
+          {
+            "id": "eval-3",
+            "description": "Interactive cases stay on the ladder-proven fast model.",
+            "evidenceRefs": [
+              "nodebench_fast_slow_*.csv",
+              "ui_ux_mapping.csv"
+            ]
+          }
+        ],
+        "rootCauseCategories": [
+          "eval_measures_wrong_behavior",
+          "ui_review_friction"
+        ]
+      }
+    ],
+    "implementationHandoffCandidates": [],
+    "blockedImplementationHandoffCandidates": [
+      {
+        "evalCandidateId": "candidate-gtm-pitchbook-match",
+        "kind": "more_research",
+        "canBlockMerge": false,
+        "reasons": [
+          "missing research packet evidence",
+          "candidate evals are advisory only"
+        ]
+      },
+      {
+        "evalCandidateId": "contested-eval-harness-expansion",
+        "kind": "eval_fixture",
+        "canBlockMerge": false,
+        "reasons": [
+          "contested claims must stay advisory until resolved or explicitly modeled"
+        ]
+      },
+      {
+        "evalCandidateId": "research-validated-finance-reconcile",
+        "kind": "implementation",
+        "canBlockMerge": false,
+        "reasons": [
+          "demoted: architecture budget is red (forbidden surfaces dirty / review required) — human approval before any implementation handoff"
+        ]
+      }
+    ],
+    "nextLiveRuns": [
+      "npm run agent:improve -- --live",
+      "npm run agent:improve -- --full-live",
+      "npm run agent:improve -- --ui-media=docs/eval/ui-recordings/<recording-or-screenshot>",
+      "npm run benchmark:charts"
+    ],
+    "architectureBudget": {
+      "allowedScope": "Only files or modules named by the failing trace, failing eval, or handoff evidence.",
+      "defaultAllowedAreas": [
+        "src/agent runtime, tools, context, and compaction",
+        "Convex job/tool adapters that already participate in the failing flow",
+        "eval fixtures and deterministic assertions for the affected workflow"
+      ],
+      "forbiddenWithoutHumanApproval": [
+        "new database tables",
+        "new services or framework layers",
+        "new UI surfaces",
+        "graph/wiki/embedding expansion without a failing workflow eval",
+        "weakened CAS, lock, draft, auth, privacy, or eval gates"
+      ]
+    }
+  }
+}

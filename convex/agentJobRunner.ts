@@ -238,8 +238,14 @@ export const runFreeAutoJobSlice = internalAction({
         journal: modelJournal,
         deadlineAt,
         reserveMs,
-        // Gateway spend ceiling — cap a single slice's token spend (a per-job cap aggregates across slices in telemetry).
-        spendLimits: { maxTokens: envNumber("AGENT_MAX_TOKENS_PER_SLICE", 250_000, 1_000, 4_000_000) },
+        // Gateway spend ceiling — cap a single slice's token AND dollar spend. priceStep makes the
+        // USD half reachable (P0-4: without it the gate received costUsd=0 and maxCostUsd was dead
+        // surface — one env var pointing free-auto at a paid model meant unbounded spend).
+        spendLimits: {
+          maxTokens: envNumber("AGENT_MAX_TOKENS_PER_SLICE", 250_000, 1_000, 4_000_000),
+          maxCostUsd: envNumber("AGENT_MAX_USD_PER_SLICE", 2, 0.01, 100),
+        },
+        priceStep: (modelName, inputTokens, outputTokens) => priceRun(modelName, inputTokens, outputTokens),
       });
       const { runId, telemetry } = await recordRun(result);
       const done = result.stopReason === "done" && !result.exhausted;

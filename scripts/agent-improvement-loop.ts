@@ -15,6 +15,7 @@ import {
   PROFESSIONAL_WORKFLOW_CASES,
   type ProfessionalHarnessRequirement,
 } from "../evals/professionalWorkflows";
+import { readEvalRuns, runKey, type EvalRunRecord } from "../evals/evalStore";
 
 type Lane = "deterministic" | "live" | "ui" | "full-live";
 type StepStatus = "pass" | "fail" | "skip";
@@ -62,6 +63,13 @@ type LoopRun = {
   steps: StepResult[];
   handoff: {
     topRecommendations: string[];
+    /** P1-4: the failing eval rows from the latest recorded run — checks, failureSummary (with P1-5
+     *  trace pointers), traceRef + a static repro command. The packet carries evidence, not
+     *  "see captured output". */
+    failingEvalEvidence: Array<{
+      caseId: string; suite: string; runKey: string; score?: number;
+      failingChecks: string[]; failureSummary?: string; traceRef?: string; repro: string;
+    }>;
     generatedEvalIdeas: EvalCandidate[];
     implementationHandoffCandidates: HandoffDecision[];
     blockedImplementationHandoffCandidates: HandoffDecision[];
@@ -136,7 +144,9 @@ const steps: StepSpec[] = [
     label: "Architecture budget review",
     lane: "deterministic",
     command: "npm",
-    args: ["run", "architecture:budget"],
+    // P0-3: the loop's own --strict arms the budget gate (exit 1 on forbidden-surface dirt).
+    // Unarmed runs still REPORT; the zero-false-positive enforcement below is the handoff demotion.
+    args: ["run", "architecture:budget", ...(strict ? ["--", "--strict"] : [])],
     timeoutMs: 120_000,
   },
   {
@@ -314,8 +324,24 @@ function buildHandoff(results: StepResult[]): LoopRun["handoff"] {
   const architectureBudgetStep = results.find((step) => step.id === "architecture-budget");
   const generatedEvalIdeas = buildGeneratedEvalIdeas();
   const handoffDecisions = generatedEvalIdeas.map(evaluateEvalCandidateForHandoff);
-  const implementationHandoffCandidates = handoffDecisions.filter((decision) => decision.kind === "implementation");
-  const blockedImplementationHandoffCandidates = handoffDecisions.filter((decision) => decision.kind !== "implementation");
+  // P0-3: when the architecture-budget gate is red (step failed, or the report says review-required),
+  // NO implementation handoff may ship — a coding agent must not receive scoped impl work while
+  // forbidden surfaces are dirty. Demote every implementation decision to the blocked list with the
+  // reason attached. Zero false positives: a red budget is exactly the condition the gate names.
+  const budgetRed =
+    architectureBudgetStep?.status === "fail" ||
+    !!architectureBudgetStep?.stdoutTail?.includes("architecture budget: review required");
+  const rawImplementation = handoffDecisions.filter((decision) => decision.kind === "implementation");
+  const implementationHandoffCandidates = budgetRed ? [] : rawImplementation;
+  const blockedImplementationHandoffCandidates = [
+    ...handoffDecisions.filter((decision) => decision.kind !== "implementation"),
+    ...(budgetRed
+      ? rawImplementation.map((decision) => ({
+          ...decision,
+          reasons: [...decision.reasons, "demoted: architecture budget is red (forbidden surfaces dirty / review required) — human approval before any implementation handoff"],
+        }))
+      : []),
+  ];
   const topRecommendations = [
     ...failed.map((step) => `Fix failing loop step ${step.id}: ${step.reason ?? "see captured output"}.`),
     ...(architectureBudgetStep?.stdoutTail?.includes("architecture budget: review required")
@@ -331,6 +357,28 @@ function buildHandoff(results: StepResult[]): LoopRun["handoff"] {
     "Add browser-visible multi-user checks for public/private chat, artifact references, proposals, and trace accept-all.",
   ].slice(0, 8);
 
+  // P1-4: pull the latest recorded run's FAILING rows out of the eval store — the evidence already
+  // exists one import away; the packet must carry it instead of "see captured output".
+  let failingEvalEvidence: LoopRun["handoff"]["failingEvalEvidence"] = [];
+  try {
+    const records = readEvalRuns();
+    if (records.length) {
+      const newestKey = runKey([...records].sort((a, b) => b.ts - a.ts)[0]);
+      const latestByCase = new Map<string, EvalRunRecord>();
+      for (const r of records.filter((x) => runKey(x) === newestKey).sort((a, b) => a.ts - b.ts)) latestByCase.set(r.caseId, r);
+      failingEvalEvidence = [...latestByCase.values()].filter((r) => r.status === "fail").map((r) => ({
+        caseId: r.caseId,
+        suite: r.suite,
+        runKey: newestKey,
+        score: r.score,
+        failingChecks: Object.entries(r.checks ?? {}).filter(([, ok]) => !ok).map(([k]) => k),
+        failureSummary: r.failureSummary,
+        traceRef: r.traceRef,
+        repro: reproForEvalRecord(r),
+      }));
+    }
+  } catch { /* store unreadable — packet ships without evidence rather than failing the loop */ }
+
   const nextLiveRuns = [
     "npm run agent:improve -- --live",
     "npm run agent:improve -- --full-live",
@@ -339,12 +387,24 @@ function buildHandoff(results: StepResult[]): LoopRun["handoff"] {
   ];
   return {
     topRecommendations,
+    failingEvalEvidence,
     generatedEvalIdeas,
     implementationHandoffCandidates,
     blockedImplementationHandoffCandidates,
     nextLiveRuns,
     architectureBudget: buildArchitectureBudget(),
   };
+}
+
+function reproForEvalRecord(record: Pick<EvalRunRecord, "suite" | "caseId">): string {
+  if (record.suite === "credit") return "npm run eval:credit";
+  if (record.suite === "professional") return "npm run eval:professional";
+  if (record.suite === "workflow") return "npx vitest run tests/workflowEvals.test.ts";
+  if (record.suite === "ladder") {
+    const rung = record.caseId.split(":").slice(1).join(":");
+    return rung ? `npm run ladder -- --rungs=${rung}` : "npm run ladder";
+  }
+  return "npm run agent:improve -- --record";
 }
 
 function buildArchitectureBudget() {

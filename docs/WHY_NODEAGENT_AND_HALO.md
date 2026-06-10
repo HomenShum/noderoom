@@ -148,11 +148,14 @@ Each entry: **the choice → the why → the trade-off → what it fixes vs a pa
 - **Trade-off.** Maintaining the suite. It is also the thing that makes self-modification *safe*.
 
 ### Why the free-auto durable background path
-- **Why.** Free models are slow and flaky (the live ladder showed `openrouter/free-auto` is correct
-  but 20–100s/op and doesn't finish L4 interactively). So free-auto is *wrong* as the live
-  collaboration default — but *right* as a budgeted, resumable **background worker**. Fast paid models
-  stay the interactive default; free-auto is productized with checkpoints, health, and resumable
-  execution.
+- **Why.** Free routes are slow AND not uniformly correct — match the recorded evidence, not the
+  flattering memory: the first live ladder run (`docs/eval/free-auto-ladder.md`) had the router alias
+  pass L1–L3 with escalating 20–100s+ latency and TIMEOUT on L4; the current QA matrix (README,
+  generated) records the alias at **L3 FAIL + L4 TIMEOUT**, while expanded top *concrete* free
+  candidates do pass L3. So free-auto is *wrong* as the live collaboration default on both latency and
+  correctness grounds — but *right* as a budgeted, resumable **background worker** whose per-rung
+  results are re-verified by the ladder, per concrete route, not assumed from the alias. Fast paid
+  models stay the interactive default.
 - **Trade-off.** Two model lanes to reason about. The honest framing: don't make free-auto fast,
   make it *durable.*
 

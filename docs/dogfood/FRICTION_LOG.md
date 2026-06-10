@@ -1,5 +1,11 @@
 # Friction log — append-only
 
+## 2026-06-10 - Deploy 500s root-caused: our payload, not Vercel
+
+| Stoplight | Moment | What happened | Root cause | Fix |
+|---|---|---|---|---|
+| 🔴 | vercel --prod failing repeatedly with their API returning Internal Server Error | I blamed a Vercel outage; their status page showed ALL SYSTEMS OPERATIONAL | No .vercelignore - every deploy uploaded ~260MB of media the site never serves (docs gifs 98MB, judge scratch 58MB, capture frames 54MB, episode masters 23MB); their files API choked | .vercelignore ships source + public only (~25x lighter); episode videos explicitly re-included via ! negation because gitignored files are ALSO skipped by the uploader (this briefly 404d the videos - caught by the post-deploy URL check) |
+
 ## 2026-06-09 - The 0/3 review-mode agent, root-caused and fixed (found by the walkthrough capturer)
 
 | Stoplight | Moment | What happened | Root cause (server-side step logs, not guesses) | Fix |

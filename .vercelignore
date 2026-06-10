@@ -1,0 +1,17 @@
+# Deploys were failing with Vercel-side 500s because the upload carried ~260MB of media the site
+# never serves (docs gifs, capture frames, judge artifacts, episode masters). The site needs only
+# source + public/. Root-caused 2026-06-10; see docs/dogfood/FRICTION_LOG.md.
+docs
+episodes
+remotion
+e2e
+tests
+evals
+demo
+scripts
+.tmp-qa
+*.log
+# Episode videos are gitignored (repo stays lean) but MUST deploy — they are served at
+# noderoom.live/episodes/*.mp4. The ! re-includes them for the upload.
+!public/episodes
+!public/episodes/**

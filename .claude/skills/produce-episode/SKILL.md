@@ -76,6 +76,18 @@ the MP4 into GitHub's web editor (not automatable) — the poster+link pattern i
 equivalent. GIFs stay the inline format for the short walkthroughs; episodes keep audio, so they
 ship as MP4 links.
 
+## The "before" scene has TWO honest modes — pick deliberately
+1. **Guards-removed variant of our app** (branch like `demo/v0-naive-agent`): same UI, safety
+   removed. Label the build ON SCREEN. Use when the story is "here is exactly what our guard
+   prevents."
+2. **Different-stack baseline** — the same feature attempted on a typical build: Streamlit,
+   shadcn/Tailwind + a conventional backend, assistant-ui-style chat frontends. This is usually
+   the MORE truthful "before": those apps are not broken, they simply don't have live shared
+   state, versioning, or review **by construction** — which is most viewers' actual starting
+   point. Honesty rule: never frame the other stack as bad; frame it as "what most of us build
+   first, and where it structurally stops." Real baseline footage exists in the ParselyFi/
+   Streamlit captures of the feature-walkthrough-gif repo — reuse before building new baselines.
+
 ## Staged stages (interfaces defined, NOT yet built — do not pretend they ran)
 - `failure-replay`: drive the SAME spec against a `v0-*` git tag in a worktree to record the
   naive version failing. Needs tags or a fixture flag that disables the guard being demoed.

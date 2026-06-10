@@ -22,7 +22,6 @@ const previews: WorkflowPreview[] = [
     userWorkflow: "A user asks the Room NodeAgent to reconcile Q3 variance cells; the agent locks exact cells, reads versions, writes with CAS, releases, and leaves trace rows.",
     frames: [
       "docs/screenshots/qa-real-llm-ask.png",
-      "docs/eval/ui-recordings/live-spreadsheet-20260608.png",
       "docs/screenshots/live-room-after-agent.png",
       "docs/screenshots/ui-trace-lifecycle.png",
     ],
@@ -40,7 +39,6 @@ const previews: WorkflowPreview[] = [
     userWorkflow: "A user runs source-backed company research over pending/stale rows; the agent preserves CRM fields, fills evidence-bearing payloads, and marks freshness.",
     frames: [
       "docs/screenshots/live-research-before.png",
-      "docs/eval/ui-recordings/live-research-20260608.png",
       "docs/screenshots/live-research-after.png",
       "docs/screenshots/live-research-sources-freshness.png",
       "docs/screenshots/live-research-requeue.png",
@@ -58,7 +56,6 @@ const previews: WorkflowPreview[] = [
     title: "Grounded wiki and note update",
     userWorkflow: "A user asks for a note/wiki summary; the NodeAgent discovers room artifacts, reads the source sheet, writes a grounded note with citations, and respects private/public boundaries.",
     frames: [
-      "docs/eval/ui-recordings/live-note-20260608.png",
       "docs/screenshots/lib-note.png",
       "docs/screenshots/qa-telemetry.png",
     ],
@@ -73,7 +70,6 @@ const previews: WorkflowPreview[] = [
     frames: [
       "docs/screenshots/live-proposals-review.png",
       "docs/screenshots/live-proposals-buttons.png",
-      "docs/eval/ui-recordings/live-wall-20260608.png",
       "docs/screenshots/lib-wall.png",
     ],
     evidence: ["docs/WALKTHROUGH.md", "docs/PRODUCTION_GUARANTEE_MATRIX.md", "tests/roomEngine.test.ts"],

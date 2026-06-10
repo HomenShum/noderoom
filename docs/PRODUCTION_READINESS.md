@@ -62,6 +62,7 @@ lease races, cron SLA, or public abuse behavior under real traffic.
 | **Join rate limit + member cap** (10 joins/min sliding, 32 members/room) | `convex/rooms.ts` |
 | **Room-code entropy floor** (server-enforced `[A-Z0-9]{6,12}`, ≈2.2B space) | `convex/rooms.ts` |
 | **Cumulative daily USD cap per room** (bounds the SUM across `/ask` runs, not just one run) | `convex/agentRuns.ts` `roomSpendSince` + gate in `convex/agent.ts`; `tests/productionGates.test.ts` |
+| **Global monthly USD cap with breach attribution** (`GLOBAL_MAX_USD_PER_MONTH`, default $75 — the $100-experiment gate; the breach error reports distinct rooms so it self-diagnoses as growth vs runaway; bounded read fails closed on truncation) | `convex/agentRuns.ts` `globalSpendSince` + gate in `convex/agent.ts`; `tests/productionGates.test.ts`; env armed on dev **and** prod (`0.50`/slice, `$3`/room-day, `$75`/month) |
 | **Telemetry retention** (traces/agentSteps/operation-events pruned past the window, product data untouched) | `convex/retention.ts` + `convex/crons.ts`; `tests/productionGates.test.ts` |
 | Field-length caps (name/title) | `convex/rooms.ts` |
 

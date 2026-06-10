@@ -17,6 +17,30 @@ Professional workflow evals are tracked separately in
 workflow shapes into redacted GTM, finance, parsing, wiki, and long-running
 cases without committing private rows.
 
+The live company-research benchmark is a separate router/cost harness:
+
+```bash
+npm run benchmark -- openrouter/free-auto --no-merge --companies=3 --model-timeout-ms=240000 --model-reserve-ms=10000 --row-hard-timeout-ms=270000
+npm run benchmark:charts
+```
+
+Its current verified artifact is `docs/eval/results.json`
+(`company-research-v3-composite-synthesis`). It records route snapshots,
+pricing-at-run, failure ownership, and per-row trace refs
+(`docs/eval/traces/benchmark/`). v3 is a **two-call composite**: the harness's
+`fetch_row_sources` owns lock/fetch and returns fenced snippets, the model
+synthesizes the research fields in its own words, and `write_row` validates
+with zod and owns CAS writes/citations/freshness/status/release. A content
+floor in `STRUCTURED_FIELDS` rejects disclaimer-shaped non-answers and
+from-memory text with no derivation from the fetched evidence — the two
+strategies that gamed earlier generations (v2's "9/9" was a deterministic
+template grading itself and was invalidated on review; see the README's
+"Why v3 exists"). Latest verified v3 run: `deepseek/deepseek-v4-flash` 9/9 at
+$0.0034/run with real grounded synthesis; `openrouter/free-auto` 7/9, failing
+exactly the content floor + judge. Treat a 9/9 as proof for the background
+research workflow only. Interactive collaboration still needs the L1-L6
+lock/CAS/draft ladder below.
+
 ---
 
 ## 1. Who uses the agent

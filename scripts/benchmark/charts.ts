@@ -15,7 +15,7 @@ const ACCENT = "#D97757";
 const PASS = "#3FB37F";
 const FAIL = "#E0564E";
 const MONO = "ui-monospace, 'JetBrains Mono', monospace";
-const BENCHMARK_VERSION = "company-research-v2-9checks-router";
+const BENCHMARK_VERSION = "company-research-v3-composite-synthesis"; // must match run.ts — the staleness guard below rejects mixed-version artifacts
 
 type Row = {
   model: string;

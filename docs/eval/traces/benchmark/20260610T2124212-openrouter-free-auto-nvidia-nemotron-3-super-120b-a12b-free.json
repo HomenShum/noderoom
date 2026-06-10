@@ -1,0 +1,403 @@
+{
+  "benchmarkVersion": "company-research-v2-9checks-router",
+  "generatedAt": "2026-06-10T21:24:21.229Z",
+  "model": "openrouter/free-auto",
+  "resolvedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+  "routeSnapshotId": "fabbcd520e971ec7",
+  "companies": [
+    {
+      "id": "rc_anthropic",
+      "company": "Anthropic",
+      "url": "https://www.anthropic.com",
+      "source2Url": "https://en.wikipedia.org/wiki/Anthropic"
+    },
+    {
+      "id": "rc_ramp",
+      "company": "Ramp",
+      "url": "https://ramp.com",
+      "source2Url": "https://en.wikipedia.org/wiki/Ramp_(company)"
+    },
+    {
+      "id": "rc_mercury",
+      "company": "Mercury",
+      "url": "https://mercury.com",
+      "source2Url": "https://www.forbes.com/companies/mercury/"
+    }
+  ],
+  "stopReason": "done",
+  "exhausted": false,
+  "steps": 6,
+  "usage": {
+    "inputTokens": 14591,
+    "outputTokens": 2179,
+    "modelCalls": 6
+  },
+  "checks": {
+    "ALL_COMPLETE": true,
+    "EVERY_ROW_SOURCED": true,
+    "EVERY_ROW_MULTI_SOURCE": true,
+    "SOURCES_FETCHED": true,
+    "STRUCTURED_FIELDS": true,
+    "FRESHNESS_WRITTEN": true,
+    "COMPLETED_IN_BUDGET": true,
+    "NO_FABRICATION": true,
+    "RIGHT_ENTITY": true
+  },
+  "trace": [
+    {
+      "step": 0,
+      "tool": "research_company_row",
+      "args": {
+        "rowId": "rc_anthropic",
+        "company": "Anthropic",
+        "homepageUrl": "https://www.anthropic.com",
+        "corroboratingUrl": "https://en.wikipedia.org/wiki/Anthropic"
+      },
+      "result": {
+        "ok": true,
+        "rowId": "rc_anthropic",
+        "company": "Anthropic",
+        "fetched": [
+          {
+            "requestedUrl": "https://www.anthropic.com",
+            "ok": true,
+            "resultUrl": "https://www.anthropic.com/",
+            "title": "Home \\ Anthropic",
+            "snippet": "Home \\ Anthropic Skip to main content Skip to footer Research Policy Commitments Initiatives Claude&#x27;s Constitution Policy on the AI Exponential Transparency Responsible Scaling Policy Trust center Security and compliance Learn Learn Anthropic Academy Tutorials Use cases Engi"
+          },
+          {
+            "requestedUrl": "https://en.wikipedia.org/wiki/Anthropic",
+            "ok": true,
+            "resultUrl": "https://en.wikipedia.org/wiki/Anthropic",
+            "title": "Anthropic - Wikipedia",
+            "snippet": "Anthropic - Wikipedia Jump to content Main menu Main menu move to sidebar hide Navigation Main page Contents Current events Random article About Wikipedia Contact us Contribute Help Learn to edit Community portal Recent changes Upload file Special pages Search Search Appearance D"
+          }
+        ],
+        "writes": [
+          {
+            "elementId": "rc_anthropic__status",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_anthropic__summary",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_anthropic__funding",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_anthropic__headcount",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_anthropic__recent_signal",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_anthropic__source",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_anthropic__source2",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_anthropic__last_researched",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_anthropic__status",
+            "ok": true,
+            "version": 3
+          }
+        ]
+      },
+      "ms": 200
+    },
+    {
+      "step": 1,
+      "tool": "research_company_row",
+      "args": {
+        "rowId": "rc_ramp",
+        "company": "Ramp",
+        "homepageUrl": "https://ramp.com",
+        "corroboratingUrl": "https://en.wikipedia.org/wiki/Ramp_(company)"
+      },
+      "result": {
+        "ok": true,
+        "rowId": "rc_ramp",
+        "company": "Ramp",
+        "fetched": [
+          {
+            "requestedUrl": "https://ramp.com",
+            "ok": true,
+            "resultUrl": "https://ramp.com/",
+            "title": "ramp.com",
+            "snippet": "# Ramp — Machine Version **Quick links:** [Docs](https://docs.ramp.com/) · [Help Center](https://support.ramp.com/) · [Integrations](https://ramp.com/integrations) · [Pricing](https://ramp.com/pricing) · [Trust Center](https://trust.ramp.com/) --- ## Ramp Promotional Offer Ramp i"
+          },
+          {
+            "requestedUrl": "https://en.wikipedia.org/wiki/Ramp_(company)",
+            "ok": true,
+            "resultUrl": "https://en.wikipedia.org/wiki/Ramp_(company)",
+            "title": "Ramp (company) - Wikipedia",
+            "snippet": "Ramp (company) - Wikipedia Jump to content Main menu Main menu move to sidebar hide Navigation Main page Contents Current events Random article About Wikipedia Contact us Contribute Help Learn to edit Community portal Recent changes Upload file Special pages Search Search Appeara"
+          }
+        ],
+        "writes": [
+          {
+            "elementId": "rc_ramp__status",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_ramp__summary",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_ramp__funding",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_ramp__headcount",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_ramp__recent_signal",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_ramp__source",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_ramp__source2",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_ramp__last_researched",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_ramp__status",
+            "ok": true,
+            "version": 3
+          }
+        ]
+      },
+      "ms": 228
+    },
+    {
+      "step": 2,
+      "tool": "research_company_row",
+      "args": {
+        "rowId": "rc_mercury",
+        "company": "Mercury",
+        "homepageUrl": "https://mercury.com",
+        "corroboratingUrl": "https://www.forbes.com/companies/mercury/"
+      },
+      "result": {
+        "ok": true,
+        "rowId": "rc_mercury",
+        "company": "Mercury",
+        "fetched": [
+          {
+            "requestedUrl": "https://mercury.com",
+            "ok": true,
+            "resultUrl": "https://mercury.com/",
+            "title": "Online Business Banking For Startups, Small Businesses &amp; Scaling Companies",
+            "snippet": "Online Business Banking For Startups, Small Businesses &amp; Scaling Companies Mercury logo The logo for Mercury, featuring a circular emblem with abstract, interconnected swirling lines on the left, and the word &quot;MERCURY&quot; in clean, uppercase letters to the right. Produ"
+          },
+          {
+            "requestedUrl": "https://www.forbes.com/companies/mercury/",
+            "ok": true,
+            "resultUrl": "https://www.forbes.com/companies/mercury/",
+            "title": "Mercury | Company Overview &amp; News",
+            "snippet": "Mercury | Company Overview &amp; News /*! * Bootstrap v3.3.7 (http://getbootstrap.com) * Copyright 2011-2016 Twitter, Inc. * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE) *//*! * Bootstrap v3.3.7 (http://getbootstrap.com) * Copyright 2011-2016 Twitter"
+          }
+        ],
+        "writes": [
+          {
+            "elementId": "rc_mercury__status",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_mercury__summary",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_mercury__funding",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_mercury__headcount",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_mercury__recent_signal",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_mercury__source",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_mercury__source2",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_mercury__last_researched",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_mercury__status",
+            "ok": true,
+            "version": 3
+          }
+        ]
+      },
+      "ms": 362
+    },
+    {
+      "step": 3,
+      "tool": "say",
+      "args": {
+        "message": "Completed research for Anthropic, Ramp, and Mercury."
+      },
+      "result": {
+        "error": "unknown tool: say"
+      },
+      "ms": 0
+    }
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": "YOUR TASK: Research the 3 listed pending companies. Use research_company_row once per row. The workflow tool owns lock, fetch, CAS writes, citations, freshness, status, and release. Do not manually choreograph low-level spreadsheet edits.\n\nUse only the research_company_row tool. Call it exactly once for each listed row, then stop.\nRows to process:\n  rc_anthropic | company=Anthropic | homepage=https://www.anthropic.com | corroborating=https://en.wikipedia.org/wiki/Anthropic | status=pending | status=v1 summary=v1 funding=v1 headcount=v1 recent_signal=v1 source=v1 source2=v1 last_researched=v1\n  rc_ramp | company=Ramp | homepage=https://ramp.com | corroborating=https://en.wikipedia.org/wiki/Ramp_(company) | status=pending | status=v1 summary=v1 funding=v1 headcount=v1 recent_signal=v1 source=v1 source2=v1 last_researched=v1\n  rc_mercury | company=Mercury | homepage=https://mercury.com | corroborating=https://www.forbes.com/companies/mercury/ | status=pending | status=v1 summary=v1 funding=v1 headcount=v1 recent_signal=v1 source=v1 source2=v1 last_researched=v1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "toolCalls": [
+        {
+          "id": "call_8df0afe928544b52b9545d4b",
+          "tool": "research_company_row",
+          "args": {
+            "rowId": "rc_anthropic",
+            "company": "Anthropic",
+            "homepageUrl": "https://www.anthropic.com",
+            "corroboratingUrl": "https://en.wikipedia.org/wiki/Anthropic"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "toolCallId": "call_8df0afe928544b52b9545d4b",
+      "toolName": "research_company_row",
+      "content": "{\"ok\":true,\"rowId\":\"rc_anthropic\",\"company\":\"Anthropic\",\"fetched\":[{\"requestedUrl\":\"https://www.anthropic.com\",\"ok\":true,\"resultUrl\":\"https://www.anthropic.com/\",\"title\":\"Home \\\\ Anthropic\",\"snippet\":\"Home \\\\ Anthropic Skip to main content Skip to footer Research Policy Commitments Initiatives Claude&#x27;s Constitution Policy on the AI Exponential Transparency Responsible Scaling Policy Trust center Security and compliance Learn Learn Anthropic Academy Tutorials Use cases Engi\"},{\"requestedUrl\":\"https://en.wikipedia.org/wiki/Anthropic\",\"ok\":true,\"resultUrl\":\"https://en.wikipedia.org/wiki/Anthropic\",\"title\":\"Anthropic - Wikipedia\",\"snippet\":\"Anthropic - Wikipedia Jump to content Main menu Main menu move to sidebar hide Navigation Main page Contents Current events Random article About Wikipedia Contact us Contribute Help Learn to edit Community portal Recent changes Upload file Special pages Search Search Appearance D\"}],\"writes\":[{\"elementId\":\"rc_anthropic__status\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_anthropic__summary\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_anthropic__funding\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_anthropic__headcount\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_anthropic__recent_signal\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_anthropic__source\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_anthropic__source2\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_anthropic__last_researched\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_anthropic__status\",\"ok\":true,\"version\":3}]}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "toolCalls": [
+        {
+          "id": "call_a9915d22eb7c4f11af2234e1",
+          "tool": "research_company_row",
+          "args": {
+            "rowId": "rc_ramp",
+            "company": "Ramp",
+            "homepageUrl": "https://ramp.com",
+            "corroboratingUrl": "https://en.wikipedia.org/wiki/Ramp_(company)"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "toolCallId": "call_a9915d22eb7c4f11af2234e1",
+      "toolName": "research_company_row",
+      "content": "{\"ok\":true,\"rowId\":\"rc_ramp\",\"company\":\"Ramp\",\"fetched\":[{\"requestedUrl\":\"https://ramp.com\",\"ok\":true,\"resultUrl\":\"https://ramp.com/\",\"title\":\"ramp.com\",\"snippet\":\"# Ramp — Machine Version **Quick links:** [Docs](https://docs.ramp.com/) · [Help Center](https://support.ramp.com/) · [Integrations](https://ramp.com/integrations) · [Pricing](https://ramp.com/pricing) · [Trust Center](https://trust.ramp.com/) --- ## Ramp Promotional Offer Ramp i\"},{\"requestedUrl\":\"https://en.wikipedia.org/wiki/Ramp_(company)\",\"ok\":true,\"resultUrl\":\"https://en.wikipedia.org/wiki/Ramp_(company)\",\"title\":\"Ramp (company) - Wikipedia\",\"snippet\":\"Ramp (company) - Wikipedia Jump to content Main menu Main menu move to sidebar hide Navigation Main page Contents Current events Random article About Wikipedia Contact us Contribute Help Learn to edit Community portal Recent changes Upload file Special pages Search Search Appeara\"}],\"writes\":[{\"elementId\":\"rc_ramp__status\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_ramp__summary\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_ramp__funding\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_ramp__headcount\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_ramp__recent_signal\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_ramp__source\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_ramp__source2\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_ramp__last_researched\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_ramp__status\",\"ok\":true,\"version\":3}]}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "toolCalls": [
+        {
+          "id": "call_c7849d218c1c48d4a617bb56",
+          "tool": "research_company_row",
+          "args": {
+            "rowId": "rc_mercury",
+            "company": "Mercury",
+            "homepageUrl": "https://mercury.com",
+            "corroboratingUrl": "https://www.forbes.com/companies/mercury/"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "toolCallId": "call_c7849d218c1c48d4a617bb56",
+      "toolName": "research_company_row",
+      "content": "{\"ok\":true,\"rowId\":\"rc_mercury\",\"company\":\"Mercury\",\"fetched\":[{\"requestedUrl\":\"https://mercury.com\",\"ok\":true,\"resultUrl\":\"https://mercury.com/\",\"title\":\"Online Business Banking For Startups, Small Businesses &amp; Scaling Companies\",\"snippet\":\"Online Business Banking For Startups, Small Businesses &amp; Scaling Companies Mercury logo The logo for Mercury, featuring a circular emblem with abstract, interconnected swirling lines on the left, and the word &quot;MERCURY&quot; in clean, uppercase letters to the right. Produ\"},{\"requestedUrl\":\"https://www.forbes.com/companies/mercury/\",\"ok\":true,\"resultUrl\":\"https://www.forbes.com/companies/mercury/\",\"title\":\"Mercury | Company Overview &amp; News\",\"snippet\":\"Mercury | Company Overview &amp; News /*! * Bootstrap v3.3.7 (http://getbootstrap.com) * Copyright 2011-2016 Twitter, Inc. * Licensed under MIT (https://github.com/twbs/bootstrap/blob/master/LICENSE) *//*! * Bootstrap v3.3.7 (http://getbootstrap.com) * Copyright 2011-2016 Twitter\"}],\"writes\":[{\"elementId\":\"rc_mercury__status\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_mercury__summary\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_mercury__funding\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_mercury__headcount\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_mercury__recent_signal\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_mercury__source\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_mercury__source2\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_mercury__last_researched\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_mercury__status\",\"ok\":true,\"version\":3}]}"
+    },
+    {
+      "role": "user",
+      "content": "HARNESS NOTE: every tool call so far has been a read. The table in your context already holds the data — stop reading. Next turn: propose_lock the target cells, then edit_cell each of them (batch multiple edit_cell calls in one turn; pendingApproval results are SUCCESS)."
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "toolCalls": [
+        {
+          "id": "call_87189ce0017d447c8d21af02",
+          "tool": "say",
+          "args": {
+            "message": "Completed research for Anthropic, Ramp, and Mercury."
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "toolCallId": "call_87189ce0017d447c8d21af02",
+      "toolName": "say",
+      "content": "{\"error\":\"unknown tool: say\"}"
+    },
+    {
+      "role": "assistant",
+      "content": "Research completed for Anthropic, Ramp, and Mercury."
+    },
+    {
+      "role": "user",
+      "content": "HARNESS NOTE: this run cannot be complete — no cells were written or proposed. You already have the data you need in context. Finish the task now: propose_lock the target cells, then edit_cell each of them with the values implied by what you read (batch the edit_cell calls in one turn; a pendingApproval result is SUCCESS — never retry it)."
+    },
+    {
+      "role": "assistant",
+      "content": "Research completed for Anthropic, Ramp, and Mercury. All requested rows have been processed via the research_company_row tool. No further actions needed."
+    }
+  ]
+}

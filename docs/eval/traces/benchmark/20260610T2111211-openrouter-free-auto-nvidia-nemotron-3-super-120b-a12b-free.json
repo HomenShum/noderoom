@@ -1,0 +1,185 @@
+{
+  "benchmarkVersion": "company-research-v2-9checks-router",
+  "generatedAt": "2026-06-10T21:11:21.155Z",
+  "model": "openrouter/free-auto",
+  "resolvedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+  "routeSnapshotId": "fabbcd520e971ec7",
+  "companies": [
+    {
+      "id": "rc_anthropic",
+      "company": "Anthropic",
+      "url": "https://www.anthropic.com",
+      "source2Url": "https://en.wikipedia.org/wiki/Anthropic"
+    }
+  ],
+  "stopReason": "done",
+  "exhausted": false,
+  "steps": 4,
+  "usage": {
+    "inputTokens": 6503,
+    "outputTokens": 1608,
+    "modelCalls": 4
+  },
+  "checks": {
+    "ALL_COMPLETE": true,
+    "EVERY_ROW_SOURCED": true,
+    "EVERY_ROW_MULTI_SOURCE": true,
+    "SOURCES_FETCHED": true,
+    "STRUCTURED_FIELDS": true,
+    "FRESHNESS_WRITTEN": true,
+    "COMPLETED_IN_BUDGET": true,
+    "NO_FABRICATION": true,
+    "RIGHT_ENTITY": true
+  },
+  "trace": [
+    {
+      "step": 0,
+      "tool": "research_company_row",
+      "args": {
+        "rowId": "rc_anthropic",
+        "company": "Anthropic",
+        "homepageUrl": "https://www.anthropic.com",
+        "corroboratingUrl": "https://en.wikipedia.org/wiki/Anthropic"
+      },
+      "result": {
+        "ok": true,
+        "rowId": "rc_anthropic",
+        "company": "Anthropic",
+        "fetched": [
+          {
+            "requestedUrl": "https://www.anthropic.com",
+            "ok": true,
+            "resultUrl": "https://www.anthropic.com/",
+            "title": "Home \\ Anthropic",
+            "snippet": "Home \\ Anthropic Skip to main content Skip to footer Research Policy Commitments Initiatives Claude&#x27;s Constitution Policy on the AI Exponential Transparency Responsible Scaling Policy Trust center Security and compliance Learn Learn Anthropic Academy Tutorials Use cases Engi"
+          },
+          {
+            "requestedUrl": "https://en.wikipedia.org/wiki/Anthropic",
+            "ok": true,
+            "resultUrl": "https://en.wikipedia.org/wiki/Anthropic",
+            "title": "Anthropic - Wikipedia",
+            "snippet": "Anthropic - Wikipedia Jump to content Main menu Main menu move to sidebar hide Navigation Main page Contents Current events Random article About Wikipedia Contact us Contribute Help Learn to edit Community portal Recent changes Upload file Special pages Search Search Appearance D"
+          }
+        ],
+        "writes": [
+          {
+            "elementId": "rc_anthropic__status",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_anthropic__summary",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_anthropic__funding",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_anthropic__headcount",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_anthropic__recent_signal",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_anthropic__source",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_anthropic__source2",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_anthropic__last_researched",
+            "ok": true,
+            "version": 2
+          },
+          {
+            "elementId": "rc_anthropic__status",
+            "ok": true,
+            "version": 3
+          }
+        ]
+      },
+      "ms": 184
+    },
+    {
+      "step": 1,
+      "tool": "say",
+      "args": {
+        "message": "Researched Anthropic row rc_anthropic; updated summary, funding, headcount, recent_signal, sources, and last_researched."
+      },
+      "result": {
+        "error": "unknown tool: say"
+      },
+      "ms": 0
+    }
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": "YOUR TASK: Research the listed pending company. Use research_company_row once per row. The workflow tool owns lock, fetch, CAS writes, citations, freshness, status, and release. Do not manually choreograph low-level spreadsheet edits.\n\nUse only the research_company_row tool. Call it exactly once for each listed row, then stop.\nRows to process:\n  rc_anthropic | company=Anthropic | homepage=https://www.anthropic.com | corroborating=https://en.wikipedia.org/wiki/Anthropic | status=pending | status=v1 summary=v1 funding=v1 headcount=v1 recent_signal=v1 source=v1 source2=v1 last_researched=v1"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "toolCalls": [
+        {
+          "id": "call_46ffccb1e8f34359824f429d",
+          "tool": "research_company_row",
+          "args": {
+            "rowId": "rc_anthropic",
+            "company": "Anthropic",
+            "homepageUrl": "https://www.anthropic.com",
+            "corroboratingUrl": "https://en.wikipedia.org/wiki/Anthropic"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "toolCallId": "call_46ffccb1e8f34359824f429d",
+      "toolName": "research_company_row",
+      "content": "{\"ok\":true,\"rowId\":\"rc_anthropic\",\"company\":\"Anthropic\",\"fetched\":[{\"requestedUrl\":\"https://www.anthropic.com\",\"ok\":true,\"resultUrl\":\"https://www.anthropic.com/\",\"title\":\"Home \\\\ Anthropic\",\"snippet\":\"Home \\\\ Anthropic Skip to main content Skip to footer Research Policy Commitments Initiatives Claude&#x27;s Constitution Policy on the AI Exponential Transparency Responsible Scaling Policy Trust center Security and compliance Learn Learn Anthropic Academy Tutorials Use cases Engi\"},{\"requestedUrl\":\"https://en.wikipedia.org/wiki/Anthropic\",\"ok\":true,\"resultUrl\":\"https://en.wikipedia.org/wiki/Anthropic\",\"title\":\"Anthropic - Wikipedia\",\"snippet\":\"Anthropic - Wikipedia Jump to content Main menu Main menu move to sidebar hide Navigation Main page Contents Current events Random article About Wikipedia Contact us Contribute Help Learn to edit Community portal Recent changes Upload file Special pages Search Search Appearance D\"}],\"writes\":[{\"elementId\":\"rc_anthropic__status\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_anthropic__summary\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_anthropic__funding\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_anthropic__headcount\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_anthropic__recent_signal\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_anthropic__source\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_anthropic__source2\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_anthropic__last_researched\",\"ok\":true,\"version\":2},{\"elementId\":\"rc_anthropic__status\",\"ok\":true,\"version\":3}]}"
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "toolCalls": [
+        {
+          "id": "call_e789b0f73c674fb18a6d6517",
+          "tool": "say",
+          "args": {
+            "message": "Researched Anthropic row rc_anthropic; updated summary, funding, headcount, recent_signal, sources, and last_researched."
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "toolCallId": "call_e789b0f73c674fb18a6d6517",
+      "toolName": "say",
+      "content": "{\"error\":\"unknown tool: say\"}"
+    },
+    {
+      "role": "assistant",
+      "content": "Researched Anthropic row rc_anthropic; updated summary, funding, headcount, recent_signal, sources, and last_researched."
+    },
+    {
+      "role": "user",
+      "content": "HARNESS NOTE: this run cannot be complete — no cells were written or proposed. You already have the data you need in context. Finish the task now: propose_lock the target cells, then edit_cell each of them with the values implied by what you read (batch the edit_cell calls in one turn; a pendingApproval result is SUCCESS — never retry it)."
+    },
+    {
+      "role": "assistant",
+      "content": "Research completed for Anthropic (rc_anthropic). The research_company_row tool has been executed, fetching data from the homepage and Wikipedia and preparing updates for the summary, funding, headcount, recent_signal, source, source2, last_researched, and status fields. No further actions are required."
+    }
+  ]
+}

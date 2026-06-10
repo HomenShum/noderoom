@@ -12,7 +12,7 @@ through the same versioned concurrency control.**
 
 [Why Convex](#why-convex-and-why-not) · [Audience fluency](#audience-world-proof-artifacts) · [Lessons](#lessons-from-building-noderoom) · [Sequences](#live-collaboration-sequence) · [Why & HALO](docs/WHY_NODEAGENT_AND_HALO.md) · [Quickstart](#quickstart) · [Agent runtime](docs/AGENT_RUNTIME.md) · [Agent eval](docs/AGENT_EVAL.md) · [Agent wiki](docs/AGENT_WIKI.md) · [Design](docs/DESIGN.md) · [Stack](docs/STACK.md) · [Walkthrough](docs/WALKTHROUGH.md) · [Architecture](docs/ARCHITECTURE.md) · [Open gaps](docs/GAPS_NOT_DONE.md)
 
-[Interview notes](docs/INTERVIEW_NOTES.md) · [Over-engineering audit](docs/OVERENGINEERING_AUDIT.md) · [Improvement roadmap](docs/IMPROVEMENT_ROADMAP.md)
+[Interview notes](docs/INTERVIEW_NOTES.md) · [Over-engineering audit](docs/OVERENGINEERING_AUDIT.md) · [Improvement roadmap](docs/IMPROVEMENT_ROADMAP.md) · [Operating budget](docs/OPERATING_BUDGET.md) · [Audience workloads](docs/AUDIENCE_WORKLOADS.md)
 
 </div>
 
@@ -208,8 +208,10 @@ The repo now treats that as an eval surface, not marketing copy:
   [`episodes/noderoom-live-collab-v1/judge.md`](episodes/noderoom-live-collab-v1/judge.md).
 
 Run `npm run content:fluency:check` to keep this layer honest. Current status is **yellow**:
-the audience context and private-investment brief are present and checked, but the audience-specific
-episode still needs to be rendered and judged before it can be called production-proven.
+the audience context, private-investment brief, rendered episode, and Gemini
+media judge are present, but content-fluency/trust-signal review and current
+media judge defects still need to be closed before it can be called
+production-proven.
 
 ## Why Convex (and why not)
 
@@ -313,13 +315,15 @@ and [`evals/professionalWorkflows.ts`](evals/professionalWorkflows.ts).
    auto-accept. The UI is not decoration; it is how humans inspect evidence and
    control agent writes.
 
-7. **Single action -> durable sliced workflow.** Every agent command creates or
-   reuses a durable `agentJobs` row. `/ask` runs the first slice immediately for
-   responsive UX; if it exhausts step or time budget, it checkpoints cursor state
-   and resumes through the same Workflow/Workpool slice runner. The continuation
-   function is still named `freeAutoWorkflow` from its first use case, but it
-   preserves the job's model policy, so `/ask` and `/free` share the durable
-   contract. `/free` is a model-policy shortcut that forces
+7. **Single action -> durable sliced workflow.** Mutating or long-running agent
+   commands create or reuse a durable `agentJobs` row; private read-only advise
+   can stay a one-call private reply until it needs continuation or mutation.
+   `/ask` runs the first slice immediately for responsive UX; if it exhausts
+   step or time budget, it checkpoints cursor state and resumes through the same
+   Workflow/Workpool slice runner. The continuation function is still named
+   `freeAutoWorkflow` from its first use case, but it preserves the job's model
+   policy, so `/ask` and `/free` share the durable contract. `/free` is a
+   model-policy shortcut that forces
    `openrouter/free-auto`, not a second agent architecture. The remaining
    production hardening is stricter deadline/tool abort behavior, provider
    request idempotency where available, and model health/quarantine. See
@@ -412,7 +416,9 @@ npm run dev             # the multi-panel app (in-memory) → http://localhost:5
 
 # ── Live: real Convex backend + real LLM agent ───────────────────────────────
 npx convex dev                                  # creates a deployment + generates types
-npx convex env set ANTHROPIC_API_KEY sk-ant-…   # the agent's model key (Convex env)
+npx convex env set AGENT_MODEL gemini-3.5-flash # or another ladder-approved route
+npx convex env set GOOGLE_GENERATIVE_AI_API_KEY ... # set the key for the selected route
+# Alternative route keys may include OPENAI_API_KEY, ANTHROPIC_API_KEY, or OPENROUTER_API_KEY.
 npx convex env set SEED_ADMIN_TOKEN <admin-secret>
 npx convex run seed:seedDemoRoom '{"adminToken":"<admin-secret>"}'
 # Optional: add "hostAuthToken":"<32+ random chars, no spaces>" if you need a host browser session.
@@ -489,7 +495,7 @@ flowchart LR
    **elements** (`{ id, version, value }`), so locks, CAS, drafts, and smart-merge are **one**
    generic mechanism. Pure, deterministic, 12 scenario tests.
 2. **The agent harness** (`src/agent/`) — context engineering + tool construction + a bounded loop
-   with an **injectable model** (scripted or real Anthropic) and a **swappable backend** (in-memory
+   with an **injectable model** (scripted or routed real provider) and a **swappable backend** (in-memory
    or Convex). Context **compaction** keeps long runs bounded. See [`docs/AGENT_RUNTIME.md`](docs/AGENT_RUNTIME.md).
 3. **The store seam** (`src/app/store.tsx`) — the UI calls `useStore()`; one provider is the
    in-memory engine, the other is live Convex with **optimistic updates**. The components don't change.
@@ -625,7 +631,7 @@ This section is generated from `docs/qa/production-matrix.json`. When the system
 | `gpt-5.4-mini` | OpenAI | PASS | PASS | FAIL | PASS | parser/read-only/background until conflict rung passes |
 | `claude-haiku-4-5` | Anthropic | PASS | PASS | PASS | FAIL | parser/read-only/background until blocked-range rung passes |
 | `openai/gpt-4o-mini` | OpenRouter | PASS | PASS | PASS | FAIL | parser/read-only/background until blocked-range rung passes |
-| `openrouter/free-auto` | OpenRouter free-auto router | PASS | PASS | FAIL | TIMEOUT | opt-in /free only; router alias exhausted L3 and timed out L4 |
+| `openrouter/free-auto` | OpenRouter free-auto router | PASS | FAIL | PASS | TIMEOUT | opt-in /free only; hit step budget on L2 despite correct value/provenance and timed out L4 |
 | `openrouter/free-auto top-5 candidates` | OpenRouter router-expanded ladder | PASS | PASS | PASS | TIMEOUT | not promotable; summarizes routed top free candidates, see concrete rows |
 | `nvidia/nemotron-3-super-120b-a12b:free` | OpenRouter free candidate | PASS | PASS | PASS | TIMEOUT | best free candidate for /free; not interactive because L4 times out |
 | `nvidia/nemotron-3-ultra-550b-a55b:free` | OpenRouter free candidate | FAIL | FAIL | FAIL | FAIL | do not route; invalid JSON in live ladder |
@@ -635,7 +641,7 @@ This section is generated from `docs/qa/production-matrix.json`. When the system
 | `gpt-5.4-nano` | OpenAI | PASS | FAIL | FAIL | FAIL | research benchmark winner candidate only when collaboration safety is not required |
 | `gpt-5.4` | OpenAI | PASS | FAIL | PASS | PASS | requires rerun because L2 time-budget failure blocks promotion |
 
-Research benchmark route: `openrouter/free-auto -> nvidia/nemotron-3-super-120b-a12b:free` is the cheapest current v2 recorded model clearing 9/9 checks at $0.0000 per run. Collaboration routing still uses the ladder gate above, not benchmark cost alone.
+Research benchmark route: `deepseek/deepseek-v4-flash` is the cheapest current v3 composite-synthesis model clearing 9/9 checks at $0.0034 per run. Collaboration routing still uses the ladder gate above, not benchmark cost alone.
 
 Full QA ledger: [`docs/PRODUCTION_GUARANTEE_MATRIX.md`](docs/PRODUCTION_GUARANTEE_MATRIX.md).
 <!-- QA_COCKPIT_END -->
@@ -808,29 +814,44 @@ The full founder-level rationale, past-project comparison, and HALO handoff cont
 [`docs/WHY_NODEAGENT_AND_HALO.md`](docs/WHY_NODEAGENT_AND_HALO.md).
 Architecture ownership/budget gate: `npm run architecture:budget -- --strict`.
 
-## Benchmark Harness / Latest Free-Auto Composite Run
+## Benchmark Harness / v3 Composite-Synthesis Run
 
 The agent is model-agnostic (one `AgentModel` seam), so the diligence-research task can run across
 providers and the cheapest model that clears the **boolean gate** wins. Providers are routed by
 **NodeBench's `modelCatalog.ts`** (copied verbatim — reuse, not reinvent), reaching cheap + free
 models through OpenRouter's OpenAI-compatible endpoint. The checked-in `docs/eval/results.json`
-is the latest verified free-auto composite run, not proof that all models and all scenarios were
+is the latest verified run of the listed routes, not proof that all models and all scenarios were
 rerun.
 
 **The charts are downstream of a real run — never hand-drawn.** `npm run benchmark` writes
 `docs/eval/results.json` (real $/latency/tokens from `agentRuns`, real pass% from deterministic
 checks); `npm run benchmark:charts` renders these SVGs from it. Reproduce it yourself.
 
-Current artifact note: `docs/eval/results.json` is now the v2 9-check router-aware artifact.
-It records requested-vs-resolved model IDs, row-level source matching, multi-source checks,
-structured-field and freshness checks, CellPayload unwrapping, route snapshots, pricing-at-run,
-failure ownership, and trace refs. The latest verified run uses the composite
-`research_company_row` workflow tool and records
-`openrouter/free-auto -> nvidia/nemotron-3-super-120b-a12b:free` clearing 9/9
-for 3 companies at $0.0000 in 77.3s with 4 tool calls. That is promotion
-evidence for the background research workflow only; collaboration routing still
-uses the lock/CAS/draft ladder below. Run `npm run benchmark` or
-`npm run benchmark:free` to refresh it.
+**Why v3 exists (an honest history).** Two earlier benchmark generations were invalidated on
+review and are not comparable to v3: the v1 low-level runs executed with a broken fetch path
+(every `fetch_source` failed, so two checks measured the network, not the model), and the v2
+single-call composite let a deterministic harness template author the row fields — every check
+graded our own code, and a content-free "no claim asserted" template passed `NO_FABRICATION`
+vacuously. v3 (`company-research-v3-composite-synthesis`) splits the workflow so each layer is
+measured for what it owns: a **fetch preflight** aborts before any model spend if the environment
+cannot fetch; `fetch_row_sources` (harness) locks the row and returns fenced source snippets;
+**the model synthesizes the four research fields in its own words**; `write_row` (harness)
+validates with zod and does the CAS writes, citations, freshness, status, and lock release. A
+**content floor** in `STRUCTURED_FIELDS` rejects both disclaimer-shaped non-answers and
+from-memory text with no derivation from the fetched evidence, and the LLM judge grades the
+model-authored summaries against the actual fetched snippets.
+
+Latest verified v3 run (3 companies, per-row trace refs in `docs/eval/traces/benchmark/`):
+
+| Route | Gate | Cost/run | Time | What the gate saw |
+|---|---|---|---|---|
+| `deepseek/deepseek-v4-flash` | **9/9** | $0.0034 | 91s | Real grounded synthesis on every row ("Anthropic is an AI safety and research company best known for creating Claude…") |
+| `openrouter/free-auto` → `nemotron-3-super-120b:free` | 7/9 | $0.0000 | 216s | Failed `STRUCTURED_FIELDS` + `NO_FABRICATION`: wrote "the snippets do not contain a description…" — the exact disclaimer-shaped non-answer the content floor exists to reject |
+
+That contrast is the point: the gate now **differentiates synthesis quality** instead of grading
+harness choreography. The cheapest route clearing the full gate is promotion evidence for the
+background research workflow only; collaboration routing still uses the lock/CAS/draft ladder.
+Run `npm run benchmark` or `npm run benchmark:free` to refresh it.
 
 ![Cost vs quality](docs/eval/cost-quality.svg)
 ![Leaderboard](docs/eval/leaderboard.svg)
@@ -902,12 +923,11 @@ the full task-ladder spec is in [`docs/AUDIT.md`](docs/AUDIT.md).
 - **`gpt-5.5`** (flagship *reasoning* model) hits the OpenAI-Responses-API analog of the Gemini
   issue — a `function_call` needs its reasoning item round-tripped. The metadata round-trip needs
   extending to OpenAI's reasoning path; the **GPT-5.4 tier works clean**.
-- **OpenRouter free tier** is task-dependent. It now clears the composite GTM
-  research benchmark through `research_company_row`, but the same pool is still
-  not promotable for interactive collaboration because the live L1-L4
-  lock/CAS/draft ladder times out or fails on blocked-range behavior. The route
-  is viable for explicit `/free` and background research jobs, not as the
-  default shared-room editor.
+- **OpenRouter free tier** is task-dependent. It is useful for explicit `/free`
+  and budgeted background experiments, but the current v3 GTM research
+  benchmark keeps it at 7/9 because it fails the content floor, and the live
+  L1-L4 lock/CAS/draft ladder times out or fails on blocked-range behavior. Do
+  not promote it as the default shared-room editor.
 
 Model ids are **discovery-verified** (parallel subagents + a live probe corrected
 `claude-*.5`→`claude-*-5`, dropped shut-down `gemini-3.1-flash-lite-preview`, added

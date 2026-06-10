@@ -16,13 +16,14 @@
  */
 import { isIP } from "node:net";
 import { lookup } from "node:dns/promises";
-import { Agent } from "undici";
+import { Agent, fetch as undiciFetch } from "undici";
 import type { SourceResult } from "./types";
 
 const META_NAMES = new Set(["localhost", "metadata.google.internal", "metadata", "metadata.goog", "instance-data"]);
 const TIMEOUT_MS = 5000, MAX_BYTES = 200_000, MAX_REDIRECTS = 4;
 type PublicAddress = { address: string; family: 4 | 6 };
-type PinnedFetch = { res: Response; dispatcher: Agent };
+type FetchResponse = Awaited<ReturnType<typeof undiciFetch>>;
+type PinnedFetch = { res: FetchResponse; dispatcher: Agent };
 
 function isPrivateV4(ip: string): boolean {
   const o = ip.split(".").map(Number);
@@ -99,10 +100,16 @@ async function lookupWithAbort(hostname: string, signal: AbortSignal) {
 function pinnedDispatcher(addresses: PublicAddress[]): Agent {
   let i = 0;
   return new Agent({
+    allowH2: false,
     connect: {
       lookup(_hostname, options, callback) {
         const family = typeof options === "object" && (options.family === 4 || options.family === 6) ? options.family : undefined;
         const candidates = family ? addresses.filter((a) => a.family === family) : addresses;
+        if (typeof options === "object" && options.all) {
+          if (candidates.length === 0) callback(new Error("no validated address"), [] as unknown as string, 0);
+          else callback(null, candidates.map((a) => ({ address: a.address, family: a.family })) as unknown as string, 0);
+          return;
+        }
         const next = candidates[i++ % candidates.length];
         if (!next) callback(new Error("no validated address"), "", 0);
         else callback(null, next.address, next.family);
@@ -121,12 +128,12 @@ async function fetchPinned(url: URL, signal: AbortSignal): Promise<PinnedFetch |
   const dispatcher = pinnedDispatcher(addresses);
   const init = {
     signal,
-    redirect: "manual",
+    redirect: "manual" as const,
     headers: { "user-agent": "NodeRoom/1.0 (+research)" },
     dispatcher,
   };
   try {
-    const res = await fetch(url.toString(), init as unknown as RequestInit);
+    const res = await undiciFetch(url.toString(), init);
     return { res, dispatcher };
   } catch (error) {
     await closeDispatcher(dispatcher);
@@ -181,7 +188,7 @@ async function fetchWithSafeRedirects(start: URL, signal: AbortSignal): Promise<
   throw new Error("too many redirects");
 }
 
-async function readCapped(res: Response, cap: number): Promise<string> {
+async function readCapped(res: FetchResponse, cap: number): Promise<string> {
   if (!res.body) return new TextDecoder().decode((await res.arrayBuffer()).slice(0, cap));
   const reader = res.body.getReader();
   const chunks: Uint8Array[] = [];

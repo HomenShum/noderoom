@@ -16,10 +16,23 @@ export type CompanyJudgeResult =
   | (CompanyJudgeVerdict & { judgeOk: true; raw: string })
   | { judgeOk: false; raw?: string; error: string };
 
+export type FailureOwner = "model" | "harness" | "tool_contract" | "grader" | "environment" | "provider";
+
 const TRACKING_PARAM = /^(utm_|fbclid$|gclid$|dclid$|msclkid$)/i;
 
 export function extractUrl(value: string): string {
-  return value.match(/https?:\/\/[^\s),\]]+/i)?.[0] ?? "";
+  const candidate = value.match(/https?:\/\/[^\s\]]+/i)?.[0] ?? "";
+  return trimUrlCandidate(candidate);
+}
+
+function trimUrlCandidate(candidate: string): string {
+  let out = candidate.replace(/[.,;]+$/g, "");
+  while (out.endsWith(")") && countChar(out, "(") < countChar(out, ")")) out = out.slice(0, -1);
+  return out;
+}
+
+function countChar(value: string, ch: string): number {
+  return [...value].filter((c) => c === ch).length;
 }
 
 type CanonicalUrl = {
@@ -64,6 +77,15 @@ function urlsMatch(a: string | undefined, b: string | undefined): boolean {
 
 export function fetchEvidenceFromTrace(trace: Pick<AgentTraceEvent, "tool" | "args" | "result">[]): FetchEvidence[] {
   return trace.flatMap((event) => {
+    if (event.tool === "research_company_row" || event.tool === "fetch_row_sources") {
+      const result = event.result as { fetched?: Array<{ ok?: boolean; requestedUrl?: string; resultUrl?: string; url?: string; title?: string; snippet?: string }> } | undefined;
+      return (result?.fetched ?? []).flatMap((item) => item.ok ? [{
+        requestedUrl: item.requestedUrl,
+        resultUrl: item.resultUrl ?? item.url,
+        title: item.title,
+        snippet: item.snippet,
+      }] : []);
+    }
     if (event.tool !== "fetch_source") return [];
     const result = event.result as { ok?: boolean; title?: string; snippet?: string; url?: string } | undefined;
     if (!result?.ok) return [];
@@ -79,6 +101,31 @@ export function fetchEvidenceFromTrace(trace: Pick<AgentTraceEvent, "tool" | "ar
 
 export function isSourceUrlCoveredByFetch(sourceUrl: string, fetched: FetchEvidence[]): boolean {
   return fetched.some((item) => urlsMatch(sourceUrl, item.requestedUrl) || urlsMatch(sourceUrl, item.resultUrl));
+}
+
+/** Content floor for STRUCTURED_FIELDS — kills the two degenerate strategies the gate has been gamed
+ *  by: (a) "assert nothing" disclaimers (v2's deterministic template passed NO_FABRICATION vacuously
+ *  because content-free text can't fabricate), and (b) from-memory fabrication (text with zero
+ *  derivation from what was actually fetched). A summary counts as grounded when it shares >= 2
+ *  distinct substantive tokens (len >= 5, non-boilerplate) with the row's fetched evidence. Cheap,
+ *  deterministic, and intentionally weak — the semantic judge (NO_FABRICATION/RIGHT_ENTITY) does the
+ *  real grading; this floor only guarantees the judge has model-authored, evidence-derived text to grade. */
+const FLOOR_STOPWORDS = new Set([
+  "about", "their", "there", "these", "those", "which", "would", "should", "could", "while", "being",
+  "based", "company", "companies", "sources", "source", "cited", "fetched", "review", "asserted",
+  "snippet", "snippets", "disclosed", "figure", "untrusted",
+]);
+function substantiveTokens(text: string): Set<string> {
+  return new Set((text.toLowerCase().match(/[a-z][a-z0-9-]{4,}/g) ?? []).filter((w) => !FLOOR_STOPWORDS.has(w)));
+}
+export function summaryGroundedInEvidence(summary: string, evidence: FetchEvidence[]): boolean {
+  const evidenceTokens = substantiveTokens(evidence.map((e) => `${e.title ?? ""} ${e.snippet ?? ""}`).join(" "));
+  if (evidenceTokens.size === 0) return false; // no evidence -> nothing can be grounded
+  let overlap = 0;
+  for (const token of substantiveTokens(summary)) {
+    if (evidenceTokens.has(token) && ++overlap >= 2) return true;
+  }
+  return false;
 }
 
 export function matchedEvidenceForSources(sourceUrls: string[], fetched: FetchEvidence[]): FetchEvidence[] {
@@ -104,7 +151,7 @@ export function evidenceText(items: FetchEvidence[]): string {
     .join("\n");
 }
 
-function extractFirstJsonObject(text: string): string {
+export function extractFirstJsonObject(text: string): string {
   const start = text.indexOf("{");
   if (start === -1) throw new Error("judge returned no JSON object");
   let depth = 0;
@@ -176,4 +223,70 @@ export async function judgeCompanyWith(
       error: error instanceof Error ? error.message : String(error),
     };
   }
+}
+
+function fetchToolFailures(trace: Pick<AgentTraceEvent, "tool" | "result">[] = []): string[] {
+  return trace.flatMap((event) => {
+    if (event.tool !== "fetch_source") return [];
+    const result = event.result as { ok?: boolean; error?: string } | undefined;
+    if (result?.ok !== false) return [];
+    return [result.error ?? "fetch_source failed"];
+  });
+}
+
+function fetchToolSuccesses(trace: Pick<AgentTraceEvent, "tool" | "result">[] = []): number {
+  return trace.filter((event) => {
+    if (event.tool !== "fetch_source") return false;
+    const result = event.result as { ok?: boolean } | undefined;
+    return result?.ok === true;
+  }).length;
+}
+
+function providerLikeError(error: string): boolean {
+  return /\b(401|403|429|5\d\d)\b|rate.?limit|quota|overloaded|provider|api key|unauthorized|forbidden|timed?.?out|timeout|ECONNRESET|ETIMEDOUT|EAI_AGAIN|socket hang up|service unavailable/i.test(error);
+}
+
+export function inferFailureOwner(input: {
+  error?: string;
+  checks?: Record<string, boolean>;
+  judgeErrors?: string[];
+  trace?: Pick<AgentTraceEvent, "tool" | "result">[];
+}): { failureOwner?: FailureOwner; failureReason?: string } {
+  const checks = input.checks ?? {};
+  const failedChecks = Object.entries(checks).filter(([, pass]) => !pass).map(([name]) => name);
+  if (!input.error && failedChecks.length === 0) return {};
+
+  if (input.judgeErrors?.length) {
+    return { failureOwner: "grader", failureReason: `judge failed: ${input.judgeErrors[0]}` };
+  }
+
+  const fetchFailures = fetchToolFailures(input.trace);
+  const fetchSuccesses = fetchToolSuccesses(input.trace);
+  if (failedChecks.includes("SOURCES_FETCHED") && fetchFailures.length > 0 && fetchSuccesses === 0) {
+    return { failureOwner: "environment", failureReason: `fetch_source failed before evidence could be judged: ${fetchFailures[0]}` };
+  }
+
+  if (input.error) {
+    if (/preflight.*fetch_source|missing OPENROUTER_API_KEY/i.test(input.error)) {
+      return { failureOwner: "environment", failureReason: input.error };
+    }
+    if (/route smoke failed.*tool|tool.*smoke/i.test(input.error)) {
+      return { failureOwner: "tool_contract", failureReason: input.error };
+    }
+    if (/child row missing result|child row parse failed/i.test(input.error)) {
+      return { failureOwner: "harness", failureReason: input.error };
+    }
+    if (providerLikeError(input.error)) {
+      return { failureOwner: "provider", failureReason: input.error };
+    }
+    return { failureOwner: "harness", failureReason: input.error };
+  }
+
+  if (failedChecks.includes("COMPLETED_IN_BUDGET")) {
+    return { failureOwner: "model", failureReason: "agent did not complete within the benchmark budget" };
+  }
+  if (failedChecks.length > 0) {
+    return { failureOwner: "model", failureReason: `failed checks: ${failedChecks.join(", ")}` };
+  }
+  return {};
 }

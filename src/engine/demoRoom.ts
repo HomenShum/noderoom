@@ -29,14 +29,14 @@ export const RESEARCH_COLS = [
 export const RESEARCH_COMPANIES = [
   { id: "rc_anthropic", company: "Anthropic", url: "https://www.anthropic.com", source2Url: "https://en.wikipedia.org/wiki/Anthropic", tier: "A", intent: "AI safety + enterprise API", owner: "Homen", crmStatus: "Target" },
   { id: "rc_ramp", company: "Ramp", url: "https://ramp.com", source2Url: "https://en.wikipedia.org/wiki/Ramp_(company)", tier: "A", intent: "Finance automation", owner: "Priya", crmStatus: "Working" },
-  { id: "rc_mercury", company: "Mercury", url: "https://mercury.com", source2Url: "https://en.wikipedia.org/wiki/Mercury_(banking_company)", tier: "B", intent: "Startup banking", owner: "Homen", crmStatus: "Research" },
+  { id: "rc_mercury", company: "Mercury", url: "https://mercury.com", source2Url: "https://www.forbes.com/companies/mercury/", tier: "B", intent: "Startup banking", owner: "Homen", crmStatus: "Research" },
   { id: "rc_brex", company: "Brex", url: "https://www.brex.com", source2Url: "https://en.wikipedia.org/wiki/Brex", tier: "A", intent: "Spend management", owner: "Priya", crmStatus: "Target" },
 ];
 /** Scripted enrichment targets for the no-keys path (the live LLM researches for real instead). */
 export const RESEARCH_PLAN = [
   { rowId: "rc_anthropic", summary: "AI safety lab; Claude model family; enterprise API + apps.", funding: "Backed by major cloud and venture investors.", headcount: "Large AI lab; exact count requires source review.", recentSignal: "Enterprise AI adoption and model updates.", sourceUrl: "https://www.anthropic.com", source2Url: "https://en.wikipedia.org/wiki/Anthropic" },
   { rowId: "rc_ramp", summary: "Corporate cards + spend management; finance automation.", funding: "Late-stage fintech with multiple growth rounds.", headcount: "Scaled finance automation team.", recentSignal: "Expansion across procurement and AP workflows.", sourceUrl: "https://ramp.com", source2Url: "https://en.wikipedia.org/wiki/Ramp_(company)" },
-  { rowId: "rc_mercury", summary: "Banking + treasury for startups; business accounts.", funding: "Venture-backed startup banking platform.", headcount: "Mid-size startup-focused financial platform.", recentSignal: "Treasury and business banking product growth.", sourceUrl: "https://mercury.com", source2Url: "https://en.wikipedia.org/wiki/Mercury_(banking_company)" },
+  { rowId: "rc_mercury", summary: "Banking + treasury for startups; business accounts.", funding: "Venture-backed startup banking platform.", headcount: "Mid-size startup-focused financial platform.", recentSignal: "Treasury and business banking product growth.", sourceUrl: "https://mercury.com", source2Url: "https://www.forbes.com/companies/mercury/" },
   { rowId: "rc_brex", summary: "Corporate cards + expense management for scaled startups.", funding: "Late-stage fintech with major venture backing.", headcount: "Scaled global fintech team.", recentSignal: "Spend management and travel platform expansion.", sourceUrl: "https://www.brex.com", source2Url: "https://en.wikipedia.org/wiki/Brex" },
 ];
 export const WIKI_DOC = "Living wiki for room state, file inventory, agent sessions, workflows, backend map, and recent trace evidence. It updates from artifacts, sessions, runs, and traces.";

@@ -19,10 +19,10 @@ scenes:
 
   - id: naive-problem
     type: failure_capture
-    status: staged                                    # needs v0-naive tag or staged fixture room
+    status: ready                                     # captured on the labeled naive build
     narration: "But the moment a human and an agent edit the same artifact, the demo stops being simple."
-    plan: replay same-cell concurrent edit WITHOUT CAS (worktree at a pre-CAS commit, or fixture flag)
-    evidence: e2e/three-user-collab.spec.ts#act-4     # the CONVERGING version exists; the clobbering one is the staged shot
+    source: docs/walkthroughs/naive-overwrite.mp4     # branch demo/v0-naive-agent: agents skip locks/CAS/traces
+    evidence: scripts/walkthroughs/specs.ts#naive-overwrite  # Maya's +30.0% silently replaced; probe traceHasAgentEdit=false
 
   - id: code-before-after
     type: code_diff

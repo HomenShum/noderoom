@@ -23,10 +23,18 @@ system; assembled by `scripts/walkthroughs/episode.ts` → `remotion/Episode.tsx
 - Verified via ffprobe (streams/duration) + two rendered stills (video scene + card scene) ✅
 
 ## Machine judge (Gemini 3.5 Flash video understanding)
-**Verdict: publish · 15/16** ([judge.md](./judge.md)) — 2/2 on state clarity, caption sync,
-pacing, audio, proof-feel, safety, restraint; 1/2 on mobile legibility (desktop footage in
-vertical format). One P2 logged: zoom the active sheet area in review-mode scenes — queued for
-the next render cycle, not worth a re-render loop now (judge passed it for publishing).
+**Cut 2 (with failure-replay): verdict publish · 16/16** ([judge.md](./judge.md)) — perfect
+across all 8 dimensions; the prior legibility P2 resolved itself once the conflict arc gave the
+vertical format a story structure the judge could follow. (Cut 1 scored 15/16.)
+
+## Failure-replay — DONE (the missing "pain" beat)
+Branch `demo/v0-naive-agent` (pushed, **never merged, never deployed**): agents skip locks, CAS,
+and traces in the IN-MEMORY engine only, and the naive `/ask` recomputes every cell
+unconditionally. Captured deterministically via the walkthrough pipeline against a worktree dev
+server (`WALKTHROUGH_BASE=http://localhost:5274 … capture.ts naive-overwrite`, spec is `optIn`).
+Probe-verified before filming: Maya commits `+30.0% — Maya's manual calc` → `/ask` → silently
+replaced by `+21.7%`, **zero trace of the agent's write** while its chat message claims the work.
+The clip labels the naive build on screen (honesty rule). `naive-problem` scene: staged → ready.
 
 ## Deferred — with reasons, not vibes
 - **failure-replay (the naive-overwrite clip):** checked history — the FIRST public commit

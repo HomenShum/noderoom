@@ -18,10 +18,10 @@ export default {
     },
     {
       "id": "naive-problem",
-      "kind": "card",
-      "video": null,
+      "kind": "video",
+      "video": "video/naive-problem.mp4",
       "audio": "audio/naive-problem.mp3",
-      "durationInFrames": 213,
+      "durationInFrames": 300,
       "narration": "But the moment a human and an agent edit the same artifact, the demo stops being simple.",
       "card": {
         "title": "The naive demo breaks",
@@ -104,5 +104,5 @@ export default {
       }
     }
   ],
-  "totalFrames": 1644
+  "totalFrames": 1731
 };

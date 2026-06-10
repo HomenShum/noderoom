@@ -80,6 +80,27 @@ export const MODEL_EVAL_SCENARIOS: ModelEvalScenario[] = [
     gate: "denied lock becomes a draft with the target operation; no direct write while locked",
     source: "evals/ladder.ts",
   },
+  {
+    id: "collaboration_l5_large_range",
+    suite: "collaboration",
+    label: "L5 large range without full snapshot",
+    gate: "600-row sheet: load only the narrow window (no full-sheet read, bounded context), touch only the target cell",
+    source: "evals/ladder.ts",
+  },
+  {
+    id: "collaboration_l6_long_horizon",
+    suite: "collaboration",
+    label: "L6 long horizon under compaction + conflicts",
+    gate: "5 targets with 3 injected human conflicts and compacted context; fresh read provenance for every edit, no lock shortcut",
+    source: "evals/ladder.ts",
+  },
+  {
+    id: "collaboration_l7_resume",
+    suite: "collaboration",
+    label: "L7 resume after slice death",
+    gate: "slice 1 dies mid-task (real exhaustion + handoff); a COLD slice 2 finishes only the remaining targets — completed work untouched, a human's between-slice revision left standing",
+    source: "evals/ladder.ts",
+  },
 ];
 
 export const SUPPORTED_MODEL_ROUTES: SupportedModelRoute[] = [
@@ -248,15 +269,15 @@ export function buildModelEvalCommands(options: ModelEvalPlanOptions = {}): Mode
   }
   if (collaborationRoutes.length > 0) {
     commands.push({
-      id: "collaboration_l1_l4",
+      id: "collaboration_l1_l7",
       suite: "collaboration",
-      description: "Run the live L1-L4 lock/CAS/draft collaboration ladder across selected routes.",
+      description: "Run the live L1-L7 collaboration ladder (lock/CAS/draft + scale, long-horizon, and resume-after-slice-death) across selected routes.",
       command: "tsx",
       args: [
         "evals/ladder.ts",
         "--real",
         collaborationRoutes.join(","),
-        "--levels=1-4",
+        "--levels=1-7",
         `--rung-timeout-ms=${options.rungTimeoutMs ?? 540_000}`,
         `--reserve-ms=${options.rungReserveMs ?? 30_000}`,
         "--json-out",

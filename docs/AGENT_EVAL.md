@@ -20,9 +20,20 @@ cases without committing private rows.
 The live company-research benchmark is a separate router/cost harness:
 
 ```bash
-npm run benchmark -- deepseek/deepseek-v4-flash openrouter/free-auto --no-merge --companies=3 --model-timeout-ms=240000 --model-reserve-ms=10000 --row-hard-timeout-ms=270000
+npm run benchmark -- deepseek/deepseek-v4-flash,openrouter/free-auto --no-merge --companies=3 --model-timeout-ms=240000 --model-reserve-ms=10000 --row-hard-timeout-ms=270000
 npm run benchmark:charts
 ```
+
+The supported route bakeoff is generated from a route/scenario registry:
+
+```bash
+npm run eval:model-matrix -- --json-out docs/eval/model-eval-matrix-plan.json
+npm run eval:model-matrix:live
+```
+
+`docs/eval/MODEL_EVAL_MATRIX.md` defines the supported OpenRouter/native routes
+and the scenario split: v3 research synthesis plus L1-L4 collaboration safety.
+Passing one lane is not promotion for the other lane.
 
 Its current verified artifact is `docs/eval/results.json`
 (`company-research-v3-composite-synthesis`). It records route snapshots,
@@ -38,8 +49,11 @@ template grading itself and was invalidated on review; see the README's
 "Why v3 exists"). Latest verified v3 run: `deepseek/deepseek-v4-flash` 9/9 at
 $0.0034/run with real grounded synthesis; `openrouter/free-auto` 7/9, failing
 exactly the content floor + judge. Treat a 9/9 as proof for the background
-research workflow only. Interactive collaboration still needs the L1-L6
-lock/CAS/draft ladder below.
+research workflow only. Interactive collaboration still needs the L1-L7
+lock/CAS/draft ladder below — L7 (RESUME) is the rung that gates checkpointed
+background jobs: a forced slice death mid-task, a human revision landing while
+the agent is dead, and a cold-context continuation that must finish only the
+remaining targets without touching completed or human-revised cells.
 
 ---
 

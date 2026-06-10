@@ -34,6 +34,20 @@ const L6_TARGETS: Record<string, string> = {
   r_ni__variance: "+22.4%",
 };
 
+// L7 · RESUME — slice death + cold continuation. Slice 1 gets the full L6_TARGETS task but a step
+// budget that kills it after the first two targets (a REAL slice death: exhausted=true, handoff
+// emitted). Between slices a human revises an already-completed cell. Slice 2 is a FRESH runAgent
+// (no conversation memory — room state + handoff only) that must finish ONLY the remaining targets:
+// completed work untouched, the human's between-slice revision left standing.
+const L7_REMAINING_TARGETS: Record<string, string> = {
+  r_gp__variance: "+21.7%",
+  r_opex__variance: "+20.5%",
+  r_ni__variance: "+22.4%",
+};
+const L7_HUMAN_REVISED_CELL = "r_rev__variance"; // completed by slice 1, revised by a human between slices
+const L7_HUMAN_REVISED_VALUE = "+19% (analyst reviewed)";
+const L7_COMPLETED_KEPT_CELL = "r_cogs__variance"; // completed by slice 1, must remain its slice-1 value
+
 interface Stats {
   contextChars: number;
   snapshotCalls: number;
@@ -49,6 +63,8 @@ interface Env {
   human: Actor;
   blocker?: { actor: Actor; sessionId: string };
   stats: Stats;
+  /** L7: slice-1 outcome, stashed so checks can assert the death was real and grade slice 2 alone. */
+  resumeState?: { slice1: AgentResult };
 }
 
 interface Rung {
@@ -66,6 +82,16 @@ interface Rung {
   scripted: () => AgentModel;
   check: (result: AgentResult, env: Env) => boolean;
   diagnose?: (result: AgentResult, env: Env) => string;
+  /** L7+: two-slice resume rung. Slice 1 runs rung.goal under slice1MaxSteps (forced death), then
+   *  betweenSlices mutates the room (the world moves while the agent is dead), then a FRESH run
+   *  executes resumeGoal under rung.maxSteps. check()/rungChecks() receive the SLICE-2 result;
+   *  slice 1 is available via env.resumeState. */
+  resume?: {
+    slice1MaxSteps: number;
+    betweenSlices: (env: Env) => void;
+    resumeGoal: (slice1: AgentResult) => string;
+    scriptedSlice2: () => AgentModel;
+  };
 }
 
 interface RuntimeBudget {
@@ -407,6 +433,41 @@ const RUNGS: Rung[] = [
       return `missing=[${missing.join(", ")}] conflicts=${conflicts(r)} compaction=${used(r, "compaction")} locked=${used(r, "propose_lock")} provenance=${editReadProvenance(r)} immediateRead=${readImmediatelyBeforeEdits(r)} touchedOnly=${onlyTouched(r, new Set(Object.keys(L6_TARGETS)))} exhausted=${r.exhausted}`;
     },
   },
+  {
+    id: "L7_resume",
+    level: 7,
+    label: "RESUME (slice death + cold continuation)",
+    goal: `Set these exact Q3 variance values without locking: r_rev__variance=+24%, r_cogs__variance=+27.5%, r_gp__variance=+21.7%, r_opex__variance=+20.5%, r_ni__variance=+22.4%. Do not call propose_lock. Before every edit_cell call, call read_range for that exact cell and use the version returned by that read.`,
+    maxSteps: 18, // slice-2 budget; slice 1 dies at resume.slice1MaxSteps by design
+    resume: {
+      // 5 steps = read+edit r_rev, read+edit r_cogs, read r_gp → cut. Two targets done, three pending,
+      // exhausted=true, handoff emitted — a real slice death, not a simulated flag.
+      slice1MaxSteps: 5,
+      betweenSlices: (env) => injectHumanEdit(env, L7_HUMAN_REVISED_CELL, L7_HUMAN_REVISED_VALUE),
+      resumeGoal: (slice1) =>
+        `You are RESUMING an interrupted agent job in this room. The previous run died mid-task` +
+        (slice1.handoff?.summary ? ` — its handoff said: "${String(slice1.handoff.summary).slice(0, 200)}"` : "") +
+        `. REMAINING targets (set exactly these): r_gp__variance=+21.7%, r_opex__variance=+20.5%, r_ni__variance=+22.4%. ` +
+        `r_rev__variance and r_cogs__variance were ALREADY COMPLETED by the previous run — do NOT touch them, even if a ` +
+        `human has revised their values since (human revisions stand). Do not call propose_lock. Before every edit_cell ` +
+        `call, call read_range for that exact cell and use the version returned by that read.`,
+      scriptedSlice2: () => scriptedModel(recomputeVariancePlan(L7_REMAINING_TARGETS, { lock: false }), "scripted-resume"),
+    },
+    scripted: () => scriptedModel(recomputeVariancePlan(L6_TARGETS, { lock: false }), "scripted-slice1"),
+    check: (r, env) =>
+      Boolean(env.resumeState?.slice1.exhausted) &&
+      allTargetsSet(env, L7_REMAINING_TARGETS) &&
+      cellValue(env, L7_COMPLETED_KEPT_CELL) === L6_TARGETS[L7_COMPLETED_KEPT_CELL] &&
+      cellValue(env, L7_HUMAN_REVISED_CELL) === L7_HUMAN_REVISED_VALUE &&
+      onlyTouched(r, new Set(Object.keys(L7_REMAINING_TARGETS))) &&
+      editReadProvenance(r) &&
+      !used(r, "propose_lock") &&
+      !r.exhausted,
+    diagnose: (r, env) => {
+      const missing = Object.entries(L7_REMAINING_TARGETS).filter(([id, value]) => cellValue(env, id) !== value).map(([id]) => `${id}=${cellValue(env, id) || "(empty)"}`);
+      return `slice1Exhausted=${Boolean(env.resumeState?.slice1.exhausted)} missing=[${missing.join(", ")}] keptCompleted=${cellValue(env, L7_COMPLETED_KEPT_CELL)} humanRevision=${cellValue(env, L7_HUMAN_REVISED_CELL)} touchedOnlyRemaining=${onlyTouched(r, new Set(Object.keys(L7_REMAINING_TARGETS)))} provenance=${editReadProvenance(r)} locked=${used(r, "propose_lock")} exhausted=${r.exhausted}`;
+    },
+  },
 ];
 
 function rungChecks(rung: Rung, result: AgentResult, env: Env): Record<string, boolean> {
@@ -457,6 +518,17 @@ function rungChecks(rung: Rung, result: AgentResult, env: Env): Record<string, b
         touchedOnlyTargets: onlyTouched(result, new Set(Object.keys(L6_TARGETS))),
         notExhausted: !result.exhausted,
       };
+    case "L7_resume":
+      return {
+        sliceDeathReal: Boolean(env.resumeState?.slice1.exhausted),
+        remainingTargetsSet: allTargetsSet(env, L7_REMAINING_TARGETS),
+        completedWorkKept: cellValue(env, L7_COMPLETED_KEPT_CELL) === L6_TARGETS[L7_COMPLETED_KEPT_CELL],
+        humanRevisionSurvived: cellValue(env, L7_HUMAN_REVISED_CELL) === L7_HUMAN_REVISED_VALUE,
+        resumeTouchedOnlyRemaining: onlyTouched(result, new Set(Object.keys(L7_REMAINING_TARGETS))),
+        freshReadProvenance: editReadProvenance(result),
+        noLockShortcut: !used(result, "propose_lock"),
+        notExhausted: !result.exhausted,
+      };
     default:
       return {
         completed: rung.check(result, env),
@@ -486,6 +558,7 @@ function checkFailurePointers(rung: Rung, result: AgentResult, checks: Record<st
   point("readImmediatelyBeforeWrite", readImmediatelyBeforeEditsViolation(result));
   if (rung.id === "L5_large_range") point("touchedOnlyTarget", onlyTouchedViolation(result, new Set(["lr_0420__variance"])));
   if (rung.id === "L6_long_horizon") point("touchedOnlyTargets", onlyTouchedViolation(result, new Set(Object.keys(L6_TARGETS))));
+  if (rung.id === "L7_resume") point("resumeTouchedOnlyRemaining", onlyTouchedViolation(result, new Set(Object.keys(L7_REMAINING_TARGETS))));
   return out;
 }
 
@@ -509,22 +582,51 @@ async function runRung(rung: Rung, maker: (rung: Rung) => AgentModel, modelName:
   const t0 = Date.now();
   const deadlineAt = budget.rungTimeoutMs ? t0 + budget.rungTimeoutMs : undefined;
   try {
-    const result = await runAgent({
+    const runOnce = (goal: string, m: AgentModel, maxSteps: number) => runAgent({
       rt,
-      goal: rung.goal,
-      model: trackedModel,
+      goal,
+      model: m,
       tools: rung.tools ?? ROOM_TOOLS,
-      maxSteps: rung.maxSteps ?? 18,
+      maxSteps,
       contextBuilder,
       compaction: rung.compaction,
       deadlineAt,
       reserveMs: budget.reserveMs,
       onTrace: (event) => rung.onTrace?.(event, env),
     });
+    let result: AgentResult;
+    let slice1: AgentResult | undefined;
+    if (rung.resume) {
+      // Slice 1: the full task under a fatal step budget — must die mid-task for the rung to be valid.
+      slice1 = await runOnce(rung.goal, trackedModel, rung.resume.slice1MaxSteps);
+      env.resumeState = { slice1 };
+      // The world moves while the agent is dead.
+      rung.resume.betweenSlices(env);
+      // Slice 2: a COLD continuation — fresh model context; only room state + the handoff text carry over.
+      const slice2Base = modelName === "scripted" ? rung.resume.scriptedSlice2() : maker(rung);
+      const tracked2: AgentModel = {
+        get name() { return slice2Base.name; },
+        async next(input) {
+          const step = await slice2Base.next(input);
+          resolvedModels.push(slice2Base.name);
+          return step;
+        },
+      };
+      result = await runOnce(rung.resume.resumeGoal(slice1), tracked2, rung.maxSteps ?? 18);
+    } else {
+      result = await runOnce(rung.goal, trackedModel, rung.maxSteps ?? 18);
+    }
     const resolvedModel = resolvedModels.at(-1) ?? trackedModel.name;
+    // Checks grade the slice-2 result (slice 1 is asserted via env.resumeState); the ARTIFACT carries both
+    // traces with a boundary marker so a failing live route can be diagnosed across the death.
     const checks = rungChecks(rung, result, env);
     const checkDetails = checkFailurePointers(rung, result, checks);
     const pass = rung.check(result, env) && Object.values(checks).every(Boolean);
+    const combinedTrace = slice1
+      ? [...slice1.trace, { step: -1, tool: "slice_boundary", args: { forced: true, slice1Exhausted: slice1.exhausted }, result: { handoff: slice1.handoff?.summary ?? null }, ms: 0 } as AgentTraceEvent, ...result.trace]
+      : result.trace;
+    const cost = (result.usage ? priceRun(resolvedModel, result.usage.inputTokens, result.usage.outputTokens) : 0)
+      + (slice1?.usage ? priceRun(resolvedModel, slice1.usage.inputTokens, slice1.usage.outputTokens) : 0);
     return {
       pass,
       checkDetails,
@@ -534,13 +636,13 @@ async function runRung(rung: Rung, maker: (rung: Rung) => AgentModel, modelName:
       rung: rung.id,
       level: rung.level,
       ms: Date.now() - t0,
-      tools: result.trace.filter((t) => t.tool !== "compaction").length,
-      cost: result.usage ? priceRun(resolvedModel, result.usage.inputTokens, result.usage.outputTokens) : 0,
+      tools: combinedTrace.filter((t) => t.tool !== "compaction" && t.tool !== "slice_boundary").length,
+      cost,
       stopReason: result.stopReason,
       handoff: result.handoff?.summary,
       reason: pass ? "" : rung.diagnose?.(result, env) ?? result.handoff?.summary ?? "failed",
       checks,
-      trace: result.trace,
+      trace: combinedTrace,
     };
   } catch (error) {
     const resolvedModel = resolvedModels.at(-1) ?? trackedModel.name;

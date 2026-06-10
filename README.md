@@ -10,7 +10,7 @@ through the same versioned concurrency control.**
 
 `multi-panel room` · `public + private agents` · `affected-range lock` · `draft-for-merge` · `per-room traces` · `live Convex + real LLM`
 
-[Why Convex](#why-convex-and-why-not) · [Audience fluency](#audience-world-proof-artifacts) · [Lessons](#lessons-from-building-noderoom) · [Sequences](#live-collaboration-sequence) · [Why & HALO](docs/WHY_NODEAGENT_AND_HALO.md) · [Quickstart](#quickstart) · [Agent runtime](docs/AGENT_RUNTIME.md) · [Agent eval](docs/AGENT_EVAL.md) · [Agent wiki](docs/AGENT_WIKI.md) · [Design](docs/DESIGN.md) · [Stack](docs/STACK.md) · [Walkthrough](docs/WALKTHROUGH.md) · [Architecture](docs/ARCHITECTURE.md) · [Open gaps](docs/GAPS_NOT_DONE.md)
+[Why Convex](#why-convex-and-why-not) · [Audience fluency](#audience-world-proof-artifacts) · [Lessons](#lessons-from-building-noderoom) · [Sequences](#live-collaboration-sequence) · [Why & HALO](docs/WHY_NODEAGENT_AND_HALO.md) · [Quickstart](#quickstart) · [Agent runtime](docs/AGENT_RUNTIME.md) · [Agent eval](docs/AGENT_EVAL.md) · [Model eval matrix](docs/eval/MODEL_EVAL_MATRIX.md) · [Agent wiki](docs/AGENT_WIKI.md) · [Design](docs/DESIGN.md) · [Stack](docs/STACK.md) · [Walkthrough](docs/WALKTHROUGH.md) · [Architecture](docs/ARCHITECTURE.md) · [Open gaps](docs/GAPS_NOT_DONE.md)
 
 [Interview notes](docs/INTERVIEW_NOTES.md) · [Over-engineering audit](docs/OVERENGINEERING_AUDIT.md) · [Improvement roadmap](docs/IMPROVEMENT_ROADMAP.md) · [Operating budget](docs/OPERATING_BUDGET.md) · [Audience workloads](docs/AUDIENCE_WORKLOADS.md)
 
@@ -294,7 +294,7 @@ and [`evals/professionalWorkflows.ts`](evals/professionalWorkflows.ts).
 3. **Database OCC -> app-level no-clobber.** Convex optimistic concurrency
    protects transactions, not stale intent. NodeRoom still needs per-element
    versions. A lock prevents races; CAS catches stale writes; a blocked agent
-   drafts instead of forcing. The L1-L6 ladder in [`evals/ladder.ts`](evals/ladder.ts)
+   drafts instead of forcing. The L1-L7 ladder in [`evals/ladder.ts`](evals/ladder.ts)
    makes that measurable.
 
 4. **Scalar spreadsheet values -> evidence-bearing cell payloads.** GTM and
@@ -646,7 +646,7 @@ Research benchmark route: `deepseek/deepseek-v4-flash` is the cheapest current v
 Full QA ledger: [`docs/PRODUCTION_GUARANTEE_MATRIX.md`](docs/PRODUCTION_GUARANTEE_MATRIX.md).
 <!-- QA_COCKPIT_END -->
 
-## The collaboration ladder (L1–L6)
+## The collaboration ladder (L1–L7)
 
 **Captured live from the running app.** These are the **actual NodeRoom DOM** (memory mode),
 screenshotted frame-by-frame by a Playwright run
@@ -669,8 +669,17 @@ The per-rung previews below are **trace replays** — the same agent-runtime too
 `gemini-3.5-flash` run, L4/L6 from the deterministic engine) drawn into a clean sheet by
 [`scripts/render-workflow-preview.ts`](scripts/render-workflow-preview.ts), so each rung has an isolated
 visual of the `lock → CAS → draft → smart-merge` protocol the [HALO loop](#agent-improvement-loop)
-re-verifies every cycle. The rungs L1–L6 are the [`evals/ladder.ts`](evals/ladder.ts) bar that turns
+re-verifies every cycle. The rungs L1–L7 are the [`evals/ladder.ts`](evals/ladder.ts) bar that turns
 "completed" into "right tool, no clobber, in budget."
+
+**L7 · RESUME (slice death + cold continuation)** is the newest rung and tests the promise long-running
+jobs actually depend on: slice 1 gets the full task but a step budget that kills it mid-way (a real
+exhaustion + handoff, not a simulated flag); while the agent is dead a human revises one of its
+completed cells; slice 2 is a **fresh context** — no conversation memory, only room state and the
+handoff — and must finish only the remaining targets. Pass requires: completed work untouched, the
+human's between-slice revision left standing, fresh read provenance for every slice-2 edit, and no
+lock shortcut. This is the rung that separates "can edit a sheet" from "can be trusted with a
+checkpointed background job."
 
 ### Evidence levels
 
@@ -761,7 +770,7 @@ feedback, reusable evals, a validation gate, and a Codex handoff — then it rep
 |---|---|---|---|
 | 1 | **Trace** | every agent run records a replayable trace (tools, args, results, versions) | `writeTraceArtifact` (`evals/ladder.ts`) · `agentSteps` (convex) |
 | 2 | **Feedback** | three sources score the run: trace signals, human, LLM-judge | trace checks · review · judge |
-| 3 | **Evals** | each rung raises the bar from "completed" to "right tool, no clobber, in budget" | `evals/ladder.ts` (L1–L6) · `tests/workflowEvals.test.ts` · `evals/creditEval.ts` |
+| 3 | **Evals** | each rung raises the bar from "completed" to "right tool, no clobber, in budget" | `evals/ladder.ts` (L1–L7) · `tests/workflowEvals.test.ts` · `evals/creditEval.ts` |
 | 4 | **Record** | append-only store keyed by `(commit + worktree, case, ts)` with per-check booleans + trace ref | `evals/evalStore.ts` → `docs/eval/eval-runs.jsonl` |
 | 5 | **Gate** | cross-version diff names the degraded case **and the exact check that broke** | `npm run eval:diff` (exit 1 on regression) |
 | 6 | **Handoff** | the failing trace + ranked recommendations become a Codex / Claude Code packet | [`docs/WHY_NODEAGENT_AND_HALO.md`](docs/WHY_NODEAGENT_AND_HALO.md) handoff contract |
@@ -777,7 +786,7 @@ npm run agent:improve -- --ui-media=docs/eval/ui-recordings/<recording-or-screen
 ```
 
 Run the whole loop continuously until a clock deadline. Deterministic-only is the default safe overnight
-shape; full-live adds provider spend, the V2 benchmark, and the free-auto router ladder:
+shape; full-live adds provider spend, the current benchmark contract, and the free-auto router ladder:
 
 ```bash
 npm run halo:overnight -- --skip-e2e --skip-live --until "2026-06-09T17:00:00Z" --sleep-minutes 25
@@ -852,6 +861,15 @@ That contrast is the point: the gate now **differentiates synthesis quality** in
 harness choreography. The cheapest route clearing the full gate is promotion evidence for the
 background research workflow only; collaboration routing still uses the lock/CAS/draft ladder.
 Run `npm run benchmark` or `npm run benchmark:free` to refresh it.
+
+The broader supported-model bakeoff is tracked separately in
+[`docs/eval/MODEL_EVAL_MATRIX.md`](docs/eval/MODEL_EVAL_MATRIX.md). Dry-run the
+whole route/scenario plan with `npm run eval:model-matrix -- --json-out
+docs/eval/model-eval-matrix-plan.json`; run it live with
+`npm run eval:model-matrix:live` when you intentionally want the full
+OpenRouter/native route spend. That matrix covers the v3 research task plus
+L1-L4 collaboration scenarios, so a model cannot be promoted from research
+quality alone.
 
 ![Cost vs quality](docs/eval/cost-quality.svg)
 ![Leaderboard](docs/eval/leaderboard.svg)

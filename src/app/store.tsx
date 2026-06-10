@@ -290,12 +290,11 @@ export function EngineStoreProvider({ roomId, children }: { roomId: string; me: 
         });
         return;
       }
+      // NAIVE-DEMO (demo/v0-naive-agent): the naive agent recomputes EVERY variance cell
+      // unconditionally — it assumes it owns the latest state, so a human's freshly-committed
+      // figure is just another cell to overwrite. (Main filters to empty cells.)
       const targets: Record<string, string> = {};
-      for (const rid of Object.keys(VARIANCE)) if (!sheet.elements[`${rid}__variance`]?.value) targets[`${rid}__variance`] = VARIANCE[rid];
-      if (Object.keys(targets).length === 0) {
-        engine.postMessage({ roomId, channel: "public", author: actor, text: "Every variance cell is already filled — nothing to recompute.", clientMsgId: crypto.randomUUID(), kind: "agent" });
-        return;
-      }
+      for (const rid of Object.keys(VARIANCE)) targets[`${rid}__variance`] = VARIANCE[rid];
       const rt = new InMemoryRoomTools(engine, roomId, sheet.id, actor, sess.id);
       const result = await runHarness({ rt, goal, model: scriptedModel(recomputeVariancePlan(targets, { lock: true })), tools: ROOM_TOOLS, maxSteps: 16 });
       // The scripted plan narrates via the model's text, not the say tool — post that summary to the room

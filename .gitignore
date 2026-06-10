@@ -34,3 +34,4 @@ playwright/.cache/
 # Walkthrough capture intermediates (regenerable: npm run walkthroughs)
 remotion/public/frames/
 NUL
+docs/walkthroughs/*.mp4

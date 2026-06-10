@@ -1,5 +1,19 @@
 # Friction log — append-only
 
+## 2026-06-09 - LIVE verification of the three red fixes (noderoom.live + deployed Convex)
+
+| Fix | Live evidence | Status |
+|---|---|---|
+| Undo (Ctrl/Cmd+Z) | Two SEPARATE browser contexts, fresh prod room: hand edit → Undo → reverted in the host **and** in the member view (member sheet presence-asserted before the claim) — real CAS round-trip, not memory mode. | ✅ proven |
+| In-cell approve/reject | Live `/ask` with auto-allow off: 2 inline chips rendered at the cells, **coalesced (no duplicate chips per cell)**, inline approve applied `+24.0%` host-side. Member-view chip fan-out encoded as eval Act 9 (rides the same `listProposals` subscription proven cross-view in Acts 2–4). | ✅ proven host-side · Act 9 covers cross-view |
+| Re-import upsert | Deterministic mutations on the deployed backend: add "Acme Corp" → set sourced `summary` → re-import same company/domain → **1 row group** (no `acme_1`), `owner` updated to the new value, **sourced summary survived**. | ✅ proven |
+
+Probe lessons (so the next run doesn't repeat them): use one browser context per persona (shared
+localStorage makes page 2 reuse page 1's session); assert an element EXISTS before any
+"doesn't-contain-X" claim (negative predicates pass vacuously on a missing sheet); section every
+probe with its own try/catch or one failure erases all other evidence. 2 of 4 live `/ask` runs
+produced nothing (provider flake) — review-mode acts stay best-effort like eval Acts 5/7.
+
 ## 2026-06-09 - Resolution pass for three red findings
 
 | Finding | Resolution | Evidence |

@@ -26,6 +26,8 @@
     "benchmark": "tsx scripts/benchmark/run.ts",
     "benchmark:free": "tsx scripts/benchmark/run.ts openrouter/free-auto --free-auto-top=5 --no-merge --model-timeout-ms=180000 --model-reserve-ms=15000 --row-hard-timeout-ms=210000",
     "benchmark:charts": "tsx scripts/benchmark/charts.ts",
+    "eval:model-matrix": "tsx scripts/model-eval-matrix.ts",
+    "eval:model-matrix:live": "tsx scripts/model-eval-matrix.ts --live --allow-failures --json-out docs/eval/model-eval-matrix-plan.json",
     "openrouter:free": "tsx scripts/openrouter-free-discover.ts",
     "provider-parser:smoke": "tsx scripts/provider-parser-smoke.ts",
     "agent:improve": "tsx scripts/agent-improvement-loop.ts",

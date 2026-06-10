@@ -110,7 +110,17 @@ export const runRoomAgent = action({
     if (monthly.truncated || monthly.totalUsd >= monthlyCapUsd) {
       throw new Error(`global_monthly_spend_cap:spentUsd=${monthly.totalUsd.toFixed(2)}:rooms=${monthly.distinctRooms}:runs=${monthly.runCount}`);
     }
-    const model = agentModel(process.env.AGENT_MODEL ?? "gemini-3.5-flash"); // current recorded L1-L4 collaboration-safe fallback; override via AGENT_MODEL.
+    // Route promotion is per-LANE, by evidence (never price alone):
+    //  - research (background synthesis): deepseek-v4-flash — first route to clear the v3 composite-
+    //    synthesis benchmark 9/9 at $0.0034/run (docs/eval/results.json; ~300x cheaper than gemini-3.5-flash's
+    //    measured $1.10/task). Evidence covers the fetch->synthesize->write shape ONLY.
+    //  - interactive collaboration (lock/CAS/draft): stays on gemini-3.5-flash, the only route with a
+    //    recorded L1-L4 collaboration-ladder pass. flash gets this lane only after it passes the ladder.
+    const model = agentModel(
+      a.mode === "research"
+        ? (process.env.AGENT_RESEARCH_MODEL ?? "deepseek/deepseek-v4-flash")
+        : (process.env.AGENT_MODEL ?? "gemini-3.5-flash"),
+    );
     const requestedSteps = a.maxSteps ?? (a.mode === "research" ? 60 : 10);
     const maxSteps = Math.max(1, Math.min(requestedSteps, a.mode === "research" ? 80 : 24));
     const actionBudgetMs = envNumber("AGENT_ACTION_BUDGET_MS", CONVEX_ACTION_LIMIT_MS, 60_000, CONVEX_ACTION_LIMIT_MS);

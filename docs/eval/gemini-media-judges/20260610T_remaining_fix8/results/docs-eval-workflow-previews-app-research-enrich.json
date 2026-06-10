@@ -1,0 +1,73 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-app-research-enrich",
+    "class": "workflow_preview",
+    "title": "App Research Enrich",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\app-research-enrich.gif",
+    "relPath": "docs/eval/workflow-previews/app-research-enrich.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T_remaining_fix8/docs-eval-workflow-previews-app-research-enrich.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/app-research-enrich.gif",
+  "bytes": 54697,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The workflow preview clearly demonstrates the account enrichment feature, showing the transition from pending to complete status with updated research data and trace logs.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Shows the transition of account statuses from pending to complete with enriched research text."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Captures the initial pending state, the enrichment action, and the final populated table."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark-themed spreadsheet layout with structured columns and a visible trace panel."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with the NodeRoom paradigm of spreadsheets, agents, and real-time execution traces."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Authentic UI capture showing actual data changes and detailed trace logs."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Table headers, status badges, and trace logs are readable at standard preview sizes."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for automated GTM research and data enrichment workflows."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately reflects the execution steps and state changes via the trace log."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet interface with account rows",
+      "Enrich button interaction",
+      "Status change from PENDING to COMPLETE",
+      "Populated research text cells",
+      "Room trace log updating from 5 to 57 events"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:02",
+        "severity": "P2",
+        "observed": "The video remains static from 00:02 to 00:07 after the enrichment completes.",
+        "fix": "Trim the trailing static frames to reduce file size and keep the loop snappy."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch NodeRoom's research agent enrich pending accounts with GTM data and log the execution trace in real-time."
+  },
+  "score": 8,
+  "maxScore": 16
+}

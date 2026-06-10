@@ -1,0 +1,72 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-ask-spreadsheet-cas",
+    "class": "workflow_preview",
+    "title": "Ask Spreadsheet Cas",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\ask-spreadsheet-cas.gif",
+    "relPath": "docs/eval/workflow-previews/ask-spreadsheet-cas.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T_remaining_fix8/docs-eval-workflow-previews-ask-spreadsheet-cas.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/ask-spreadsheet-cas.gif",
+  "bytes": 163734,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The workflow preview demonstrates an agent interacting with a spreadsheet, locking cells, and communicating in public and private chats. The flow is visible but fast-paced.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Shows spreadsheet cell updates, agent locking states, and chat logs, though the multi-panel layout requires close attention."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Captures the transition from public chat request to spreadsheet locking and private agent response."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Dark mode UI is structured, but the dense layout with multiple active panels feels slightly crowded."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with the NodeRoom paradigm of spreadsheets, public/private chats, and room traces."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Appears to be a direct capture of the application interface during an execution trace."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Text in the chat panels and spreadsheet cells is readable at standard resolution, though small."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Demonstrates financial spreadsheet auditing and multi-agent collaboration, highly relevant to business users."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Shows real-time UI state changes, locking banners, and trace logs without simulated overlays."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet cell locking state banner",
+      "Public chat log with Room NodeAgent",
+      "Private chat log with Your NodeAgent",
+      "Room trace logs at the bottom of the screen"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:05",
+        "severity": "P2",
+        "observed": "The transition to the private chat panel on the right happens abruptly, making it easy to miss the context shift.",
+        "fix": "Add a brief pause or visual transition indicator when the private chat panel updates."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch NodeAgent lock variance columns, update spreadsheet values, and coordinate across public and private channels."
+  },
+  "score": 8,
+  "maxScore": 16
+}

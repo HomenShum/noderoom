@@ -16,7 +16,7 @@ type Feature = {
 type Matrix = {
   features: Feature[];
   modelLadder: {
-    source: string;
+    source: string | string[];
     routes: Array<{ modelRoute: string; provider: string; l1: string; l2: string; l3: string; l4: string; recommendedUse?: string }>;
   };
 };
@@ -50,7 +50,10 @@ describe("production QA matrix", () => {
   });
 
   it("keeps the live model ladder gate explicit", () => {
-    expect(existsSync(join(root, matrix.modelLadder.source))).toBe(true);
+    const sources = Array.isArray(matrix.modelLadder.source) ? matrix.modelLadder.source : [matrix.modelLadder.source];
+    for (const source of sources) {
+      expect(existsSync(join(root, source)), `model ladder source missing: ${source}`).toBe(true);
+    }
     const statuses = new Set(["PASS", "FAIL", "TIMEOUT", "SKIP"]);
 
     for (const route of matrix.modelLadder.routes) {

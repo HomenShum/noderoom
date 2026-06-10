@@ -1,0 +1,72 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-sheet-undo",
+    "class": "readme_walkthrough",
+    "title": "Sheet Undo",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\sheet-undo.gif",
+    "relPath": "docs/walkthroughs/sheet-undo.gif",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:sheet-undo"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T_remaining_fix8/docs-walkthroughs-sheet-undo.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/walkthroughs/sheet-undo.gif",
+  "bytes": 925918,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough clearly demonstrates the spreadsheet cell editing and subsequent undo functionality, showing how edits are versioned and reverted safely in a multiplayer environment.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.4,
+        "evidence": "The video clearly shows a user entering a value into a spreadsheet cell and then clicking the undo button to revert it."
+      },
+      "workflowCompleteness": {
+        "score": 1.5,
+        "evidence": "Demonstrates the entire flow: empty cell, entering '+20.5%', committing, and then undoing the action to revert the state."
+      },
+      "visualDesign": {
+        "score": 1.3,
+        "evidence": "The dark mode interface is clean and well-structured, though the layout is dense with multiple panels."
+      },
+      "consistency": {
+        "score": 1.4,
+        "evidence": "Aligns perfectly with NodeRoom's collaborative spreadsheet and versioned room trace concept."
+      },
+      "evidenceQuality": {
+        "score": 1.4,
+        "evidence": "Captured directly from a live UI session with realistic data and interactive steps."
+      },
+      "legibility": {
+        "score": 1.2,
+        "evidence": "The spreadsheet cell values and room trace logs are readable, though the font size is somewhat small."
+      },
+      "professionalRelevance": {
+        "score": 1.3,
+        "evidence": "Highly relevant for showing robust state management and audit trails in collaborative financial tools."
+      },
+      "productionHonesty": {
+        "score": 1.4,
+        "evidence": "Accurately shows that undoing an action increments the version state (v2 to v3) rather than pretending to erase history."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet cell editing",
+      "Undo button interaction",
+      "Version state change from v2 to v3 in the room trace"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:09",
+        "severity": "P2",
+        "observed": "The 'Undo' button and version text are small and might be easily missed without the overlay caption.",
+        "fix": "Consider adding a subtle visual highlight or zoom effect on the version control panel when undo is clicked."
+      }
+    ],
+    "suggestedReadmeCaption": "NodeRoom's versioned spreadsheet allows seamless cell edits and safe multi-user undo operations, tracked directly in the room history."
+  },
+  "score": 10.9,
+  "maxScore": 16
+}

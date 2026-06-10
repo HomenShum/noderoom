@@ -1,0 +1,64 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l6-long-horizon",
+    "class": "workflow_preview",
+    "title": "L6 Long Horizon",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l6-long-horizon.gif",
+    "relPath": "docs/eval/workflow-previews/l6-long-horizon.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T_remaining_fix8/docs-eval-workflow-previews-l6-long-horizon.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l6-long-horizon.gif",
+  "bytes": 252349,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The animation clearly demonstrates a multi-cell conflict resolution and compaction workflow over a long horizon, showing step-by-step agent reads, conflicts, and CAS writes.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Demonstrates CAS conflict handling and state compaction across multiple financial cells."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Shows the entire sequence from initial state through multiple conflicts and final committed values."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark-themed UI with clear highlighting of active rows and status changes."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with the spreadsheet-based agent execution and trace logging narrative."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Appears to be a high-fidelity trace replay of an actual execution run."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Text and status indicators are readable, though the bottom status bar is slightly small."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for engineering audiences interested in multi-agent consistency and transactional safety."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Explicitly shows conflicts and retries rather than a perfect, error-free path."
+      }
+    },
+    "observedEvidence": [
+      "Step-by-step execution trace from step 0 to 31",
+      "CAS conflict detection and resolution UI indicators",
+      "Compaction phase transitions"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Watch NodeRoom's AI agent resolve multi-cell write conflicts using CAS (Compare-And-Swap) and context compaction over a long-horizon financial update."
+  },
+  "score": 8,
+  "maxScore": 16
+}

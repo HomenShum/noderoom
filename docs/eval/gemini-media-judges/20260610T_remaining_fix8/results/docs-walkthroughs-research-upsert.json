@@ -1,0 +1,72 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-research-upsert",
+    "class": "readme_walkthrough",
+    "title": "Research Upsert",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\research-upsert.gif",
+    "relPath": "docs/walkthroughs/research-upsert.gif",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:research-upsert"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T_remaining_fix8/docs-walkthroughs-research-upsert.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/walkthroughs/research-upsert.gif",
+  "bytes": 1306794,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough clearly demonstrates the research upsert feature, showing how importing an existing account updates the row instead of creating a duplicate.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Demonstrates importing a new account and then updating it with new data, showing the upsert behavior."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Shows the initial state, the import action, the resulting new row, and the subsequent update action."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark mode interface with clear table layout and highlighted action buttons."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with NodeRoom's GTM research theme, featuring accounts, GTM status, and room traces."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Captured directly from the running application, showing real-time UI updates and trace logs."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Text in the table and the import modal is readable at standard browser resolutions."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for GTM teams managing account lists and avoiding duplicate entries."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately depicts the upsert logic without simulating or masking the UI behavior."
+      }
+    },
+    "observedEvidence": [
+      "Import accounts modal",
+      "Table row insertion and update",
+      "Room trace logging the import events"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:06",
+        "severity": "P2",
+        "observed": "The text pasting in the import modal is instantaneous, which looks slightly abrupt.",
+        "fix": "Add a slight typing delay or transition to make the input feel more natural."
+      }
+    ],
+    "suggestedReadmeCaption": "Import and upsert GTM accounts seamlessly without creating duplicate records."
+  },
+  "score": 8,
+  "maxScore": 16
+}

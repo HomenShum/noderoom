@@ -1,0 +1,73 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-app-variance-fill",
+    "class": "workflow_preview",
+    "title": "App Variance Fill",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\app-variance-fill.gif",
+    "relPath": "docs/eval/workflow-previews/app-variance-fill.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T_remaining_fix8/docs-eval-workflow-previews-app-variance-fill.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/app-variance-fill.gif",
+  "bytes": 99637,
+  "judge": {
+    "verdict": "publish",
+    "summary": "Excellent workflow preview demonstrating automated variance calculation via collaborative agents with real-time trace updates.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.6,
+        "evidence": "Clearly shows agents locking cells, calculating variances, and updating the sheet."
+      },
+      "workflowCompleteness": {
+        "score": 1.7,
+        "evidence": "Captures the entire flow from unpopulated cells to active execution and final merged state."
+      },
+      "visualDesign": {
+        "score": 1.5,
+        "evidence": "Polished dark-mode UI with clean layout, though trace text is slightly compact."
+      },
+      "consistency": {
+        "score": 1.6,
+        "evidence": "Perfectly aligns with NodeRoom's spreadsheet, agent collaboration, and trace log paradigm."
+      },
+      "evidenceQuality": {
+        "score": 1.7,
+        "evidence": "Authentic UI capture showing real-time state changes and trace logs."
+      },
+      "legibility": {
+        "score": 1.4,
+        "evidence": "Main spreadsheet is highly legible; trace log text is readable but small."
+      },
+      "professionalRelevance": {
+        "score": 1.6,
+        "evidence": "Highly relevant for financial analysts and automation engineers."
+      },
+      "productionHonesty": {
+        "score": 1.6,
+        "evidence": "Accurately depicts agent locking mechanisms and trace logs without overpromising."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet UI with Q2/Q3 financial data",
+      "Run collaboration button trigger",
+      "Agent locking indicators (RA icon)",
+      "Real-time trace log updates",
+      "Completed variance calculations (+24%, +27.5%, etc.)"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:01",
+        "severity": "P2",
+        "observed": "Trace log text is quite small and may be hard to read on smaller mobile screens.",
+        "fix": "Slightly increase the font size of the trace log panel if possible."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch NodeRoom agents collaborate to automatically calculate and merge financial variance analysis directly into your spreadsheet."
+  },
+  "score": 12.7,
+  "maxScore": 16
+}

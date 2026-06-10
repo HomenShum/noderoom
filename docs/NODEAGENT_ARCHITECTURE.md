@@ -1,10 +1,12 @@
 # NodeAgent Architecture
 
 This is the contract for NodeRoom's unified NodeAgent job architecture. Every
-agent command creates or reuses an `agentJobs` row; `/ask` runs an immediate
-first slice for responsive UX, and any slice that exhausts budget checkpoints
-into the Workflow/Workpool runner. `/free` is only a model-policy shortcut for
-`openrouter/free-auto`, not a separate runtime. The historical
+mutating or durable agent command (`/ask`, `/free`, and private Room-lane
+actions) creates or reuses an `agentJobs` row; `/ask` runs an immediate first
+slice for responsive UX, and any slice that exhausts budget checkpoints into
+the Workflow/Workpool runner. Private read-only advise is currently a one-call
+private reply path and does not create an `agentJobs` row. `/free` is only a
+model-policy shortcut for `openrouter/free-auto`, not a separate runtime. The historical
 MewAgent/GraphStore design is useful as a domain reference, but not as a
 runtime model.
 
@@ -76,12 +78,12 @@ not overstate what is enforced today.
 
 | Area | Current implementation | Target contract |
 |---|---|---|
-| Interactive agent | public `/ask` creates/reuses an `agentJobs` row, runs `runRoomAgent` with `ConvexRoomTools`, and auto-hands off to Workflow when budget is exhausted | private/system/automation entrypoints share the same job root and result view |
+| Interactive agent | public `/ask` and private Room-lane actions create/reuse an `agentJobs` row, run `runRoomAgent` with `ConvexRoomTools`, and auto-hand off to Workflow when budget is exhausted; private advise is still a read-only one-call private reply | private/system/automation entrypoints share the same job root and result view when they mutate or need durable continuation |
 | Background jobs | `/free` uses the same `agentJobs`, attempts, workflow slices, and job lease with `modelPolicy=openrouter/free-auto` | every entrypoint can checkpoint through the same slice runner |
 | Job schema | `agentJobs` is still artifact-scoped in places | jobs target artifacts, notebooks, wiki pages, spreadsheet ranges, or no surface |
 | Artifact conflicts | `locks` plus CAS are the write-enforcement path | coordinate leases/locks are checked by every write mutation |
 | `agentLeases` | job-slice/execution lease plus target design docs | target-level leases for notebook/wiki/range writes, reconciled with `locks` |
-| Operation ledger | partial operation rows plus `agentSteps`, receipts, and room trace | every action/query/mutation/model/tool/scheduler boundary records a bounded event |
+| Operation ledger | bounded job-level and aggregate slice events plus `agentSteps`, receipts, and room trace | every action/query/mutation/model/tool/scheduler boundary records a bounded event |
 | Wiki | currently also represented as artifact/note elements in live tools | `wikiPages`/`wikiRevisions` become the canonical revision surface |
 | Notebook graph | schema/mutations and some receipts/embedding enqueue exist | agent tools, endpoint validation, private visibility, leases, soft delete, and draft structural ops |
 | Tool registry | static Zod tools exist | versioned registry with permission, scope, risk, lease, idempotency, and composite-tool policy |
@@ -241,12 +243,19 @@ Important rules:
 - `commandText` is not authorization. It is just intent.
 - `scope` selects what evidence the agent may read.
 - `evidencePolicy` selects what evidence the agent may cite or write back.
-- `approvalPolicy` determines whether mutating tools commit or write drafts.
+- Target contract: `approvalPolicy` determines whether mutating tools commit or
+  write drafts. Current artifact writes enforce the room `autoAllow` boundary:
+  auto-allow off returns `pending_approval`; auto-allow on commits through
+  lock/CAS. `approvalPolicy` and `agentDraftOperations` are the generalized
+  target surfaces.
 - `idempotencyKey` lives on `agentJobs`, not only `agentRuns`, so duplicate
   submits cannot create duplicate jobs.
 - `targetArtifactId`, `targetNotebookId`, `targetWikiPageId`, and
   `targetRootNodeId` allow one agent run to coordinate spreadsheet, wiki, and
   notebook work without collapsing all surfaces into one table.
+- Current implementation note: the live `agentJobs` root is still
+  artifact-scoped. Graph/wiki/range/no-surface target fields are design fields
+  until `agentJobs` no longer requires an `artifactId`.
 - Client-local optimistic state is never trusted as request truth. If the client
   has pending optimistic mutations, the request may include correlation IDs in
   metadata, but the server still reads canonical Convex rows before acting.
@@ -310,7 +319,8 @@ Memory and learned tool patterns become durable rows, not local graph nodes name
 
 ## Unified Job Tables
 
-The existing `agentJobs` table should become the root for every agent request.
+The existing `agentJobs` table should become the root for every mutating or
+durable agent request.
 `agentRuns` remains telemetry for a model execution attempt or slice.
 `agentSteps` remains the append-only tool trajectory.
 
@@ -477,14 +487,17 @@ agentLeases
 
 The minimum implementation change is to make `runRoomAgent` create or claim an
 `agentJobs` row first, then execute the first slice immediately. The fast path
-still feels interactive; it just has the same durable root as `/free`.
+still feels interactive; it just has the same durable root as `/free`. Current
+private read-only advise remains outside this root until it needs mutation,
+approval, resumability, or cost/trace accounting.
 
 `agentSteps` is the human and eval trajectory: what the model tried, which
 tools it used, and what work product resulted. `agentOperationEvents` is the
-infrastructure ledger: every action slice, internal query, internal mutation,
-model call, tool call, lease operation, checkpoint, and scheduler handoff. The
-job counters are derived from this ledger so the system can answer "how many
-action/query/mutation pings did this job use?" without parsing prose logs.
+infrastructure ledger. Current code records bounded job-level and aggregate
+slice events for create/start, scheduler, leases, checkpoints, and aggregate
+action/model/tool counts. Per-query and per-mutation operation rows remain the
+target contract so the system can answer "how many action/query/mutation pings
+did this job use?" without parsing prose logs.
 
 ### Operation Ledger Bounds
 
@@ -569,7 +582,8 @@ and subscribes to durable state.
 
 ### Step Accounting
 
-Every ping-pong boundary should write an `agentOperationEvents` row:
+Target contract: every ping-pong boundary should write an
+`agentOperationEvents` row:
 
 ```text
 mutation createJob
@@ -588,7 +602,8 @@ scheduler continueJob
   -> operation kind=scheduler name=agentJobs.scheduleNextSlice
 ```
 
-The job row keeps materialized counters for fast UI display, but the ledger is
+The job row keeps materialized counters for fast UI display. Today those
+counters are more complete than the per-boundary ledger; the target ledger is
 the durable source. This matters for long-running work because a "single step"
 may contain multiple reads, a model call, several checked mutations, an
 embedding job enqueue, and a scheduler continuation.
@@ -983,10 +998,24 @@ wiki.refresh_from_public_sources
 spreadsheet.summarize_range_to_wiki
 ```
 
-A composite tool is still accountable. Each internal query, mutation, model
-call, and scheduler continuation writes an `agentOperationEvents` row, while
-the composite tool call remains the higher-level `agentStep` visible to the
-user and eval harness.
+A composite tool is still accountable. Target architecture records every
+internal query, mutation, model call, and scheduler continuation as
+`agentOperationEvents`, while the composite tool call remains the higher-level
+`agentStep` visible to the user and eval harness. Current implementation is
+coarser: it records aggregate job/slice/tool events and mutation receipts, then
+should expand toward per-boundary operation events as composites move into
+production `ROOM_TOOLS`.
+
+Current implementation note: the v3 benchmark in `scripts/benchmark/run.ts`
+uses a two-call composite shape. `fetch_row_sources` owns row lock, source
+fetch, and fenced evidence snippets; the model authors the research fields from
+those snippets; `write_row` owns validation, CAS writes, citations, freshness,
+status, and release. The retired v2 `research_company_row` proof tool is
+retained only for historical trace parsing and tests, because it let the
+deterministic harness author the row fields. Promoting a research workflow to
+production still requires the same registry metadata as any other tool:
+permission, scope, approval policy, idempotency key, operation events, mutation
+receipts, and trace retention.
 
 ## Embedding CRUD
 

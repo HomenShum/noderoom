@@ -24,6 +24,9 @@
   .row.locked { box-shadow:inset 3px 0 0 var(--lock); background:rgba(224,161,78,.08); }
   .row.conflict { background:rgba(224,86,78,.14); box-shadow:inset 3px 0 0 var(--bad); }
   .row.conflict .val { color:var(--bad); }
+  .row.draft { background:rgba(228,197,103,.14); box-shadow:inset 3px 0 0 #e4c567; }
+  .row.draft .val { color:#f0d986; }
+  .row.draft .tag { color:#f0d986; }
   .row.committed .val { color:var(--ok); }
   .ticker { position:absolute; left:30px; right:30px; bottom:24px; display:flex; align-items:center; gap:12px; }
   .who { width:30px; height:30px; border-radius:9px; display:grid; place-items:center; font-weight:800; font-size:13px; flex:none;
@@ -51,6 +54,7 @@ const cells = WF.cells.map(c => ({ ...c, value: c.value ?? "", version: c.versio
 const byId = Object.fromEntries(cells.map(c => [c.id, c]));
 // Each frame is the state AFTER applying step i (frame 0 = initial).
 const frames = [];
+let lockAttempt = 0;
 function snap(act) { frames.push({ cells: cells.map(c => ({ ...c })), act }); }
 snap('<b>Goal</b> ' + (WF.subtitle || ''));
 for (const ev of WF.trace) {
@@ -65,9 +69,12 @@ for (const ev of WF.trace) {
     for (const r of rows) { if (byId[r.id]) { byId[r.id].state = 'active'; byId[r.id].version = r.version ?? byId[r.id].version; if (r.value!=='' && r.value!=null) byId[r.id].value = r.value; } }
     act = '<b>reads</b> ' + ids.join(', ') + ' &middot; sees version' + (rows[0] ? ' v'+rows[0].version : '');
   } else if (tool === 'propose_lock') {
+    lockAttempt += 1;
     for (const c of cells) c.state = '';
     for (const id of ids) if (byId[id]) byId[id].state = 'locked';
-    act = '<b>locks</b> the affected range &middot; read-only for others';
+    act = lockAttempt === 1
+      ? '<b>locks</b> the affected range &middot; read-only for others'
+      : '<b>confirms lock</b> still protects the range &middot; draft instead of overwrite';
   } else if (tool === 'edit_cell' || tool === 'write_cell_result') {
     const id = (ev.args && ev.args.elementId) || ids[0];
     const v = ev.args && (ev.args.value && ev.args.value.value !== undefined ? ev.args.value.value : ev.args.value);
@@ -77,7 +84,10 @@ for (const ev of WF.trace) {
     else { act = tool; }
   } else if (tool === 'create_draft') {
     const ops = (ev.args && ev.args.ops) || [];
-    for (const op of ops) if (byId[op.elementId]) { byId[op.elementId].state = 'active'; }
+    for (const op of ops) if (byId[op.elementId]) {
+      byId[op.elementId].state = 'draft';
+      if (op.value != null) byId[op.elementId].value = String(op.value);
+    }
     act = '<b>drafts</b> the change for smart-merge on unlock';
   } else if (tool === 'release_lock' || tool === 'release') {
     for (const c of cells) if (c.state==='locked') c.state='';
@@ -94,7 +104,7 @@ window.frameCount = () => frames.length;
 window.showFrame = (i) => {
   const f = frames[Math.max(0,Math.min(i,frames.length-1))];
   el('sheet').innerHTML = f.cells.map(c =>
-    `<div class="row ${c.state}"><div class="lab">${c.label}</div><div class="val">${c.value===''?'&mdash;':c.value}</div><div class="tag">${c.state==='locked'?'locked':c.state==='conflict'?'conflict':c.state==='committed'?'committed v'+c.version:'v'+c.version}</div></div>`
+    `<div class="row ${c.state}"><div class="lab">${c.label}</div><div class="val">${c.value===''?'&mdash;':c.value}</div><div class="tag">${c.state==='locked'?'locked':c.state==='conflict'?'conflict':c.state==='draft'?'draft':c.state==='committed'?'committed v'+c.version:'v'+c.version}</div></div>`
   ).join('');
   el('act').innerHTML = f.act;
   el('stepn').textContent = i+'/'+(frames.length-1);

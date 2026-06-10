@@ -2,6 +2,9 @@
 
 The in-app wiki is currently generated deterministically from room state. A future
 LLM-backed wiki agent must write the same structure and follow these rules.
+Current storage note: the visible wiki surface is still rendered over room
+state and note/artifact data in places. `wikiPages` and `wikiRevisions` are
+schema foundations, not yet the canonical live write path for all wiki updates.
 
 The reusable skill contract is checked in at
 [`docs/skills/self-updating-wiki/SKILL.md`](skills/self-updating-wiki/SKILL.md).

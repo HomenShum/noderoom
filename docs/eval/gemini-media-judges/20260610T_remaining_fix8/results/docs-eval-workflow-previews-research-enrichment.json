@@ -1,0 +1,72 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-research-enrichment",
+    "class": "workflow_preview",
+    "title": "Research Enrichment",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\research-enrichment.gif",
+    "relPath": "docs/eval/workflow-previews/research-enrichment.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T_remaining_fix8/docs-eval-workflow-previews-research-enrichment.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/research-enrichment.gif",
+  "bytes": 135741,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The workflow preview successfully demonstrates the research enrichment feature, showing the transition from pending items to completed research with updated trace logs and chat notifications.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "The 'Enrich 4 pending' button and subsequent progress state clearly indicate the research enrichment feature."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Shows the initial pending state, the active progress bar, and the final populated research cards."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "The dark mode UI is structured, though the dense layout and small text elements reduce visual focus."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with the NodeRoom paradigm of combining chat, research tabs, and trace logs."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Captured directly from the application interface, showing realistic data and state transitions."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Most text is readable, though the trace logs at the bottom are quite small."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Demonstrates automated data enrichment, which is highly relevant for research and analyst workflows."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "The UI states and trace logs accurately reflect the background processing steps."
+      }
+    },
+    "observedEvidence": [
+      "Enrichment progress bar animation",
+      "Updated research cards with sources and descriptions",
+      "Agent notification in the public chat",
+      "Trace log updates reflecting lock releases and status changes"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:06",
+        "severity": "P2",
+        "observed": "The trace log text at the bottom is very small and difficult to read at standard preview sizes.",
+        "fix": "Increase the font size of the trace log panel or zoom in slightly on the active panel during the transition."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch NodeRoom's agent enrich company profiles in real-time, updating the research workspace and logging every step in the trace."
+  },
+  "score": 8,
+  "maxScore": 16
+}

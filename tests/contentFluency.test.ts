@@ -19,14 +19,15 @@ describe("audience fluency content contract", () => {
 
   it("keeps audience fluency in the generated production matrix as a yellow proof lane", () => {
     const matrix = JSON.parse(readFileSync(join(root, "docs/qa/production-matrix.json"), "utf8")) as {
-      features: Array<{ id: string; status: string; deterministicChecks: string[]; liveChecks: string[]; evidence: Array<{ ref: string }> }>;
+      features: Array<{ id: string; status: string; deterministicChecks: string[]; liveChecks: string[]; evidence: Array<{ ref: string }>; nextReview: string }>;
     };
     const row = matrix.features.find((feature) => feature.id === "audience_fluency_content");
 
     expect(row).toBeTruthy();
     expect(row!.status).toBe("yellow");
     expect(row!.deterministicChecks).toContain("npm run content:fluency:check");
-    expect(row!.liveChecks.some((check) => check.startsWith("missing:"))).toBe(true);
+    expect(row!.liveChecks).toContain("npm run media:gemini-judge -- --all");
+    expect(row!.nextReview).toContain("P1 defects");
     expect(row!.evidence.map((e) => e.ref)).toContain("docs/skills/audience-fluency/SKILL.md");
   });
 

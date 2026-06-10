@@ -1,0 +1,65 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l5-large-range",
+    "class": "workflow_preview",
+    "title": "L5 Large Range",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l5-large-range.gif",
+    "relPath": "docs/eval/workflow-previews/l5-large-range.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T_remaining_fix8/docs-eval-workflow-previews-l5-large-range.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l5-large-range.gif",
+  "bytes": 69550,
+  "judge": {
+    "verdict": "publish",
+    "summary": "A clean, step-by-step conceptual animation demonstrating cell-level locking and versioned writes within a 5-row window for large ranges.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.3,
+        "evidence": "Clearly demonstrates the 5-row window loading, locking, reading, writing, and releasing flow."
+      },
+      "workflowCompleteness": {
+        "score": 1.4,
+        "evidence": "Shows the entire sequence from initial state to lock, edit, commit, and release."
+      },
+      "visualDesign": {
+        "score": 1.5,
+        "evidence": "High-contrast dark mode with clean typography and smooth transitions."
+      },
+      "consistency": {
+        "score": 1.4,
+        "evidence": "Aligns well with the versioned spreadsheet cell concept."
+      },
+      "evidenceQuality": {
+        "score": 1.2,
+        "evidence": "Feels more like a polished conceptual diagram/simulation than a live product capture."
+      },
+      "legibility": {
+        "score": 1.5,
+        "evidence": "Text and labels are highly readable even at smaller resolutions."
+      },
+      "professionalRelevance": {
+        "score": 1.3,
+        "evidence": "Highly relevant for explaining concurrency and scoping to technical stakeholders."
+      },
+      "productionHonesty": {
+        "score": 1.4,
+        "evidence": "Accurately represents the step-by-step protocol flow without claiming to be a live UI."
+      }
+    },
+    "observedEvidence": [
+      "5-row window visualization",
+      "Locking state change on Line 420",
+      "Read and write operations with versioning",
+      "Lock release state"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Visualizing how agents safely lock, read, and commit versioned updates within a localized 5-row window on large sheets."
+  },
+  "score": 11,
+  "maxScore": 16
+}

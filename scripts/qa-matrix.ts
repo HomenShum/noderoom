@@ -41,7 +41,7 @@ type Matrix = {
   releaseRule: string;
   features: Feature[];
   modelLadder: {
-    source: string;
+    source: string | string[];
     gate: string;
     routes: ModelRoute[];
   };
@@ -61,7 +61,7 @@ type BenchmarkResults = {
 
 const root = new URL("../", import.meta.url);
 const checkOnly = process.argv.includes("--check");
-const CURRENT_BENCHMARK_VERSION = "company-research-v2-9checks-router";
+const CURRENT_BENCHMARK_VERSION = "company-research-v3-composite-synthesis";
 const START = "<!-- QA_COCKPIT_START -->";
 const END = "<!-- QA_COCKPIT_END -->";
 const BG = "#111418";
@@ -84,6 +84,9 @@ const statusLabel = (s: Status) => (s === "green" ? "Green" : s === "yellow" ? "
 const short = (s: string, max = 86) => (s.length <= max ? s : `${s.slice(0, max - 1)}...`);
 const backtickList = (items: string[]) => items.map((x) => `\`${x}\``).join(", ");
 const executedLiveCheck = (check: string) => !/^\s*(not applicable|manual\b|manual browser\b|missing:)/i.test(check);
+const modelLadderSources = () => Array.isArray(matrix.modelLadder.source) ? matrix.modelLadder.source : [matrix.modelLadder.source];
+const modelLadderSourceLabel = () => modelLadderSources().map((source) => `\`${source}\``).join(", ");
+const modelLadderSourceText = () => modelLadderSources().join(", ");
 
 const matrix = parseJson<Matrix>("docs/qa/production-matrix.json");
 const benchmark = parseJson<BenchmarkResults>("docs/eval/results.json");
@@ -137,7 +140,7 @@ function renderFullMatrix(): string {
   lines.push("");
   lines.push("## Live Model Ladder Gate");
   lines.push("");
-  lines.push(`Source: \`${matrix.modelLadder.source}\``);
+  lines.push(`Source: ${modelLadderSourceLabel()}`);
   lines.push("");
   lines.push(`Gate: ${matrix.modelLadder.gate}`);
   lines.push("");
@@ -209,7 +212,7 @@ function renderReadmeSection(): string {
     const label = bestBenchmark.resolvedModel && bestBenchmark.resolvedModel !== bestBenchmark.model
       ? `${bestBenchmark.model} -> ${bestBenchmark.resolvedModel}`
       : bestBenchmark.model;
-    lines.push(`Research benchmark route: \`${label}\` is the cheapest current v2 recorded model clearing ${bestBenchmark.total}/${bestBenchmark.total} checks at $${bestBenchmark.costUsd.toFixed(4)} per run. Collaboration routing still uses the ladder gate above, not benchmark cost alone.`);
+    lines.push(`Research benchmark route: \`${label}\` is the cheapest current v3 composite-synthesis model clearing ${bestBenchmark.total}/${bestBenchmark.total} checks at $${bestBenchmark.costUsd.toFixed(4)} per run. Collaboration routing still uses the ladder gate above, not benchmark cost alone.`);
   } else if (benchmarkIsCurrent) {
     const bestRecorded = [...benchmark.models].sort((a, b) => b.passed - a.passed || a.ms - b.ms)[0];
     const budget = "timeouts" in benchmark && benchmark.timeouts && typeof benchmark.timeouts === "object"
@@ -218,9 +221,9 @@ function renderReadmeSection(): string {
     const summary = bestRecorded
       ? ` Best recorded row was \`${bestRecorded.model}${bestRecorded.resolvedModel && bestRecorded.resolvedModel !== bestRecorded.model ? ` -> ${bestRecorded.resolvedModel}` : ""}\` at ${bestRecorded.passed}/${bestRecorded.total}.`
       : "";
-    lines.push(`Research benchmark route: current v2 router-aware results are recorded for ${benchmark.models.length} route(s), but no route cleared the ${benchmark.checks.length}-check gate.${summary}${budget}`);
+    lines.push(`Research benchmark route: current v3 composite-synthesis results are recorded for ${benchmark.models.length} route(s), but no route cleared the ${benchmark.checks.length}-check gate.${summary}${budget}`);
   } else {
-    lines.push(`Research benchmark route: current v2 router-aware results are not recorded yet. Run \`npm run benchmark\` or \`npm run benchmark:free\` to replace the stale ${benchmark.checks.length}-check artifact with \`${CURRENT_BENCHMARK_VERSION}\`.`);
+    lines.push(`Research benchmark route: current v3 composite-synthesis results are not recorded yet. Run \`npm run benchmark\` or \`npm run benchmark:free\` to replace the stale ${benchmark.checks.length}-check artifact with \`${CURRENT_BENCHMARK_VERSION}\`.`);
   }
   lines.push("");
   lines.push("Full QA ledger: [`docs/PRODUCTION_GUARANTEE_MATRIX.md`](docs/PRODUCTION_GUARANTEE_MATRIX.md).");
@@ -274,7 +277,7 @@ function renderModelLadderSvg(): string {
   out.push(`<rect width="${W}" height="${H}" rx="16" fill="${BG}"/>`);
   out.push(`<text x="28" y="36" fill="${TEXT}" font-size="19" font-weight="700">Live model ladder gate</text>`);
   out.push(`<text x="28" y="58" fill="${MUTE}" font-size="11">${esc(matrix.modelLadder.gate)}</text>`);
-  out.push(`<text x="28" y="78" fill="${MUTE}" font-size="10">Source: ${esc(matrix.modelLadder.source)}</text>`);
+  out.push(`<text x="28" y="78" fill="${MUTE}" font-size="10">Source: ${esc(modelLadderSourceText())}</text>`);
   ["L1", "L2", "L3", "L4"].forEach((l, i) => out.push(`<text x="${cols[i]}" y="${top - 13}" fill="${MUTE}" font-size="11" text-anchor="middle">${l}</text>`));
   routes.forEach((r, i) => {
     const y = top + i * rowH;

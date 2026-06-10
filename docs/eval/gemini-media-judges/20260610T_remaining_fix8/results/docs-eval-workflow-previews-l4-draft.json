@@ -1,0 +1,64 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l4-draft",
+    "class": "workflow_preview",
+    "title": "L4 Draft",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l4-draft.gif",
+    "relPath": "docs/eval/workflow-previews/l4-draft.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T_remaining_fix8/docs-eval-workflow-previews-l4-draft.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l4-draft.gif",
+  "bytes": 80311,
+  "judge": {
+    "verdict": "publish",
+    "summary": "A clear, step-by-step workflow preview demonstrating how an AI agent handles locked spreadsheet ranges by creating a draft version instead of overwriting.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.3,
+        "evidence": "The UI clearly shows the transition of a cell from a locked state to a drafted state with explicit labels."
+      },
+      "workflowCompleteness": {
+        "score": 1.4,
+        "evidence": "Demonstrates the full sequence: initial locked state, agent reading/confirming, and final draft generation."
+      },
+      "visualDesign": {
+        "score": 1.3,
+        "evidence": "Clean dark-mode layout with high-contrast text and a clear step indicator at the bottom."
+      },
+      "consistency": {
+        "score": 1.2,
+        "evidence": "Aligns with the spreadsheet and agent-trace paradigm of the platform."
+      },
+      "evidenceQuality": {
+        "score": 1.2,
+        "evidence": "High-fidelity capture of the UI state transitions and agent execution steps."
+      },
+      "legibility": {
+        "score": 1.4,
+        "evidence": "All text, including the small status chips and agent logs, is highly readable."
+      },
+      "professionalRelevance": {
+        "score": 1.2,
+        "evidence": "Highly relevant for financial and enterprise workflows where data locking and audit trails are critical."
+      },
+      "productionHonesty": {
+        "score": 1.3,
+        "evidence": "Accurately depicts the step-by-step logic and constraints of the agent's environment."
+      }
+    },
+    "observedEvidence": [
+      "Step-by-step progress bar (1/5 to 5/5) at the bottom",
+      "Transition of Net income / variance row from empty to +22.4% with a DRAFT label",
+      "Agent status logs explaining each action in real-time"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Watch how the NodeRoom agent respects locked ranges by automatically drafting changes for a smart-merge once unlocked."
+  },
+  "score": 10.3,
+  "maxScore": 16
+}

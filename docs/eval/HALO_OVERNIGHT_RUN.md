@@ -1,6 +1,6 @@
 # HALO Overnight Run
 
-Last updated: 2026-06-10T08:50Z.
+Last updated: 2026-06-10T21:35Z.
 
 Target deadline: 2026-06-10 10:00 AM PT.
 
@@ -130,8 +130,9 @@ Live cycle evidence in `20260609T060208Z`:
 - V2 multi-model benchmark: pass as a completed run, but not as promotion evidence
 - Free-auto router ladder: fail after 3,823,229ms. It wrote
   `docs/eval/free-auto-router-ladder.json`; no free route cleared L1-L4.
-  `openrouter/free-auto` passed L1/L2, failed L3 by step budget, and timed out
-  L4. `nvidia/nemotron-3-super-120b-a12b:free` passed L1-L3 but timed out L4.
+  `openrouter/free-auto` passed L1, failed L2 by step budget despite correct
+  edit/provenance, passed L3, and timed out L4.
+  `nvidia/nemotron-3-super-120b-a12b:free` passed L1-L3 but timed out L4.
   The other free candidates failed due invalid JSON, provider retry errors, or
   unsafe/missing actions.
 
@@ -142,16 +143,33 @@ Separate UI/video evidence:
 
 ## Benchmark Reading
 
-The benchmark result is mixed and should not be described as a production
-guarantee:
+Historical note: the June 9 low-level benchmark rows are retained as failure
+analysis, not promotion evidence. The 0/9 `openrouter/free-auto` row came from
+the older tool choreography and should not be used as a current model-quality
+claim.
 
-- `openrouter/free-auto`: 0/9 checks, resolved `nvidia/nemotron-3-super-120b-a12b:free`
-- `gemini-3.5-flash`: 5/9 checks
-- `claude-sonnet-4-6`: 5/9 checks
-- several paid/smaller models: 1/9 checks
-- `gpt-5.5`: provider/tool-call error in this run
+Current verified benchmark evidence is the v3 composite-synthesis contract in
+`docs/eval/results.json`:
 
-Use this as routing feedback and failure analysis, not a default-model promotion.
+- workflow: `fetch_row_sources` then model-authored synthesis then `write_row`;
+- scope: 3 companies;
+- cheapest full gate-clearer: `deepseek/deepseek-v4-flash`, 9/9 checks,
+  $0.0034, about 91s;
+- free route result: `openrouter/free-auto -> nvidia/nemotron-3-super-120b-a12b:free`,
+  7/9 checks, $0.0000, about 216s, failing `STRUCTURED_FIELDS` and
+  `NO_FABRICATION`;
+- gate-clear trace:
+  `docs/eval/traces/benchmark/20260610T2148086-deepseek-deepseek-v4-flash-deepseek-deepseek-v4-flash.json`;
+- free route trace:
+  `docs/eval/traces/benchmark/20260610T2146296-openrouter-free-auto-nvidia-nemotron-3-super-120b-a12b-free.json`.
+
+The older v2 single-call free-auto 9/9 trace is retained only as harness
+history; review found that the deterministic tool template authored the row
+fields, so the checks graded harness code rather than model synthesis. Do not
+use v2 as promotion evidence. Do not use the research benchmark as evidence
+that free-auto is safe for interactive shared-room editing either; that still
+requires the L1-L4 lock/CAS/draft ladder, where the free routes remain
+non-promotable.
 
 ## Subagent Review Findings To Preserve
 

@@ -22,6 +22,12 @@ export type EpisodeData = { episodeId: string; fps: number; title: string; scene
 const VIDEO_W = 1000;
 const VIDEO_H = Math.round(VIDEO_W * 848 / 1280); // captures are 1280×848
 
+function videoScale(sceneId: string): number {
+  if (sceneId === "continuity") return 1.18;
+  if (sceneId === "cold-open" || sceneId === "provenance" || sceneId === "after-room" || sceneId === "after-review") return 1.08;
+  return 1;
+}
+
 const Card: React.FC<{ scene: EpScene; f: number }> = ({ scene, f }) => {
   const inT = (d: number) => interpolate(Math.max(0, f - d), [0, 10], [0, 1], { extrapolateRight: "clamp" });
   return (
@@ -116,7 +122,7 @@ export const Episode: React.FC<{ data: EpisodeData }> = ({ data }) => {
               <div style={{ opacity: interpolate(local, [0, 8], [0, 1], { extrapolateRight: "clamp" }) }}>
                 {s.kind === "video" && s.video ? (
                   <div style={{ width: VIDEO_W, height: VIDEO_H, borderRadius: 22, overflow: "hidden", boxShadow: "0 40px 90px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.08)" }}>
-                    <OffthreadVideo src={staticFile(s.video)} muted style={{ width: VIDEO_W, height: VIDEO_H }} />
+                    <OffthreadVideo src={staticFile(s.video)} muted style={{ width: VIDEO_W, height: VIDEO_H, transform: `scale(${videoScale(s.id)})`, transformOrigin: "50% 48%" }} />
                   </div>
                 ) : s.kind === "code" && s.code?.lines?.length ? (
                   <CodePanel scene={s} f={Math.max(0, local)} />

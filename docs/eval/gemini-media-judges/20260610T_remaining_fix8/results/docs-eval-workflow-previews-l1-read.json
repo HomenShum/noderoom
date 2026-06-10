@@ -1,0 +1,64 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l1-read",
+    "class": "workflow_preview",
+    "title": "L1 Read",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l1-read.gif",
+    "relPath": "docs/eval/workflow-previews/l1-read.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T_remaining_fix8/docs-eval-workflow-previews-l1-read.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l1-read.gif",
+  "bytes": 44166,
+  "judge": {
+    "verdict": "publish",
+    "summary": "A concise and clear workflow preview demonstrating an AI agent reading a financial table cell without making modifications.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "The interface clearly highlights the specific row being read by the agent."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Shows the initial goal, the active reading step, and the final completion state."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark-themed table layout with clear contrast and focused highlighting."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with the spreadsheet and agent execution trace paradigm."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Appears to be a direct capture of the application's execution interface."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "All text, including the agent log at the bottom, is highly legible."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Demonstrates basic auditability of financial data access by an AI."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately represents a simple read-only operation without overclaiming."
+      }
+    },
+    "observedEvidence": [
+      "AI agent goal statement",
+      "Highlighted table row for Net Income variance",
+      "Agent execution log showing read action and completion"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "NodeRoom L1 Read workflow showing an AI agent safely reading financial variance data without altering the source sheet."
+  },
+  "score": 8,
+  "maxScore": 16
+}

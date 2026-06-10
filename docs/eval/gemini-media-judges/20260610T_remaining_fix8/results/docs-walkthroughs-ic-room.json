@@ -1,0 +1,66 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-ic-room",
+    "class": "readme_walkthrough",
+    "title": "Ic Room",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\ic-room.gif",
+    "relPath": "docs/walkthroughs/ic-room.gif",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:ic-room"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T_remaining_fix8/docs-walkthroughs-ic-room.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/walkthroughs/ic-room.gif",
+  "bytes": 651658,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough clearly demonstrates importing a new account row from raw text into the research table, showing real-time updates in both the table and the room trace.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.4,
+        "evidence": "Demonstrates pasting raw text to import a row into the research table."
+      },
+      "workflowCompleteness": {
+        "score": 1.5,
+        "evidence": "Shows the complete flow: opening import, pasting text, submitting, and verifying the new row and trace log."
+      },
+      "visualDesign": {
+        "score": 1.3,
+        "evidence": "Clean dark-themed UI with clear focus on the import modal and table updates."
+      },
+      "consistency": {
+        "score": 1.4,
+        "evidence": "Aligns with NodeRoom's workspace paradigm, featuring research tables and room traces."
+      },
+      "evidenceQuality": {
+        "score": 1.5,
+        "evidence": "Authentic screen capture of UI interaction with visible state changes."
+      },
+      "legibility": {
+        "score": 1.2,
+        "evidence": "Text in the input area and table is readable, though some room trace text is small."
+      },
+      "professionalRelevance": {
+        "score": 1.4,
+        "evidence": "Highly relevant for investment and research teams managing pipeline data."
+      },
+      "productionHonesty": {
+        "score": 1.5,
+        "evidence": "Accurately depicts the manual copy-paste import process and immediate UI feedback."
+      }
+    },
+    "observedEvidence": [
+      "Import accounts modal",
+      "Pasted text row",
+      "Updated research table",
+      "Room trace event log"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Importing a new opportunity into the research table and tracking the change in the room trace."
+  },
+  "score": 11.2,
+  "maxScore": 16
+}

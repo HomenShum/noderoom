@@ -1,0 +1,73 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-ask-agent",
+    "class": "readme_walkthrough",
+    "title": "Ask Agent",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\ask-agent.gif",
+    "relPath": "docs/walkthroughs/ask-agent.gif",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:ask-agent"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T_remaining_fix8/docs-walkthroughs-ask-agent.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/walkthroughs/ask-agent.gif",
+  "bytes": 886574,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough successfully demonstrates asking an agent to reconcile Q3 revenue and fill variance cells in a spreadsheet. The workflow is complete, showing the input command, agent execution, and the updated spreadsheet cells.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "The user types a clear command to the agent, and the agent executes it by filling the spreadsheet cells."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Shows the initial empty variance cells, the command entry, and the final populated state with the agent's chat response."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "The dark mode UI is clean and structured, though the layout is dense with multiple panels."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with the product's core concept of combining spreadsheets, chat, and agent traces."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Captured directly from the working UI, showing real-time updates to the spreadsheet."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "The text in the chat and spreadsheet is legible, though small at standard resolutions."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for financial and operations workflows involving automated spreadsheet reconciliation."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "The agent's trace updates and cell changes are shown clearly, though the execution speed is very rapid."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet with empty variance cells",
+      "User typing '/ask reconcile Q3 revenue and fill the variance cells' in chat",
+      "Agent responding in chat and updating the spreadsheet cells",
+      "Room trace updating with agent steps"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:09",
+        "severity": "P2",
+        "observed": "The agent fills the spreadsheet cells almost instantaneously, which may look simulated to some viewers.",
+        "fix": "Add a brief loading indicator or slow down the playback slightly to reflect realistic agent processing time."
+      }
+    ],
+    "suggestedReadmeCaption": "Ask the Room NodeAgent to automatically reconcile financial data and populate spreadsheet variances directly from the chat."
+  },
+  "score": 8,
+  "maxScore": 16
+}

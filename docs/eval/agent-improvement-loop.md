@@ -10,6 +10,15 @@ Latest run artifact: `docs/eval/agent-improvement-loop/20260610T183945Z.json`
 
 Summary: 7 pass, 0 fail, 6 skip.
 
+Post-run benchmark note: this generated loop skipped the full-live benchmark.
+Current benchmark evidence is `docs/eval/results.json`, generated
+`2026-06-10T21:48:08.700Z`, under
+`company-research-v3-composite-synthesis`: `deepseek/deepseek-v4-flash`
+clears 9/9, while `openrouter/free-auto -> nvidia/nemotron-3-super-120b-a12b:free`
+reaches 7/9 and fails the content floor. The older v2 free-auto 9/9 trace is
+invalidated as model evidence because the deterministic harness authored the
+row fields.
+
 ## Step Results
 
 | Step | Lane | Status | Duration | Command |
@@ -116,4 +125,3 @@ Forbidden without human approval:
 - `npm run agent:improve -- --full-live`
 - `npm run agent:improve -- --ui-media=docs/eval/ui-recordings/<recording-or-screenshot>`
 - `npm run benchmark:charts`
-

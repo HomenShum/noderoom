@@ -238,7 +238,7 @@
     {
       "id": "unified_nodeagent_jobs",
       "area": "Unified NodeAgent jobs",
-      "claim": "Every NodeAgent request uses a durable agentJobs root with request envelope, operation accounting, leases, and links to runs/steps.",
+      "claim": "Every mutating or long-running NodeAgent request uses a durable agentJobs root with request envelope, operation accounting, leases, and links to runs/steps; private read-only advise remains a one-call private reply.",
       "status": "yellow",
       "productionGate": "Interactive /ask and /free both create or reuse agentJobs, artifact writes emit receipts, job details are browser-visible, notebook graph mutations enqueue embeddings, and live browser/backend smoke proves linked runs/steps.",
       "deterministicChecks": [
@@ -286,7 +286,7 @@
         { "type": "data", "ref": "docs/eval/agent-improvement-loop/gemini-ui-review.json" },
         { "type": "media", "ref": "docs/eval/ui-recordings/live-ui-walkthrough-20260608.mp4" }
       ],
-      "nextReview": "Record full live provider benchmark, free-auto ladder, and Gemini-reviewed UI recording before marking green."
+      "nextReview": "Rerun the full-live loop under the v3 benchmark with provider, free-auto ladder, Convex, and media lanes current; promote only after repeated clean runs without skipped required lanes."
     },
     {
       "id": "demo_media_evidence_quality",
@@ -312,13 +312,13 @@
       "area": "Audience fluency content",
       "claim": "README, video, and interview proof artifacts translate NodeRoom features into researched high-trust professional workflow scenes instead of generic AI demos.",
       "status": "yellow",
-      "productionGate": "Audience context YAML, scenario brief, trust-signal checklist, deterministic content-fluency gate, rendered audience-specific episode, and video/content judge evidence.",
+      "productionGate": "Audience context YAML, scenario brief, trust-signal checklist, deterministic content-fluency gate, rendered audience-specific episode, and video/content judge evidence with current media defects tracked.",
       "deterministicChecks": [
         "npm run content:fluency:check"
       ],
       "liveChecks": [
         "npx tsx scripts/walkthroughs/judge-video.ts noderoom-live-collab-v1",
-        "missing: render and judge episodes/private-investment-room-v1 before marking green"
+        "npm run media:gemini-judge -- --all"
       ],
       "evidence": [
         { "type": "doc", "ref": "docs/skills/audience-fluency/SKILL.md" },
@@ -327,11 +327,14 @@
         { "type": "doc", "ref": "episodes/private-investment-room-v1/brief.md" },
         { "type": "doc", "ref": "episodes/noderoom-live-collab-v1/report.md" }
       ],
-      "nextReview": "Render the private-investment-room episode with fixture data, run Gemini video review plus a content-fluency rubric, then promote only if proof quality and discretion pass."
+      "nextReview": "Close the current media-judge P1 defects and run a content-fluency/trust-signal review before promoting this row to green."
     }
   ],
   "modelLadder": {
-    "source": "docs/eval/free-auto-router-ladder.json",
+    "source": [
+      "docs/eval/live-provider-agent-ladder-2026-06-08.md",
+      "docs/eval/free-auto-router-ladder.json"
+    ],
     "gate": "Interactive collaboration routes must pass L1-L4 for lock/CAS/draft safety.",
     "routes": [
       {
@@ -374,10 +377,10 @@
         "modelRoute": "openrouter/free-auto",
         "provider": "OpenRouter free-auto router",
         "l1": "PASS",
-        "l2": "PASS",
-        "l3": "FAIL",
+        "l2": "FAIL",
+        "l3": "PASS",
         "l4": "TIMEOUT",
-        "recommendedUse": "opt-in /free only; router alias exhausted L3 and timed out L4"
+        "recommendedUse": "opt-in /free only; hit step budget on L2 despite correct value/provenance and timed out L4"
       },
       {
         "modelRoute": "openrouter/free-auto top-5 candidates",

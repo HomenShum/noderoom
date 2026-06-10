@@ -43,11 +43,14 @@ handoff
 The handoff is also written as a trace event (`tool: "handoff"`), so it participates in the same append-only, hash-chained `agentSteps` audit path as normal tool calls.
 
 Current direction: `/ask` is no longer a separate persistence path. Every
-request creates or reuses an `agentJobs` row first, then runs the first slice
-immediately. If that slice exhausts its step/time budget, it checkpoints cursor
-state and starts the same Workflow/Workpool continuation path. Each action,
-query, mutation, scheduler handoff, model call, and tool call is recorded in the
-job operation ledger. `/free` remains only the explicit slow/free model policy.
+durable public or Room-lane request creates or reuses an `agentJobs` row first,
+then runs the first slice immediately. Private read-only advise is still a
+one-call private reply path and does not create a job. If a durable slice
+exhausts its step/time budget, it checkpoints cursor state and starts the same
+Workflow/Workpool continuation path. The current ledger records bounded
+job-level and aggregate slice events; per-query and per-mutation operation rows
+remain the target contract. `/free` remains only the explicit slow/free model
+policy.
 See
 [`docs/NODEAGENT_ARCHITECTURE.md`](NODEAGENT_ARCHITECTURE.md).
 
@@ -219,14 +222,14 @@ double-bill case.
 ## Remaining Hardening
 
 The durable shape is built: `agentJobs`, `agentJobAttempts`,
-`freeAutoWorkflow`, Workpool-limited slices, leases, cursor/handoff resume,
-cancel/retry, resolved-model attempt telemetry, and durable provider-step
-journaling. What remains is the reliability layer that turns it from a
+idempotent `createOrReuse` / `startFreeAuto`, `freeAutoWorkflow`,
+Workpool-limited slices, leases, cursor/handoff resume, cancel/retry,
+resolved-model attempt telemetry, and durable provider-step journaling. What
+remains is the reliability layer that turns it from a
 demo-compatible background path into a production worker:
 
 | Gap | Why it matters | Direction |
 |---|---|---|
-| Duplicate enqueue idempotency | A lease prevents two workers from running the same job; it does not prevent a double-click from creating two jobs. | Add `agentJobs.idempotencyKey` and claim-or-reuse by room, artifact, actor, and normalized goal. |
 | Stricter budget clamps | Defaults leave margin, but env overrides can shrink the reserve too far. | Cap slice budgets below the platform limit and enforce a larger reserve floor. |
 | Per-tool abort propagation | The runtime checks time before each tool, and model calls are abortable, but a slow tool started near the deadline can still run to completion. | Thread a deadline `AbortSignal` into tools and long I/O helpers. |
 | Provider idempotency keys | The durable journal replays after a response is recorded, but cannot replay a response that never committed. | Add provider request idempotency keys where supported and store provider request ids on journal rows. |

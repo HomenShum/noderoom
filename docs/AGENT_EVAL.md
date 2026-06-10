@@ -20,7 +20,7 @@ cases without committing private rows.
 The live company-research benchmark is a separate router/cost harness:
 
 ```bash
-npm run benchmark -- openrouter/free-auto --no-merge --companies=3 --model-timeout-ms=240000 --model-reserve-ms=10000 --row-hard-timeout-ms=270000
+npm run benchmark -- deepseek/deepseek-v4-flash openrouter/free-auto --no-merge --companies=3 --model-timeout-ms=240000 --model-reserve-ms=10000 --row-hard-timeout-ms=270000
 npm run benchmark:charts
 ```
 

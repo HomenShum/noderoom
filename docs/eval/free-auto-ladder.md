@@ -79,7 +79,7 @@ It failed overall: no free route cleared L1-L4.
 
 | Route | L1 | L2 | L3 | L4 | Notes |
 |---|---:|---:|---:|---:|---|
-| `openrouter/free-auto` -> `nvidia/nemotron-3-super-120b-a12b:free` | PASS | PASS | FAIL | TIMEOUT | Alias exhausted the step budget on L3 and time budget on L4. |
+| `openrouter/free-auto` -> `nvidia/nemotron-3-super-120b-a12b:free` | PASS | FAIL | PASS | TIMEOUT | Alias hit step budget on L2 despite correct value/provenance, passed L3, and timed out L4. |
 | `nvidia/nemotron-3-super-120b-a12b:free` | PASS | PASS | PASS | TIMEOUT | Best concrete candidate, but still fails the blocked/draft rung under the live budget. |
 | `nvidia/nemotron-3-ultra-550b-a55b:free` | FAIL | FAIL | FAIL | FAIL | Invalid JSON responses. |
 | `qwen/qwen3-coder:free` | FAIL | FAIL | FAIL | FAIL | Provider retry errors. |
@@ -90,3 +90,13 @@ Operational reading: free-auto discovery is useful, but the current free pool is
 collaboration-safe for the lock/CAS/draft path. Keep free routes opt-in for `/free`
 or background jobs, and keep interactive collaboration on a route with recorded L1-L4
 passes.
+
+Do not confuse this ladder result with the company-research benchmark. The
+current v3 benchmark (`company-research-v3-composite-synthesis`) has
+`deepseek/deepseek-v4-flash` clearing 9/9 for 3 companies, while
+`openrouter/free-auto -> nvidia/nemotron-3-super-120b-a12b:free` reaches 7/9
+and fails the content floor. The older v2 single-call free-auto 9/9 trace is
+invalidated as model evidence because the deterministic harness authored the
+row fields. None of that overrides this ladder's collaboration-safety verdict:
+editing a shared room under locks, denied locks, drafts, and conflicts is a
+harder contract.

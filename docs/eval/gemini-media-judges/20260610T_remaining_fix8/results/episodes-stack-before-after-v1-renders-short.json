@@ -1,0 +1,71 @@
+{
+  "asset": {
+    "id": "episodes-stack-before-after-v1-renders-short",
+    "class": "episode",
+    "title": "Stack Before After V1",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\episodes\\stack-before-after-v1\\renders\\short.mp4",
+    "relPath": "episodes/stack-before-after-v1/renders/short.mp4",
+    "purpose": "Narrated explainer episode. Judge story clarity, visual design, proof quality, and whether it fits the README claim."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "episodes/stack-before-after-v1/renders/short.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 10076124,
+  "judge": {
+    "verdict": "publish",
+    "summary": "An excellent comparison video demonstrating the transition from a single-player Streamlit workflow to NodeRoom's collaborative, multi-player environment with human-in-the-loop agent approvals.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Clearly contrasts a standard Streamlit pipeline with NodeRoom's collaborative spreadsheet and agent review features."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Shows the initial state in Streamlit, the limitation slide, and the resolved collaborative workflow in NodeRoom."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark-mode UI with clear focus areas, smooth transitions, and professional typography."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Features the standard NodeRoom components including the spreadsheet, research tab, and room trace."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Authentic screen recording of the product interface showing live agent execution and cell-level updates."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "UI text, spreadsheet cells, and side panels remain readable throughout the video."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for teams looking to integrate AI agents into collaborative financial or research workflows."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately depicts the agent's proposal state and the manual approval step required by the user."
+      }
+    },
+    "observedEvidence": [
+      "Streamlit single-player pipeline execution",
+      "NodeRoom collaborative research tab with account import",
+      "NodeRoom spreadsheet with agent-proposed cell edits and approval UI",
+      "Room trace showing agent actions"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:21",
+        "severity": "P2",
+        "observed": "Abrupt transition between the Streamlit demo slide and the NodeRoom interface.",
+        "fix": "Add a subtle fade transition to smooth the visual jump."
+      }
+    ],
+    "suggestedReadmeCaption": "Compare a traditional single-player Streamlit pipeline with NodeRoom's collaborative environment, featuring real-time agent proposals and human-in-the-loop approvals directly inside a shared spreadsheet."
+  },
+  "score": 8,
+  "maxScore": 16
+}

@@ -144,19 +144,17 @@ export const FEATURES: FeatureSpec[] = [
     optIn: true,
     seedCompanies: [
       { company: "Meridian Robotics", website: "https://example.com/meridian", tier: "A", owner: "Principal" },
-      { company: "Caldera Therapeutics", website: "https://example.com/caldera", tier: "A", owner: "CIO" },
-      { company: "Northwind Logistics", website: "https://example.com/northwind", tier: "B", owner: "Analyst" },
     ],
     steps: [
       { kind: "state", caption: "Monday's IC meeting — targets, owners, and status in one room", holdMs: 2200 },
       { kind: "click", sel: 'button:has-text("Import accounts")', caption: "A new opportunity arrives from an advisor" },
       {
         kind: "type", sel: ".r-research-import textarea", text: "Atlas Maritime Partners, https://example.com/atlas, A, growth equity, Principal",
-        caption: "Added like a CRM — company, tier, mandate, owner",
+        caption: "One advisor target pasted like a CRM row",
       },
       {
         kind: "click", sel: '.r-research-import button:has-text("Import")', caption: "One click to file it",
-        afterCaption: "Versioned and attributed — the room records who added what, when",
+        afterCaption: "One row filed — versioned and attributed in the room trace",
         after: { textSel: ".r-research", includes: "Atlas Maritime", timeoutMs: 15_000 },
       },
       { kind: "state", caption: "Every change in this room carries provenance — that's the point", settleMs: 1200, holdMs: 2400 },

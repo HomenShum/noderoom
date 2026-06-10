@@ -13,8 +13,13 @@ The heavier app-capture previews are refreshed with:
 npm run workflow:previews:all
 ```
 
-The GIFs are built from live NodeRoom screenshots and the live UI recording in
-`docs/eval/ui-recordings`. The current live evidence anchor is
+The GIFs have explicit evidence levels:
+
+- `workflow-preview-gifs.ts` builds screenshot-composed product preview cards.
+- `render-workflow-preview.ts` builds trace replays from recorded ladder JSON.
+- `workflow:app-previews` captures the real NodeRoom DOM in memory mode.
+
+A GIF is visual evidence, not a production gate. The current live evidence anchor is
 `docs/eval/halo-runs/20260609T060208Z/summary.jsonl`: typecheck, unit tests,
 browser E2E, agent improvement loop, eval diff, QA matrix, Convex boundaries,
 OpenRouter smoke, provider parser smoke, Convex `/free` smoke, and the V2
@@ -56,9 +61,11 @@ improve one of these user-agent workflows:
 - **Agent contract:** preserve CRM fields, update only pending/stale rows, carry
   evidence-bearing `CellPayload` values, and record source/freshness fields.
 - **Evidence:** `docs/eval/PROFESSIONAL_WORKFLOW_EVALS.md`,
-  `docs/PROFESSIONAL_SPREADSHEET_WORKFLOWS.md`.
+  `docs/PROFESSIONAL_SPREADSHEET_WORKFLOWS.md`,
+  `docs/eval/results.json`,
+  `docs/eval/traces/benchmark/20260610T2148086-deepseek-deepseek-v4-flash-deepseek-deepseek-v4-flash.json`.
 - **Gate:** `tests/workflowEvals.test.ts`, `tests/providerParserAdapter.test.ts`,
-  `scripts/provider-parser-smoke.ts`.
+  `scripts/provider-parser-smoke.ts`, `scripts/benchmark/run.ts`.
 
 ### Grounded Wiki And Note Update
 

@@ -17,8 +17,10 @@
 Today a room has humans + **one shared Room agent**. v2 makes it humans + the shared Room agent +
 **each person's own agent**. Your agent reads the whole room, works for *you*, and — when you say so —
 acts in the shared room: edits the spreadsheet and/or speaks in public chat. The differentiator is
-**curation**: your agent drafts in your private space, and *you* decide what becomes public. Many agents
-and many humans touch one artifact, and the lock → draft → smart-merge (CAS) spine keeps it clobber-free.
+**curation**: the private lane replies privately; the Room lane acts publicly
+through the shared job/CAS/proposal path; private artifact draft-then-merge is
+still not shipped. Many agents and many humans touch one artifact, and the
+lock → draft → smart-merge (CAS) spine keeps it clobber-free.
 
 ## 2. Three lanes for your agent
 1. **Advise (private)** — *(shipped)* reads the room, replies only to you. Default.

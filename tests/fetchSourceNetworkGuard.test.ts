@@ -1,7 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const lookupMock = vi.hoisted(() => vi.fn());
+const undiciMocks = vi.hoisted(() => ({
+  fetch: vi.fn(),
+  Agent: vi.fn().mockImplementation(() => ({ close: vi.fn(async () => undefined) })),
+}));
 vi.mock("node:dns/promises", () => ({ lookup: lookupMock }));
+vi.mock("undici", () => ({ Agent: undiciMocks.Agent, fetch: undiciMocks.fetch }));
 
 async function fetchSourceReal() {
   return (await import("../src/agent/fetchSource")).fetchSourceReal;
@@ -12,6 +17,8 @@ describe("fetch_source network guard", () => {
     vi.resetModules();
     vi.unstubAllGlobals();
     lookupMock.mockReset();
+    undiciMocks.fetch.mockReset();
+    undiciMocks.Agent.mockClear();
   });
 
   afterEach(() => {
@@ -21,40 +28,42 @@ describe("fetch_source network guard", () => {
 
   it("blocks DNS names that resolve to private IPs before fetch", async () => {
     lookupMock.mockResolvedValue([{ address: "127.0.0.1", family: 4 }]);
-    const fetch = vi.fn();
-    vi.stubGlobal("fetch", fetch);
 
     const result = await (await fetchSourceReal())("https://private.example/");
 
     expect(result.ok).toBe(false);
     if (!result.ok) expect(result.error).toBe("blocked host (SSRF)");
-    expect(fetch).not.toHaveBeenCalled();
+    expect(undiciMocks.fetch).not.toHaveBeenCalled();
   });
 
   it("pins public DNS answers through the fetch dispatcher", async () => {
     lookupMock.mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);
     type FetchInit = RequestInit & { dispatcher?: unknown };
-    const fetch = vi.fn(async (_input: Parameters<typeof globalThis.fetch>[0], _init?: FetchInit) => new Response("<title>ok</title>", { status: 200 }));
-    vi.stubGlobal("fetch", fetch);
+    undiciMocks.fetch.mockImplementation(async (_input: Parameters<typeof globalThis.fetch>[0], _init?: FetchInit) => new Response("<title>ok</title>", { status: 200 }));
 
     const result = await (await fetchSourceReal())("https://public.example/");
 
     expect(result.ok).toBe(true);
-    expect(fetch).toHaveBeenCalledOnce();
-    const init = fetch.mock.calls[0][1];
+    expect(undiciMocks.fetch).toHaveBeenCalledOnce();
+    const init = undiciMocks.fetch.mock.calls[0][1];
     expect(init).toMatchObject({ redirect: "manual" });
     expect(init).toHaveProperty("dispatcher");
+    const agentOptions = undiciMocks.Agent.mock.calls[0][0] as { connect: { lookup: (...args: any[]) => void } };
+    let callbackArgs: unknown[] = [];
+    agentOptions.connect.lookup("public.example", { all: true }, (...args: unknown[]) => { callbackArgs = args; });
+    expect(callbackArgs[0]).toBeNull();
+    expect(callbackArgs[1]).toEqual([{ address: "93.184.216.34", family: 4 }]);
   });
 
   it("blocks redirect targets that become private or non-https", async () => {
     lookupMock.mockResolvedValue([{ address: "93.184.216.34", family: 4 }]);
-    vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 302, headers: { location: "https://127.0.0.1/" } })));
+    undiciMocks.fetch.mockImplementation(async () => new Response(null, { status: 302, headers: { location: "https://127.0.0.1/" } }));
 
     const privateResult = await (await fetchSourceReal())("https://public.example/");
     expect(privateResult.ok).toBe(false);
     if (!privateResult.ok) expect(privateResult.error).toBe("blocked redirect");
 
-    vi.stubGlobal("fetch", vi.fn(async () => new Response(null, { status: 302, headers: { location: "http://example.com/" } })));
+    undiciMocks.fetch.mockImplementation(async () => new Response(null, { status: 302, headers: { location: "http://example.com/" } }));
     const protocolResult = await (await fetchSourceReal())("https://public.example/");
     expect(protocolResult.ok).toBe(false);
     if (!protocolResult.ok) expect(protocolResult.error).toBe("blocked redirect");

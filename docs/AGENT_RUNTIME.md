@@ -8,7 +8,7 @@ Everything here is real, typechecked code you can run:
 
 ```
 npm run demo:agent          # the harness, scripted model (no keys), two scenarios
-npm run demo:agent -- --real  # the same harness on the real Anthropic model
+npm run demo:agent -- --real  # the same harness on the configured real provider route
 npm test                    # 17 scenarios incl. the agent runtime
 ```
 
@@ -30,16 +30,16 @@ NodeRoom's harness lives in `src/agent/` and is deliberately tiny. The only thin
                   seam ① the model   seam ③ the tools    seam ② the backend
                   ───────────────    ───────────────     ────────────────
                   scriptedModel      read_range          InMemoryRoomTools
-                  anthropicModel     propose_lock        (over RoomEngine)
+                  model()/convexModel propose_lock       (over RoomEngine)
                   (model.ts)         edit_cell  …        ConvexRoomTools
                                      (tools.ts)          (over Convex)
 ```
 
 Here are the three seams, defined in the header of `src/agent/types.ts` (lines 4-10):
 
-- **Seam 1 — the model** (`AgentModel`, `src/agent/types.ts:43-46`). The brain. Two implementations: `scriptedModel` (deterministic, no network) and `anthropicModel` (the real LLM). The loop doesn't care which it's holding.
+- **Seam 1 — the model** (`AgentModel`, `src/agent/types.ts:43-46`). The brain. Current implementations include `scriptedModel` (deterministic, no network), `model(modelId)` for local/provider runs, and `convexModel(modelId)` for Convex actions. The loop doesn't care which it's holding.
 - **Seam 2 — the tool backend** (`RoomTools`, `src/agent/types.ts:75-92`). The thing the tools actually call. Two implementations: `InMemoryRoomTools` over the in-process engine (`src/agent/roomTools.ts`) and `ConvexRoomTools` over Convex (`convex/convexRoomTools.ts`). Same interface, so the agent code is identical between the spike and production.
-- **Seam 3 — the tools** (`AgentTool[]`, `src/agent/types.ts:49-54`). The concrete array the model is allowed to call: `ROOM_TOOLS` in `src/agent/tools.ts:18-55`.
+- **Seam 3 — the tools** (`AgentTool[]`, `src/agent/types.ts:49-54`). The concrete array the model is allowed to call: `ROOM_TOOLS` in `src/agent/tools.ts`.
 
 The point to hammer: **the harness code — `context.ts`, `tools.ts`, `runtime.ts` — is identical across both backends.** Only the `RoomTools` implementation swaps. So when you say "we tested this end-to-end with no API keys," you mean the *real* runtime and the *real* tool layer ran; only the brain and the database were fakes.
 
@@ -127,9 +127,11 @@ That version tag is load-bearing. **The versions in this table are what make CAS
 
 ## 4. The tools (`src/agent/tools.ts`)
 
-Each tool is `{ name, description, schema (zod), execute }` — the shape from `src/agent/types.ts:49-54`. `ROOM_TOOLS` (`tools.ts:18-55`) has six tools, and they map 1:1 to the five protocol steps plus chat:
+Each tool is `{ name, description, schema (zod), execute }` — the shape from `src/agent/types.ts:49-54`. `ROOM_TOOLS` now includes the core lock/CAS/draft/chat tools plus workflow helpers:
 
-`read_range`, `propose_lock`, `edit_cell`, `create_draft`, `release_lock`, `say`.
+`read_range`, `search_sheet_context`, `propose_lock`, `edit_cell`, `write_cell_result`,
+`list_artifacts`, `update_wiki`, `reconcile_cell`, `create_draft`, `release_lock`,
+`say`, and `fetch_source`.
 
 Three things matter about how these are built:
 
@@ -245,7 +247,7 @@ the Convex action variant. Provider SDK tools are still declared without `execut
 tool calls and NodeRoom runs them against `RoomTools`. `openrouter/free-auto` is explicit for the
 long-running `/free` lane and records the concrete resolved model for audit.
 
-**`anthropicModel`** (`model.ts:21-41`) is the real model — a thin adapter over the Vercel AI SDK's `generateText` (`model.ts:26`) with `anthropic(modelId)`, defaulting to `'claude-haiku-4-5'` (`model.ts:21`). The critical detail: the SDK tools are defined **without an `execute` function** (`model.ts:25`). So the SDK only *returns* the tool calls — it doesn't run them. NodeRoom's runtime runs them against `RoomTools`. It also deliberately omits `maxSteps` (`model.ts:31`) so each call is exactly one model turn. The division of labor: the AI SDK owns provider plumbing, streaming, and retries; the harness owns the loop, the context, and the backend.
+**Provider adapters** are route-based, not Anthropic-only. `model(modelId)` uses the catalog-backed local/provider adapter path, while `convexModel(modelId)` is the Convex-safe action adapter. The critical detail is unchanged: provider tools are declared without local side effects. The provider returns tool calls; NodeRoom validates and executes them against `RoomTools`. The division of labor: the provider adapter owns model plumbing, while the harness owns the loop, context, tool validation, backend writes, conflict recovery, compaction, budgets, and traceability.
 
 **`scriptedModel`** (`model.ts:63-73`) is a deterministic model for demos and tests. It takes a `Planner` that reads the running message history — so it can see prior tool results, including versions and conflicts — and returns the next step. No network, no keys. The `lastVersions` helper (`model.ts:76-86`) lets planners pull versions out of prior `read_range` results.
 
@@ -258,18 +260,35 @@ Why this seam earns its keep: the demo and tests use the scripted model so they 
 Current production wiring uses `convexModel(process.env.AGENT_MODEL ?? "gemini-3.5-flash")`, so
 provider keys depend on the selected model route rather than being Anthropic-only.
 
-`convex/agent.ts` is the production entry point. It's a `"use node"` action (`agent.ts:18`) — it needs Node so the AI SDK can run, and it needs `ANTHROPIC_API_KEY` in the Convex env. `runRoomAgent` (`agent.ts:29-50`) is intentionally tiny:
+`convex/agent.ts` is the production entry point. It is a Convex action because
+model calls and external services belong outside deterministic mutations.
+Provider keys depend on the selected `AGENT_MODEL` route, not on Anthropic
+alone. `runRoomAgent` now claims or creates an `agentJobs` row, applies spend
+and time budgets, enables compaction, uses the provider-step journal, and hands
+off to Workflow/Workpool when the first slice cannot finish:
 
 ```ts
-const roomState = await ctx.runQuery(api.rooms.full, { roomId: a.roomId, requester: a.requester });
-const session = roomState.sessions.find((s) => s.scope === "public");
-const actor = { kind: "agent", id: session.agentId, name: session.agentName, scope: "public" };
-const rt = new ConvexRoomTools(ctx, a.roomId, a.artifactId, actor, String(session.id)); // the Convex backend
-const model = anthropicModel(process.env.AGENT_MODEL ?? "claude-haiku-4-5");        // the real model
-return runAgent({ rt, goal: a.goal, model, tools: ROOM_TOOLS, maxSteps: a.maxSteps ?? 10 }); // the SAME loop
+const job = await createOrReuseAgentJob(...);
+const rt = new ConvexRoomTools(ctx, roomId, artifactId, actor, sessionId);
+const model = convexModel(job.modelPolicy ?? process.env.AGENT_MODEL ?? "gemini-3.5-flash");
+const result = await runAgent({
+  rt,
+  goal,
+  model,
+  tools: ROOM_TOOLS,
+  journal: makeConvexStepJournal(...),
+  deadlineAt,
+  compaction: ...
+});
+await finishInteractiveOrCheckpoint(job, result);
 ```
 
-It first verifies the caller's member proof through `rooms.full`, derives the public room agent/session on the server, constructs a `ConvexRoomTools`, picks the real model, and calls the **identical `runAgent`** from `src/agent/runtime.ts` with `ROOM_TOOLS`. That's the seam paying off: nothing in the harness changed between the demo and production — only the two implementations behind seams 1 and 2 got swapped for the real ones.
+It first verifies the caller's member proof through `rooms.full`, derives the
+public room agent/session on the server, constructs `ConvexRoomTools`, picks the
+resolved model route, and calls the **identical `runAgent`** from
+`src/agent/runtime.ts` with `ROOM_TOOLS`. That's the seam paying off: the loop
+is shared between deterministic tests, local provider runs, and Convex actions;
+only the model and backend implementations differ.
 
 > **Step budgets, for precision.** Three different defaults in play: the runtime's own default is 8 (`src/agent/runtime.ts:35`), the production action uses 10 (`agent.ts:41`), and the demo uses 16 (`demo/runAgent.ts:48`). Same loop, different rails for different contexts.
 
@@ -289,8 +308,8 @@ The action returns a summary — `{ finalText, steps, exhausted, toolCalls, conf
 | The loop (harness) | `src/agent/runtime.ts` |
 | Context — the protocol (system prompt) | `src/agent/systemPrompt.ts` |
 | Context — the live JIT table | `src/agent/context.ts` |
-| The six tools | `src/agent/tools.ts` |
-| Seam 1 — model adapters (scripted + Anthropic) | `src/agent/model.ts` |
+| Current tools | `src/agent/tools.ts` |
+| Seam 1 — model adapters (scripted + provider routes) | `src/agent/model.ts`, `src/agent/convexModel.ts` |
 | Scripted planners (drive the demo/tests) | `src/agent/plans.ts` |
 | Seam 2 — in-memory backend | `src/agent/roomTools.ts` (over `src/engine/roomEngine.ts`) |
 | Seam 2 — Convex backend | `convex/convexRoomTools.ts` |

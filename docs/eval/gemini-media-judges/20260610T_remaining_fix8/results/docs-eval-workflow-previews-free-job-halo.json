@@ -1,0 +1,71 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-free-job-halo",
+    "class": "workflow_preview",
+    "title": "Free Job Halo",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\free-job-halo.gif",
+    "relPath": "docs/eval/workflow-previews/free-job-halo.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T_remaining_fix8/docs-eval-workflow-previews-free-job-halo.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/free-job-halo.gif",
+  "bytes": 129361,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The workflow preview successfully demonstrates the execution of a collaborative spreadsheet update within NodeRoom, showing the trigger, execution state, and final updated values alongside agent logs.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Demonstrates the 'Run collaboration' action on a spreadsheet, though the specific 'halo' concept is implicit."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Shows the initial state, the user clicking 'Run collaboration', and the resulting updates in the chat and spreadsheet."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark-mode layout with clear panel division, though some text elements have low contrast."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with the NodeRoom paradigm of spreadsheets, chat channels, and agent traces."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Captured from a live-running UI session showing real-time data updates."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Main UI elements are readable, but small trace logs at the bottom require zooming."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for financial auditing and automated reconciliation workflows."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately depicts the execution delay and step-by-step agent output."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet variance column updates",
+      "Public chat log updates from Room NodeAgent",
+      "Collaboration execution trace at the bottom"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:03",
+        "severity": "P2",
+        "observed": "The 'Run collaboration' button appears suddenly without hover state feedback.",
+        "fix": "Ensure cursor hover states are captured in the recording to improve interaction clarity."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch NodeRoom's collaborative agent execute a variance reconciliation workflow directly on the Q3 spreadsheet."
+  },
+  "score": 8,
+  "maxScore": 16
+}

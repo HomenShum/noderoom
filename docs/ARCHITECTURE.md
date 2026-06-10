@@ -55,8 +55,8 @@ The in-memory `RoomEngine` is the deterministic implementation of `convex/schema
 | `RoomEngine` Maps | tables: `rooms`, `members`, `artifacts`, `elements`, `locks`, `drafts`, `proposals`, `agentSessions`, `messages`, `traces` |
 | `engine.subscribe()` + `useSyncExternalStore` | reactive `useQuery` subscriptions (the stream) |
 | `applyEdit` (CAS) | `applyCellEdit` mutation — per-element `version` check; **conflict returned as data, not a thrown `ConvexError`** (a throw rolls back the whole mutation) |
-| `proposeLock` / `releaseLock` | `locks` table mutations; release triggers a merge action |
-| `mergeDraft` → deterministic resolver | a `"use node"` action calling an LLM resolver |
+| `proposeLock` / `releaseLock` | `locks` table mutations; `releaseLock` calls deterministic `mergeBlockedDrafts` |
+| `mergeDraft` → deterministic resolver | deterministic Convex mutation flow today; an LLM resolver remains a future seam |
 | `opId` / `clientMsgId` idempotency | `withIndex().unique()`-then-insert (Convex has no DB unique constraint) |
 | scripted agents | `pi-agent-core` loop in a `"use node"` action; tools = `read_range` / `propose_lock` / `edit` / `create_draft`; conflicts come back as tool errors → the model re-reads + retries |
 
@@ -93,10 +93,11 @@ range by artifact id, visibility, version, row range, and column range.
 ## Long-running job lifecycle
 
 Long-running execution is a property of `agentJobs`, not a separate agent
-runtime. `/ask` creates the same durable job root as `/free`; it runs an
-immediate first slice for interactive UX, then checkpoints into Workflow if the
-slice exhausts budget. `/free` only starts the job with the free-auto model
-policy.
+runtime. Durable public and Room-lane requests (`/ask`, `/free`, private
+Room-lane actions) use the same job root; private read-only advise is still a
+one-call private reply path. `/ask` runs an immediate first slice for
+interactive UX, then checkpoints into Workflow if the slice exhausts budget.
+`/free` only starts the job with the free-auto model policy.
 
 ```text
 agentJobs create/handoff mutation
@@ -118,15 +119,15 @@ Built guarantees:
   job state; legacy scheduler continuation is only used for old
   `runtime="scheduler"` jobs.
 - A lease prevents two workers from running the same job at the same time.
+- `createOrReuse` and `startFreeAuto` dedupe by idempotency key.
+- The provider-step journal replays completed model steps after
+  crash-after-response/before-checkpoint failures.
 
 Important production distinction:
 
-- A lease is not enqueue idempotency. A double-click can still create two
-  independent jobs unless `startFreeAuto` claims or reuses a deterministic job
-  idempotency key.
-- Runtime exactly-once journaling is proven in tests, but the Convex `/free`
-  runner still needs a durable provider-step journal keyed by a stable job step
-  id to avoid re-billing after a crash immediately after a provider call.
+- A lease is not provider request idempotency. The journal prevents replaying a
+  completed recorded model step, but providers that support request
+  idempotency should still receive stable request ids.
 - Model calls receive deadline abort signals; tools are checked before
   execution, but stricter production cap-safety should thread deadline signals
   through tool implementations too.
@@ -134,9 +135,9 @@ Important production distinction:
 ## NodeAgent job contract
 
 The `/ask` and `/free` split has converged on one durable NodeAgent contract:
-every agent request first creates or reuses an `agentJobs` row, then the first
-action slice either completes quickly or checkpoints into the same
-Workflow/Workpool continuation path. The detailed target
+every durable public or Room-lane request first creates or reuses an
+`agentJobs` row, then the first action slice either completes quickly or
+checkpoints into the same Workflow/Workpool continuation path. The detailed target
 design, including `NodeAgentRequest`, `NodeAgentResult`, notebook graph tables,
 the action/query/mutation operation ledger, leases, tool permissions, mutation
 receipts, and embedding sync, lives in

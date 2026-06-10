@@ -1,0 +1,65 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l3-no-clobber",
+    "class": "workflow_preview",
+    "title": "L3 No Clobber",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l3-no-clobber.gif",
+    "relPath": "docs/eval/workflow-previews/l3-no-clobber.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T_remaining_fix8/docs-eval-workflow-previews-l3-no-clobber.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l3-no-clobber.gif",
+  "bytes": 78516,
+  "judge": {
+    "verdict": "publish",
+    "summary": "A clear, step-by-step animation demonstrating optimistic concurrency control (CAS) when a human edits a cell mid-write, forcing the agent to re-read and commit safely.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.4,
+        "evidence": "The step-by-step progression clearly illustrates the CAS conflict and subsequent resolution."
+      },
+      "workflowCompleteness": {
+        "score": 1.5,
+        "evidence": "Shows the initial state, the conflict occurrence, the re-read of V2, and the final V3 commit."
+      },
+      "visualDesign": {
+        "score": 1.3,
+        "evidence": "Clean dark-mode layout with clear row highlighting and progress indicators."
+      },
+      "consistency": {
+        "score": 1.2,
+        "evidence": "Aligns well with the spreadsheet-based agent collaboration model."
+      },
+      "evidenceQuality": {
+        "score": 1.2,
+        "evidence": "Provides a high-fidelity conceptual walkthrough of the concurrency protocol."
+      },
+      "legibility": {
+        "score": 1.5,
+        "evidence": "Text, version chips, and status labels are highly readable."
+      },
+      "professionalRelevance": {
+        "score": 1.3,
+        "evidence": "Highly relevant for engineers designing multi-agent or human-in-the-loop transactional systems."
+      },
+      "productionHonesty": {
+        "score": 1.4,
+        "evidence": "Accurately depicts the conflict state and the necessity of a re-read before committing."
+      }
+    },
+    "observedEvidence": [
+      "Step-by-step progress bar (0/5 to 5/5)",
+      "Conflict state indicator ('CONFLICT')",
+      "Version tracking labels (V1, V2, V3)",
+      "Agent action log at the bottom"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Watch how NodeRoom's CAS protocol prevents clobbering: when a human edits a cell mid-write, the agent detects the conflict, re-reads the new value, and safely commits V3."
+  },
+  "score": 10.8,
+  "maxScore": 16
+}

@@ -1,0 +1,72 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-wiki-note-grounding",
+    "class": "workflow_preview",
+    "title": "Wiki Note Grounding",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\wiki-note-grounding.gif",
+    "relPath": "docs/eval/workflow-previews/wiki-note-grounding.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T_remaining_fix8/docs-eval-workflow-previews-wiki-note-grounding.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/wiki-note-grounding.gif",
+  "bytes": 212559,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The workflow preview demonstrates the relationship between a diligence note and grounded cells in a spreadsheet. It uses clear annotations to guide the viewer through the transition, though some UI transitions are abrupt.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Shows a note and then highlights the corresponding grounded cells in the spreadsheet, though the linking action itself is implicit."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Captures the start state in the note tab, a transition step, and the final grounded spreadsheet view."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark-mode layout with clear multi-pane structure, though text overlays are manually added."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with the NodeRoom paradigm of chat, notes, spreadsheets, and agent traces."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Appears to be a genuine UI capture, enhanced with explanatory text overlays."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Main text and spreadsheet cells are readable, though trace logs at the bottom are quite small."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for financial analysts and diligence workflows involving structured data grounding."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Clearly uses annotations to explain the flow rather than pretending the UI automatically displays those exact text labels."
+      }
+    },
+    "observedEvidence": [
+      "Note tab displaying 'Sync reliability - diligence note'",
+      "Spreadsheet tab displaying financial rows and a 'NOTE' column",
+      "Highlighted 'Grounded cells' annotation in the spreadsheet view",
+      "Agent trace panel at the bottom of the screen"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:02",
+        "severity": "P2",
+        "observed": "Abrupt transition with a static text overlay 'Open Spreadsheet next' instead of showing the actual click path.",
+        "fix": "Show the mouse cursor navigating and clicking the Spreadsheet tab to make the transition feel more natural."
+      }
+    ],
+    "suggestedReadmeCaption": "See how NodeRoom grounds diligence notes directly to specific cells within your financial spreadsheets, ensuring traceability."
+  },
+  "score": 8,
+  "maxScore": 16
+}

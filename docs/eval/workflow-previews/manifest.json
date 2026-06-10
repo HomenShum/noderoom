@@ -1,16 +1,25 @@
 {
   "schema": 1,
-  "generatedAt": "2026-06-10T18:20:48.677Z",
+  "generatedAt": "2026-06-10T21:48:08.313Z",
   "generator": "scripts/workflow-preview-gifs.ts",
   "previews": [
     {
       "id": "ask-spreadsheet-cas",
       "title": "Public /ask spreadsheet reconciliation",
       "userWorkflow": "A user asks the Room NodeAgent to reconcile Q3 variance cells; the agent locks exact cells, reads versions, writes with CAS, releases, and leaves trace rows.",
+      "size": "960x720",
+      "crop": "1080x810+220+50",
+      "delay": "170",
       "frames": [
         "docs/screenshots/qa-real-llm-ask.png",
-        "docs/screenshots/live-room-after-agent.png",
-        "docs/screenshots/ui-trace-lifecycle.png"
+        {
+          "frame": "docs/screenshots/live-room-after-agent.png",
+          "delay": "280"
+        },
+        {
+          "frame": "docs/screenshots/ui-trace-lifecycle.png",
+          "delay": "380"
+        }
       ],
       "evidence": [
         "docs/eval/halo-runs/20260609T060208Z/summary.jsonl",
@@ -33,8 +42,23 @@
       "id": "research-enrichment",
       "title": "GTM research enrichment",
       "userWorkflow": "A user runs source-backed company research over pending/stale rows; the agent preserves CRM fields, fills evidence-bearing payloads, and marks freshness.",
+      "delay": "170",
       "frames": [
         "docs/screenshots/live-research-before.png",
+        {
+          "frame": "docs/screenshots/live-research-before.png",
+          "delay": "280",
+          "callout": {
+            "text": "Research in progress",
+            "x": 525,
+            "y": 132,
+            "width": 150,
+            "height": 44,
+            "labelX": 438,
+            "labelY": 106,
+            "pointSize": 24
+          }
+        },
         "docs/screenshots/live-research-after.png",
         "docs/screenshots/live-research-sources-freshness.png",
         "docs/screenshots/live-research-requeue.png"
@@ -60,9 +84,40 @@
       "id": "wiki-note-grounding",
       "title": "Grounded wiki and note update",
       "userWorkflow": "A user asks for a note/wiki summary; the NodeAgent discovers room artifacts, reads the source sheet, writes a grounded note with citations, and respects private/public boundaries.",
+      "size": "960x720",
+      "crop": "1080x810+220+50",
+      "delay": "185",
       "frames": [
         "docs/screenshots/lib-note.png",
-        "docs/screenshots/qa-telemetry.png"
+        {
+          "frame": "docs/screenshots/lib-note.png",
+          "delay": "260",
+          "callout": {
+            "text": "Open Spreadsheet next",
+            "x": 238,
+            "y": 0,
+            "width": 104,
+            "height": 34,
+            "labelX": 260,
+            "labelY": 260,
+            "pointSize": 20
+          }
+        },
+        "docs/screenshots/qa-telemetry.png",
+        {
+          "frame": "docs/screenshots/qa-telemetry.png",
+          "delay": "260",
+          "callout": {
+            "text": "Grounded cells",
+            "x": 470,
+            "y": 120,
+            "width": 130,
+            "height": 225,
+            "labelX": 488,
+            "labelY": 370,
+            "pointSize": 18
+          }
+        }
       ],
       "evidence": [
         "docs/AGENT_WIKI.md",
@@ -84,10 +139,30 @@
       "id": "proposals-wall-review",
       "title": "Proposal review and wall collaboration",
       "userWorkflow": "With Auto-allow off, agent edits become host-reviewed proposals; wall edits and approvals remain versioned room artifacts, not invisible local state.",
+      "size": "960x720",
+      "crop": "1080x810+220+50",
+      "delay": "165",
       "frames": [
         "docs/screenshots/live-proposals-review.png",
         "docs/screenshots/live-proposals-buttons.png",
-        "docs/screenshots/lib-wall.png"
+        {
+          "frame": "docs/screenshots/live-proposals-buttons.png",
+          "delay": "240",
+          "callout": {
+            "text": "",
+            "x": 548,
+            "y": 56,
+            "width": 70,
+            "height": 46,
+            "labelX": 505,
+            "labelY": 42,
+            "pointSize": 22
+          }
+        },
+        {
+          "frame": "docs/screenshots/lib-wall.png",
+          "delay": "440"
+        }
       ],
       "evidence": [
         "docs/WALKTHROUGH.md",
@@ -109,10 +184,20 @@
       "id": "free-job-halo",
       "title": "Long-running /free job and HALO handoff",
       "userWorkflow": "A user starts a slow free-auto job; NodeRoom shows job state, attempts, receipts, and traces while HALO records regressions and handoff evidence.",
+      "delay": "240",
       "frames": [
-        "docs/screenshots/qa-room.png",
-        "docs/screenshots/qa-ask-flow.png",
-        "docs/screenshots/qa-telemetry.png"
+        {
+          "frame": "docs/screenshots/qa-room.png",
+          "delay": "260"
+        },
+        {
+          "frame": "docs/screenshots/qa-ask-flow.png",
+          "delay": "320"
+        },
+        {
+          "frame": "docs/screenshots/qa-telemetry.png",
+          "delay": "420"
+        }
       ],
       "evidence": [
         "docs/eval/HALO_OVERNIGHT_RUN.md",

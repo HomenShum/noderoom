@@ -108,8 +108,9 @@ export const runRoomAgent = action({
       return typeof error === "string" ? error : JSON.stringify(error) ?? String(error);
     };
     const stepStatus = (e: { tool: string; result: unknown }): "ok" | "conflict" | "locked" | "error" => {
-      const r = (e.result ?? {}) as { ok?: boolean; conflict?: boolean; locked?: boolean; error?: unknown };
+      const r = (e.result ?? {}) as { ok?: boolean; conflict?: boolean; locked?: boolean; error?: unknown; pendingApproval?: boolean };
       if (e.tool === "edit_cell") { if (r.conflict) return "conflict"; if (r.locked) return "locked"; }
+      if (r.pendingApproval) return "ok"; // review mode: proposal filed = success, not an error
       if (r.error || r.ok === false) return "error";
       return "ok";
     };
@@ -274,6 +275,12 @@ export const runRoomAgent = action({
         journal: modelJournal,
         deadlineAt,
         reserveMs: actionReserveMs,
+        // P0-4: interactive runs get the same token + dollar ceiling as the durable lane.
+        spendLimits: {
+          maxTokens: envNumber("AGENT_MAX_TOKENS_PER_RUN", 250_000, 1_000, 4_000_000),
+          maxCostUsd: envNumber("AGENT_MAX_USD_PER_RUN", 2, 0.01, 100),
+        },
+        priceStep: (modelName, inputTokens, outputTokens) => priceRun(modelName, inputTokens, outputTokens),
       });
     } catch (error) {
       await persistFailure(error);

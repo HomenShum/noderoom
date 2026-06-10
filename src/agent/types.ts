@@ -109,6 +109,10 @@ export interface AwarenessView {
   activeLocks: { lockId: string; elementIds: string[]; holder: string; reason: string }[];
   agents: { name: string; scope: string; status: string }[];
   recentTrace: string[];
+  /** Room write policy. false = REVIEW MODE: agent edits file proposals (pendingApproval results).
+   *  Surfaced to the model via the context builders — without it, the model reads pendingApproval
+   *  as failure and retries/wanders (the live 0/3 review-mode incident, see FRICTION_LOG). */
+  autoAllow?: boolean;
 }
 export type EditOutcome =
   | { ok: true; version: number; mutationReceiptId?: string }

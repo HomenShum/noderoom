@@ -53,6 +53,21 @@ Loading states are first-class: an agent "thinking" beat is part of the story, n
 - Keep room codes random per capture (`GIF-…`) so every walkthrough starts from a genuinely
   empty state on the live backend.
 
+## GIF encode + camera (updated after the size blow-up)
+
+- **Stage 4 (preferred): system ffmpeg two-pass palette** — render H.264 (`--codec=h264 --crf=16`)
+  then `ffmpeg -vf "fps=12,scale=896:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=128:
+  stats_mode=diff[p];[s1][p]paletteuse=dither=bayer:bayer_scale=3:diff_mode=rectangle"`.
+  Remotion's bundled ffmpeg is a MINIMAL build (no fps/palette filters) — a full system ffmpeg is
+  required; `render.ts` falls back to direct `--codec=gif` without one.
+- **Camera (ported from HomenShum/feature-walkthrough-gif):** zoom 1.30x toward the click on
+  action beats (edge-clamped origin), pull back through the result beat. **GIF rule: ease over a
+  FIXED ~14-frame window then HOLD static** — a continuous relax animates every pixel of every
+  frame and tripled file sizes (8–16MB) before being fixed; inter-frame delta IS the size budget.
+- Port backlog (from the public repo, not yet built here): selector-shorthand DSL for specs,
+  caption-derived holds (`clamp(1.5s, words/2.5, 7s)`), MP4 shipped alongside GIF + frame-0
+  poster, render-only CI smoke with checked-in frames, splitting any >20s walkthrough in two.
+
 ## Pitfalls (paid for, don't repay)
 
 - **One browser context per persona** — shared localStorage silently reuses the first session.

@@ -1,0 +1,73 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l4-draft",
+    "class": "workflow_preview",
+    "title": "L4 Draft",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l4-draft.gif",
+    "relPath": "docs/eval/workflow-previews/l4-draft.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T190900Z/docs-eval-workflow-previews-l4-draft.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l4-draft.gif",
+  "bytes": 74842,
+  "judge": {
+    "verdict": "fix-then-publish",
+    "summary": "The workflow preview clearly demonstrates the concept of an agent handling locked ranges, but contains a duplicate step in the sequence animation.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.2,
+        "evidence": "The UI clearly shows the transition of a row to a locked state and the agent's response."
+      },
+      "workflowCompleteness": {
+        "score": 1.1,
+        "evidence": "Shows the progression from goal to completion, though the final drafted value is not visually shown in the cell."
+      },
+      "visualDesign": {
+        "score": 1.2,
+        "evidence": "Clean dark mode layout with clear highlighting of the active row."
+      },
+      "consistency": {
+        "score": 1.1,
+        "evidence": "Aligns well with the versioning and multi-agent collaboration narrative."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Functions well as a conceptual workflow diagram, though it is a simplified simulation."
+      },
+      "legibility": {
+        "score": 1.3,
+        "evidence": "Text and status indicators are highly readable with good contrast."
+      },
+      "professionalRelevance": {
+        "score": 1.2,
+        "evidence": "Highly relevant for financial analysts managing shared model updates."
+      },
+      "productionHonesty": {
+        "score": 1.1,
+        "evidence": "Clearly presented as a step-by-step conceptual flow rather than live UI capture."
+      }
+    },
+    "observedEvidence": [
+      "Step-by-step progress indicator (0/5 to 5/5)",
+      "Locked status highlight on the Net Income row",
+      "AI agent status bar at the bottom"
+    ],
+    "missingEvidence": [
+      "Visual representation of the drafted value or the final smart-merge proposal screen"
+    ],
+    "defects": [
+      {
+        "ts": "00:03",
+        "severity": "P1",
+        "observed": "Step 3/5 duplicates the text and action of Step 1/5 ('locks the affected range - read-only for others').",
+        "fix": "Remove the duplicate step or update Step 3/5 to show a unique progression in the workflow."
+      }
+    ],
+    "suggestedReadmeCaption": "NodeRoom agent automatically drafting updates for a locked cell to prepare for a smart-merge once unlocked."
+  },
+  "score": 9.2,
+  "maxScore": 16
+}

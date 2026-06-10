@@ -1,0 +1,71 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l6-long-horizon",
+    "class": "workflow_preview",
+    "title": "L6 Long Horizon",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l6-long-horizon.gif",
+    "relPath": "docs/eval/workflow-previews/l6-long-horizon.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T190900Z/docs-eval-workflow-previews-l6-long-horizon.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l6-long-horizon.gif",
+  "bytes": 252349,
+  "judge": {
+    "verdict": "publish",
+    "summary": "A highly polished, step-by-step visualization of an AI agent resolving multi-cell write conflicts using CAS (Compare-And-Swap) and compaction. The progression is clear, legible, and directly relevant to transactional agent workflows.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.4,
+        "evidence": "The step-by-step execution clearly demonstrates conflict detection, stale write rejection, and eventual successful commit."
+      },
+      "workflowCompleteness": {
+        "score": 1.5,
+        "evidence": "Shows the entire lifecycle of reading, encountering a conflict, compacting, and successfully writing across multiple cells."
+      },
+      "visualDesign": {
+        "score": 1.4,
+        "evidence": "Clean dark-mode aesthetic with clear row highlighting and a structured progress bar at the bottom."
+      },
+      "consistency": {
+        "score": 1.3,
+        "evidence": "Aligns well with NodeRoom's spreadsheet-based agent coordination and trace-logging paradigm."
+      },
+      "evidenceQuality": {
+        "score": 1.3,
+        "evidence": "Feels like a high-fidelity execution trace replay, though slightly abstracted from a live browser environment."
+      },
+      "legibility": {
+        "score": 1.4,
+        "evidence": "High-contrast text and clear labels make it easy to read even at smaller sizes."
+      },
+      "professionalRelevance": {
+        "score": 1.4,
+        "evidence": "Highly relevant to developers building multi-agent systems requiring transactional integrity over shared state."
+      },
+      "productionHonesty": {
+        "score": 1.3,
+        "evidence": "Explicitly highlights conflicts and retries rather than presenting a flawless, instantaneous execution."
+      }
+    },
+    "observedEvidence": [
+      "Step-by-step progress bar (1/31 to 31/31)",
+      "Conflict state indicators (V1, V2, V3 versions)",
+      "Agent action logs at the bottom (reads, writes, compaction)"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:02",
+        "severity": "P2",
+        "observed": "The interface is highly stylized and abstracted, which may not perfectly match the actual production UI.",
+        "fix": "Add a small caption or subtitle indicating this is a trace visualization of the underlying agent protocol."
+      }
+    ],
+    "suggestedReadmeCaption": "NodeRoom agent executing a long-horizon task: resolving concurrent human-agent edit conflicts on financial cells using CAS and context compaction without locking."
+  },
+  "score": 11,
+  "maxScore": 16
+}

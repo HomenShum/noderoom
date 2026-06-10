@@ -305,7 +305,7 @@
         { "type": "doc", "ref": "docs/eval/MEDIA_JUDGE.md" },
         { "type": "data", "ref": "docs/eval/gemini-media-judges/latest.json" }
       ],
-      "nextReview": "Fix the three remaining P1 media defects called out by Gemini: ask-spreadsheet-cas pacing, free-job-halo pacing/density, and L4 draft's repeated lock step; then rerun the batch judge."
+      "nextReview": "Fix every current P1 defect listed under Open Defects in docs/eval/MEDIA_JUDGE.md, then rerun the batch judge and promote only when no P1/P0 defects remain."
     },
     {
       "id": "audience_fluency_content",

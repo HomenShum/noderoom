@@ -1,0 +1,72 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-app-research-enrich",
+    "class": "workflow_preview",
+    "title": "App Research Enrich",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\app-research-enrich.gif",
+    "relPath": "docs/eval/workflow-previews/app-research-enrich.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T190900Z/docs-eval-workflow-previews-app-research-enrich.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/app-research-enrich.gif",
+  "bytes": 54697,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The workflow preview clearly demonstrates the account enrichment feature, showing the transition from pending to complete states with corresponding trace updates.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Shows the transition of account status from pending to complete with populated research data."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Captures the before state, the enrichment action, and the final populated spreadsheet with trace logs."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark-themed spreadsheet layout with clear visual hierarchy and distinct status indicators."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Integrates the spreadsheet view with the Room trace panel, aligning with the platform's core concepts."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Authentic UI capture showing real-time state changes and detailed agent execution logs."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Text in the spreadsheet cells and the trace log is legible at standard viewing sizes."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for GTM and sales operations workflows requiring automated company research."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately depicts the execution trace and data changes without artificial overlays."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet interface with account names and pending statuses",
+      "Enrich button interaction",
+      "Status change to complete with populated research text",
+      "Room trace log updating with agent execution details"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:02",
+        "severity": "P2",
+        "observed": "The video remains static from 00:01 to 00:07 after the enrichment action completes.",
+        "fix": "Trim the trailing static frames to reduce the overall GIF file size."
+      }
+    ],
+    "suggestedReadmeCaption": "Automate company research and enrich account lists using public and private NodeAgents, with full execution visibility in the Room trace."
+  },
+  "score": 8,
+  "maxScore": 16
+}

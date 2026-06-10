@@ -1,0 +1,72 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-ask-spreadsheet-cas",
+    "class": "workflow_preview",
+    "title": "Ask Spreadsheet Cas",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\ask-spreadsheet-cas.gif",
+    "relPath": "docs/eval/workflow-previews/ask-spreadsheet-cas.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T190900Z/docs-eval-workflow-previews-ask-spreadsheet-cas.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/ask-spreadsheet-cas.gif",
+  "bytes": 109385,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The workflow preview successfully demonstrates an AI agent interacting with a financial spreadsheet to calculate variances. The multi-pane layout clearly shows the chat, spreadsheet updates, and execution trace.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.4,
+        "evidence": "Shows the agent processing a variance analysis request and updating the spreadsheet cells in real-time."
+      },
+      "workflowCompleteness": {
+        "score": 1.5,
+        "evidence": "Captures the initial state, agent execution/thinking steps, and the resulting spreadsheet updates."
+      },
+      "visualDesign": {
+        "score": 1.4,
+        "evidence": "Clean dark-mode interface with well-structured panels, though the dense layout contains a lot of simultaneous information."
+      },
+      "consistency": {
+        "score": 1.6,
+        "evidence": "Perfectly aligns with the NodeRoom paradigm of chat, spreadsheet, private agent, and execution trace."
+      },
+      "evidenceQuality": {
+        "score": 1.5,
+        "evidence": "Authentic UI capture showing realistic financial data and actual agent trace logs."
+      },
+      "legibility": {
+        "score": 1.3,
+        "evidence": "Text and cell values are legible at standard resolutions, though some smaller labels require zooming."
+      },
+      "professionalRelevance": {
+        "score": 1.5,
+        "evidence": "Highly relevant for financial analysts and operations teams automating variance reporting."
+      },
+      "productionHonesty": {
+        "score": 1.5,
+        "evidence": "Accurately displays the agent's thinking states and step-by-step cell locking/writing process."
+      }
+    },
+    "observedEvidence": [
+      "Public chat panel with NodeAgent messages",
+      "Interactive spreadsheet with variance calculations",
+      "Room trace panel showing agent execution steps",
+      "Private agent panel on the right"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:01",
+        "severity": "P2",
+        "observed": "The transition of spreadsheet cell states happens very rapidly, which may be hard to track on first viewing.",
+        "fix": "Slightly increase the delay between agent actions to allow the viewer to digest the cell updates."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch NodeAgent analyze Q3 variance, automatically calculating and locking spreadsheet cells while logging its execution trace."
+  },
+  "score": 11.7,
+  "maxScore": 16
+}

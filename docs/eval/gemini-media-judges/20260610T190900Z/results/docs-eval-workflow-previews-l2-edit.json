@@ -1,0 +1,77 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l2-edit",
+    "class": "workflow_preview",
+    "title": "L2 Edit",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l2-edit.gif",
+    "relPath": "docs/eval/workflow-previews/l2-edit.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T190900Z/docs-eval-workflow-previews-l2-edit.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l2-edit.gif",
+  "bytes": 73284,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The workflow preview clearly demonstrates the Compare-And-Set (CAS) edit protocol on a spreadsheet cell. It step-by-steps through reading, locking, writing, and releasing, though it contains minor placeholder steps.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.3,
+        "evidence": "The step-by-step annotations clearly explain the CAS (Compare-And-Set) mechanism on the Net Income cell."
+      },
+      "workflowCompleteness": {
+        "score": 1.4,
+        "evidence": "Shows the entire lifecycle from initial state, read, lock, write, and final committed state."
+      },
+      "visualDesign": {
+        "score": 1.2,
+        "evidence": "Clean dark-themed UI with clear row highlighting, though highly schematic."
+      },
+      "consistency": {
+        "score": 1.2,
+        "evidence": "Aligns with the spreadsheet and versioned data model of NodeRoom."
+      },
+      "evidenceQuality": {
+        "score": 1.1,
+        "evidence": "Appears to be a stylized UI replay or high-fidelity mockup animation rather than a raw app capture."
+      },
+      "legibility": {
+        "score": 1.4,
+        "evidence": "Text and status chips are highly legible with strong contrast."
+      },
+      "professionalRelevance": {
+        "score": 1.3,
+        "evidence": "Highly relevant for demonstrating transactional integrity in financial spreadsheet workflows."
+      },
+      "productionHonesty": {
+        "score": 1.2,
+        "evidence": "Accurately represents the logical steps of a CAS operation without overclaiming."
+      }
+    },
+    "observedEvidence": [
+      "Step-by-step CAS edit workflow",
+      "Cell locking and versioning visualization (V1 to V2)",
+      "Status indicators for COMMITTED and LOCKED states"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:02",
+        "severity": "P2",
+        "observed": "The AI action label briefly shows 'say' with no descriptive text.",
+        "fix": "Provide descriptive text for step 2/7 or remove the empty placeholder step."
+      },
+      {
+        "ts": "00:06",
+        "severity": "P2",
+        "observed": "The AI action label shows 'say' with no descriptive text before the final step.",
+        "fix": "Provide descriptive text for step 6/7 or remove the empty placeholder step."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch how NodeRoom's L2 Edit protocol uses Compare-And-Set (CAS) to safely lock, edit, and version spreadsheet cells without clobbering concurrent updates."
+  },
+  "score": 10.1,
+  "maxScore": 16
+}

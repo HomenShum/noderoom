@@ -1,0 +1,79 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-ask-agent",
+    "class": "readme_walkthrough",
+    "title": "Ask Agent",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\ask-agent.gif",
+    "relPath": "docs/walkthroughs/ask-agent.gif",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:ask-agent"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T190900Z/docs-walkthroughs-ask-agent.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/walkthroughs/ask-agent.gif",
+  "bytes": 886574,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough clearly demonstrates using an agent to reconcile spreadsheet cells via chat commands, showing the execution trace and final locked cell updates.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Shows the user typing a command and the agent updating the spreadsheet cells directly."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Captures the full flow from initial empty variance cells to command input, execution, and final populated state."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark mode interface, though the bottom caption overlays slightly crowd the screen."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Integrates the spreadsheet, chat interface, and room trace panel seamlessly."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Real UI interaction with visible state changes and trace updates."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Text is readable, though spreadsheet numbers are small."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Directly addresses financial reconciliation use cases."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Shows the actual trace steps and CAS-safe lock indicators."
+      }
+    },
+    "observedEvidence": [
+      "Chat input command typing",
+      "Agent response and status indicator",
+      "Spreadsheet cells updating with lock icons",
+      "Room trace log updating with agent steps"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:02",
+        "severity": "P2",
+        "observed": "Abrupt zoom transition into the chat input box.",
+        "fix": "Smooth out the zoom transition or keep a steady viewport."
+      },
+      {
+        "ts": "00:05",
+        "severity": "P2",
+        "observed": "Bottom caption overlays obscure the lower portion of the chat input and trace log.",
+        "fix": "Reduce caption height or place them in a less intrusive position."
+      }
+    ],
+    "suggestedReadmeCaption": "Ask the NodeAgent to reconcile variance cells directly from the chat and audit every step in the trace log."
+  },
+  "score": 8,
+  "maxScore": 16
+}

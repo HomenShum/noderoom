@@ -1,0 +1,73 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-ic-room",
+    "class": "readme_walkthrough",
+    "title": "Ic Room",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\ic-room.gif",
+    "relPath": "docs/walkthroughs/ic-room.gif",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:ic-room"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T190900Z/docs-walkthroughs-ic-room.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/walkthroughs/ic-room.gif",
+  "bytes": 688551,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough effectively demonstrates importing a new account into the research spreadsheet with clear provenance tracking in the room trace. The UI is clean and the workflow is complete.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Demonstrates pasting comma-separated text to import a new account row into the research table."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Shows the entire flow from clicking import, pasting data, submitting, and seeing the updated table and trace."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Modern dark mode interface with clear layout, though some text truncation occurs in the table cells."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with the product story of collaborative rooms, structured spreadsheets, and activity traces."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Captured directly from a live web application showing real-time UI updates and state changes."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Text is generally readable, though small in the trace log and partially cut off in the account column."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for investment teams managing pipelines and tracking deal provenance."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately depicts the manual CSV/text parsing interface without overpromising automation."
+      }
+    },
+    "observedEvidence": [
+      "Import accounts modal interaction",
+      "Pasting comma-separated values",
+      "Row addition to the Research spreadsheet",
+      "Room trace update showing 'Maya imported 3 Research row(s)'"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:09",
+        "severity": "P2",
+        "observed": "The imported account name 'Atlas Maritime Partners' is truncated to 'Atlas Maritime Part...' in the table cell.",
+        "fix": "Adjust column width or enable text wrapping to prevent truncation of key entity names."
+      }
+    ],
+    "suggestedReadmeCaption": "Import and track new opportunities instantly with full provenance and team attribution in your shared research room."
+  },
+  "score": 8,
+  "maxScore": 16
+}

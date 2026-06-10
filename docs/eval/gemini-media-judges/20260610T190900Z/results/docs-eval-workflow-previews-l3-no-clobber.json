@@ -1,0 +1,71 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l3-no-clobber",
+    "class": "workflow_preview",
+    "title": "L3 No Clobber",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l3-no-clobber.gif",
+    "relPath": "docs/eval/workflow-previews/l3-no-clobber.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T190900Z/docs-eval-workflow-previews-l3-no-clobber.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l3-no-clobber.gif",
+  "bytes": 83208,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The workflow preview clearly demonstrates concurrent write conflict resolution (CAS) in a financial table. The step-by-step visualization of a human editing mid-write and the agent handling the conflict is highly legible and professional.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.4,
+        "evidence": "The step-by-step UI updates clearly show the transition from V1 to V2 (human edit) and V3 (agent write after conflict)."
+      },
+      "workflowCompleteness": {
+        "score": 1.5,
+        "evidence": "Shows the entire sequence: initial state, human intervention, conflict detection, and final resolution."
+      },
+      "visualDesign": {
+        "score": 1.4,
+        "evidence": "Clean dark mode table layout with clear highlighting of active rows and status indicators."
+      },
+      "consistency": {
+        "score": 1.3,
+        "evidence": "Aligns with the spreadsheet/table interface and agent trace logging of NodeRoom."
+      },
+      "evidenceQuality": {
+        "score": 1.4,
+        "evidence": "High-fidelity UI capture showing realistic data versioning and state changes."
+      },
+      "legibility": {
+        "score": 1.5,
+        "evidence": "All text, version numbers, and status chips are highly readable."
+      },
+      "professionalRelevance": {
+        "score": 1.4,
+        "evidence": "Directly addresses data integrity and concurrency, which are critical for financial and enterprise workflows."
+      },
+      "productionHonesty": {
+        "score": 1.3,
+        "evidence": "Accurately depicts the conflict state and resolution steps without overclaiming."
+      }
+    },
+    "observedEvidence": [
+      "Financial table with versioned rows (V1, V2, V3)",
+      "Conflict status indicator",
+      "Step-by-step agent action log at the bottom"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:01",
+        "severity": "P2",
+        "observed": "The bottom status bar briefly shows 'say' with no content before moving to the next step.",
+        "fix": "Ensure the agent's verbal output or thought process is populated or skip the empty 'say' step."
+      }
+    ],
+    "suggestedReadmeCaption": "NodeRoom's concurrent write protection (CAS) prevents agents from overwriting human edits by rejecting stale writes and forcing a re-read before committing."
+  },
+  "score": 11.2,
+  "maxScore": 16
+}

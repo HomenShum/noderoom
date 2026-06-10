@@ -1,0 +1,71 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-free-job-halo",
+    "class": "workflow_preview",
+    "title": "Free Job Halo",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\free-job-halo.gif",
+    "relPath": "docs/eval/workflow-previews/free-job-halo.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T190900Z/docs-eval-workflow-previews-free-job-halo.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/free-job-halo.gif",
+  "bytes": 108016,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The workflow preview effectively demonstrates collaborative spreadsheet updates triggered by chat commands and executed by agents, complete with trace logs.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.2,
+        "evidence": "Shows chat-driven spreadsheet updates and agent execution clearly."
+      },
+      "workflowCompleteness": {
+        "score": 1.3,
+        "evidence": "Captures the initial state, the user command, and the updated spreadsheet values."
+      },
+      "visualDesign": {
+        "score": 1.1,
+        "evidence": "Clean dark-mode interface, though the layout is highly dense."
+      },
+      "consistency": {
+        "score": 1.3,
+        "evidence": "Aligns with NodeRoom's multi-pane workspace layout and agent trace logs."
+      },
+      "evidenceQuality": {
+        "score": 1.2,
+        "evidence": "Realistic financial data and agent interactions make it feel authentic."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Small text in the spreadsheet and logs may be hard to read on smaller screens."
+      },
+      "professionalRelevance": {
+        "score": 1.3,
+        "evidence": "Highly relevant for financial analysts and operations teams auditing data."
+      },
+      "productionHonesty": {
+        "score": 1.2,
+        "evidence": "Clearly displays agent execution traces and status updates."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet data updates dynamically",
+      "Agent chat responses and execution traces are visible",
+      "Multi-pane workspace layout is shown"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:01",
+        "severity": "P2",
+        "observed": "Dense UI text and small font sizes in the spreadsheet cells reduce readability at standard preview sizes.",
+        "fix": "Slightly increase the zoom level of the application UI during capture."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch NodeRoom's agent automatically compute and sync spreadsheet variances directly from audited NetSuite notes."
+  },
+  "score": 9.6,
+  "maxScore": 16
+}

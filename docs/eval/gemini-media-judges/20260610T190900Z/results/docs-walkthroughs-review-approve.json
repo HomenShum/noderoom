@@ -1,0 +1,74 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-review-approve",
+    "class": "readme_walkthrough",
+    "title": "Review Approve",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\review-approve.gif",
+    "relPath": "docs/walkthroughs/review-approve.gif",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:review-approve"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T190900Z/docs-walkthroughs-review-approve.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/walkthroughs/review-approve.gif",
+  "bytes": 1142704,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough clearly demonstrates the review and approval workflow, showing how turning off auto-allow forces agents to propose changes rather than writing them directly.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Shows the transition from auto-allow to review mode, followed by agent proposals appearing in the spreadsheet."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Captures the entire loop: disabling auto-allow, prompting the agent, viewing pending cell proposals, and accepting them."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "The dark-themed interface is clean, with clear orange highlights for pending proposals."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with the NodeRoom ecosystem, combining chat, spreadsheet, and room trace updates."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Shows authentic UI interactions, including realistic agent execution delays and state changes."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Most text is readable, though spreadsheet cell values and trace logs are slightly small at standard zoom."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for financial and compliance use cases requiring human-in-the-loop verification."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately depicts the step-by-step approval process without skipping intermediate states."
+      }
+    },
+    "observedEvidence": [
+      "Auto-allow toggle interaction",
+      "Review mode notification toast",
+      "Agent proposal badges on spreadsheet cells",
+      "Accept all button interaction",
+      "Room trace updates reflecting the approved changes"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:09",
+        "severity": "P2",
+        "observed": "The proposal badges and text inside the spreadsheet cells are quite small and may be hard to read on smaller screens.",
+        "fix": "Slightly increase the font size of the cell proposals and badges for better legibility."
+      }
+    ],
+    "suggestedReadmeCaption": "Enable Review Mode to inspect and approve agent proposals before they are committed to your spreadsheet."
+  },
+  "score": 8,
+  "maxScore": 16
+}

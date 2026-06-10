@@ -1,0 +1,71 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-proposals-wall-review",
+    "class": "workflow_preview",
+    "title": "Proposals Wall Review",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\proposals-wall-review.gif",
+    "relPath": "docs/eval/workflow-previews/proposals-wall-review.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T190900Z/docs-eval-workflow-previews-proposals-wall-review.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/proposals-wall-review.gif",
+  "bytes": 142274,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The workflow preview successfully demonstrates transitioning from a spreadsheet view to a diligence wall review with agent-generated proposals. The UI is highly detailed and consistent with the NodeRoom product story.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Shows the transition from spreadsheet collaboration to a proposals wall review, though the transition is very rapid."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Captures the before state (spreadsheet), action (running collaboration), and result (proposals wall with trace updates)."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "The dark-mode UI is highly detailed and structured, though the density of information is quite high."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Integrates spreadsheets, chat, private agents, and room traces seamlessly into a single view."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Looks like an authentic product capture with realistic financial data and agent logs."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Text is readable at standard resolutions, though some smaller labels require zooming."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant to financial analysts and operations teams managing automated reconciliation."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately depicts UI state changes and trace logs without artificial overlays."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet view with 'Run collaboration' button",
+      "Diligence wall view with sticky notes/cards",
+      "Room trace updates showing agent proposals"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:02",
+        "severity": "P2",
+        "observed": "The transition from the spreadsheet view to the Diligence Wall is abrupt and may disorient viewers.",
+        "fix": "Add a brief fade transition or slow down the frame rate during the view switch."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch NodeRoom transition from a collaborative spreadsheet to a Diligence Wall where agents propose and track variance footnotes."
+  },
+  "score": 8,
+  "maxScore": 16
+}

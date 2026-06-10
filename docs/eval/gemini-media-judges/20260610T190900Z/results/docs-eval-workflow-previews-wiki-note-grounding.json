@@ -1,0 +1,71 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-wiki-note-grounding",
+    "class": "workflow_preview",
+    "title": "Wiki Note Grounding",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\wiki-note-grounding.gif",
+    "relPath": "docs/eval/workflow-previews/wiki-note-grounding.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T190900Z/docs-eval-workflow-previews-wiki-note-grounding.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/wiki-note-grounding.gif",
+  "bytes": 97733,
+  "judge": {
+    "verdict": "fix-then-publish",
+    "summary": "The preview demonstrates wiki note grounding and spreadsheet syncing in NodeRoom, but the transition between the note and spreadsheet states is too abrupt.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Shows note grounding and spreadsheet sync, though the connection between the two states is fast."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Shows the initial note and the resulting spreadsheet, but lacks the explicit action step in between."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark-mode UI, but the multi-panel layout is dense and complex."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns well with the NodeRoom paradigm of sheets, notes, agents, and traces."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Appears to be a genuine product capture, though highly abbreviated."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Text in the panels is legible at standard resolution, though small."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for financial diligence and automated spreadsheet workflows."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Traces and agent logs are visible, showing the underlying operations honestly."
+      }
+    },
+    "observedEvidence": [
+      "Diligence note panel with sync instructions",
+      "Spreadsheet view with populated financial data",
+      "Room trace and agent logs at the bottom"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:01",
+        "severity": "P1",
+        "observed": "Abrupt transition from the note view to the spreadsheet view without showing the trigger action.",
+        "fix": "Include intermediate frames showing the transition or the user/agent action that initiates the sync."
+      }
+    ],
+    "suggestedReadmeCaption": "NodeRoom's Wiki Note Grounding allows agents to sync and validate spreadsheet data based on collaborative diligence notes."
+  },
+  "score": 8,
+  "maxScore": 16
+}

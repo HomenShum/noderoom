@@ -1,6 +1,6 @@
 {
-  "runId": "20260610T184700Z",
-  "generatedAt": "2026-06-10T18:40:43.170Z",
+  "runId": "20260610T190900Z",
+  "generatedAt": "2026-06-10T18:58:34.950Z",
   "model": "gemini-3.5-flash",
   "primaryOnly": false,
   "all": true,
@@ -135,6 +135,15 @@
       "relPath": "docs/walkthroughs/chat.gif",
       "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
       "duplicateGroup": "walkthrough:chat"
+    },
+    {
+      "id": "docs-walkthroughs-ic-room",
+      "class": "readme_walkthrough",
+      "title": "Ic Room",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\ic-room.gif",
+      "relPath": "docs/walkthroughs/ic-room.gif",
+      "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+      "duplicateGroup": "walkthrough:ic-room"
     },
     {
       "id": "docs-walkthroughs-research-upsert",

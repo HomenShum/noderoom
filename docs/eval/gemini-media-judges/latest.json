@@ -1,6 +1,6 @@
 {
-  "runId": "20260610T184700Z",
-  "generatedAt": "2026-06-10T18:46:32.487Z",
+  "runId": "20260610T185906Z",
+  "generatedAt": "2026-06-10T19:05:14.227Z",
   "model": "gemini-3.5-flash",
   "command": "npm run media:gemini-judge -- --all",
   "notes": [
@@ -8,17 +8,17 @@
     "This media judge is evidence-quality QA; it does not replace backend/browser production gates."
   ],
   "counts": {
-    "total": 23,
-    "judged": 23,
+    "total": 24,
+    "judged": 24,
     "errors": 0,
     "dryRun": 0,
     "verdicts": {
-      "publish": 19,
-      "fix-then-publish": 4
+      "publish": 21,
+      "fix-then-publish": 3
     },
     "defects": {
-      "P2": 17,
-      "P1": 3
+      "P1": 3,
+      "P2": 18
     }
   },
   "results": [
@@ -33,59 +33,58 @@
       },
       "model": "gemini-3.5-flash",
       "status": "judged",
-      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-app-manual-edit.mp4",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-eval-workflow-previews-app-manual-edit.mp4",
       "mediaType": "video/mp4",
       "convertedFrom": "docs/eval/workflow-previews/app-manual-edit.gif",
       "bytes": 54421,
       "judge": {
         "verdict": "publish",
-        "summary": "The preview demonstrates a manual variance addition in a versioned spreadsheet, updating the room trace from v1 to v2.",
+        "summary": "The GIF clearly demonstrates a manual edit workflow in the versioned spreadsheet, showing the transition from v1 to v2 with an updated room trace.",
         "scores": {
           "featureClarity": {
-            "score": 1,
-            "evidence": "Shows clicking '+ add' to calculate and display a variance percentage."
+            "score": 1.4,
+            "evidence": "Demonstrates clicking '+ add' to set a variance value, updating the cell and version."
           },
           "workflowCompleteness": {
-            "score": 1,
-            "evidence": "Captures the state before the click, the action, and the resulting v2 state with updated trace."
+            "score": 1.4,
+            "evidence": "Shows the initial state, the click action, and the resulting state with updated trace."
           },
           "visualDesign": {
-            "score": 1,
-            "evidence": "Clean dark-mode spreadsheet interface, though layout is basic."
+            "score": 1.3,
+            "evidence": "Clean dark-themed spreadsheet interface with clear visual hierarchy."
           },
           "consistency": {
-            "score": 1,
-            "evidence": "Integrates spreadsheet cells, versioning, and room trace updates."
+            "score": 1.4,
+            "evidence": "Aligns with NodeRoom's spreadsheet, versioning, and event trace concepts."
           },
           "evidenceQuality": {
-            "score": 1,
-            "evidence": "Authentic UI capture showing real-time state transitions."
+            "score": 1.3,
+            "evidence": "Authentic UI capture showing real-time state updates."
           },
           "legibility": {
-            "score": 1,
-            "evidence": "Text and numbers are readable, though some trace details are small."
+            "score": 1.2,
+            "evidence": "Spreadsheet values and trace logs are readable, though trace text is small."
           },
           "professionalRelevance": {
-            "score": 1,
-            "evidence": "Demonstrates financial spreadsheet auditability, relevant to analysts."
+            "score": 1.3,
+            "evidence": "Relevant for financial and audit-trail use cases."
           },
           "productionHonesty": {
-            "score": 1,
-            "evidence": "Accurately reflects UI behavior and trace log synchronization."
+            "score": 1.3,
+            "evidence": "Accurately represents the manual edit action and its direct consequences."
           }
         },
         "observedEvidence": [
-          "Spreadsheet interface with Q2 and Q3 columns",
-          "Clicking '+ add' on the Revenue row",
-          "Variance cell updating to +20.5%",
-          "Room trace updating to 6 events with Homen action",
-          "Version badge incrementing from v1 to v2"
+          "Spreadsheet interface with Q2/Q3 columns",
+          "Clicking '+ add' on Revenue row",
+          "Version updates from v1 to v2",
+          "Room trace adds event: 'Homen set r_rev_variance = +20.5%'"
         ],
         "missingEvidence": [],
         "defects": [],
-        "suggestedReadmeCaption": "Manually trigger variance calculations to instantly update the versioned spreadsheet and log the action in the room trace."
+        "suggestedReadmeCaption": "Manually editing a cell updates the spreadsheet version and appends a new event to the Room trace."
       },
-      "score": 8,
+      "score": 10.6,
       "maxScore": 16
     },
     {
@@ -99,67 +98,59 @@
       },
       "model": "gemini-3.5-flash",
       "status": "judged",
-      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-app-research-enrich.mp4",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-eval-workflow-previews-app-research-enrich.mp4",
       "mediaType": "video/mp4",
       "convertedFrom": "docs/eval/workflow-previews/app-research-enrich.gif",
       "bytes": 54697,
       "judge": {
         "verdict": "publish",
-        "summary": "The workflow preview clearly demonstrates the account enrichment process with a before-and-after state transition and corresponding trace log updates.",
+        "summary": "The workflow preview clearly demonstrates the account enrichment feature, showing the transition from pending to complete with updated trace logs.",
         "scores": {
           "featureClarity": {
-            "score": 1.4,
-            "evidence": "Shows transition from pending accounts to enriched research data."
+            "score": 1,
+            "evidence": "Shows the 'Enrich 4 pending' action populating the GTM and Research columns."
           },
           "workflowCompleteness": {
-            "score": 1.5,
-            "evidence": "Demonstrates the before, action, and after states of the enrichment process."
+            "score": 1,
+            "evidence": "Captures the before state (pending), the action, and the completed state with populated data."
           },
           "visualDesign": {
-            "score": 1.3,
-            "evidence": "Clean dark-themed spreadsheet interface with structured columns."
+            "score": 1,
+            "evidence": "Clean dark-mode spreadsheet interface with a structured trace panel at the bottom."
           },
           "consistency": {
-            "score": 1.5,
-            "evidence": "Integrates spreadsheet view, agent sessions, and real-time trace logs."
+            "score": 1,
+            "evidence": "Aligns with the NodeRoom concept, featuring spreadsheet views and agent trace logs."
           },
           "evidenceQuality": {
-            "score": 1.4,
-            "evidence": "Authentic UI capture showing live trace updates and state changes."
+            "score": 1,
+            "evidence": "Looks like an authentic product capture showing real-time UI updates and state changes."
           },
           "legibility": {
-            "score": 1.2,
-            "evidence": "Text is legible, though some cell contents are truncated."
+            "score": 1,
+            "evidence": "Text in the table and trace log is readable, though some cell content is truncated."
           },
           "professionalRelevance": {
-            "score": 1.4,
-            "evidence": "Highly relevant for automated GTM research and data enrichment workflows."
+            "score": 1,
+            "evidence": "Highly relevant for GTM and sales operations looking to automate account research."
           },
           "productionHonesty": {
-            "score": 1.3,
-            "evidence": "Accurately represents the execution trace and data population."
+            "score": 1,
+            "evidence": "Accurately represents the execution flow and agent trace logs without artificial overlays."
           }
         },
         "observedEvidence": [
-          "Spreadsheet interface with account list",
-          "Enrich button triggering agent execution",
-          "Status transition from PENDING to COMPLETE",
-          "Room trace log updating from 5 to 57 events"
+          "Spreadsheet view with account list",
+          "Enrichment action button",
+          "Status transition from pending to complete",
+          "Populated research data columns",
+          "Agent trace log updating with execution details"
         ],
-        "missingEvidence": [
-          "Hover state or expanded view of the truncated research text"
-        ],
-        "defects": [
-          {
-            "ts": "00:01",
-            "severity": "P2",
-            "observed": "Research column text is truncated with ellipses.",
-            "fix": "Expand column width or provide a tooltip hover state to show full text."
-          }
-        ],
-        "suggestedReadmeCaption": "Automate account research by triggering NodeAgents to enrich pending CRM records with real-time company data and tracking the execution in the live room trace."
+        "missingEvidence": [],
+        "defects": [],
+        "suggestedReadmeCaption": "Watch NodeRoom's agent enrich account records with targeted GTM research in real-time, complete with execution traces."
       },
-      "score": 11,
+      "score": 8,
       "maxScore": 16
     },
     {
@@ -173,65 +164,59 @@
       },
       "model": "gemini-3.5-flash",
       "status": "judged",
-      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-app-variance-fill.mp4",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-eval-workflow-previews-app-variance-fill.mp4",
       "mediaType": "video/mp4",
       "convertedFrom": "docs/eval/workflow-previews/app-variance-fill.gif",
       "bytes": 99637,
       "judge": {
         "verdict": "publish",
-        "summary": "The workflow preview clearly demonstrates automated variance calculations in a financial spreadsheet using collaborative agents, supported by a real-time trace log.",
+        "summary": "The video clearly demonstrates the automated variance fill workflow using public and private agents, with real-time trace updates.",
         "scores": {
           "featureClarity": {
-            "score": 1.6,
-            "evidence": "Demonstrates agents locking cells, calculating variance percentages, and merging results."
+            "score": 1.5,
+            "evidence": "Clear visualization of agents locking and filling variance cells."
           },
           "workflowCompleteness": {
-            "score": 1.7,
-            "evidence": "Captures the entire sequence from initiating collaboration to the final merged state."
+            "score": 1.5,
+            "evidence": "Shows initial empty state, execution phase, and final merged state."
           },
           "visualDesign": {
             "score": 1.4,
-            "evidence": "Clean dark-themed UI with clear visual hierarchy between the spreadsheet and trace log."
+            "evidence": "Clean dark mode spreadsheet layout with clear status indicators."
           },
           "consistency": {
-            "score": 1.6,
-            "evidence": "Aligns with NodeRoom's core concepts of spreadsheets, agents, and trace logs."
+            "score": 1.5,
+            "evidence": "Perfect alignment with NodeRoom's spreadsheet and trace-based architecture."
           },
           "evidenceQuality": {
             "score": 1.5,
-            "evidence": "Authentic UI capture showing real-time state changes and trace updates."
+            "evidence": "High-fidelity UI capture showing actual trace logs and cell updates."
           },
           "legibility": {
-            "score": 1.4,
-            "evidence": "Spreadsheet values and status banners are highly readable, though trace text is slightly dense."
+            "score": 1.3,
+            "evidence": "Text is readable, though trace logs at the bottom are slightly small."
           },
           "professionalRelevance": {
-            "score": 1.6,
-            "evidence": "Directly applicable to financial analysts automating variance analysis."
+            "score": 1.5,
+            "evidence": "Directly applicable to financial analysts automating spreadsheet workflows."
           },
           "productionHonesty": {
             "score": 1.5,
-            "evidence": "Accurately represents the step-by-step execution and agent locking mechanisms."
+            "evidence": "Accurately depicts agent coordination and merge logs."
           }
         },
         "observedEvidence": [
-          "Spreadsheet UI with Q2/Q3 financial data",
-          "Run collaboration button and active state",
-          "Agent locking indicators (+RA) in the Variance column",
-          "Real-time Room trace updates showing agent actions"
+          "Spreadsheet UI with empty variance column",
+          "Collaboration run trigger",
+          "Agent locking indicators",
+          "Trace log updates",
+          "Completed variance values"
         ],
         "missingEvidence": [],
-        "defects": [
-          {
-            "ts": "00:02",
-            "severity": "P2",
-            "observed": "The transition during agent execution is rapid, making it slightly hard to track individual lock releases.",
-            "fix": "Slightly increase the delay between agent steps in the demo recording."
-          }
-        ],
-        "suggestedReadmeCaption": "Watch NodeRoom agents collaborate to lock, calculate, and merge variance analysis directly within a financial spreadsheet."
+        "defects": [],
+        "suggestedReadmeCaption": "Watch NodeRoom agents collaborate to automatically calculate and merge financial variance values directly into the spreadsheet, backed by a transparent execution trace."
       },
-      "score": 12.3,
+      "score": 11.7,
       "maxScore": 16
     },
     {
@@ -245,65 +230,64 @@
       },
       "model": "gemini-3.5-flash",
       "status": "judged",
-      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-ask-spreadsheet-cas.mp4",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-eval-workflow-previews-ask-spreadsheet-cas.mp4",
       "mediaType": "video/mp4",
       "convertedFrom": "docs/eval/workflow-previews/ask-spreadsheet-cas.gif",
       "bytes": 109385,
       "judge": {
-        "verdict": "fix-then-publish",
-        "summary": "The workflow preview demonstrates an agent updating a spreadsheet and interacting in chat, but the rapid playback speed makes it difficult to follow the details.",
+        "verdict": "publish",
+        "summary": "The workflow preview successfully demonstrates an agent interacting with a financial spreadsheet and updating variances in real-time, though the text density makes legibility slightly challenging.",
         "scores": {
           "featureClarity": {
-            "score": 1,
-            "evidence": "Shows agent spreadsheet updates and chat, but the dense UI makes the exact flow hard to parse quickly."
+            "score": 1.2,
+            "evidence": "The video clearly shows the NodeAgent updating spreadsheet cells and communicating status in the chat panel."
           },
           "workflowCompleteness": {
-            "score": 1,
-            "evidence": "Captures the before, action, and result states, though the transitions occur very rapidly."
+            "score": 1.1,
+            "evidence": "Demonstrates the transition from agent execution to spreadsheet cell updates and trace logging."
           },
           "visualDesign": {
             "score": 1,
-            "evidence": "Well-structured dark mode UI, but extremely dense with multiple competing focal points."
+            "evidence": "The dark mode UI is well-structured, though the dense layout feels slightly crowded."
           },
           "consistency": {
-            "score": 1,
-            "evidence": "Successfully integrates the spreadsheet, chat, private agent, and trace panels."
+            "score": 1.3,
+            "evidence": "Perfectly aligns with the NodeRoom paradigm of spreadsheets, multi-agent chat, and execution traces."
           },
           "evidenceQuality": {
-            "score": 1,
-            "evidence": "Authentic product capture showing real-time UI updates and console traces."
+            "score": 1.2,
+            "evidence": "Captures authentic UI interactions and state changes without simulated overlays."
           },
           "legibility": {
-            "score": 1,
-            "evidence": "Text in the chat and trace panels is quite small and hard to read at standard preview sizes."
+            "score": 0.8,
+            "evidence": "Small font sizes in the spreadsheet cells and chat logs make it difficult to read at standard preview sizes."
           },
           "professionalRelevance": {
-            "score": 1,
-            "evidence": "Highly relevant to financial analysts managing spreadsheet-based variance analysis."
+            "score": 1.2,
+            "evidence": "Highly relevant for financial analysts and operations teams looking at automated reconciliation."
           },
           "productionHonesty": {
-            "score": 1,
-            "evidence": "Shows realistic agent latency, thinking states, and detailed trace logs."
+            "score": 1.1,
+            "evidence": "Clearly displays agent thinking states and trace logs rather than instantaneous results."
           }
         },
         "observedEvidence": [
-          "Interactive spreadsheet panel with updating cells",
-          "Public chat panel with user and agent messages",
-          "Room trace panel showing agent execution steps",
-          "Private agent panel with status updates"
+          "Spreadsheet cell updates",
+          "Multi-agent chat interaction",
+          "Room trace logs updating in real-time"
         ],
         "missingEvidence": [],
         "defects": [
           {
             "ts": "00:01",
             "severity": "P1",
-            "observed": "The transition between agent actions and spreadsheet updates is too fast to read the text comfortably.",
-            "fix": "Slow down the GIF frame rate or add pauses at key states to allow the viewer to read the chat and spreadsheet cells."
+            "observed": "The text in the spreadsheet cells and chat messages is very small and difficult to read at standard README display resolutions.",
+            "fix": "Increase the browser zoom level slightly before recording to improve text legibility."
           }
         ],
-        "suggestedReadmeCaption": "Watch NodeAgent automatically reconcile Q3 variances, update the shared spreadsheet, and log its execution trace in real-time."
+        "suggestedReadmeCaption": "Watch NodeAgent automatically reconcile Q3 variances and update the shared spreadsheet while logging its execution trace."
       },
-      "score": 8,
+      "score": 8.9,
       "maxScore": 16
     },
     {
@@ -317,68 +301,62 @@
       },
       "model": "gemini-3.5-flash",
       "status": "judged",
-      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-free-job-halo.mp4",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-eval-workflow-previews-free-job-halo.mp4",
       "mediaType": "video/mp4",
       "convertedFrom": "docs/eval/workflow-previews/free-job-halo.gif",
       "bytes": 108016,
       "judge": {
-        "verdict": "fix-then-publish",
-        "summary": "The workflow preview demonstrates collaborative spreadsheet updates via agents, but the rapid transition speed and dense text layout make it difficult to fully digest the sequence of events.",
+        "verdict": "publish",
+        "summary": "The workflow preview effectively demonstrates collaborative financial analysis within NodeRoom, showing an agent executing a variance calculation request and updating a spreadsheet in real-time.",
         "scores": {
           "featureClarity": {
             "score": 1,
-            "evidence": "Demonstrates agent-driven spreadsheet updates, though the dense UI makes the exact feature interaction slightly difficult to isolate immediately."
+            "evidence": "Demonstrates multi-agent spreadsheet updates based on chat commands."
           },
           "workflowCompleteness": {
             "score": 1,
-            "evidence": "Shows the initial state, user request, agent execution, and final spreadsheet update, but the transition is extremely rapid."
+            "evidence": "Shows the initial state, the user command, and the resulting spreadsheet updates."
           },
           "visualDesign": {
             "score": 1,
-            "evidence": "The dark-themed UI is modern and structured, but the high density of panels and text elements creates visual clutter."
+            "evidence": "Clean dark-mode dashboard layout, though dense with information."
           },
           "consistency": {
             "score": 1,
-            "evidence": "Aligns well with the NodeRoom paradigm of spreadsheets, chat, and agent execution traces."
+            "evidence": "Aligns with the NodeRoom paradigm of spreadsheets, chat, and agent traces."
           },
           "evidenceQuality": {
             "score": 1,
-            "evidence": "Appears to be a genuine UI capture of the application, showing realistic data and logs."
+            "evidence": "Appears to be a direct capture of the working application interface."
           },
           "legibility": {
             "score": 1,
-            "evidence": "Small font sizes in the chat and trace logs are difficult to read at standard preview resolutions."
+            "evidence": "Text and numbers are readable, though small on standard displays."
           },
           "professionalRelevance": {
             "score": 1,
-            "evidence": "Highly relevant to financial analysts and operations teams looking at automated diligence workflows."
+            "evidence": "Highly relevant for financial diligence and automated workflow use cases."
           },
           "productionHonesty": {
             "score": 1,
-            "evidence": "Accurately represents the UI state changes and execution logs without artificial overlays."
+            "evidence": "Shows clear execution steps and trace logs matching the UI updates."
           }
         },
         "observedEvidence": [
-          "Public chat panel with user 'Homen' requesting variance recomputation",
-          "Spreadsheet panel showing formula updates and variance calculations",
-          "NodeAgent trace logs updating in real-time at the bottom"
+          "Public chat panel with user commands",
+          "Spreadsheet panel showing real-time cell updates",
+          "Agent trace log at the bottom showing execution steps"
         ],
         "missingEvidence": [],
         "defects": [
           {
-            "ts": "00:01",
-            "severity": "P1",
-            "observed": "The transition from the user request to the agent execution and spreadsheet update happens too quickly to follow comfortably.",
-            "fix": "Increase the delay between frames or slow down the GIF playback speed to allow users to read the chat and trace logs."
-          },
-          {
-            "ts": "00:00",
+            "ts": "00:02",
             "severity": "P2",
-            "observed": "Small text in the 'Your NodeAgent' and 'Public Chat' panels is hard to read without zooming in.",
-            "fix": "Slightly increase the font size or crop the preview to focus on the active panels."
+            "observed": "The transition and update happen very quickly, which might require pausing to read.",
+            "fix": "Slightly extend the duration of the final state to allow easier reading."
           }
         ],
-        "suggestedReadmeCaption": "Watch NodeRoom's agent automatically recompute and sync GS variance across the shared workspace upon user request."
+        "suggestedReadmeCaption": "Watch NodeRoom agents collaborate to automatically compute and update financial variances in a shared spreadsheet."
       },
       "score": 8,
       "maxScore": 16
@@ -394,64 +372,64 @@
       },
       "model": "gemini-3.5-flash",
       "status": "judged",
-      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-l1-read.mp4",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-eval-workflow-previews-l1-read.mp4",
       "mediaType": "video/mp4",
       "convertedFrom": "docs/eval/workflow-previews/l1-read.gif",
       "bytes": 68574,
       "judge": {
         "verdict": "publish",
-        "summary": "The workflow preview clearly demonstrates an AI agent reading financial variance data from a structured sheet without modifying any values, supported by step-by-step trace highlights.",
+        "summary": "A clean, step-by-step visualization of an AI agent performing a read-only workflow on a financial table. It clearly demonstrates the non-destructive nature of the operation through structured trace steps.",
         "scores": {
           "featureClarity": {
-            "score": 1.2,
-            "evidence": "The UI clearly displays the 'Read' goal and highlights the specific rows being accessed by the agent."
+            "score": 1,
+            "evidence": "The UI clearly highlights the rows being read and displays the agent's step-by-step actions at the bottom."
           },
           "workflowCompleteness": {
-            "score": 1.3,
-            "evidence": "Shows the step-by-step execution from listing artifacts to reading specific variances and completing the task."
+            "score": 1,
+            "evidence": "Shows the progression from the initial goal through individual read steps to completion."
           },
           "visualDesign": {
-            "score": 1.4,
-            "evidence": "Clean dark-mode interface with high-contrast row highlighting and a clear progress indicator at the bottom."
+            "score": 1,
+            "evidence": "Clean dark-mode interface with clear typography and subtle row highlighting."
           },
           "consistency": {
-            "score": 1.2,
-            "evidence": "Aligns with the spreadsheet and financial analysis context, showing agent actions mapped to sheet rows."
+            "score": 1,
+            "evidence": "Aligns with the spreadsheet and agent trace concept of NodeRoom."
           },
           "evidenceQuality": {
-            "score": 1.3,
-            "evidence": "Appears to be a direct capture of a trace replay, showing authentic step-by-step execution."
+            "score": 1,
+            "evidence": "High-fidelity trace replay that effectively demonstrates the agent's execution path."
           },
           "legibility": {
-            "score": 1.4,
-            "evidence": "Text, labels, and agent action chips are highly legible with appropriate contrast."
+            "score": 1,
+            "evidence": "All text, labels, and step counters are highly legible and easy to follow."
           },
           "professionalRelevance": {
-            "score": 1.3,
-            "evidence": "Highly relevant to financial analysts and engineers looking at automated audit or data retrieval workflows."
+            "score": 1,
+            "evidence": "Demonstrates safe, read-only data access which is critical for financial auditing use cases."
           },
           "productionHonesty": {
-            "score": 1.2,
-            "evidence": "Accurately depicts the read-only nature of the operation without implying any write actions."
+            "score": 1,
+            "evidence": "Accurately represents the step-by-step logic of the agent without simulating fake complexity."
           }
         },
         "observedEvidence": [
-          "Step-by-step trace execution bar at the bottom",
-          "Row-by-row visual highlighting corresponding to agent read actions",
-          "Financial metrics table (Revenue, COGS, Gross profit, Net income)"
+          "Step-by-step progress indicator (0/7 to 7/7)",
+          "Visual highlighting of table rows corresponding to agent read actions",
+          "Clear goal and final completion status message"
         ],
         "missingEvidence": [],
         "defects": [
           {
             "ts": "00:05",
             "severity": "P2",
-            "observed": "The 'say' steps do not display the actual output text or value reported by the agent in the status bar.",
-            "fix": "Update the status bar to display the output text during the 'say' phase of the trace."
+            "observed": "The 'say' steps (5/7 and 6/7) do not display the actual text output generated by the agent.",
+            "fix": "Show a brief snippet of the reported value text in the status bar during the 'say' steps."
           }
         ],
-        "suggestedReadmeCaption": "Watch a NodeRoom AI agent execute a read-only audit of financial variance metrics, tracing each step from artifact discovery to final reporting."
+        "suggestedReadmeCaption": "Watch a NodeRoom agent safely execute an L1 Read workflow, scanning financial variances step-by-step without altering any underlying data."
       },
-      "score": 10.3,
+      "score": 8,
       "maxScore": 16
     },
     {
@@ -465,65 +443,70 @@
       },
       "model": "gemini-3.5-flash",
       "status": "judged",
-      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-l2-edit.mp4",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-eval-workflow-previews-l2-edit.mp4",
       "mediaType": "video/mp4",
       "convertedFrom": "docs/eval/workflow-previews/l2-edit.gif",
       "bytes": 73284,
       "judge": {
         "verdict": "publish",
-        "summary": "A clear, well-paced step-by-step visualization of an AI agent performing a Compare-And-Set (CAS) edit on a spreadsheet cell, demonstrating locking, versioning, and committing.",
+        "summary": "The animation clearly demonstrates the step-by-step Compare-And-Set (CAS) protocol used by an AI agent to edit a spreadsheet cell safely. It is highly legible and structurally complete.",
         "scores": {
           "featureClarity": {
-            "score": 1.2,
-            "evidence": "Clearly demonstrates the CAS flow, showing cell selection, locking, writing, and version incrementing."
+            "score": 1.4,
+            "evidence": "The step-by-step progression clearly explains the CAS lock, write, and release sequence."
           },
           "workflowCompleteness": {
-            "score": 1.3,
-            "evidence": "Shows the complete sequence from initial state to lock, write, commit, and release."
+            "score": 1.5,
+            "evidence": "Shows the entire lifecycle from reading version v1 to committing version v2 and releasing the lock."
           },
           "visualDesign": {
-            "score": 1.2,
-            "evidence": "Clean dark-themed UI with clear row highlighting and step progress indicators."
+            "score": 1.3,
+            "evidence": "Clean dark-themed UI with clear highlight states, though it functions more as an explanatory diagram than a live UI capture."
           },
           "consistency": {
-            "score": 1.1,
-            "evidence": "Aligns well with the spreadsheet and agent execution trace paradigm."
+            "score": 1.2,
+            "evidence": "Aligns well with NodeRoom's spreadsheet-based agent collaboration model."
           },
           "evidenceQuality": {
-            "score": 1.2,
-            "evidence": "High-fidelity step-by-step trace representation of agent actions."
+            "score": 1.1,
+            "evidence": "High-quality vector-like animation, though it leans towards a conceptual walkthrough rather than raw terminal/app capture."
           },
           "legibility": {
-            "score": 1.3,
-            "evidence": "High contrast text and clear layout make it highly readable."
+            "score": 1.5,
+            "evidence": "Text, status badges, and step indicators are highly readable with excellent contrast."
           },
           "professionalRelevance": {
-            "score": 1.2,
-            "evidence": "Relevant for demonstrating safe multi-agent database/spreadsheet writes."
+            "score": 1.4,
+            "evidence": "Highly relevant for technical audiences evaluating concurrency and multi-agent safety protocols."
           },
           "productionHonesty": {
-            "score": 1.1,
-            "evidence": "Accurately represents the logical steps of a CAS transaction."
+            "score": 1.2,
+            "evidence": "Accurately represents the logical flow of CAS without pretending to be a live unedited screen recording."
           }
         },
         "observedEvidence": [
-          "Step-by-step progress bar",
-          "Spreadsheet UI with versioning (V1, V2)",
-          "Locking status indicator ('LOCKED', 'COMMITTED')",
-          "AI agent action captions"
+          "Step-by-step CAS lock and write sequence",
+          "Cell status transitions from V1 to LOCKED to COMMITTED V2",
+          "AI agent action log at the bottom"
         ],
         "missingEvidence": [],
         "defects": [
           {
             "ts": "00:02",
             "severity": "P2",
-            "observed": "The 'say' step at step 2/7 and 6/7 has no accompanying text or dialogue bubble.",
-            "fix": "Add placeholder text or remove the empty 'say' steps to streamline the sequence."
+            "observed": "The step indicator shows 'say' with no accompanying text or dialogue content.",
+            "fix": "Provide actual dialogue text or consolidate the step to avoid empty placeholders."
+          },
+          {
+            "ts": "00:06",
+            "severity": "P2",
+            "observed": "Another 'say' step appears empty before the final 'done' state.",
+            "fix": "Add descriptive text or merge with the final completion step."
           }
         ],
-        "suggestedReadmeCaption": "Watch an AI agent safely update a spreadsheet cell using Compare-And-Set (CAS) protocol to prevent write collisions."
+        "suggestedReadmeCaption": "Visualizing NodeRoom's L2 Compare-And-Set (CAS) protocol: how agents safely lock, edit, and version spreadsheet cells to prevent overwrites."
       },
-      "score": 9.6,
+      "score": 10.6,
       "maxScore": 16
     },
     {
@@ -537,57 +520,57 @@
       },
       "model": "gemini-3.5-flash",
       "status": "judged",
-      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-l3-no-clobber.mp4",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-eval-workflow-previews-l3-no-clobber.mp4",
       "mediaType": "video/mp4",
       "convertedFrom": "docs/eval/workflow-previews/l3-no-clobber.gif",
       "bytes": 83208,
       "judge": {
         "verdict": "publish",
-        "summary": "A clear, step-by-step visualization of a concurrent write conflict (CAS) and agent recovery. The workflow is easy to follow and highly relevant for multi-agent systems.",
+        "summary": "A clear, step-by-step visualization of concurrent edit handling (CAS) where an AI agent detects a conflict, re-reads the updated state, and successfully commits without clobbering.",
         "scores": {
           "featureClarity": {
-            "score": 1.4,
-            "evidence": "Demonstrates CAS conflict and resolution step-by-step with clear state changes."
+            "score": 1,
+            "evidence": "The step-by-step progression clearly explains the CAS mechanism and conflict resolution."
           },
           "workflowCompleteness": {
-            "score": 1.4,
-            "evidence": "Shows the initial state, human intervention, conflict rejection, and final successful write."
+            "score": 1,
+            "evidence": "Shows the initial state, the conflict occurrence, the re-read, and the final committed state."
           },
           "visualDesign": {
-            "score": 1.3,
-            "evidence": "Clean dark-mode table layout with clear row highlighting and status indicators."
+            "score": 1,
+            "evidence": "Clean dark mode interface with clear highlighting of the active row and status changes."
           },
           "consistency": {
-            "score": 1.3,
-            "evidence": "Aligns with the spreadsheet-like data view and agent execution trace paradigm."
+            "score": 1,
+            "evidence": "Matches the spreadsheet and versioning story of the platform."
           },
           "evidenceQuality": {
-            "score": 1.2,
-            "evidence": "Provides a high-fidelity mock/trace of concurrent agent execution."
+            "score": 1,
+            "evidence": "Provides a realistic simulation of a concurrent write conflict and resolution."
           },
           "legibility": {
-            "score": 1.4,
-            "evidence": "All text, version numbers, and status chips are highly legible."
+            "score": 1,
+            "evidence": "Text and status labels are readable, though the bottom status bar is slightly small."
           },
           "professionalRelevance": {
-            "score": 1.3,
-            "evidence": "Directly addresses concurrency and data integrity concerns for enterprise workflows."
+            "score": 1,
+            "evidence": "Highly relevant for engineering and finance users concerned with data integrity."
           },
           "productionHonesty": {
-            "score": 1.3,
-            "evidence": "Accurately depicts the step-by-step mechanics of a CAS failure and retry."
+            "score": 1,
+            "evidence": "Accurately depicts the step-by-step logic of a CAS transaction."
           }
         },
         "observedEvidence": [
-          "Step-by-step CAS conflict visualization",
-          "Agent execution log at the bottom",
-          "Version tracking (V1, V2, V3) on the table rows"
+          "Step-by-step CAS conflict resolution",
+          "Version history updates (V1 to V3)",
+          "Agent action log at the bottom"
         ],
         "missingEvidence": [],
         "defects": [],
-        "suggestedReadmeCaption": "Watch how NodeRoom's CAS mechanism prevents agents from overwriting human edits mid-write, forcing a re-read and safe commit."
+        "suggestedReadmeCaption": "Demonstration of NodeRoom's concurrent edit protection (CAS) preventing an agent from overwriting a human's mid-write update."
       },
-      "score": 10.6,
+      "score": 8,
       "maxScore": 16
     },
     {
@@ -601,63 +584,64 @@
       },
       "model": "gemini-3.5-flash",
       "status": "judged",
-      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-l4-draft.mp4",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-eval-workflow-previews-l4-draft.mp4",
       "mediaType": "video/mp4",
       "convertedFrom": "docs/eval/workflow-previews/l4-draft.gif",
       "bytes": 74842,
       "judge": {
-        "verdict": "fix-then-publish",
-        "summary": "The workflow preview clearly outlines the step-by-step logic of drafting when a range is locked. However, there is a logical repetition in the steps where the agent locks the range twice (at step 1/5 and 3/5), which should be corrected before publishing.",
+        "verdict": "publish",
+        "summary": "A clean, highly legible step-by-step workflow animation demonstrating how an AI agent handles locked ranges by drafting changes. It effectively communicates concurrency and versioning concepts.",
         "scores": {
           "featureClarity": {
-            "score": 1.2,
-            "evidence": "The goal and steps of drafting changes on a locked range are clearly stated in the bottom caption bar and top header."
+            "score": 1.5,
+            "evidence": "Clearly illustrates the agent's behavior when encountering a locked cell range."
           },
           "workflowCompleteness": {
-            "score": 1.1,
-            "evidence": "Shows a step-by-step progression from goal to completion, though it functions more like a sequenced slideshow than a live UI capture."
+            "score": 1.5,
+            "evidence": "Shows a complete 5-step sequence from initial goal to final versioned draft."
           },
           "visualDesign": {
-            "score": 1.2,
-            "evidence": "Clean dark-mode aesthetic with consistent typography and clear highlighting of the active row."
+            "score": 1.5,
+            "evidence": "Excellent dark-mode aesthetic with clean typography and focused highlights."
           },
           "consistency": {
-            "score": 1,
-            "evidence": "Aligns with the versioning and locking concepts of NodeRoom, but lacks richer trace or spreadsheet context."
+            "score": 1.5,
+            "evidence": "Aligns perfectly with the spreadsheet versioning and agent collaboration narrative."
           },
           "evidenceQuality": {
-            "score": 0.9,
-            "evidence": "Feels somewhat simulated or simplified rather than showing a rich, interactive product environment."
+            "score": 1,
+            "evidence": "An elegant conceptual animation rather than a raw UI capture, but highly informative."
           },
           "legibility": {
-            "score": 1.4,
-            "evidence": "High contrast text and clean layout make it very easy to read even at smaller sizes."
+            "score": 1.5,
+            "evidence": "Large, high-contrast text and clear step indicators make it easy to read."
           },
           "professionalRelevance": {
-            "score": 1.1,
-            "evidence": "Demonstrates a useful multi-agent coordination feature for financial modeling and collaborative spreadsheets."
+            "score": 1.5,
+            "evidence": "Directly addresses financial modeling concurrency issues relevant to enterprise users."
           },
           "productionHonesty": {
-            "score": 1,
-            "evidence": "Clearly presented as a step-by-step conceptual sequence without pretending to be a fully fluid live recording."
+            "score": 1.5,
+            "evidence": "Accurately frames the sequence as a step-by-step agent execution trace."
           }
         },
         "observedEvidence": [
-          "Step-by-step sequence showing agent actions on a locked spreadsheet row",
-          "Status indicators showing 'LOCKED' and version changes"
+          "Step-by-step agent execution trace",
+          "Locked range visual indicators",
+          "Drafting state changes"
         ],
         "missingEvidence": [],
         "defects": [
           {
             "ts": "00:03",
-            "severity": "P1",
-            "observed": "The sequence repeats the 'locks the affected range' action at step 3/5, which was already executed at step 1/5.",
-            "fix": "Revise the step sequence to ensure each step represents a unique, logical progression in the workflow."
+            "severity": "P2",
+            "observed": "Step 3/5 repeats the exact text and state of Step 1/5 ('locks the affected range').",
+            "fix": "Ensure step 3/5 has unique descriptive text matching its specific action."
           }
         ],
-        "suggestedReadmeCaption": "Workflow preview demonstrating how NodeRoom agents safely draft edits on locked ranges to prevent overwrites."
+        "suggestedReadmeCaption": "Watch how NodeRoom agents handle locked ranges by drafting edits to prevent overwrites during collaborative sessions."
       },
-      "score": 8.9,
+      "score": 11.5,
       "maxScore": 16
     },
     {
@@ -671,58 +655,64 @@
       },
       "model": "gemini-3.5-flash",
       "status": "judged",
-      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-l5-large-range.mp4",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-eval-workflow-previews-l5-large-range.mp4",
       "mediaType": "video/mp4",
       "convertedFrom": "docs/eval/workflow-previews/l5-large-range.gif",
       "bytes": 69550,
       "judge": {
         "verdict": "publish",
-        "summary": "A clear, step-by-step workflow preview demonstrating concurrency control and range locking on a 5-row window. The visual style is clean and legible, though highly schematic.",
+        "summary": "The workflow preview clearly demonstrates the step-by-step locking, reading, writing, and releasing mechanism for a 5-row window in a large range. The presentation is clean and highly legible, though it leans toward a simplified conceptual animation rather than a raw application capture.",
         "scores": {
           "featureClarity": {
-            "score": 1,
-            "evidence": "Demonstrates the 5-row window locking, reading, writing, and releasing sequence clearly."
+            "score": 1.3,
+            "evidence": "The animation clearly labels each step of the protocol, from locking the range to committing the CAS write."
           },
           "workflowCompleteness": {
-            "score": 1,
-            "evidence": "Shows the full progression from goal loading to lock release across 5 steps."
+            "score": 1.4,
+            "evidence": "Shows the full sequence of events: goal setup, locking, reading, writing, and releasing the lock."
           },
           "visualDesign": {
-            "score": 1,
-            "evidence": "Clean dark mode layout with clear step indicators, though highly simplified."
+            "score": 1.2,
+            "evidence": "Clean dark-themed layout with clear visual cues, though highly schematic and simplified."
           },
           "consistency": {
-            "score": 1,
-            "evidence": "Aligns with the agent-based row-level locking and versioning story."
+            "score": 1.1,
+            "evidence": "Aligns with the spreadsheet row-versioning and agent-coordination narrative of NodeRoom."
           },
           "evidenceQuality": {
             "score": 1,
-            "evidence": "Functions well as a conceptual trace replay, though it leans toward a schematic mock."
+            "evidence": "Feels more like an educational vector animation or mock trace than a live-recorded product interface."
           },
           "legibility": {
-            "score": 1,
-            "evidence": "Text and status indicators are readable, though font sizes are small."
+            "score": 1.4,
+            "evidence": "High contrast text and clear step indicators at the bottom make it very easy to read."
           },
           "professionalRelevance": {
-            "score": 1,
-            "evidence": "Highly relevant for developers understanding concurrency and CAS in large datasets."
+            "score": 1.2,
+            "evidence": "Directly addresses concurrency and performance concerns for large-scale financial sheets."
           },
           "productionHonesty": {
-            "score": 1,
-            "evidence": "Accurately represents a simulated step-by-step trace without overclaiming."
+            "score": 1.1,
+            "evidence": "Clearly presented as a conceptual workflow sequence rather than pretending to be a full-blown IDE capture."
           }
         },
         "observedEvidence": [
-          "Step-by-step progress indicator (0/5 to 5/5)",
-          "Row locking state change on Line 420",
-          "CAS write (+8.2%) and commit to V2",
-          "Lock release state"
+          "Step-by-step locking and versioning sequence",
+          "Line 420 state transitions from locked to committed V2",
+          "AI agent goal and action captions at the bottom"
         ],
         "missingEvidence": [],
-        "defects": [],
-        "suggestedReadmeCaption": "Step-by-step execution of the L5 Large Range workflow, demonstrating row-level locking, CAS write, and version commitment within a 5-row window."
+        "defects": [
+          {
+            "ts": "00:01",
+            "severity": "P2",
+            "observed": "The UI is highly abstracted, which may set different expectations compared to the actual complex application interface.",
+            "fix": "Add a small caption or label indicating this is a conceptual protocol trace visualization."
+          }
+        ],
+        "suggestedReadmeCaption": "Visualizing the L5 Large Range protocol: NodeRoom agents lock and update a localized 5-row window without loading or clobbering the entire sheet."
       },
-      "score": 8,
+      "score": 9.7,
       "maxScore": 16
     },
     {
@@ -736,56 +726,55 @@
       },
       "model": "gemini-3.5-flash",
       "status": "judged",
-      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-l6-long-horizon.mp4",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-eval-workflow-previews-l6-long-horizon.mp4",
       "mediaType": "video/mp4",
       "convertedFrom": "docs/eval/workflow-previews/l6-long-horizon.gif",
       "bytes": 252349,
       "judge": {
         "verdict": "publish",
-        "summary": "An excellent, highly legible step-by-step trace replay demonstrating an AI agent resolving write conflicts on a financial table using CAS and context compaction.",
+        "summary": "A clear, step-by-step visualization of an AI agent resolving multi-cell conflicts in a financial model using CAS (Compare-And-Swap) and context compaction. The progression is highly legible and technically honest.",
         "scores": {
           "featureClarity": {
             "score": 1.4,
-            "evidence": "Shows step-by-step execution of an AI agent resolving conflicts and writing to a financial table."
+            "evidence": "The UI explicitly labels actions like reads, conflicts, compaction, and CAS writes, making the concurrency control feature easy to understand."
           },
           "workflowCompleteness": {
             "score": 1.5,
-            "evidence": "Demonstrates the entire sequence from initial state through multiple read/conflict/write cycles to completion."
+            "evidence": "Shows the entire lifecycle from initial state, through multiple read/write conflicts and compactions, to the final completed state."
           },
           "visualDesign": {
             "score": 1.4,
-            "evidence": "Clean dark UI with clear row highlights and a progress indicator at the bottom."
+            "evidence": "Clean dark-mode interface with high contrast, clear row highlighting, and a subtle progress indicator at the bottom."
           },
           "consistency": {
             "score": 1.3,
-            "evidence": "Aligns with the spreadsheet/table interface and AI agent execution trace concept."
+            "evidence": "Aligns well with the spreadsheet-based agent execution and trace logging narrative of NodeRoom."
           },
           "evidenceQuality": {
             "score": 1.4,
-            "evidence": "High-fidelity trace replay showing actual state transitions and agent logs."
+            "evidence": "Appears to be a high-fidelity trace replay of actual agent execution steps rather than a mock marketing graphic."
           },
           "legibility": {
             "score": 1.5,
-            "evidence": "High contrast text and clear labels make it easy to follow the sequence."
+            "evidence": "Text, version tags, and bottom status logs are highly readable even at smaller preview sizes."
           },
           "professionalRelevance": {
             "score": 1.4,
-            "evidence": "Highly relevant for demonstrating robust multi-agent coordination over financial models."
+            "evidence": "Highly relevant to engineers building multi-agent systems and financial analysts concerned with data overwrites."
           },
           "productionHonesty": {
             "score": 1.5,
-            "evidence": "Clearly displays conflicts and CAS retries rather than a perfect happy path."
+            "evidence": "Accurately depicts the step-by-step latency, retries, and conflict resolution steps without skipping complexity."
           }
         },
         "observedEvidence": [
-          "Step-by-step agent execution trace",
-          "Financial table with Revenue, COGS, Gross Profit, Net Income",
-          "Conflict resolution and CAS write retries",
-          "Context compaction events"
+          "Step-by-step execution trace from step 0/31 to 31/31",
+          "Visual indicators for CONFLICT, COMMITTED, and version numbers (V1, V2, V3)",
+          "Bottom status bar detailing agent actions (reads, writes, compaction)"
         ],
         "missingEvidence": [],
         "defects": [],
-        "suggestedReadmeCaption": "Watch NodeRoom's AI agent navigate a long-horizon task, resolving edit conflicts on a financial model using CAS (Compare-And-Swap) and context compaction without locking the sheet."
+        "suggestedReadmeCaption": "Watch NodeRoom's AI agent handle multi-cell financial updates under repeated human edit conflicts, utilizing context compaction and CAS to prevent data clobbering."
       },
       "score": 11.4,
       "maxScore": 16
@@ -801,64 +790,64 @@
       },
       "model": "gemini-3.5-flash",
       "status": "judged",
-      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-proposals-wall-review.mp4",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-eval-workflow-previews-proposals-wall-review.mp4",
       "mediaType": "video/mp4",
       "convertedFrom": "docs/eval/workflow-previews/proposals-wall-review.gif",
       "bytes": 142274,
       "judge": {
-        "verdict": "publish",
-        "summary": "The workflow preview effectively demonstrates the transition from a spreadsheet view to a diligence wall review within the NodeRoom platform, highlighting agent collaboration and trace logs.",
+        "verdict": "fix-then-publish",
+        "summary": "The workflow preview demonstrates transitioning from a spreadsheet view to a diligence wall review. While the UI is detailed and authentic, the transition is abrupt and could benefit from clearer interaction cues.",
         "scores": {
           "featureClarity": {
-            "score": 1.2,
-            "evidence": "Clearly shows the transition to the Diligence Wall and the review of agent proposals."
+            "score": 1,
+            "evidence": "Shows the transition to the Diligence Wall, though the sudden switch makes the exact trigger action unclear."
           },
           "workflowCompleteness": {
-            "score": 1.3,
-            "evidence": "Captures the before-and-after states of the workspace as the user switches views."
+            "score": 1,
+            "evidence": "Captures the before and after states, but lacks the intermediate user action or click animation."
           },
           "visualDesign": {
-            "score": 1.1,
-            "evidence": "Clean dark-mode layout, though the high density of text panels slightly clutters the screen."
+            "score": 1,
+            "evidence": "The dark-themed interface is modern and structured, but the high density of text and panels reduces visual focus."
           },
           "consistency": {
-            "score": 1.4,
-            "evidence": "Perfectly aligns with the core product pillars: files, spreadsheets, walls, and traces."
+            "score": 1,
+            "evidence": "Aligns well with the NodeRoom ecosystem, featuring chats, spreadsheets, agents, and traces."
           },
           "evidenceQuality": {
-            "score": 1.3,
-            "evidence": "Authentic UI capture showing realistic financial diligence data and agent interactions."
+            "score": 1,
+            "evidence": "Appears to be a direct capture of the working application interface rather than a mockup."
           },
           "legibility": {
             "score": 1,
-            "evidence": "Small font sizes in the chat and trace panels are somewhat difficult to read without zooming."
+            "evidence": "Text in the chat and wall cards is readable, though small sidebar elements are harder to resolve."
           },
           "professionalRelevance": {
-            "score": 1.3,
-            "evidence": "Highly relevant for financial analysts and auditors managing variance reconciliation."
+            "score": 1,
+            "evidence": "Highly relevant for financial analysts and diligence teams reviewing automated ledger proposals."
           },
           "productionHonesty": {
-            "score": 1.2,
-            "evidence": "The UI state changes and trace logs accurately reflect the system's operations."
+            "score": 1,
+            "evidence": "Accurately represents the UI state changes without artificial overlays or simulated success states."
           }
         },
         "observedEvidence": [
-          "Diligence wall canvas with sticky notes",
-          "Room trace panel updating with agent proposals",
-          "Public and private agent chat panels"
+          "Transition from Q3 variance spreadsheet to Diligence Wall view",
+          "Diligence wall cards showing variance notes and NetSuite reconciliation tasks",
+          "Room trace updating with agent actions"
         ],
         "missingEvidence": [],
         "defects": [
           {
             "ts": "00:02",
             "severity": "P2",
-            "observed": "Abrupt transition between the spreadsheet view and the diligence wall view.",
-            "fix": "Add a brief transition animation or a hover state to make the view switch smoother."
+            "observed": "Abrupt transition from the spreadsheet view to the Diligence Wall without a visible click or navigation indicator.",
+            "fix": "Add a brief hover or click animation on the sidebar navigation item to guide the viewer's eye."
           }
         ],
-        "suggestedReadmeCaption": "Reviewing automated financial proposals and sticky notes on the Diligence Wall."
+        "suggestedReadmeCaption": "Reviewing automated ledger proposals and reconciliation tasks on the Diligence Wall."
       },
-      "score": 9.8,
+      "score": 8,
       "maxScore": 16
     },
     {
@@ -872,65 +861,65 @@
       },
       "model": "gemini-3.5-flash",
       "status": "judged",
-      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-research-enrichment.mp4",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-eval-workflow-previews-research-enrichment.mp4",
       "mediaType": "video/mp4",
       "convertedFrom": "docs/eval/workflow-previews/research-enrichment.gif",
       "bytes": 120124,
       "judge": {
         "verdict": "publish",
-        "summary": "The preview effectively demonstrates the research enrichment workflow, showing the transition from pending to completed states with updated sources and trace logs.",
+        "summary": "The workflow preview effectively demonstrates the research enrichment feature, showing the transition from pending to completed states with updated chat messages and trace logs.",
         "scores": {
           "featureClarity": {
-            "score": 1.3,
-            "evidence": "The interface clearly displays the 'Research' tab and the enrichment of company profiles."
+            "score": 1.4,
+            "evidence": "The UI clearly transitions from a 'pending' enrichment state to a completed state with populated company details."
           },
           "workflowCompleteness": {
-            "score": 1.4,
-            "evidence": "Demonstrates the full sequence from pending status to completed enrichment with populated sources."
+            "score": 1.5,
+            "evidence": "Demonstrates the full loop: initiating enrichment, agent execution, and the final structured output."
           },
           "visualDesign": {
             "score": 1.2,
-            "evidence": "Clean dark-mode layout, though the dense information density makes it look slightly cluttered."
+            "evidence": "The interface is modern and well-aligned, though the dense layout contains a lot of competing text elements."
           },
           "consistency": {
             "score": 1.4,
-            "evidence": "Integrates the chat, research panel, agent notes, and execution trace seamlessly."
+            "evidence": "Aligns with the NodeRoom paradigm, combining chat, structured tabs, and a live execution trace."
           },
           "evidenceQuality": {
-            "score": 1.4,
-            "evidence": "Authentic UI capture showing real-time state changes and log updates."
+            "score": 1.5,
+            "evidence": "Authentic application capture showing real-time state updates and trace logs."
           },
           "legibility": {
             "score": 1.1,
-            "evidence": "Small font sizes in the trace log and chat sidebar require close attention to read."
+            "evidence": "Some sidebar text and trace logs are small and may be difficult to read on smaller screens."
           },
           "professionalRelevance": {
-            "score": 1.3,
-            "evidence": "Highly relevant for automated research and data enrichment use cases."
+            "score": 1.4,
+            "evidence": "Highly relevant for automated research, data enrichment, and analyst workflows."
           },
           "productionHonesty": {
             "score": 1.4,
-            "evidence": "The UI state changes correspond directly with the trace logs shown at the bottom."
+            "evidence": "Accurately depicts the step-by-step progress of background agent tasks."
           }
         },
         "observedEvidence": [
-          "Research enrichment button interaction",
-          "Status transition from pending to complete",
-          "Populated company sources and summary",
-          "Room trace log updates"
+          "Research tab showing pending status",
+          "Agent execution and completion message in chat",
+          "Populated company research cards with sources",
+          "Trace logs updating in real-time"
         ],
         "missingEvidence": [],
         "defects": [
           {
             "ts": "00:02",
             "severity": "P2",
-            "observed": "The text in the Room Trace and chat panels is quite small and may be hard to read on smaller screens.",
-            "fix": "Increase the default font size or zoom level slightly during recording."
+            "observed": "The text in the 'Room trace' panel at the bottom right is quite small and hard to read.",
+            "fix": "Increase the font size of the trace panel or zoom in slightly on the active panel during recording."
           }
         ],
-        "suggestedReadmeCaption": "Watch NodeRoom enrich company profiles in real-time, updating structured fields and logging agent actions in the room trace."
+        "suggestedReadmeCaption": "Watch NodeRoom's agent enrich company profiles with structured data and live sources in real-time."
       },
-      "score": 10.5,
+      "score": 10.9,
       "maxScore": 16
     },
     {
@@ -944,65 +933,70 @@
       },
       "model": "gemini-3.5-flash",
       "status": "judged",
-      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-eval-workflow-previews-wiki-note-grounding.mp4",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-eval-workflow-previews-wiki-note-grounding.mp4",
       "mediaType": "video/mp4",
       "convertedFrom": "docs/eval/workflow-previews/wiki-note-grounding.gif",
       "bytes": 97733,
       "judge": {
-        "verdict": "publish",
-        "summary": "The workflow preview successfully demonstrates the integration of collaborative notes, spreadsheets, and multi-agent execution traces within the NodeRoom environment, showing the grounding of wiki notes into structured spreadsheet data.",
+        "verdict": "fix-then-publish",
+        "summary": "The workflow preview demonstrates wiki note grounding and spreadsheet synchronization. While the UI is detailed, the transition is extremely rapid and small text limits legibility.",
         "scores": {
           "featureClarity": {
-            "score": 1.3,
-            "evidence": "Shows the transition from a text-based diligence note to a structured spreadsheet sync, though the transition is rapid."
+            "score": 1,
+            "evidence": "Shows transition from a diligence note to a spreadsheet view, but the grounding mechanism is fast."
           },
           "workflowCompleteness": {
-            "score": 1.4,
-            "evidence": "Captures the initial note state, the agent interaction, and the resulting spreadsheet updates with trace logs."
+            "score": 1,
+            "evidence": "Captures two distinct states of the workflow, though intermediate steps are brief."
           },
           "visualDesign": {
-            "score": 1.4,
-            "evidence": "Clean dark-mode UI with consistent panel layouts, though dense with information."
+            "score": 1,
+            "evidence": "Consistent dark mode layout, but the dense multi-column interface feels cluttered."
           },
           "consistency": {
-            "score": 1.5,
-            "evidence": "Perfectly aligns with NodeRoom's core concepts of public/private agents, spreadsheets, notes, and execution traces."
+            "score": 1,
+            "evidence": "Aligns well with NodeRoom's multi-agent and spreadsheet/note workspace concept."
           },
           "evidenceQuality": {
-            "score": 1.4,
-            "evidence": "Authentic UI capture showing realistic financial data, agent logs, and system traces."
+            "score": 1,
+            "evidence": "Appears to be a genuine product capture with realistic data and agent logs."
           },
           "legibility": {
-            "score": 1.1,
-            "evidence": "Small font sizes in the chat and trace logs may be difficult to read on smaller screens without zooming."
+            "score": 1,
+            "evidence": "Small font sizes in the chat and spreadsheet cells make it hard to read at standard resolutions."
           },
           "professionalRelevance": {
-            "score": 1.4,
-            "evidence": "Highly relevant for financial analysts and developers building multi-agent collaborative workflows."
+            "score": 1,
+            "evidence": "Highly relevant to financial diligence and collaborative audit workflows."
           },
           "productionHonesty": {
-            "score": 1.3,
-            "evidence": "Accurately represents the system's state transitions and trace outputs without artificial embellishments."
+            "score": 1,
+            "evidence": "Displays realistic agent outputs and trace logs without obvious simulation artifacts."
           }
         },
         "observedEvidence": [
-          "Diligence note tab showing sync reliability guidelines",
-          "Spreadsheet tab showing financial rows (Revenue, COGS, Gross Profit)",
-          "Room trace panel displaying agent execution logs",
-          "Public and private agent chat panels"
+          "Diligence note interface",
+          "Spreadsheet view with variance data",
+          "NodeAgent chat and trace logs"
         ],
         "missingEvidence": [],
         "defects": [
           {
             "ts": "00:01",
+            "severity": "P1",
+            "observed": "The transition between the note and the spreadsheet is abrupt, making it hard to follow the grounding action.",
+            "fix": "Add a transition frame or slow down the animation to clarify how the note content updates the spreadsheet."
+          },
+          {
+            "ts": "00:00",
             "severity": "P2",
-            "observed": "Dense text in the Room Trace and chat panels is hard to read at standard README display resolutions.",
-            "fix": "Increase the default zoom level of the browser during capture to make text elements larger."
+            "observed": "Text in the chat and agent panels is very small and difficult to read.",
+            "fix": "Increase zoom level or crop the capture to focus on the active workspace area."
           }
         ],
-        "suggestedReadmeCaption": "NodeRoom's Wiki Note Grounding workflow: seamlessly syncing unstructured diligence notes into structured, version-controlled spreadsheets with full agent execution traces."
+        "suggestedReadmeCaption": "NodeRoom's collaborative workspace showing real-time synchronization and grounding between diligence notes and financial spreadsheets."
       },
-      "score": 10.8,
+      "score": 8,
       "maxScore": 16
     },
     {
@@ -1017,65 +1011,65 @@
       },
       "model": "gemini-3.5-flash",
       "status": "judged",
-      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-walkthroughs-ask-agent.mp4",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-walkthroughs-ask-agent.mp4",
       "mediaType": "video/mp4",
       "convertedFrom": "docs/walkthroughs/ask-agent.gif",
-      "bytes": 630168,
+      "bytes": 886574,
       "judge": {
         "verdict": "publish",
-        "summary": "The walkthrough clearly demonstrates using the NodeAgent to reconcile spreadsheet variances via chat commands, showing real-time cell updates and execution traces.",
+        "summary": "The walkthrough effectively demonstrates the NodeAgent interacting with a spreadsheet to reconcile Q3 revenue. It shows the full loop from chat command to cell updates and trace logs.",
         "scores": {
           "featureClarity": {
-            "score": 1.3,
-            "evidence": "Demonstrates typing a command to reconcile variance cells and seeing the agent execute it."
+            "score": 1.4,
+            "evidence": "The user types a clear command in the chat, and the agent executes it, updating the spreadsheet cells directly."
           },
           "workflowCompleteness": {
-            "score": 1.4,
-            "evidence": "Shows the complete flow from command input to agent execution, cell locking, and final trace updates."
+            "score": 1.5,
+            "evidence": "Shows the initial state, the command input, the agent processing state, and the final updated spreadsheet with trace logs."
           },
           "visualDesign": {
-            "score": 1.2,
-            "evidence": "Clean dark-themed UI layout, though the interface is dense with multiple panels."
+            "score": 1.3,
+            "evidence": "Clean dark mode interface with clear panel division, though the text in the trace log is quite dense."
           },
           "consistency": {
-            "score": 1.3,
-            "evidence": "Aligns with NodeRoom's core concepts of spreadsheets, chat-based agents, and audit traces."
+            "score": 1.5,
+            "evidence": "Perfect alignment with the NodeRoom paradigm of spreadsheets, chat-based agents, and audit traces."
           },
           "evidenceQuality": {
             "score": 1.4,
-            "evidence": "Authentic screen recording showing actual UI interactions and live state changes."
+            "evidence": "Captured directly from a working UI session, showing realistic latency and state transitions."
           },
           "legibility": {
-            "score": 1.1,
-            "evidence": "Small font sizes in the spreadsheet cells and chat input may limit readability on smaller screens."
+            "score": 1.2,
+            "evidence": "Most text is readable, though some smaller labels in the spreadsheet and trace log require zooming."
           },
           "professionalRelevance": {
-            "score": 1.3,
-            "evidence": "Highly relevant for financial analysts and operations teams automating reconciliation tasks."
+            "score": 1.5,
+            "evidence": "Highly relevant to financial analysts and operations teams looking to automate spreadsheet reconciliation."
           },
           "productionHonesty": {
-            "score": 1.4,
-            "evidence": "Accurately depicts the step-by-step execution, cell-locking mechanism, and trace logs."
+            "score": 1.3,
+            "evidence": "Displays the actual agent execution steps and trace logs without masking the underlying process."
           }
         },
         "observedEvidence": [
-          "Chat input panel with /ask command execution",
-          "Spreadsheet component showing Q3 variance data",
-          "NodeAgent status updates and cell-locking visual indicators",
-          "Versioned spreadsheet sync trace updating in real-time"
+          "Chat input interface with slash commands",
+          "Spreadsheet with Q2/Q3 columns and variance cells",
+          "NodeAgent processing status indicator",
+          "Room trace panel updating with agent steps"
         ],
         "missingEvidence": [],
         "defects": [
           {
-            "ts": "00:06",
+            "ts": "00:09",
             "severity": "P2",
-            "observed": "Spreadsheet cell values and chat text are small and may be difficult to read at default README resolution.",
-            "fix": "Slightly increase browser zoom level during recording to enhance text legibility."
+            "observed": "Some variance cells are filled with 'null' values, which might look like an execution error to some viewers.",
+            "fix": "Ensure the mock data or agent output populates actual numerical variances or clearer empty states instead of literal 'null'."
           }
         ],
-        "suggestedReadmeCaption": "Ask the Room NodeAgent to reconcile spreadsheet variances directly from the chat, featuring real-time cell locking and auditable execution traces."
+        "suggestedReadmeCaption": "Ask the NodeAgent to reconcile financial sheets and automatically fill in variance cells with full auditability."
       },
-      "score": 10.4,
+      "score": 11.1,
       "maxScore": 16
     },
     {
@@ -1090,57 +1084,139 @@
       },
       "model": "gemini-3.5-flash",
       "status": "judged",
-      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-walkthroughs-chat.mp4",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-walkthroughs-chat.mp4",
       "mediaType": "video/mp4",
       "convertedFrom": "docs/walkthroughs/chat.gif",
-      "bytes": 606959,
+      "bytes": 499876,
       "judge": {
         "verdict": "publish",
-        "summary": "The walkthrough effectively demonstrates the real-time chat feature within NodeRoom's collaborative workspace, showing typing, sending, and instant rendering.",
+        "summary": "The walkthrough clearly demonstrates the basic room chat functionality within NodeRoom, showing a user typing and sending a message in real-time. The UI is consistent with the product's theme, though the camera panning is slightly abrupt.",
         "scores": {
           "featureClarity": {
-            "score": 1.3,
-            "evidence": "The chat input and message log are clearly highlighted and shown in action."
+            "score": 1.4,
+            "evidence": "The chat input and message sending flow are clearly visible and easy to follow."
           },
           "workflowCompleteness": {
-            "score": 1.4,
-            "evidence": "Captures the full sequence from clicking the input field to typing and sending the message."
+            "score": 1.3,
+            "evidence": "Shows the complete sequence of typing a message, pressing enter, and seeing it render in the public chat."
           },
           "visualDesign": {
             "score": 1.2,
-            "evidence": "Clean dark-mode interface, though the multi-column layout is somewhat dense."
+            "evidence": "Clean dark-mode UI, though the sudden zoom-in transition at the beginning is slightly jarring."
           },
           "consistency": {
-            "score": 1.3,
-            "evidence": "Integrates well with the spreadsheet and agent panels shown in the workspace."
+            "score": 1.4,
+            "evidence": "Displays the expected sidebar elements including files, spreadsheets, and active room agents."
           },
           "evidenceQuality": {
-            "score": 1.4,
-            "evidence": "Shows authentic UI interaction with realistic financial review context."
+            "score": 1.3,
+            "evidence": "Captured directly from the working web application with helpful step-by-step caption overlays."
           },
           "legibility": {
             "score": 1.2,
-            "evidence": "Text is legible, though the font size is relatively small at standard zoom."
+            "evidence": "The text in the chat input and sidebar is legible, though the zoom level shifts during the clip."
           },
           "professionalRelevance": {
-            "score": 1.2,
-            "evidence": "Demonstrates real-time collaboration useful for finance and team reviews."
+            "score": 1.3,
+            "evidence": "Demonstrates real-time collaboration context which is useful for team-based financial or engineering reviews."
           },
           "productionHonesty": {
-            "score": 1.3,
-            "evidence": "Accurately depicts the UI state changes without simulated effects."
+            "score": 1.4,
+            "evidence": "Accurately represents the UI state changes and instant rendering behavior without simulated effects."
           }
         },
         "observedEvidence": [
-          "Interactive chat panel with message input",
-          "Real-time message rendering in the chat log",
-          "Multi-column workspace containing a spreadsheet and agent panel"
+          "Public chat panel",
+          "Sidebar with files (Q3 variance, NetSuite export)",
+          "Active users list (Maya, Room NodeAgent)",
+          "Message input field with placeholder text",
+          "Sent message rendering instantly in the chat history"
         ],
         "missingEvidence": [],
-        "defects": [],
-        "suggestedReadmeCaption": "Send instant messages to coordinate tasks directly alongside your shared spreadsheets and agents."
+        "defects": [
+          {
+            "ts": "00:02",
+            "severity": "P2",
+            "observed": "Abrupt camera pan and zoom into the chat input field may feel disorienting to some viewers.",
+            "fix": "Smooth out the transition or maintain a consistent viewport zoom level throughout the walkthrough."
+          }
+        ],
+        "suggestedReadmeCaption": "Send real-time messages to your team and active agents directly within the shared room."
       },
-      "score": 10.3,
+      "score": 10.5,
+      "maxScore": 16
+    },
+    {
+      "asset": {
+        "id": "docs-walkthroughs-ic-room",
+        "class": "readme_walkthrough",
+        "title": "Ic Room",
+        "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\ic-room.gif",
+        "relPath": "docs/walkthroughs/ic-room.gif",
+        "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+        "duplicateGroup": "walkthrough:ic-room"
+      },
+      "model": "gemini-3.5-flash",
+      "status": "judged",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-walkthroughs-ic-room.mp4",
+      "mediaType": "video/mp4",
+      "convertedFrom": "docs/walkthroughs/ic-room.gif",
+      "bytes": 688551,
+      "judge": {
+        "verdict": "fix-then-publish",
+        "summary": "The walkthrough demonstrates importing account data into a research spreadsheet with live trace updates, though there is a minor mismatch in the row count reported by the trace.",
+        "scores": {
+          "featureClarity": {
+            "score": 1,
+            "evidence": "Demonstrates the import accounts feature via text pasting into a structured table."
+          },
+          "workflowCompleteness": {
+            "score": 1,
+            "evidence": "Shows the full flow from clicking import, pasting data, to the updated table state."
+          },
+          "visualDesign": {
+            "score": 1,
+            "evidence": "Clean dark-mode interface with clear focus states, though some text elements are small."
+          },
+          "consistency": {
+            "score": 1,
+            "evidence": "Aligns with the product's theme of collaborative rooms, spreadsheets, and activity traces."
+          },
+          "evidenceQuality": {
+            "score": 1,
+            "evidence": "Captured directly from the running web application, showing authentic UI interactions."
+          },
+          "legibility": {
+            "score": 1,
+            "evidence": "UI text and captions are readable, though spreadsheet cells require close attention."
+          },
+          "professionalRelevance": {
+            "score": 1,
+            "evidence": "Highly relevant for investment teams managing pipeline accounts and CRM data."
+          },
+          "productionHonesty": {
+            "score": 1,
+            "evidence": "Shows real-time updates, but the trace log count does not perfectly match the input."
+          }
+        },
+        "observedEvidence": [
+          "Import accounts modal",
+          "Pasted CSV-like text input",
+          "Updated spreadsheet row",
+          "Room trace activity log"
+        ],
+        "missingEvidence": [],
+        "defects": [
+          {
+            "ts": "00:09",
+            "severity": "P1",
+            "observed": "The room trace log indicates 'Maya imported 3 Research row(s)' but only 1 row was pasted and displayed.",
+            "fix": "Update the mock data or trace logic so the reported imported row count matches the actual input data."
+          }
+        ],
+        "suggestedReadmeCaption": "Easily import and track new investment opportunities directly within your shared team room with automatic provenance tracking."
+      },
+      "score": 8,
       "maxScore": 16
     },
     {
@@ -1155,64 +1231,65 @@
       },
       "model": "gemini-3.5-flash",
       "status": "judged",
-      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-walkthroughs-research-upsert.mp4",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-walkthroughs-research-upsert.mp4",
       "mediaType": "video/mp4",
       "convertedFrom": "docs/walkthroughs/research-upsert.gif",
-      "bytes": 1136892,
+      "bytes": 1306794,
       "judge": {
         "verdict": "publish",
-        "summary": "The walkthrough clearly demonstrates the research upsert feature, showing how importing an existing account updates the row instead of duplicating it.",
+        "summary": "The walkthrough clearly demonstrates the GTM research upsert feature, showing how importing duplicate accounts updates existing rows instead of creating duplicates.",
         "scores": {
           "featureClarity": {
-            "score": 1,
-            "evidence": "Demonstrates importing a new account and then updating it with new details."
+            "score": 1.5,
+            "evidence": "Clearly shows the transition from importing a new account to updating an existing one."
           },
           "workflowCompleteness": {
-            "score": 1,
-            "evidence": "Shows the initial state, the import action, the result, and the subsequent update action."
+            "score": 1.4,
+            "evidence": "Demonstrates the entire flow: initial state, pasting data, importing, and verifying the updated row."
           },
           "visualDesign": {
-            "score": 1,
-            "evidence": "Clean dark UI with clear highlights on interactive elements."
+            "score": 1.3,
+            "evidence": "Clean dark mode interface with clear visual hierarchy, though input text is slightly small."
           },
           "consistency": {
-            "score": 1,
-            "evidence": "Consistent with NodeRoom's GTM research and spreadsheet-like interface."
+            "score": 1.4,
+            "evidence": "Aligns well with the NodeRoom workspace concept, featuring the Research tab and Room trace."
           },
           "evidenceQuality": {
-            "score": 1,
-            "evidence": "Captured directly from the working web application with real-time updates."
+            "score": 1.5,
+            "evidence": "Authentic screen recording showing real-time UI updates and trace logs."
           },
           "legibility": {
-            "score": 1,
-            "evidence": "Text in the import box is small but readable at standard zoom levels."
+            "score": 1.2,
+            "evidence": "Most UI elements are legible, though the pasted text in the input field is small."
           },
           "professionalRelevance": {
-            "score": 1,
-            "evidence": "Highly relevant for GTM operations and CRM data hygiene workflows."
+            "score": 1.4,
+            "evidence": "Directly applicable to GTM operations and CRM data hygiene workflows."
           },
           "productionHonesty": {
-            "score": 1,
-            "evidence": "Accurately depicts the upsert logic without artificial cuts."
+            "score": 1.5,
+            "evidence": "Accurately represents the upsert logic without simulated or exaggerated effects."
           }
         },
         "observedEvidence": [
-          "Import modal interaction",
-          "Row addition to the GTM research sheet",
-          "Row update on duplicate import"
+          "Research tab interface",
+          "Import accounts modal/input",
+          "Real-time row updates",
+          "Room trace log updates"
         ],
         "missingEvidence": [],
         "defects": [
           {
-            "ts": "00:05",
+            "ts": "00:06",
             "severity": "P2",
-            "observed": "The text pasted into the import box is quite small and slightly hard to read.",
-            "fix": "Increase the font size or contrast of the placeholder and input text in the import modal."
+            "observed": "The text pasted into the import input box is quite small and hard to read at standard resolution.",
+            "fix": "Increase the font size of the input placeholder and pasted text for better readability."
           }
         ],
-        "suggestedReadmeCaption": "NodeRoom's smart import automatically upserts existing accounts to prevent duplicates while preserving data history."
+        "suggestedReadmeCaption": "Watch how NodeRoom's GTM research sheet automatically updates existing accounts instead of creating duplicates when re-importing data."
       },
-      "score": 8,
+      "score": 11.2,
       "maxScore": 16
     },
     {
@@ -1227,65 +1304,65 @@
       },
       "model": "gemini-3.5-flash",
       "status": "judged",
-      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-walkthroughs-review-approve.mp4",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-walkthroughs-review-approve.mp4",
       "mediaType": "video/mp4",
       "convertedFrom": "docs/walkthroughs/review-approve.gif",
-      "bytes": 920336,
+      "bytes": 1142704,
       "judge": {
         "verdict": "publish",
-        "summary": "The walkthrough clearly demonstrates the 'Review mode' feature where agent edits become proposals requiring manual approval. The workflow is complete, showing the toggle, the command execution, and the inline cell approval.",
+        "summary": "The walkthrough clearly demonstrates the review and approval workflow when auto-allow is disabled, showing agent proposals and user acceptance.",
         "scores": {
           "featureClarity": {
             "score": 1,
-            "evidence": "Shows the transition from auto-allow to review mode, though the dense UI requires close attention to follow the toggle state."
+            "evidence": "Demonstrates turning off auto-allow and approving agent proposals clearly."
           },
           "workflowCompleteness": {
-            "score": 2,
-            "evidence": "Captures the entire loop: disabling auto-allow, sending a command, viewing proposed cell values, and approving them."
+            "score": 1,
+            "evidence": "Shows the complete flow from disabling auto-allow to command execution and final approval."
           },
           "visualDesign": {
             "score": 1,
-            "evidence": "Consistent dark theme and layout, though the interface is highly packed with multiple panels."
+            "evidence": "Clean dark mode interface, though the layout is quite dense with data."
           },
           "consistency": {
             "score": 1,
-            "evidence": "Aligns with the NodeRoom paradigm of spreadsheet cells, chat, and agent execution traces."
+            "evidence": "Consistent with NodeRoom's spreadsheet and agent-based collaboration model."
           },
           "evidenceQuality": {
-            "score": 2,
-            "evidence": "Authentic screen recording showing real-time UI updates, cursor interactions, and state changes."
+            "score": 1,
+            "evidence": "Authentic UI capture showing real-time state changes and trace logs."
           },
           "legibility": {
             "score": 1,
-            "evidence": "Small font sizes in the spreadsheet cells and chat panel are slightly hard to read at standard README scale."
+            "evidence": "Text and badges are readable, though some cell values are small."
           },
           "professionalRelevance": {
             "score": 1,
-            "evidence": "Highly relevant for financial and data operations where automated edits require human-in-the-loop verification."
+            "evidence": "Highly relevant for financial and audit workflows requiring human-in-the-loop verification."
           },
           "productionHonesty": {
-            "score": 2,
-            "evidence": "Accurately depicts the proposal state and the manual click required to commit changes."
+            "score": 1,
+            "evidence": "Accurately represents the proposal state before changes are committed."
           }
         },
         "observedEvidence": [
           "Auto-allow toggle interaction",
-          "Review mode status banner",
-          "Agent proposal highlights on spreadsheet cells",
-          "Inline approval checkmark interaction"
+          "Agent command execution",
+          "Cell proposal rendering",
+          "Accept all action"
         ],
         "missingEvidence": [],
         "defects": [
           {
-            "ts": "00:02",
+            "ts": "00:09",
             "severity": "P2",
-            "observed": "The 'Review mode ON' banner at the bottom briefly overlaps with other UI elements.",
-            "fix": "Adjust banner positioning or padding to avoid overlapping the lower chat input area."
+            "observed": "The orange proposal badges are slightly small and crowded in the variance column.",
+            "fix": "Increase padding or contrast for proposal badges in dense columns."
           }
         ],
-        "suggestedReadmeCaption": "Enable Review Mode to turn agent edits into inline proposals, allowing you to inspect and approve changes cell-by-cell."
+        "suggestedReadmeCaption": "Review and approve agent proposals in real-time when auto-allow is disabled."
       },
-      "score": 11,
+      "score": 8,
       "maxScore": 16
     },
     {
@@ -1300,64 +1377,64 @@
       },
       "model": "gemini-3.5-flash",
       "status": "judged",
-      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-walkthroughs-sheet-undo.mp4",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-walkthroughs-sheet-undo.mp4",
       "mediaType": "video/mp4",
       "convertedFrom": "docs/walkthroughs/sheet-undo.gif",
-      "bytes": 941506,
+      "bytes": 925918,
       "judge": {
         "verdict": "publish",
-        "summary": "The walkthrough clearly demonstrates the spreadsheet cell editing and undo functionality within the NodeRoom environment, showing real-time synchronization and versioned history updates.",
+        "summary": "The walkthrough clearly demonstrates editing a cell in a collaborative spreadsheet and then performing an undo action, which safely commits a revert version (v3) to the room trace without clobbering history.",
         "scores": {
           "featureClarity": {
-            "score": 1,
-            "evidence": "The video clearly shows editing a cell and then clicking the undo button to revert the change."
+            "score": 1.5,
+            "evidence": "The step-by-step captions and UI highlights clearly show the cell edit followed by the undo action."
           },
           "workflowCompleteness": {
-            "score": 1,
-            "evidence": "Captures the entire flow: empty cell, user input, commit, and subsequent undo action."
+            "score": 1.6,
+            "evidence": "Demonstrates the entire lifecycle: empty cell, value entry, commit, and subsequent undo reversion."
           },
           "visualDesign": {
-            "score": 1,
-            "evidence": "Consistent dark-themed UI with clear panel boundaries, though the layout is dense."
+            "score": 1.3,
+            "evidence": "Clean dark-themed UI with clear component boundaries, though the layout is somewhat dense."
           },
           "consistency": {
-            "score": 1,
-            "evidence": "Aligns with NodeRoom's spreadsheet and room trace concepts."
+            "score": 1.5,
+            "evidence": "Perfectly aligns with NodeRoom's multi-user spreadsheet sync and room trace architecture."
           },
           "evidenceQuality": {
-            "score": 1,
-            "evidence": "Authentic UI capture with real-time state updates and interactive elements."
+            "score": 1.4,
+            "evidence": "Captured directly from a live working prototype showing real-time state updates."
           },
           "legibility": {
-            "score": 1,
-            "evidence": "Captions are highly legible, though some spreadsheet cell values are small."
+            "score": 1.2,
+            "evidence": "Spreadsheet values are readable, but room trace logs and small status chips require close attention."
           },
           "professionalRelevance": {
-            "score": 1,
-            "evidence": "Directly relevant to financial and collaborative spreadsheet workflows."
+            "score": 1.5,
+            "evidence": "Highly relevant to finance and operations users who require audit trails and safe multi-user editing."
           },
           "productionHonesty": {
-            "score": 1,
-            "evidence": "Accurately represents the UI interaction and version history updates without simulation."
+            "score": 1.5,
+            "evidence": "Accurately shows that 'undo' in a collaborative environment creates a new version (v3) rather than silently deleting history."
           }
         },
         "observedEvidence": [
           "Spreadsheet cell editing",
           "Undo button interaction",
-          "Versioned spreadsheet sync trace updates"
+          "Version increment from v2 to v3 in the room trace"
         ],
         "missingEvidence": [],
         "defects": [
           {
-            "ts": "00:02",
+            "ts": "00:09",
             "severity": "P2",
-            "observed": "Spreadsheet cell text and headers are small and slightly difficult to read at standard preview sizes.",
-            "fix": "Increase the default zoom level of the spreadsheet component during recording."
+            "observed": "The 'Undo' button and version text in the sync panel are relatively small and easy to miss.",
+            "fix": "Slightly increase the contrast or size of the version control action bar."
           }
         ],
-        "suggestedReadmeCaption": "Easily edit cells and safely undo changes in a multiplayer-safe, version-controlled spreadsheet environment."
+        "suggestedReadmeCaption": "NodeRoom's collaborative spreadsheet supports safe, version-controlled undo actions that preserve the room's edit history."
       },
-      "score": 8,
+      "score": 11.5,
       "maxScore": 16
     },
     {
@@ -1372,64 +1449,65 @@
       },
       "model": "gemini-3.5-flash",
       "status": "judged",
-      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-walkthroughs-two-client-fresh-room.mp4",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-walkthroughs-two-client-fresh-room.mp4",
       "mediaType": "video/mp4",
       "convertedFrom": "docs/walkthroughs/two-client-fresh-room.gif",
       "bytes": 333181,
       "judge": {
         "verdict": "publish",
-        "summary": "A clear, step-by-step demonstration of two clients in a shared room where an AI agent reconciles a spreadsheet live, updating both views simultaneously.",
+        "summary": "Excellent demonstration of real-time multi-client synchronization and agent-driven reconciliation. The side-by-side view clearly shows the live updates across both clients.",
         "scores": {
           "featureClarity": {
-            "score": 1,
-            "evidence": "The walkthrough clearly shows Client A asking the agent to reconcile, and the resulting live updates on both screens."
+            "score": 1.3,
+            "evidence": "The flow clearly shows Client A requesting reconciliation and both clients receiving the updated variance column."
           },
           "workflowCompleteness": {
-            "score": 1,
-            "evidence": "Captures the initial empty state, the user prompt, the agent processing, and the final synchronized state."
+            "score": 1.4,
+            "evidence": "Captures the entire sequence from an empty variance column to the agent command and the final synchronized state."
           },
           "visualDesign": {
-            "score": 1,
-            "evidence": "The side-by-side layout is clean, though the dark theme and small text make it slightly dense."
+            "score": 1.2,
+            "evidence": "Clean side-by-side layout with helpful step indicators at the top and descriptive captions at the bottom."
           },
           "consistency": {
-            "score": 1,
-            "evidence": "Aligns perfectly with NodeRoom's core concepts of shared rooms, sheets, and collaborative agents."
+            "score": 1.3,
+            "evidence": "Perfectly aligns with NodeRoom's core concept of collaborative spreadsheets and autonomous agents."
           },
           "evidenceQuality": {
-            "score": 1,
-            "evidence": "High-fidelity UI recording showing real-time synchronization and agent execution."
+            "score": 1.4,
+            "evidence": "Authentic UI capture showing real-time updates, agent logs, and multi-user state synchronization."
           },
           "legibility": {
             "score": 1,
-            "evidence": "Text is legible but small due to the dual-window layout on a single canvas."
+            "evidence": "The side-by-side window layout makes the spreadsheet cell values small and slightly difficult to read on smaller screens."
           },
           "professionalRelevance": {
-            "score": 1,
-            "evidence": "Highly relevant for demonstrating real-time collaborative AI workflows in finance."
+            "score": 1.3,
+            "evidence": "Highly relevant for financial and operations teams requiring collaborative, agent-assisted data auditing."
           },
           "productionHonesty": {
-            "score": 1,
-            "evidence": "Accurately depicts the latency and step-by-step progression of the agent's action."
+            "score": 1.2,
+            "evidence": "Accurately depicts the step-by-step execution and propagation delay of the agent's action."
           }
         },
         "observedEvidence": [
-          "Dual-client synchronization",
-          "Agent invocation via chat",
-          "Live spreadsheet cell updates"
+          "Two client windows (Client A and Client B) side-by-side",
+          "Empty variance column in Q3 sheet",
+          "Agent command '/ask reconcile Q3 revenue' entered by Client A",
+          "Live update of variance values on both clients simultaneously"
         ],
         "missingEvidence": [],
         "defects": [
           {
-            "ts": "00:06",
+            "ts": "00:03",
             "severity": "P2",
-            "observed": "The text in the chat input and spreadsheet cells is quite small when viewed at standard README scale.",
-            "fix": "Consider cropping closer to the active areas or increasing the default font size for the demo recording."
+            "observed": "Spreadsheet cell text and numbers are quite small due to the dual-client side-by-side layout.",
+            "fix": "Consider zooming in slightly on the active spreadsheet areas or using a higher resolution capture."
           }
         ],
-        "suggestedReadmeCaption": "Watch NodeRoom reconcile a Q3 variance sheet live across multiple connected clients simultaneously."
+        "suggestedReadmeCaption": "Watch NodeRoom's agent reconcile a Q3 revenue sheet in real-time, instantly broadcasting updates to all connected clients."
       },
-      "score": 8,
+      "score": 10.1,
       "maxScore": 16
     },
     {
@@ -1444,71 +1522,65 @@
       },
       "model": "gemini-3.5-flash",
       "status": "judged",
-      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T184700Z/docs-walkthroughs-two-client-live-sync.mp4",
+      "mediaPath": ".tmp-qa/gemini-media-judge/20260610T185906Z/docs-walkthroughs-two-client-live-sync.mp4",
       "mediaType": "video/mp4",
       "convertedFrom": "docs/walkthroughs/two-client-live-sync.gif",
       "bytes": 427166,
       "judge": {
         "verdict": "publish",
-        "summary": "The walkthrough effectively demonstrates real-time synchronization between two clients and a server-led agent performing spreadsheet reconciliation. The workflow is complete and highly relevant to collaborative financial operations.",
+        "summary": "Excellent demonstration of real-time synchronization between two clients with an active server-led agent updating a shared spreadsheet.",
         "scores": {
           "featureClarity": {
-            "score": 2,
-            "evidence": "Clearly shows Client A and Client B updating in real-time as messages are sent and agent actions occur."
+            "score": 1.5,
+            "evidence": "Clear step-by-step captions guide the viewer through the live sync and agent reconciliation process."
           },
           "workflowCompleteness": {
-            "score": 2,
-            "evidence": "Captures the entire sequence from initial message, instant sync, agent trigger, to live cell updates."
+            "score": 1.5,
+            "evidence": "Shows the entire sequence from message input to real-time cell updates across both client screens."
           },
           "visualDesign": {
-            "score": 1,
-            "evidence": "Clean dark-mode interface, though the sudden zoom transitions at 00:05 are slightly jarring."
+            "score": 1.3,
+            "evidence": "Clean side-by-side layout with helpful zoom-ins, though the transition is slightly abrupt."
           },
           "consistency": {
-            "score": 2,
-            "evidence": "Perfectly aligns with NodeRoom's core elements: spreadsheets, chat, and server-led agents."
+            "score": 1.4,
+            "evidence": "Perfectly aligns with the NodeRoom product concept of collaborative spreadsheets and agents."
           },
           "evidenceQuality": {
-            "score": 2,
-            "evidence": "Shows actual UI interactions, side-by-side client states, and live agent execution traces."
+            "score": 1.5,
+            "evidence": "Authentic UI capture showing actual data changes, logs, and agent activity in real-time."
           },
           "legibility": {
-            "score": 1,
-            "evidence": "Zoomed-out views make small text and numbers in the spreadsheet columns difficult to read."
+            "score": 1.2,
+            "evidence": "Initial split-screen text is small, but subsequent zoom-ins make the cell values readable."
           },
           "professionalRelevance": {
-            "score": 1,
-            "evidence": "Highly relevant for collaborative finance and operations teams needing multi-user spreadsheet sync."
+            "score": 1.4,
+            "evidence": "Highly relevant for demonstrating multi-user financial collaboration and automated workflows."
           },
           "productionHonesty": {
-            "score": 1,
-            "evidence": "Accurately depicts live sync latency and agent execution steps, though heavily edited for pacing."
+            "score": 1.4,
+            "evidence": "Accurately depicts the step-by-step execution and propagation of agent actions."
           }
         },
         "observedEvidence": [
-          "Dual-client side-by-side view",
-          "Real-time message synchronization",
-          "Server-led agent triggering and cell locking",
-          "Live spreadsheet variance updates"
+          "Side-by-side client views",
+          "Real-time message propagation",
+          "Agent cell-locking and value updates",
+          "Step-by-step explanatory captions"
         ],
         "missingEvidence": [],
         "defects": [
           {
             "ts": "00:05",
             "severity": "P2",
-            "observed": "Sudden zoom-in transition is disorienting and disrupts the visual flow.",
-            "fix": "Soften the transition with a smoother ease-in-out animation or maintain a consistent crop."
-          },
-          {
-            "ts": "00:00",
-            "severity": "P2",
-            "observed": "Spreadsheet cell values are too small to read in the default dual-client view.",
-            "fix": "Increase the default font size of the spreadsheet component or use a slightly tighter side-by-side layout."
+            "observed": "Abrupt zoom transition to the close-up view of the spreadsheet.",
+            "fix": "Apply a smoother transition or fade when changing zoom levels."
           }
         ],
-        "suggestedReadmeCaption": "Watch NodeRoom's live sync in action: Client A triggers a server-led agent to reconcile Q3 revenue, instantly updating cells and locking states across both clients without page refreshes."
+        "suggestedReadmeCaption": "Watch NodeRoom's live sync in action as a server-led agent reconciles financial variances across multiple clients simultaneously."
       },
-      "score": 12,
+      "score": 11.2,
       "maxScore": 16
     },
     {
@@ -1526,60 +1598,58 @@
       "mediaType": "video/mp4",
       "bytes": 11911131,
       "judge": {
-        "verdict": "fix-then-publish",
-        "summary": "The video demonstrates multiplayer collaboration between humans and AI agents on a shared spreadsheet, highlighting conflict resolution and review workflows, though some technical slides pass too quickly.",
+        "verdict": "publish",
+        "summary": "The video effectively demonstrates multiplayer collaboration between humans and an AI agent on a shared spreadsheet, highlighting conflict resolution and state locking.",
         "scores": {
           "featureClarity": {
             "score": 1,
-            "evidence": "The UI shows spreadsheet cells being edited by both a human and an agent, though the transition between modes is rapid."
+            "evidence": "Shows spreadsheet cell edits and agent collaboration clearly."
           },
           "workflowCompleteness": {
             "score": 1,
-            "evidence": "Shows the setup, conflict occurrence, code/architecture solution, and resolved state, but at a very fast pace."
+            "evidence": "Demonstrates cell selection, agent proposal, and human approval flow."
           },
           "visualDesign": {
             "score": 1,
-            "evidence": "Dark mode UI is clean and modern, but the text overlay and code slides have contrasting densities."
+            "evidence": "Clean dark mode UI with clear panels, though text is dense."
           },
           "consistency": {
             "score": 1,
-            "evidence": "Aligns with the NodeRoom concept of shared files, agents, and versioned cell edits."
+            "evidence": "Matches the Noderoom concept of shared files, agents, and version history."
           },
           "evidenceQuality": {
             "score": 1,
-            "evidence": "Shows actual UI interactions and code, though some parts feel highly produced or simulated."
+            "evidence": "Real UI capture with actual code and state changes shown."
           },
           "legibility": {
             "score": 1,
-            "evidence": "Most UI elements are readable, but the code snippet at 00:18 is quite small."
+            "evidence": "Text in spreadsheet cells and code editor is readable but small."
           },
           "professionalRelevance": {
             "score": 1,
-            "evidence": "Highly relevant for developers building multi-agent collaborative systems and transactional workspaces."
+            "evidence": "Highly relevant for developers building collaborative AI applications."
           },
           "productionHonesty": {
             "score": 1,
-            "evidence": "Clearly states the transition from a simple demo to a complex collaboration substrate, showing the underlying code logic."
+            "evidence": "Explicitly shows conflict resolution code and state transitions."
           }
         },
         "observedEvidence": [
-          "Multiplayer spreadsheet UI with active cell edits",
-          "Code snippet showing conflict resolution logic",
-          "Diagram explaining lock/draft/review workflow",
-          "Review mode toggle and proposal approval flow"
+          "Multiplayer spreadsheet UI",
+          "Conflict resolution code snippet",
+          "Collaboration flow diagram",
+          "Agent proposal and approval UI"
         ],
-        "missingEvidence": [
-          "Direct console or network logs showing the WebSocket sync events during conflict resolution."
-        ],
+        "missingEvidence": [],
         "defects": [
           {
             "ts": "00:18",
             "severity": "P2",
-            "observed": "The code snippet is displayed with small text and is difficult to read within the short duration.",
-            "fix": "Increase the font size of the code block or extend the slide duration."
+            "observed": "Code snippet is shown briefly and has small font size.",
+            "fix": "Increase font size or extend duration of the code slide."
           }
         ],
-        "suggestedReadmeCaption": "Noderoom Live Collab demonstrates real-time multiplayer coordination between human users and AI agents editing a shared spreadsheet substrate with built-in conflict resolution."
+        "suggestedReadmeCaption": "Noderoom Live Collab: Real-time multiplayer spreadsheet collaboration between humans and AI agents with built-in conflict resolution."
       },
       "score": 8,
       "maxScore": 16
@@ -1600,58 +1670,58 @@
       "bytes": 8034046,
       "judge": {
         "verdict": "publish",
-        "summary": "An excellent narrated explainer video demonstrating NodeRoom's collaborative spreadsheet, agent proposal workflow, and cell-level version history for an investment committee use case.",
+        "summary": "A high-quality narrated explainer showing collaborative investment workflows, agent proposals, and version control in NodeRoom.",
         "scores": {
           "featureClarity": {
             "score": 1.4,
-            "evidence": "Clearly demonstrates agent proposals, human approval, and cell versioning history."
+            "evidence": "Demonstrates clear features like data enrichment, agent proposals, and cell-level versioning."
           },
           "workflowCompleteness": {
-            "score": 1.3,
-            "evidence": "Shows the end-to-end flow from agent ingestion to proposal review and final cell commit."
+            "score": 1.4,
+            "evidence": "Shows the full flow from importing accounts to agent drafting and final human approval."
           },
           "visualDesign": {
-            "score": 1.4,
-            "evidence": "Polished dark mode interface with smooth transitions and focused zoom-ins on key interactions."
+            "score": 1.3,
+            "evidence": "Clean dark-mode interface with well-structured panels, though some transitions are rapid."
           },
           "consistency": {
             "score": 1.5,
-            "evidence": "Perfectly aligns with the core NodeRoom concept of versioned spreadsheets and multi-agent collaboration."
+            "evidence": "Perfectly aligns with the NodeRoom paradigm of spreadsheets, walls, and private agents."
           },
           "evidenceQuality": {
             "score": 1.4,
-            "evidence": "Shows actual UI state changes, cell history logs, and interactive approval flows."
+            "evidence": "Shows authentic UI interactions, cursor movements, and real-time state updates."
           },
           "legibility": {
-            "score": 1.3,
-            "evidence": "Text is generally readable, aided by timely zoom-ins on dense spreadsheet areas."
+            "score": 1.2,
+            "evidence": "Main text is highly legible, but some smaller spreadsheet cells require close attention."
           },
           "professionalRelevance": {
-            "score": 1.5,
-            "evidence": "Highly relevant to finance and investment professionals requiring data provenance and audit trails."
+            "score": 1.4,
+            "evidence": "Directly addresses high-trust financial workflows and human-in-the-loop AI collaboration."
           },
           "productionHonesty": {
-            "score": 1.4,
-            "evidence": "Accurately depicts the agent's role as a drafting assistant rather than an autonomous decision-maker."
+            "score": 1.5,
+            "evidence": "Explicitly highlights that agents propose rather than write directly, showing clear boundaries."
           }
         },
         "observedEvidence": [
-          "Agent proposal workflow with 'Review mode ON'",
-          "Cell-level version history and attribution panel",
-          "Interactive spreadsheet with live collaboration features"
+          "Interactive spreadsheet with live collaboration",
+          "Agent proposal review workflow",
+          "Cell-level version history and attribution"
         ],
         "missingEvidence": [],
         "defects": [
           {
             "ts": "00:03",
             "severity": "P2",
-            "observed": "Spreadsheet cell values and small labels are slightly hard to read before the zoom-in occurs.",
-            "fix": "Slightly increase the default font size or start with a tighter crop on the active workspace."
+            "observed": "Rapid zoom transition into the spreadsheet panel can feel slightly abrupt.",
+            "fix": "Ease the zoom transition curve to make the camera movement smoother."
           }
         ],
-        "suggestedReadmeCaption": "Watch how NodeRoom enables high-trust investment workflows with versioned spreadsheets, agent proposals, and full audit trails."
+        "suggestedReadmeCaption": "See how NodeRoom enables high-trust investment preparation with auditable agent proposals and full version control."
       },
-      "score": 11.2,
+      "score": 11.1,
       "maxScore": 16
     }
   ]

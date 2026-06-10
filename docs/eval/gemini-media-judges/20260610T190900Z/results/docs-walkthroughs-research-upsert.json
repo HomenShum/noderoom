@@ -1,0 +1,65 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-research-upsert",
+    "class": "readme_walkthrough",
+    "title": "Research Upsert",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\research-upsert.gif",
+    "relPath": "docs/walkthroughs/research-upsert.gif",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:research-upsert"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T190900Z/docs-walkthroughs-research-upsert.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/walkthroughs/research-upsert.gif",
+  "bytes": 1306794,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough clearly demonstrates the research upsert feature, showing how importing an existing account updates the row rather than duplicating it. The flow is logical and the UI is clean.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.4,
+        "evidence": "The video clearly shows the import modal, pasting CSV data, and the resulting row updates in the table."
+      },
+      "workflowCompleteness": {
+        "score": 1.5,
+        "evidence": "Demonstrates the full loop: initial state, adding a new record, and updating the same record to prove upsert logic."
+      },
+      "visualDesign": {
+        "score": 1.2,
+        "evidence": "Clean dark-mode interface with clear button states, though the input text area is slightly cramped."
+      },
+      "consistency": {
+        "score": 1.3,
+        "evidence": "Aligns well with the NodeRoom workspace concept, featuring the research tab and room trace."
+      },
+      "evidenceQuality": {
+        "score": 1.4,
+        "evidence": "Captured directly from a live working interface with realistic data inputs and real-time UI updates."
+      },
+      "legibility": {
+        "score": 1.1,
+        "evidence": "The text inside the import text area and table cells is small but readable at standard resolutions."
+      },
+      "professionalRelevance": {
+        "score": 1.3,
+        "evidence": "Directly addresses CRM data hygiene and GTM list management, which is highly relevant to sales ops."
+      },
+      "productionHonesty": {
+        "score": 1.4,
+        "evidence": "Accurately depicts the actual behavior of the system without simulated success states."
+      }
+    },
+    "observedEvidence": [
+      "Import accounts modal interaction",
+      "CSV-style text pasting",
+      "Row insertion and subsequent row update without duplication"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Import and upsert GTM accounts seamlessly without creating duplicate records."
+  },
+  "score": 10.6,
+  "maxScore": 16
+}

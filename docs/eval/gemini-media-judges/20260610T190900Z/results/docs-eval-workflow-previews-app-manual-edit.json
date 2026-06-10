@@ -1,0 +1,72 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-app-manual-edit",
+    "class": "workflow_preview",
+    "title": "App Manual Edit",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\app-manual-edit.gif",
+    "relPath": "docs/eval/workflow-previews/app-manual-edit.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T190900Z/docs-eval-workflow-previews-app-manual-edit.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/app-manual-edit.gif",
+  "bytes": 54421,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The preview clearly demonstrates a manual variance edit in a financial spreadsheet, showing the corresponding version bump and trace log update.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Demonstrates manual cell entry and the resulting trace log update."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Shows the spreadsheet before the edit, the edit entry, and the updated state."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark-themed spreadsheet UI, though the edit transition is instantaneous."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Integrates spreadsheet cells, versioning, and room trace updates."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Authentic UI capture showing real-time state synchronization."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Text and numbers are readable, though trace logs are small."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for financial auditing and collaborative modeling workflows."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately reflects the direct relationship between user action and trace log."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet interface with financial rows",
+      "Manual addition of +20.5% variance",
+      "Version bump from v1 to v2",
+      "Room trace event log update"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:02",
+        "severity": "P2",
+        "observed": "The variance value '+20.5%' appears instantly without typing or cursor focus indicators.",
+        "fix": "Add a brief hover or focus state to make the manual edit action more natural."
+      }
+    ],
+    "suggestedReadmeCaption": "Manually edit spreadsheet cells to instantly update the version history and collaboration trace."
+  },
+  "score": 8,
+  "maxScore": 16
+}

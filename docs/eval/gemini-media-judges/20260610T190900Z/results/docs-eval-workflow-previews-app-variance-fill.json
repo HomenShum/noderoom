@@ -1,0 +1,73 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-app-variance-fill",
+    "class": "workflow_preview",
+    "title": "App Variance Fill",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\app-variance-fill.gif",
+    "relPath": "docs/eval/workflow-previews/app-variance-fill.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T190900Z/docs-eval-workflow-previews-app-variance-fill.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/app-variance-fill.gif",
+  "bytes": 99637,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The preview clearly demonstrates automated variance calculation in a financial spreadsheet using collaborative agents, supported by a real-time trace log.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.5,
+        "evidence": "The UI clearly shows the transition from empty variance cells to populated percentage calculations."
+      },
+      "workflowCompleteness": {
+        "score": 1.6,
+        "evidence": "Captures the entire sequence: initiating collaboration, agent locking, computation, and final merging."
+      },
+      "visualDesign": {
+        "score": 1.4,
+        "evidence": "Clean dark mode interface with clear visual hierarchy, though the bottom trace log is slightly dense."
+      },
+      "consistency": {
+        "score": 1.5,
+        "evidence": "Perfectly aligns with the NodeRoom paradigm of spreadsheets, multi-agent execution, and trace logs."
+      },
+      "evidenceQuality": {
+        "score": 1.5,
+        "evidence": "Authentic UI capture showing real-time state changes and version increments."
+      },
+      "legibility": {
+        "score": 1.3,
+        "evidence": "Main spreadsheet is highly legible, though trace log text at the bottom requires close attention."
+      },
+      "professionalRelevance": {
+        "score": 1.5,
+        "evidence": "Directly applicable to financial analysts and operations teams looking to automate reconciliation."
+      },
+      "productionHonesty": {
+        "score": 1.4,
+        "evidence": "Accurately depicts the step-by-step latency and agent coordination process."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet interface with financial rows",
+      "Run collaboration button trigger",
+      "Agent locking indicators on variance cells",
+      "Real-time trace log updates",
+      "Version increments from v1 to v5"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:01",
+        "severity": "P2",
+        "observed": "The trace log text at the bottom is small and dense, making it slightly hard to read on smaller screens.",
+        "fix": "Increase the font size of the trace log or provide a zoomed-in view of the log updates."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch NodeRoom agents collaborate to automatically calculate and merge variance metrics directly within your financial model."
+  },
+  "score": 11.7,
+  "maxScore": 16
+}

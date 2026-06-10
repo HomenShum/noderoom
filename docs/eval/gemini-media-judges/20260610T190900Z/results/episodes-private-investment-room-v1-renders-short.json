@@ -1,0 +1,71 @@
+{
+  "asset": {
+    "id": "episodes-private-investment-room-v1-renders-short",
+    "class": "episode",
+    "title": "Private Investment Room V1",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\episodes\\private-investment-room-v1\\renders\\short.mp4",
+    "relPath": "episodes/private-investment-room-v1/renders/short.mp4",
+    "purpose": "Narrated explainer episode. Judge story clarity, visual design, proof quality, and whether it fits the README claim."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "episodes/private-investment-room-v1/renders/short.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 8034046,
+  "judge": {
+    "verdict": "publish",
+    "summary": "An excellent, highly polished narrated explainer showing the collaborative investment room workflow, featuring structured spreadsheets, version control, and human-in-the-loop agent proposals.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.4,
+        "evidence": "Clear demonstration of data enrichment, agent proposals, and cell-level versioning."
+      },
+      "workflowCompleteness": {
+        "score": 1.4,
+        "evidence": "Shows the full flow from importing accounts to agent drafting and manual verification."
+      },
+      "visualDesign": {
+        "score": 1.3,
+        "evidence": "High-quality dark mode interface with clean layout and smooth transitions."
+      },
+      "consistency": {
+        "score": 1.4,
+        "evidence": "Perfectly aligns with the NodeRoom paradigm of spreadsheets, agents, and audit trails."
+      },
+      "evidenceQuality": {
+        "score": 1.4,
+        "evidence": "Realistic UI interactions, cursor movements, and real-time state updates."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Some spreadsheet cells and version logs are small and hard to read without zooming."
+      },
+      "professionalRelevance": {
+        "score": 1.4,
+        "evidence": "Directly addresses high-trust financial workflows and AI collaboration safety."
+      },
+      "productionHonesty": {
+        "score": 1.4,
+        "evidence": "Explicitly highlights that agents propose changes rather than writing directly."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet interface with live collaboration",
+      "NodeAgent panel showing private/public states",
+      "Cell-level version history and attribution",
+      "Narrated audio explanation"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:23",
+        "severity": "P2",
+        "observed": "The version history log text at the bottom of the screen is quite small and difficult to read.",
+        "fix": "Increase the font size or add a brief zoom-in effect on the version history panel."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch how NodeRoom enables high-trust investment workflows with cell-level versioning and human-approved agent proposals."
+  },
+  "score": 10.7,
+  "maxScore": 16
+}

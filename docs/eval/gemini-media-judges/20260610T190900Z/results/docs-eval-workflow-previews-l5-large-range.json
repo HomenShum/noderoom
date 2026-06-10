@@ -1,0 +1,64 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l5-large-range",
+    "class": "workflow_preview",
+    "title": "L5 Large Range",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l5-large-range.gif",
+    "relPath": "docs/eval/workflow-previews/l5-large-range.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T190900Z/docs-eval-workflow-previews-l5-large-range.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l5-large-range.gif",
+  "bytes": 69550,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The workflow preview clearly demonstrates a 5-row window locking and CAS write protocol. It is highly legible, well-structured, and effectively communicates concurrency control concepts.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.3,
+        "evidence": "Demonstrates row-level locking and CAS versioned writes on a specific range."
+      },
+      "workflowCompleteness": {
+        "score": 1.4,
+        "evidence": "Shows the full sequence from locking, reading, writing with CAS, to releasing the lock."
+      },
+      "visualDesign": {
+        "score": 1.2,
+        "evidence": "Clean dark-themed layout with clear visual cues for state changes."
+      },
+      "consistency": {
+        "score": 1.2,
+        "evidence": "Aligns with the spreadsheet-like versioning and agent execution model."
+      },
+      "evidenceQuality": {
+        "score": 1.1,
+        "evidence": "Presents a clean, simulated trace replay of the row-locking mechanism."
+      },
+      "legibility": {
+        "score": 1.4,
+        "evidence": "High-contrast text and clear step-by-step captions at the bottom."
+      },
+      "professionalRelevance": {
+        "score": 1.3,
+        "evidence": "Highly relevant for developers evaluating concurrency and data integrity features."
+      },
+      "productionHonesty": {
+        "score": 1.2,
+        "evidence": "Accurately represents the step-by-step protocol flow without overclaiming."
+      }
+    },
+    "observedEvidence": [
+      "Step-by-step execution of range locking",
+      "CAS write demonstration with version increment",
+      "Clear status indicators for locked and committed states"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Visual trace of the L5 Large Range workflow showing row-level locking and CAS-based versioned updates."
+  },
+  "score": 10.1,
+  "maxScore": 16
+}

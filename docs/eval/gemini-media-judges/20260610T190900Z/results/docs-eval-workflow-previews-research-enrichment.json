@@ -1,0 +1,73 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-research-enrichment",
+    "class": "workflow_preview",
+    "title": "Research Enrichment",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\research-enrichment.gif",
+    "relPath": "docs/eval/workflow-previews/research-enrichment.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260610T190900Z/docs-eval-workflow-previews-research-enrichment.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/research-enrichment.gif",
+  "bytes": 120124,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The workflow preview clearly demonstrates the research enrichment feature, showing the transition from pending states to fully enriched company profiles with corresponding trace logs and agent chat updates.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.5,
+        "evidence": "The 'Research' tab clearly displays company names, pending statuses, and the enrichment action button."
+      },
+      "workflowCompleteness": {
+        "score": 1.6,
+        "evidence": "Demonstrates the full sequence: pending records, triggering enrichment, and the populated results with updated logs."
+      },
+      "visualDesign": {
+        "score": 1.4,
+        "evidence": "Clean dark-mode interface with structured panels, though the layout is highly dense with text."
+      },
+      "consistency": {
+        "score": 1.6,
+        "evidence": "Integrates the core NodeRoom elements: public chat, research spreadsheet, agent notes, and the execution trace."
+      },
+      "evidenceQuality": {
+        "score": 1.5,
+        "evidence": "Authentic UI capture showing real-time state changes and log outputs rather than a mock-up."
+      },
+      "legibility": {
+        "score": 1.3,
+        "evidence": "Most text is legible, though small font sizes in the trace log and chat require close attention."
+      },
+      "professionalRelevance": {
+        "score": 1.5,
+        "evidence": "Highly relevant for automated data enrichment workflows in sales operations and financial research."
+      },
+      "productionHonesty": {
+        "score": 1.5,
+        "evidence": "Accurately represents system latency and step-by-step state updates in the trace panel."
+      }
+    },
+    "observedEvidence": [
+      "Research tab with pending company entries",
+      "Enrichment action button trigger",
+      "Populated company summaries and sources",
+      "Room trace log updates",
+      "Agent chat notification of completed research"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:02",
+        "severity": "P2",
+        "observed": "The Room trace log at the bottom right scrolls rapidly, making some entries difficult to read.",
+        "fix": "Slightly increase the display duration of the final state to allow comfortable reading of the logs."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch NodeRoom's agent enrich company profiles with structured data, sources, and real-time trace logging."
+  },
+  "score": 11.9,
+  "maxScore": 16
+}

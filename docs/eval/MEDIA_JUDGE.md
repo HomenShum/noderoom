@@ -1,69 +1,71 @@
 # Gemini Media Judge
 
-Generated: 2026-06-10T18:46:32.487Z
+Generated: 2026-06-10T19:05:14.227Z
 Model: `gemini-3.5-flash`
-Run id: `20260610T184700Z`
+Run id: `20260610T185906Z`
 
 > This judges README/demo media quality only. It does not replace live Convex, browser E2E, provider ladder, parser, privacy, or load-test gates.
 
 ## Summary
 
-- Assets: 23
-- Judged: 23
+- Assets: 24
+- Judged: 24
 - Errors: 0
-- Verdicts: publish=19, fix-then-publish=4
-- Defects: P2=17, P1=3
+- Verdicts: publish=21, fix-then-publish=3
+- Defects: P1=3, P2=18
 
 ## Asset Results
 
 | Asset | Class | Verdict | Score | P0/P1/P2 | Main finding |
 |---|---|---:|---:|---:|---|
-| `docs/eval/workflow-previews/app-manual-edit.gif` | workflow_preview | publish | 8/16 | 0/0/0 | The preview demonstrates a manual variance addition in a versioned spreadsheet, updating the room trace from v1 to v2. |
-| `docs/eval/workflow-previews/app-research-enrich.gif` | workflow_preview | publish | 11/16 | 0/0/1 | The workflow preview clearly demonstrates the account enrichment process with a before-and-after state transition and corresponding trace log updates. |
-| `docs/eval/workflow-previews/app-variance-fill.gif` | workflow_preview | publish | 12.3/16 | 0/0/1 | The workflow preview clearly demonstrates automated variance calculations in a financial spreadsheet using collaborative agents, supported by a real-time trace log. |
-| `docs/eval/workflow-previews/ask-spreadsheet-cas.gif` | workflow_preview | fix-then-publish | 8/16 | 0/1/0 | The workflow preview demonstrates an agent updating a spreadsheet and interacting in chat, but the rapid playback speed makes it difficult to follow the details. |
-| `docs/eval/workflow-previews/free-job-halo.gif` | workflow_preview | fix-then-publish | 8/16 | 0/1/1 | The workflow preview demonstrates collaborative spreadsheet updates via agents, but the rapid transition speed and dense text layout make it difficult to fully digest the sequence of events. |
-| `docs/eval/workflow-previews/l1-read.gif` | workflow_preview | publish | 10.3/16 | 0/0/1 | The workflow preview clearly demonstrates an AI agent reading financial variance data from a structured sheet without modifying any values, supported by step-by-step trace highlights. |
-| `docs/eval/workflow-previews/l2-edit.gif` | workflow_preview | publish | 9.6/16 | 0/0/1 | A clear, well-paced step-by-step visualization of an AI agent performing a Compare-And-Set (CAS) edit on a spreadsheet cell, demonstrating locking, versioning, and committing. |
-| `docs/eval/workflow-previews/l3-no-clobber.gif` | workflow_preview | publish | 10.6/16 | 0/0/0 | A clear, step-by-step visualization of a concurrent write conflict (CAS) and agent recovery. The workflow is easy to follow and highly relevant for multi-agent systems. |
-| `docs/eval/workflow-previews/l4-draft.gif` | workflow_preview | fix-then-publish | 8.9/16 | 0/1/0 | The workflow preview clearly outlines the step-by-step logic of drafting when a range is locked. However, there is a logical repetition in the steps where the agent locks the range twice (at step 1/5 and 3/5), which should be corrected before publishing. |
-| `docs/eval/workflow-previews/l5-large-range.gif` | workflow_preview | publish | 8/16 | 0/0/0 | A clear, step-by-step workflow preview demonstrating concurrency control and range locking on a 5-row window. The visual style is clean and legible, though highly schematic. |
-| `docs/eval/workflow-previews/l6-long-horizon.gif` | workflow_preview | publish | 11.4/16 | 0/0/0 | An excellent, highly legible step-by-step trace replay demonstrating an AI agent resolving write conflicts on a financial table using CAS and context compaction. |
-| `docs/eval/workflow-previews/proposals-wall-review.gif` | workflow_preview | publish | 9.8/16 | 0/0/1 | The workflow preview effectively demonstrates the transition from a spreadsheet view to a diligence wall review within the NodeRoom platform, highlighting agent collaboration and trace logs. |
-| `docs/eval/workflow-previews/research-enrichment.gif` | workflow_preview | publish | 10.5/16 | 0/0/1 | The preview effectively demonstrates the research enrichment workflow, showing the transition from pending to completed states with updated sources and trace logs. |
-| `docs/eval/workflow-previews/wiki-note-grounding.gif` | workflow_preview | publish | 10.8/16 | 0/0/1 | The workflow preview successfully demonstrates the integration of collaborative notes, spreadsheets, and multi-agent execution traces within the NodeRoom environment, showing the grounding of wiki notes into structured spreadsheet data. |
-| `docs/walkthroughs/ask-agent.gif` | readme_walkthrough | publish | 10.4/16 | 0/0/1 | The walkthrough clearly demonstrates using the NodeAgent to reconcile spreadsheet variances via chat commands, showing real-time cell updates and execution traces. |
-| `docs/walkthroughs/chat.gif` | readme_walkthrough | publish | 10.3/16 | 0/0/0 | The walkthrough effectively demonstrates the real-time chat feature within NodeRoom's collaborative workspace, showing typing, sending, and instant rendering. |
-| `docs/walkthroughs/research-upsert.gif` | readme_walkthrough | publish | 8/16 | 0/0/1 | The walkthrough clearly demonstrates the research upsert feature, showing how importing an existing account updates the row instead of duplicating it. |
-| `docs/walkthroughs/review-approve.gif` | readme_walkthrough | publish | 11/16 | 0/0/1 | The walkthrough clearly demonstrates the 'Review mode' feature where agent edits become proposals requiring manual approval. The workflow is complete, showing the toggle, the command execution, and the inline cell approval. |
-| `docs/walkthroughs/sheet-undo.gif` | readme_walkthrough | publish | 8/16 | 0/0/1 | The walkthrough clearly demonstrates the spreadsheet cell editing and undo functionality within the NodeRoom environment, showing real-time synchronization and versioned history updates. |
-| `docs/walkthroughs/two-client-fresh-room.gif` | readme_walkthrough | publish | 8/16 | 0/0/1 | A clear, step-by-step demonstration of two clients in a shared room where an AI agent reconciles a spreadsheet live, updating both views simultaneously. |
-| `docs/walkthroughs/two-client-live-sync.gif` | readme_walkthrough | publish | 12/16 | 0/0/2 | The walkthrough effectively demonstrates real-time synchronization between two clients and a server-led agent performing spreadsheet reconciliation. The workflow is complete and highly relevant to collaborative financial operations. |
-| `episodes/noderoom-live-collab-v1/renders/short.mp4` | episode | fix-then-publish | 8/16 | 0/0/1 | The video demonstrates multiplayer collaboration between humans and AI agents on a shared spreadsheet, highlighting conflict resolution and review workflows, though some technical slides pass too quickly. |
-| `episodes/private-investment-room-v1/renders/short.mp4` | episode | publish | 11.2/16 | 0/0/1 | An excellent narrated explainer video demonstrating NodeRoom's collaborative spreadsheet, agent proposal workflow, and cell-level version history for an investment committee use case. |
+| `docs/eval/workflow-previews/app-manual-edit.gif` | workflow_preview | publish | 10.6/16 | 0/0/0 | The GIF clearly demonstrates a manual edit workflow in the versioned spreadsheet, showing the transition from v1 to v2 with an updated room trace. |
+| `docs/eval/workflow-previews/app-research-enrich.gif` | workflow_preview | publish | 8/16 | 0/0/0 | The workflow preview clearly demonstrates the account enrichment feature, showing the transition from pending to complete with updated trace logs. |
+| `docs/eval/workflow-previews/app-variance-fill.gif` | workflow_preview | publish | 11.7/16 | 0/0/0 | The video clearly demonstrates the automated variance fill workflow using public and private agents, with real-time trace updates. |
+| `docs/eval/workflow-previews/ask-spreadsheet-cas.gif` | workflow_preview | publish | 8.9/16 | 0/1/0 | The workflow preview successfully demonstrates an agent interacting with a financial spreadsheet and updating variances in real-time, though the text density makes legibility slightly challenging. |
+| `docs/eval/workflow-previews/free-job-halo.gif` | workflow_preview | publish | 8/16 | 0/0/1 | The workflow preview effectively demonstrates collaborative financial analysis within NodeRoom, showing an agent executing a variance calculation request and updating a spreadsheet in real-time. |
+| `docs/eval/workflow-previews/l1-read.gif` | workflow_preview | publish | 8/16 | 0/0/1 | A clean, step-by-step visualization of an AI agent performing a read-only workflow on a financial table. It clearly demonstrates the non-destructive nature of the operation through structured trace steps. |
+| `docs/eval/workflow-previews/l2-edit.gif` | workflow_preview | publish | 10.6/16 | 0/0/2 | The animation clearly demonstrates the step-by-step Compare-And-Set (CAS) protocol used by an AI agent to edit a spreadsheet cell safely. It is highly legible and structurally complete. |
+| `docs/eval/workflow-previews/l3-no-clobber.gif` | workflow_preview | publish | 8/16 | 0/0/0 | A clear, step-by-step visualization of concurrent edit handling (CAS) where an AI agent detects a conflict, re-reads the updated state, and successfully commits without clobbering. |
+| `docs/eval/workflow-previews/l4-draft.gif` | workflow_preview | publish | 11.5/16 | 0/0/1 | A clean, highly legible step-by-step workflow animation demonstrating how an AI agent handles locked ranges by drafting changes. It effectively communicates concurrency and versioning concepts. |
+| `docs/eval/workflow-previews/l5-large-range.gif` | workflow_preview | publish | 9.7/16 | 0/0/1 | The workflow preview clearly demonstrates the step-by-step locking, reading, writing, and releasing mechanism for a 5-row window in a large range. The presentation is clean and highly legible, though it leans toward a simplified conceptual animation rather than a raw application capture. |
+| `docs/eval/workflow-previews/l6-long-horizon.gif` | workflow_preview | publish | 11.4/16 | 0/0/0 | A clear, step-by-step visualization of an AI agent resolving multi-cell conflicts in a financial model using CAS (Compare-And-Swap) and context compaction. The progression is highly legible and technically honest. |
+| `docs/eval/workflow-previews/proposals-wall-review.gif` | workflow_preview | fix-then-publish | 8/16 | 0/0/1 | The workflow preview demonstrates transitioning from a spreadsheet view to a diligence wall review. While the UI is detailed and authentic, the transition is abrupt and could benefit from clearer interaction cues. |
+| `docs/eval/workflow-previews/research-enrichment.gif` | workflow_preview | publish | 10.9/16 | 0/0/1 | The workflow preview effectively demonstrates the research enrichment feature, showing the transition from pending to completed states with updated chat messages and trace logs. |
+| `docs/eval/workflow-previews/wiki-note-grounding.gif` | workflow_preview | fix-then-publish | 8/16 | 0/1/1 | The workflow preview demonstrates wiki note grounding and spreadsheet synchronization. While the UI is detailed, the transition is extremely rapid and small text limits legibility. |
+| `docs/walkthroughs/ask-agent.gif` | readme_walkthrough | publish | 11.1/16 | 0/0/1 | The walkthrough effectively demonstrates the NodeAgent interacting with a spreadsheet to reconcile Q3 revenue. It shows the full loop from chat command to cell updates and trace logs. |
+| `docs/walkthroughs/chat.gif` | readme_walkthrough | publish | 10.5/16 | 0/0/1 | The walkthrough clearly demonstrates the basic room chat functionality within NodeRoom, showing a user typing and sending a message in real-time. The UI is consistent with the product's theme, though the camera panning is slightly abrupt. |
+| `docs/walkthroughs/ic-room.gif` | readme_walkthrough | fix-then-publish | 8/16 | 0/1/0 | The walkthrough demonstrates importing account data into a research spreadsheet with live trace updates, though there is a minor mismatch in the row count reported by the trace. |
+| `docs/walkthroughs/research-upsert.gif` | readme_walkthrough | publish | 11.2/16 | 0/0/1 | The walkthrough clearly demonstrates the GTM research upsert feature, showing how importing duplicate accounts updates existing rows instead of creating duplicates. |
+| `docs/walkthroughs/review-approve.gif` | readme_walkthrough | publish | 8/16 | 0/0/1 | The walkthrough clearly demonstrates the review and approval workflow when auto-allow is disabled, showing agent proposals and user acceptance. |
+| `docs/walkthroughs/sheet-undo.gif` | readme_walkthrough | publish | 11.5/16 | 0/0/1 | The walkthrough clearly demonstrates editing a cell in a collaborative spreadsheet and then performing an undo action, which safely commits a revert version (v3) to the room trace without clobbering history. |
+| `docs/walkthroughs/two-client-fresh-room.gif` | readme_walkthrough | publish | 10.1/16 | 0/0/1 | Excellent demonstration of real-time multi-client synchronization and agent-driven reconciliation. The side-by-side view clearly shows the live updates across both clients. |
+| `docs/walkthroughs/two-client-live-sync.gif` | readme_walkthrough | publish | 11.2/16 | 0/0/1 | Excellent demonstration of real-time synchronization between two clients with an active server-led agent updating a shared spreadsheet. |
+| `episodes/noderoom-live-collab-v1/renders/short.mp4` | episode | publish | 8/16 | 0/0/1 | The video effectively demonstrates multiplayer collaboration between humans and an AI agent on a shared spreadsheet, highlighting conflict resolution and state locking. |
+| `episodes/private-investment-room-v1/renders/short.mp4` | episode | publish | 11.1/16 | 0/0/1 | A high-quality narrated explainer showing collaborative investment workflows, agent proposals, and version control in NodeRoom. |
 
 ## Open Defects
 
-- **P2** `docs/eval/workflow-previews/app-research-enrich.gif` @ 00:01: Research column text is truncated with ellipses. -> Expand column width or provide a tooltip hover state to show full text.
-- **P2** `docs/eval/workflow-previews/app-variance-fill.gif` @ 00:02: The transition during agent execution is rapid, making it slightly hard to track individual lock releases. -> Slightly increase the delay between agent steps in the demo recording.
-- **P1** `docs/eval/workflow-previews/ask-spreadsheet-cas.gif` @ 00:01: The transition between agent actions and spreadsheet updates is too fast to read the text comfortably. -> Slow down the GIF frame rate or add pauses at key states to allow the viewer to read the chat and spreadsheet cells.
-- **P1** `docs/eval/workflow-previews/free-job-halo.gif` @ 00:01: The transition from the user request to the agent execution and spreadsheet update happens too quickly to follow comfortably. -> Increase the delay between frames or slow down the GIF playback speed to allow users to read the chat and trace logs.
-- **P2** `docs/eval/workflow-previews/free-job-halo.gif` @ 00:00: Small text in the 'Your NodeAgent' and 'Public Chat' panels is hard to read without zooming in. -> Slightly increase the font size or crop the preview to focus on the active panels.
-- **P2** `docs/eval/workflow-previews/l1-read.gif` @ 00:05: The 'say' steps do not display the actual output text or value reported by the agent in the status bar. -> Update the status bar to display the output text during the 'say' phase of the trace.
-- **P2** `docs/eval/workflow-previews/l2-edit.gif` @ 00:02: The 'say' step at step 2/7 and 6/7 has no accompanying text or dialogue bubble. -> Add placeholder text or remove the empty 'say' steps to streamline the sequence.
-- **P1** `docs/eval/workflow-previews/l4-draft.gif` @ 00:03: The sequence repeats the 'locks the affected range' action at step 3/5, which was already executed at step 1/5. -> Revise the step sequence to ensure each step represents a unique, logical progression in the workflow.
-- **P2** `docs/eval/workflow-previews/proposals-wall-review.gif` @ 00:02: Abrupt transition between the spreadsheet view and the diligence wall view. -> Add a brief transition animation or a hover state to make the view switch smoother.
-- **P2** `docs/eval/workflow-previews/research-enrichment.gif` @ 00:02: The text in the Room Trace and chat panels is quite small and may be hard to read on smaller screens. -> Increase the default font size or zoom level slightly during recording.
-- **P2** `docs/eval/workflow-previews/wiki-note-grounding.gif` @ 00:01: Dense text in the Room Trace and chat panels is hard to read at standard README display resolutions. -> Increase the default zoom level of the browser during capture to make text elements larger.
-- **P2** `docs/walkthroughs/ask-agent.gif` @ 00:06: Spreadsheet cell values and chat text are small and may be difficult to read at default README resolution. -> Slightly increase browser zoom level during recording to enhance text legibility.
-- **P2** `docs/walkthroughs/research-upsert.gif` @ 00:05: The text pasted into the import box is quite small and slightly hard to read. -> Increase the font size or contrast of the placeholder and input text in the import modal.
-- **P2** `docs/walkthroughs/review-approve.gif` @ 00:02: The 'Review mode ON' banner at the bottom briefly overlaps with other UI elements. -> Adjust banner positioning or padding to avoid overlapping the lower chat input area.
-- **P2** `docs/walkthroughs/sheet-undo.gif` @ 00:02: Spreadsheet cell text and headers are small and slightly difficult to read at standard preview sizes. -> Increase the default zoom level of the spreadsheet component during recording.
-- **P2** `docs/walkthroughs/two-client-fresh-room.gif` @ 00:06: The text in the chat input and spreadsheet cells is quite small when viewed at standard README scale. -> Consider cropping closer to the active areas or increasing the default font size for the demo recording.
-- **P2** `docs/walkthroughs/two-client-live-sync.gif` @ 00:05: Sudden zoom-in transition is disorienting and disrupts the visual flow. -> Soften the transition with a smoother ease-in-out animation or maintain a consistent crop.
-- **P2** `docs/walkthroughs/two-client-live-sync.gif` @ 00:00: Spreadsheet cell values are too small to read in the default dual-client view. -> Increase the default font size of the spreadsheet component or use a slightly tighter side-by-side layout.
-- **P2** `episodes/noderoom-live-collab-v1/renders/short.mp4` @ 00:18: The code snippet is displayed with small text and is difficult to read within the short duration. -> Increase the font size of the code block or extend the slide duration.
-- **P2** `episodes/private-investment-room-v1/renders/short.mp4` @ 00:03: Spreadsheet cell values and small labels are slightly hard to read before the zoom-in occurs. -> Slightly increase the default font size or start with a tighter crop on the active workspace.
+- **P1** `docs/eval/workflow-previews/ask-spreadsheet-cas.gif` @ 00:01: The text in the spreadsheet cells and chat messages is very small and difficult to read at standard README display resolutions. -> Increase the browser zoom level slightly before recording to improve text legibility.
+- **P2** `docs/eval/workflow-previews/free-job-halo.gif` @ 00:02: The transition and update happen very quickly, which might require pausing to read. -> Slightly extend the duration of the final state to allow easier reading.
+- **P2** `docs/eval/workflow-previews/l1-read.gif` @ 00:05: The 'say' steps (5/7 and 6/7) do not display the actual text output generated by the agent. -> Show a brief snippet of the reported value text in the status bar during the 'say' steps.
+- **P2** `docs/eval/workflow-previews/l2-edit.gif` @ 00:02: The step indicator shows 'say' with no accompanying text or dialogue content. -> Provide actual dialogue text or consolidate the step to avoid empty placeholders.
+- **P2** `docs/eval/workflow-previews/l2-edit.gif` @ 00:06: Another 'say' step appears empty before the final 'done' state. -> Add descriptive text or merge with the final completion step.
+- **P2** `docs/eval/workflow-previews/l4-draft.gif` @ 00:03: Step 3/5 repeats the exact text and state of Step 1/5 ('locks the affected range'). -> Ensure step 3/5 has unique descriptive text matching its specific action.
+- **P2** `docs/eval/workflow-previews/l5-large-range.gif` @ 00:01: The UI is highly abstracted, which may set different expectations compared to the actual complex application interface. -> Add a small caption or label indicating this is a conceptual protocol trace visualization.
+- **P2** `docs/eval/workflow-previews/proposals-wall-review.gif` @ 00:02: Abrupt transition from the spreadsheet view to the Diligence Wall without a visible click or navigation indicator. -> Add a brief hover or click animation on the sidebar navigation item to guide the viewer's eye.
+- **P2** `docs/eval/workflow-previews/research-enrichment.gif` @ 00:02: The text in the 'Room trace' panel at the bottom right is quite small and hard to read. -> Increase the font size of the trace panel or zoom in slightly on the active panel during recording.
+- **P1** `docs/eval/workflow-previews/wiki-note-grounding.gif` @ 00:01: The transition between the note and the spreadsheet is abrupt, making it hard to follow the grounding action. -> Add a transition frame or slow down the animation to clarify how the note content updates the spreadsheet.
+- **P2** `docs/eval/workflow-previews/wiki-note-grounding.gif` @ 00:00: Text in the chat and agent panels is very small and difficult to read. -> Increase zoom level or crop the capture to focus on the active workspace area.
+- **P2** `docs/walkthroughs/ask-agent.gif` @ 00:09: Some variance cells are filled with 'null' values, which might look like an execution error to some viewers. -> Ensure the mock data or agent output populates actual numerical variances or clearer empty states instead of literal 'null'.
+- **P2** `docs/walkthroughs/chat.gif` @ 00:02: Abrupt camera pan and zoom into the chat input field may feel disorienting to some viewers. -> Smooth out the transition or maintain a consistent viewport zoom level throughout the walkthrough.
+- **P1** `docs/walkthroughs/ic-room.gif` @ 00:09: The room trace log indicates 'Maya imported 3 Research row(s)' but only 1 row was pasted and displayed. -> Update the mock data or trace logic so the reported imported row count matches the actual input data.
+- **P2** `docs/walkthroughs/research-upsert.gif` @ 00:06: The text pasted into the import input box is quite small and hard to read at standard resolution. -> Increase the font size of the input placeholder and pasted text for better readability.
+- **P2** `docs/walkthroughs/review-approve.gif` @ 00:09: The orange proposal badges are slightly small and crowded in the variance column. -> Increase padding or contrast for proposal badges in dense columns.
+- **P2** `docs/walkthroughs/sheet-undo.gif` @ 00:09: The 'Undo' button and version text in the sync panel are relatively small and easy to miss. -> Slightly increase the contrast or size of the version control action bar.
+- **P2** `docs/walkthroughs/two-client-fresh-room.gif` @ 00:03: Spreadsheet cell text and numbers are quite small due to the dual-client side-by-side layout. -> Consider zooming in slightly on the active spreadsheet areas or using a higher resolution capture.
+- **P2** `docs/walkthroughs/two-client-live-sync.gif` @ 00:05: Abrupt zoom transition to the close-up view of the spreadsheet. -> Apply a smoother transition or fade when changing zoom levels.
+- **P2** `episodes/noderoom-live-collab-v1/renders/short.mp4` @ 00:18: Code snippet is shown briefly and has small font size. -> Increase font size or extend duration of the code slide.
+- **P2** `episodes/private-investment-room-v1/renders/short.mp4` @ 00:03: Rapid zoom transition into the spreadsheet panel can feel slightly abrupt. -> Ease the zoom transition curve to make the camera movement smoother.
 
 ## Re-run
 

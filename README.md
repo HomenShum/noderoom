@@ -107,10 +107,10 @@ Two fully-produced explainer videos, assembled from the live captures above + re
 an animated mental-model diagram + ElevenLabs narration — each machine-judged 16/16 before
 publishing (Gemini watches the actual render; see `episodes/*/judge.md`).
 
-| The builder story (58s) | The investment-room story (42s) |
-|---|---|
-| [![I tried to make a demo GIF — it turned into a multiplayer AI workspace](episodes/noderoom-live-collab-v1/poster.jpg)](https://noderoom.live/episodes/noderoom-live-collab-v1.mp4) | [![Before Monday's IC meeting — who changed what, and can you trust it?](episodes/private-investment-room-v1/poster.jpg)](https://noderoom.live/episodes/private-investment-room-v1.mp4) |
-| Naive agent clobbers a human → the code that fixes it → review mode live | A private investment team's room: provenance, proposals, versioned history — fictional data only |
+| The builder story (58s) | The investment-room story (42s) | The two-stacks story (50s) |
+|---|---|---|
+| [![I tried to make a demo GIF — it turned into a multiplayer AI workspace](episodes/noderoom-live-collab-v1/poster.jpg)](https://noderoom.live/episodes/noderoom-live-collab-v1.mp4) | [![Before Monday's IC meeting — who changed what, and can you trust it?](episodes/private-investment-room-v1/poster.jpg)](https://noderoom.live/episodes/private-investment-room-v1.mp4) | [![I built it on Streamlit first — then the demo needed a second user](episodes/stack-before-after-v1/poster.jpg)](https://noderoom.live/episodes/stack-before-after-v1.mp4) |
+| Naive agent clobbers a human → the code that fixes it → review mode live | A private investment team's room: provenance, proposals, versioned history — fictional data only | The REAL Streamlit baseline (ParselyFi) → where typical stacks structurally stop → the same workflow in a live room |
 
 **Media QA.** The tracked README GIFs, workflow previews, and episode renders are
 now batch-judgeable with Gemini video understanding: `npm run
@@ -625,7 +625,7 @@ This section is generated from `docs/qa/production-matrix.json`. When the system
 | `gpt-5.4-nano` | OpenAI | PASS | FAIL | FAIL | FAIL | research benchmark winner candidate only when collaboration safety is not required |
 | `gpt-5.4` | OpenAI | PASS | FAIL | PASS | PASS | requires rerun because L2 time-budget failure blocks promotion |
 
-Research benchmark route: current v2 router-aware results are recorded for 13 route(s), but no route cleared the 9-check gate. Best recorded row was `gpt-5.4-nano` at 5/9. Budget: `{"modelTimeoutMs":180000,"reserveMs":15000,"rowHardTimeoutMs":210000}`.
+Research benchmark route: current v2 router-aware results are recorded for 1 route(s), but no route cleared the 9-check gate. Best recorded row was `openrouter/free-auto -> nvidia/nemotron-3-super-120b-a12b:free` at 0/9. Budget: `{"modelTimeoutMs":120000,"reserveMs":10000,"rowHardTimeoutMs":150000}`.
 
 Full QA ledger: [`docs/PRODUCTION_GUARANTEE_MATRIX.md`](docs/PRODUCTION_GUARANTEE_MATRIX.md).
 <!-- QA_COCKPIT_END -->

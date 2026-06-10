@@ -1,0 +1,50 @@
+# Episode 3 — the different-stack "before" (per the before-scene doctrine: the baseline is a
+# REAL app on a typical stack, framed respectfully — it structurally lacks shared live state,
+# it is not "broken"). Baseline footage: actual ParselyFi (Streamlit) frames from
+# HomenShum/feature-walkthrough-gif.
+
+episode:
+  id: stack-before-after-v1
+  title: "I Built It on Streamlit First. Then the Demo Needed a Second User."
+  thesis: "Typical stacks are excellent single-player. The moment a second person — or an agent — needs the same artifact, the missing piece is a collaboration substrate: shared live state, versions, review."
+  outputs: [youtube_short, linkedin_post]
+
+scenes:
+  - id: cold-open
+    type: app_capture
+    status: ready
+    narration: "I built the research workflow on Streamlit first. Single player, it's excellent — paste a list, run the pipeline, score the companies."
+    source: docs/walkthroughs/baseline-streamlit.mp4
+    evidence: github.com/HomenShum/feature-walkthrough-gif (real ParselyFi captures)
+
+  - id: structural-stop
+    type: title_card
+    status: ready
+    narration: "Then the demo needed a second user. Nothing was broken — a typical stack just doesn't hold live, shared, versioned state. By construction."
+    codeTitle: "Where typical stacks stop — by construction, not by fault"
+    callout: "no presence — one person at a time"
+    callout: "no shared versions — last write wins"
+    callout: "no review lane for an agent's changes"
+
+  - id: after-room
+    type: app_capture
+    status: ready
+    narration: "The same workflow in a live room: owners, status, and every change attributed and versioned."
+    source: docs/walkthroughs/ic-room.mp4
+    evidence: scripts/walkthroughs/specs.ts#ic-room
+
+  - id: after-review
+    type: app_capture
+    status: ready
+    narration: "And the agent proposes instead of overwrites — you approve right where the change lands."
+    source: docs/walkthroughs/review-approve.mp4
+    evidence: docs/dogfood/FRICTION_LOG.md
+
+  - id: closing
+    type: title_card
+    status: ready
+    narration: "Same feature, two stacks. The difference isn't intelligence — it's the collaboration substrate underneath."
+    codeTitle: "Not a rewrite of Streamlit — the layer it never claimed to be"
+    callout: "live shared state across people and agents"
+    callout: "every edit versioned, every change attributed"
+    callout: "agent writes reviewable before they count"

@@ -1,0 +1,27 @@
+{
+  "cold-open": {
+    "narrationSec": 8.4,
+    "chars": 134,
+    "status": "ready"
+  },
+  "structural-stop": {
+    "narrationSec": 8.8,
+    "chars": 138,
+    "status": "ready"
+  },
+  "after-room": {
+    "narrationSec": 6.5,
+    "chars": 92,
+    "status": "ready"
+  },
+  "after-review": {
+    "narrationSec": 5.1,
+    "chars": 88,
+    "status": "ready"
+  },
+  "closing": {
+    "narrationSec": 6.6,
+    "chars": 106,
+    "status": "ready"
+  }
+}

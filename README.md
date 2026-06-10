@@ -625,7 +625,7 @@ This section is generated from `docs/qa/production-matrix.json`. When the system
 | `gpt-5.4-nano` | OpenAI | PASS | FAIL | FAIL | FAIL | research benchmark winner candidate only when collaboration safety is not required |
 | `gpt-5.4` | OpenAI | PASS | FAIL | PASS | PASS | requires rerun because L2 time-budget failure blocks promotion |
 
-Research benchmark route: current v2 router-aware results are recorded for 1 route(s), but no route cleared the 9-check gate. Best recorded row was `openrouter/free-auto -> nvidia/nemotron-3-super-120b-a12b:free` at 0/9. Budget: `{"modelTimeoutMs":120000,"reserveMs":10000,"rowHardTimeoutMs":150000}`.
+Research benchmark route: `openrouter/free-auto -> nvidia/nemotron-3-super-120b-a12b:free` is the cheapest current v2 recorded model clearing 9/9 checks at $0.0000 per run. Collaboration routing still uses the ladder gate above, not benchmark cost alone.
 
 Full QA ledger: [`docs/PRODUCTION_GUARANTEE_MATRIX.md`](docs/PRODUCTION_GUARANTEE_MATRIX.md).
 <!-- QA_COCKPIT_END -->
@@ -811,9 +811,14 @@ checks); `npm run benchmark:charts` renders these SVGs from it. Reproduce it you
 
 Current artifact note: `docs/eval/results.json` is now the v2 9-check router-aware artifact.
 It records requested-vs-resolved model IDs, row-level source matching, multi-source checks,
-structured-field and freshness checks, and CellPayload unwrapping. The current v2 run has no
-route clearing 9/9 yet, so the benchmark charts are evidence of the gap rather than a
-promotion signal. Run `npm run benchmark` or `npm run benchmark:free` to refresh it.
+structured-field and freshness checks, CellPayload unwrapping, route snapshots, pricing-at-run,
+failure ownership, and trace refs. The latest verified run uses the composite
+`research_company_row` workflow tool and records
+`openrouter/free-auto -> nvidia/nemotron-3-super-120b-a12b:free` clearing 9/9
+for 3 companies at $0.0000 in 77.3s with 4 tool calls. That is promotion
+evidence for the background research workflow only; collaboration routing still
+uses the lock/CAS/draft ladder below. Run `npm run benchmark` or
+`npm run benchmark:free` to refresh it.
 
 ![Cost vs quality](docs/eval/cost-quality.svg)
 ![Leaderboard](docs/eval/leaderboard.svg)
@@ -885,8 +890,12 @@ the full task-ladder spec is in [`docs/AUDIT.md`](docs/AUDIT.md).
 - **`gpt-5.5`** (flagship *reasoning* model) hits the OpenAI-Responses-API analog of the Gemini
   issue — a `function_call` needs its reasoning item round-tripped. The metadata round-trip needs
   extending to OpenAI's reasoning path; the **GPT-5.4 tier works clean**.
-- **OpenRouter free tier** — reachable (the probe gets text back) but **fails the multi-step
-  agentic tool-loop** (rate-limited). Reachable, not dependable.
+- **OpenRouter free tier** is task-dependent. It now clears the composite GTM
+  research benchmark through `research_company_row`, but the same pool is still
+  not promotable for interactive collaboration because the live L1-L4
+  lock/CAS/draft ladder times out or fails on blocked-range behavior. The route
+  is viable for explicit `/free` and background research jobs, not as the
+  default shared-room editor.
 
 Model ids are **discovery-verified** (parallel subagents + a live probe corrected
 `claude-*.5`→`claude-*-5`, dropped shut-down `gemini-3.1-flash-lite-preview`, added

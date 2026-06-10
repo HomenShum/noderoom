@@ -26,18 +26,22 @@ scenes:
 
   - id: code-before-after
     type: code_diff
-    status: staged                                    # code-zoom skill not built
+    status: ready                                     # real lines extracted from the repo at assemble time
+    render: code
     narration: "The write path stopped assuming the agent owns the latest state."
-    code:
-      file: convex/artifacts.ts
-      anchor: applyCellEditCore                       # lock gate -> CAS gate -> proposal branch
-    callouts: ["affected-range lock", "per-element version check", "draft / proposal on conflict"]
+    codeFile: convex/artifacts.ts
+    codeStart: "1. LOCK gate"
+    codeEnd: "pending_approval"
+    codeTitle: "convex/artifacts.ts - applyCellEditCore"
+    callout: "every write passes the affected-range LOCK gate"
+    callout: "then the per-element VERSION check (CAS)"
+    callout: "review mode: conflict becomes a PROPOSAL, never a clobber"
 
   - id: mental-model
     type: motion_canvas
-    status: staged
+    status: ready                                     # animated diagram rendered natively in Remotion
+    render: diagram
     narration: "Treat the room as a collaboration substrate, not a spreadsheet."
-    concepts: [lock, draft, smart-merge, proposal review, trace receipt]
 
   - id: review-mode
     type: app_capture

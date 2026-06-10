@@ -15,20 +15,40 @@ const FPS = 30;
 const episodeId = process.argv[2] ?? "noderoom-live-collab-v1";
 const epDir = join(ROOT, "episodes", episodeId);
 
-type SceneIn = { id: string; type: string; status: string; narration: string; source?: string };
+type SceneIn = {
+  id: string; type: string; status: string; narration: string; source?: string;
+  render?: string; codeFile?: string; codeStart?: string; codeEnd?: string; codeTitle?: string; callouts: string[];
+};
 function parseScenes(yaml: string): SceneIn[] {
   const out: SceneIn[] = [];
   let cur: SceneIn | null = null;
   for (const line of yaml.split(/\r?\n/)) {
     const id = line.match(/^\s+-\s+id:\s*(\S+)/);
-    if (id) { cur = { id: id[1], type: "", status: "ready", narration: "" }; out.push(cur); continue; }
+    if (id) { cur = { id: id[1], type: "", status: "ready", narration: "", callouts: [] }; out.push(cur); continue; }
     if (!cur) continue;
     const t = line.match(/^\s+type:\s*(\S+)/); if (t) cur.type = t[1];
     const st = line.match(/^\s+status:\s*(\w+)/); if (st) cur.status = st[1];
     const n = line.match(/^\s+narration:\s*"(.+)"\s*$/); if (n) cur.narration = n[1];
     const s = line.match(/^\s+source:\s*(\S+)/); if (s) cur.source = s[1];
+    const r = line.match(/^\s+render:\s*(\S+)/); if (r) cur.render = r[1];
+    const cf = line.match(/^\s+codeFile:\s*(\S+)/); if (cf) cur.codeFile = cf[1];
+    const cs = line.match(/^\s+codeStart:\s*"(.+)"/); if (cs) cur.codeStart = cs[1];
+    const ce = line.match(/^\s+codeEnd:\s*"(.+)"/); if (ce) cur.codeEnd = ce[1];
+    const ct = line.match(/^\s+codeTitle:\s*"(.+)"/); if (ct) cur.codeTitle = ct[1];
+    const co = line.match(/^\s+callout:\s*"(.+)"/); if (co) cur.callouts.push(co[1]);
   }
   return out;
+}
+
+/** Pull the REAL lines from the repo between two anchor strings — the video shows what's in the
+ *  codebase at render time, so the code scene can never drift from reality. */
+function extractCode(file: string, startAnchor: string, endAnchor: string, maxLines = 22): string[] {
+  const lines = readFileSync(join(ROOT, file), "utf8").split(/\r?\n/);
+  const s = lines.findIndex((l) => l.includes(startAnchor));
+  if (s < 0) { console.warn(`[episode] code anchor not found: ${startAnchor}`); return []; }
+  let e = lines.findIndex((l, i) => i > s && l.includes(endAnchor));
+  if (e < 0) e = s + maxLines;
+  return lines.slice(s, Math.min(e + 1, s + maxLines)).map((l) => l.replace(/\t/g, "  "));
 }
 
 // Card content for staged scenes — the honest interim treatment (claims, not fake footage).
@@ -60,11 +80,17 @@ const run = () => {
       if (existsSync(src)) { copyFileSync(src, join(ROOT, "remotion", "public", "video", `${s.id}.mp4`)); video = `video/${s.id}.mp4`; }
       else console.warn(`[episode] MISSING source for ready scene ${s.id}: ${s.source}`);
     }
+    // Scene kind: live video when footage exists; otherwise a real-code panel, an animated
+    // diagram, or a claim card — whichever the storyboard asks for.
+    const kind = video ? "video" : s.render === "code" ? "code" : s.render === "diagram" ? "diagram" : "card";
+    const code = kind === "code" && s.codeFile && s.codeStart && s.codeEnd
+      ? { title: s.codeTitle ?? s.codeFile, lines: extractCode(s.codeFile, s.codeStart, s.codeEnd) }
+      : null;
     out.push({
-      id: s.id, kind: video ? "video" : "card", video, audio,
+      id: s.id, kind, video, audio, code,
       durationInFrames: Math.round(durSec * FPS),
       narration: s.narration,
-      card: CARDS[s.id] ?? { title: s.id, bullets: [] },
+      card: s.callouts.length ? { title: s.codeTitle ?? CARDS[s.id]?.title ?? s.id, bullets: s.callouts } : (CARDS[s.id] ?? { title: s.id, bullets: [] }),
     });
   }
   const total = out.reduce((a, s) => a + s.durationInFrames, 0);

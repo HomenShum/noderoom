@@ -12,7 +12,11 @@ const W = 1080, H = 1920;
 const ACCENT = "#D97757";
 const FONT = '"Inter", "Segoe UI", system-ui, -apple-system, sans-serif';
 
-type EpScene = { id: string; kind: "video" | "card"; video: string | null; audio: string | null; durationInFrames: number; narration: string; card: { title: string; bullets: string[] } };
+type EpScene = {
+  id: string; kind: "video" | "card" | "code" | "diagram"; video: string | null; audio: string | null;
+  code?: { title: string; lines: string[] } | null;
+  durationInFrames: number; narration: string; card: { title: string; bullets: string[] };
+};
 export type EpisodeData = { episodeId: string; fps: number; title: string; scenes: EpScene[]; totalFrames: number };
 
 const VIDEO_W = 1000;
@@ -29,6 +33,61 @@ const Card: React.FC<{ scene: EpScene; f: number }> = ({ scene, f }) => {
           <span style={{ fontFamily: FONT, fontSize: 34, fontWeight: 600, color: "#c6ccd4", lineHeight: 1.35 }}>{b}</span>
         </div>
       ))}
+    </div>
+  );
+};
+
+/** Real code from the repo, revealed line by line — the viewer sees the actual guard, not bullets
+ *  claiming it exists. Lines are extracted at assemble time so they can never drift from the repo. */
+const CodePanel: React.FC<{ scene: EpScene; f: number }> = ({ scene, f }) => {
+  const lines = scene.code?.lines ?? [];
+  const shown = Math.min(lines.length, Math.floor(f / 2) + 1); // ~15 lines/sec reveal
+  return (
+    <div style={{ width: VIDEO_W, borderRadius: 22, background: "#0d1117", border: "1px solid rgba(255,255,255,.09)", boxShadow: "0 40px 90px rgba(0,0,0,.6)", overflow: "hidden" }}>
+      <div style={{ padding: "18px 28px", borderBottom: "1px solid rgba(255,255,255,.08)", fontFamily: FONT, fontSize: 24, fontWeight: 700, color: ACCENT }}>{scene.code?.title}</div>
+      <div style={{ padding: "22px 28px", fontFamily: '"JetBrains Mono", Consolas, monospace', fontSize: 19.5, lineHeight: 1.5 }}>
+        {lines.slice(0, shown).map((l, i) => {
+          const hot = /LOCK|conflict|pending_approval|version|CAS|lease/i.test(l);
+          return <div key={i} style={{ color: hot ? "#f2c197" : l.trim().startsWith("//") ? "#5b6775" : "#aeb8c4", whiteSpace: "pre", overflow: "hidden", textOverflow: "ellipsis" }}>{l || " "}</div>;
+        })}
+      </div>
+      <div style={{ display: "flex", gap: 12, flexWrap: "wrap", padding: "0 28px 22px" }}>
+        {scene.card.bullets.map((b, i) => (
+          <span key={b} style={{ fontFamily: FONT, fontSize: 20, fontWeight: 650, color: "#eef2f7", background: "rgba(217,119,87,.16)", border: `1px solid ${ACCENT}55`, borderRadius: 10, padding: "8px 14px", opacity: interpolate(f - 20 - i * 8, [0, 8], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" }) }}>{b}</span>
+        ))}
+      </div>
+    </div>
+  );
+};
+
+/** Animated mental-model diagram: a human and an agent reach for the same cell; the room turns the
+ *  collision into lock → draft → review → merge instead of a clobber. Plain shapes, staged reveal. */
+const Diagram: React.FC<{ f: number }> = ({ f }) => {
+  const at = (start: number, dur = 10) => interpolate(f - start, [0, dur], [0, 1], { extrapolateLeft: "clamp", extrapolateRight: "clamp" });
+  const Box: React.FC<{ x: number; y: number; w: number; label: string; sub?: string; color: string; t: number }> = ({ x, y, w, label, sub, color, t }) => (
+    <div style={{ position: "absolute", left: x, top: y + (1 - t) * 14, width: w, opacity: t, background: "#161b22", border: `2px solid ${color}`, borderRadius: 14, padding: "14px 18px", textAlign: "center" }}>
+      <div style={{ fontFamily: FONT, fontSize: 24, fontWeight: 750, color: "#f2f4f7" }}>{label}</div>
+      {sub && <div style={{ fontFamily: FONT, fontSize: 17, color: "#99a3ae", marginTop: 4 }}>{sub}</div>}
+    </div>
+  );
+  const Arrow: React.FC<{ x1: number; y1: number; x2: number; y2: number; t: number; color?: string }> = ({ x1, y1, x2, y2, t, color = "#66717c" }) => (
+    <svg style={{ position: "absolute", left: 0, top: 0, pointerEvents: "none" }} width={VIDEO_W} height={620}>
+      <line x1={x1} y1={y1} x2={x1 + (x2 - x1) * t} y2={y1 + (y2 - y1) * t} stroke={color} strokeWidth={3.5} strokeLinecap="round" />
+      {t > 0.95 && <circle cx={x2} cy={y2} r={6} fill={color} />}
+    </svg>
+  );
+  return (
+    <div style={{ position: "relative", width: VIDEO_W, height: 620, borderRadius: 22, background: "linear-gradient(165deg,#141a23,#0c1016)", border: "1px solid rgba(255,255,255,.09)", boxShadow: "0 40px 90px rgba(0,0,0,.6)" }}>
+      <Box x={70} y={50} w={250} label="Human" sub="edits cell C4" color="#5b9bf5" t={at(0)} />
+      <Box x={680} y={50} w={250} label="Agent" sub="wants C4 too" color={ACCENT} t={at(8)} />
+      <Box x={375} y={230} w={250} label="The cell" sub="one shared version" color="#7bd089" t={at(16)} />
+      <Arrow x1={195} y1={140} x2={460} y2={228} t={at(24)} color="#5b9bf5" />
+      <Arrow x1={805} y1={140} x2={540} y2={228} t={at(30)} color={ACCENT} />
+      <Box x={70} y={420} w={262} label="Lock" sub="agent claims the range" color={ACCENT} t={at(40)} />
+      <Box x={375} y={420} w={250} label="Draft" sub="blocked write waits" color="#e4c567" t={at(50)} />
+      <Box x={680} y={420} w={262} label="Review → merge" sub="human approves, nothing lost" color="#7bd089" t={at(60)} />
+      <Arrow x1={332} y1={455} x2={373} y2={455} t={at(48, 6)} />
+      <Arrow x1={627} y1={455} x2={678} y2={455} t={at(58, 6)} />
     </div>
   );
 };
@@ -59,6 +118,10 @@ export const Episode: React.FC<{ data: EpisodeData }> = ({ data }) => {
                   <div style={{ width: VIDEO_W, height: VIDEO_H, borderRadius: 22, overflow: "hidden", boxShadow: "0 40px 90px rgba(0,0,0,.65), 0 0 0 1px rgba(255,255,255,.08)" }}>
                     <OffthreadVideo src={staticFile(s.video)} muted style={{ width: VIDEO_W, height: VIDEO_H }} />
                   </div>
+                ) : s.kind === "code" && s.code?.lines?.length ? (
+                  <CodePanel scene={s} f={Math.max(0, local)} />
+                ) : s.kind === "diagram" ? (
+                  <Diagram f={Math.max(0, local)} />
                 ) : (
                   <Card scene={s} f={Math.max(0, local)} />
                 )}

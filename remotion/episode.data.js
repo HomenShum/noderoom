@@ -9,6 +9,7 @@ export default {
       "kind": "video",
       "video": "video/cold-open.mp4",
       "audio": "audio/cold-open.mp3",
+      "code": null,
       "durationInFrames": 243,
       "narration": "I only wanted a clean README GIF for a spreadsheet agent.",
       "card": {
@@ -21,6 +22,7 @@ export default {
       "kind": "video",
       "video": "video/naive-problem.mp4",
       "audio": "audio/naive-problem.mp3",
+      "code": null,
       "durationInFrames": 300,
       "narration": "But the moment a human and an agent edit the same artifact, the demo stops being simple.",
       "card": {
@@ -34,25 +36,53 @@ export default {
     },
     {
       "id": "code-before-after",
-      "kind": "card",
+      "kind": "code",
       "video": null,
       "audio": "audio/code-before-after.mp3",
+      "code": {
+        "title": "convex/artifacts.ts - applyCellEditCore",
+        "lines": [
+          "    // 1. LOCK gate — a held range is read-only for non-holders; P0-5 lease fencing for the holder.",
+          "    //    Kleppmann's fencing-token failure mode: TTL (5min) < slice budget (9min) means a long job's",
+          "    //    own lease can lapse mid-run. activeLockOn erases expired locks, which silently degraded the",
+          "    //    holder's write into an UNLOCKED write — losing the cross-cell range guarantee the lock",
+          "    //    expansion exists to provide. Fencing semantics:",
+          "    //      - another holder, lease valid  → \"locked\" (unchanged)",
+          "    //      - another holder, lease lapsed → treated as gone (janitor sweeps it)",
+          "    //      - MY lock, lease lapsed        → \"lease_expired\" as DATA (re-acquire, don't force)",
+          "    //      - MY lock, lease valid         → write proceeds and RENEWS the lease (post-apply below)",
+          "    const coveringLock = await lockCoveringElement(ctx, a.artifactId, a.elementId);",
+          "    const lockNow = Date.now();",
+          "    const leaseValid = !!coveringLock && (coveringLock.expiresAt === undefined || coveringLock.expiresAt > lockNow);",
+          "    const heldByMe = !!coveringLock && coveringLock.holder.id === a.actor.id;",
+          "    if (coveringLock && !heldByMe && leaseValid) {",
+          "      return { ok: false as const, reason: \"locked\" as const, by: coveringLock.holder.name };",
+          "    }",
+          "    if (coveringLock && heldByMe && !leaseValid) {",
+          "      return { ok: false as const, reason: \"lease_expired\" as const, lockId: String(coveringLock._id) };",
+          "    }",
+          "    // 2. CAS gate — reject a stale baseline (this is the anti-clobber check).",
+          "    const el = await getElement(ctx, a.artifactId, a.elementId);",
+          "    const actual = el?.version ?? 0;"
+        ]
+      },
       "durationInFrames": 162,
       "narration": "The write path stopped assuming the agent owns the latest state.",
       "card": {
-        "title": "convex/artifacts.ts — applyCellEditCore",
+        "title": "convex/artifacts.ts - applyCellEditCore",
         "bullets": [
-          "affected-range LOCK gate",
-          "per-element VERSION check (CAS)",
-          "draft / proposal on conflict — never clobber"
+          "every write passes the affected-range LOCK gate",
+          "then the per-element VERSION check (CAS)",
+          "review mode: conflict becomes a PROPOSAL, never a clobber"
         ]
       }
     },
     {
       "id": "mental-model",
-      "kind": "card",
+      "kind": "diagram",
       "video": null,
       "audio": "audio/mental-model.mp3",
+      "code": null,
       "durationInFrames": 162,
       "narration": "Treat the room as a collaboration substrate, not a spreadsheet.",
       "card": {
@@ -69,6 +99,7 @@ export default {
       "kind": "video",
       "video": "video/review-mode.mp4",
       "audio": "audio/review-mode.mp3",
+      "code": null,
       "durationInFrames": 282,
       "narration": "Don't trust the agent yet? Its writes become proposals you approve at the cell.",
       "card": {
@@ -81,6 +112,7 @@ export default {
       "kind": "video",
       "video": "video/multiplayer-proof.mp4",
       "audio": "audio/multiplayer-proof.mp3",
+      "code": null,
       "durationInFrames": 321,
       "narration": "Two humans and an agent in one room — same-cell edits converge, nobody clobbers anybody.",
       "card": {
@@ -93,6 +125,7 @@ export default {
       "kind": "card",
       "video": null,
       "audio": "audio/closing-thesis.mp3",
+      "code": null,
       "durationInFrames": 261,
       "narration": "The agent was not the product. The collaboration substrate was — and this video was rendered from the repo that proves it.",
       "card": {

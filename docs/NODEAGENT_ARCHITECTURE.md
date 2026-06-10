@@ -6,14 +6,14 @@ actions) creates or reuses an `agentJobs` row; `/ask` runs an immediate first
 slice for responsive UX, and any slice that exhausts budget checkpoints into
 the Workflow/Workpool runner. Private read-only advise is currently a one-call
 private reply path and does not create an `agentJobs` row. `/free` is only a
-model-policy shortcut for `openrouter/free-auto`, not a separate runtime. The historical
-MewAgent/GraphStore design is useful as a domain reference, but not as a
-runtime model.
+model-policy shortcut for `openrouter/free-auto`, not a separate runtime. The
+historical client-side GraphStore design is useful as a domain reference, but
+not as a runtime model.
 
 The migration principle:
 
 ```text
-MewAgent client_action event
+legacy client_action event
   -> NodeAgent tool proposal
   -> permission + schema + version + lock check
   -> Convex mutation or draft operation
@@ -314,8 +314,8 @@ type WorkProduct =
 ```
 
 The old `final_summary` becomes a final job log plus optional `finalText`.
-Memory and learned tool patterns become durable rows, not local graph nodes named
-`__MewAgentMemory__` or `__MewAgentPatterns__`.
+Memory and learned tool patterns become durable rows, not local graph nodes
+named as legacy memory or pattern dumps.
 
 ## Unified Job Tables
 
@@ -1479,7 +1479,7 @@ Labels:
     Make `npm run agent:improve` export HALO handoffs from failed ladder/
     workflow/provider traces and require the full regression gate before merge.
 
-## What Not To Carry Forward From MewAgent
+## What Not To Carry Forward From Client-Side GraphStore
 
 Do not carry forward:
 

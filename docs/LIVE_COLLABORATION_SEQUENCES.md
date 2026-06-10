@@ -116,19 +116,19 @@ Raw Convex file ids and NodeRoom artifact ids are durable. Provider file ids are
 cache handles that can expire or be rebuilt. Mixing those identities would break
 permissions, retention, and provenance.
 
-## Why Not Keep The Client-Side MewAgent Pattern?
+## Why Not Keep The Client-Side GraphStore Pattern?
 
-The old MewAgent shape was useful for a single browser: a server streamed
-`client_action` events over SSE, and the browser's in-memory GraphStore executed
-local CRUD. In a shared room, that creates drift: one user's browser becomes the
-hidden source of truth while other users subscribe to stale or reconstructed
-state.
+The old client-side GraphStore shape was useful for a single browser: a server
+streamed `client_action` events over SSE, and the browser's in-memory store
+executed local CRUD. In a shared room, that creates drift: one user's browser
+becomes the hidden source of truth while other users subscribe to stale or
+reconstructed state.
 
 NodeRoom keeps the domain lessons from GraphStore but moves the durable
 business logic into Convex mutations:
 
 ```text
-MewAgent client_action event
+legacy client_action event
   -> NodeAgent tool proposal
   -> permission + schema + version + lock check
   -> Convex mutation or draft operation

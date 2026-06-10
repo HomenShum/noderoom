@@ -167,6 +167,22 @@ describe("auto-allow toggle (point 8)", () => {
       expect(eng.getArtifact(sheet.id)!.elements.B6.value).toBe(42);
     } else { throw new Error("expected a proposal"); }
   });
+
+  it("coalesces identical pending agent proposals instead of creating duplicate cards", () => {
+    const { eng, room, sheet, pub } = setup(false);
+    const baseVersion = ver(eng, sheet.id, "B6");
+    const first = eng.applyEdit({ roomId: room.id, op: setOp("o1", sheet.id, "B6", 42, baseVersion), actor: pub });
+    const retry = eng.applyEdit({ roomId: room.id, op: setOp("o2", sheet.id, "B6", 42, baseVersion), actor: pub });
+
+    expect(first.ok).toBe(false);
+    expect(retry.ok).toBe(false);
+    if (!first.ok && first.reason === "pending_approval" && !retry.ok && retry.reason === "pending_approval") {
+      expect(retry.proposalId).toBe(first.proposalId);
+    } else { throw new Error("expected proposal reuse"); }
+    expect(eng.listProposals(room.id)).toHaveLength(1);
+    expect(eng.listTraces(room.id).filter((t) => t.type === "edit_proposed")).toHaveLength(1);
+  });
+
   it("a human edit always applies regardless of auto-allow", () => {
     const { eng, room, sheet, hostActor } = setup(false);
     const r = eng.applyEdit({ roomId: room.id, op: setOp("o", sheet.id, "B6", 7, ver(eng, sheet.id, "B6")), actor: hostActor });
@@ -224,6 +240,38 @@ describe("idempotency", () => {
     expect(m1).not.toBeNull();
     expect(m2).toBeNull(); // deduped
     expect(eng.listMessages(room.id, "public")).toHaveLength(1);
+  });
+});
+
+describe("research imports", () => {
+  it("re-imports an existing account as an update instead of creating a suffixed duplicate", () => {
+    const { eng, room, hostActor } = setup();
+    const research = eng.createArtifact({ roomId: room.id, kind: "sheet", title: "Company research", by: hostActor, seed: [] });
+
+    const first = eng.addResearchRows({
+      roomId: room.id,
+      artifactId: research.id,
+      by: hostActor,
+      rows: [{ company: "Acme", website: "https://www.acme.com", tier: "B", intent: "research", owner: "Maya", crmStatus: "Research" }],
+    });
+    expect(first).toEqual(["rc_acme"]);
+    expect(eng.getArtifact(research.id)!.order.filter((id) => id.startsWith("rc_acme__"))).toHaveLength(14);
+
+    eng.applyEdit({ roomId: room.id, actor: hostActor, op: setOp("summary", research.id, "rc_acme__summary", "Sourced summary stays.", 1) });
+    const second = eng.addResearchRows({
+      roomId: room.id,
+      artifactId: research.id,
+      by: hostActor,
+      rows: [{ company: "ACME Inc.", website: "https://acme.com", tier: "A", intent: "outreach", owner: "Priya", crmStatus: "Target" }],
+    });
+
+    const art = eng.getArtifact(research.id)!;
+    expect(second).toEqual(["rc_acme"]);
+    expect(art.order.some((id) => id.startsWith("rc_acme_1__"))).toBe(false);
+    expect(art.elements["rc_acme__company"].value).toBe("ACME Inc.");
+    expect(art.elements["rc_acme__tier"].value).toBe("A");
+    expect(art.elements["rc_acme__crm_status"].value).toBe("Target");
+    expect(art.elements["rc_acme__summary"].value).toBe("Sourced summary stays.");
   });
 });
 

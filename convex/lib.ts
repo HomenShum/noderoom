@@ -147,13 +147,26 @@ export async function requireActorCanUseChannel(ctx: DbCtx, roomId: Id<"rooms">,
   throw new Error("channel_forbidden");
 }
 
+/** Lock lease TTL — shared by acquisition (locks.ts), write-path renewal + fencing (artifacts.ts),
+ *  and the janitor sweep. P0-5: the write path RENEWS this on every successful locked write, so a
+ *  healthy long job (9-min slices) never outlives its own lease by accident. */
+export const LOCK_TTL_MS = 5 * 60_000;
+
 /** The active lock covering an element, if any (the affected-range read-only). */
 export async function activeLockOn(ctx: QueryCtx, artifactId: Id<"artifacts">, elementId: string) {
   const now = Date.now();
+  const lock = await lockCoveringElement(ctx, artifactId, elementId);
+  // A lock past its lease TTL is treated as gone (the holder crashed/abandoned it) — no cell blocks forever.
+  return lock && (lock.expiresAt === undefined || lock.expiresAt > now) ? lock : null;
+}
+
+/** P0-5 fencing lookup: the active-status lock covering an element INCLUDING an expired lease.
+ *  The write path needs the distinction activeLockOn erases — "my lock, but the lease lapsed" must
+ *  surface as lease_expired DATA, not silently degrade into an unlocked write. */
+export async function lockCoveringElement(ctx: QueryCtx, artifactId: Id<"artifacts">, elementId: string) {
   const locks = await ctx.db
     .query("locks")
     .withIndex("by_artifact_status", (q) => q.eq("artifactId", artifactId).eq("status", "active"))
     .collect();
-  // A lock past its lease TTL is treated as gone (the holder crashed/abandoned it) — no cell blocks forever.
-  return locks.find((l) => l.elementIds.includes(elementId) && (l.expiresAt === undefined || l.expiresAt > now)) ?? null;
+  return locks.find((l) => l.elementIds.includes(elementId)) ?? null;
 }

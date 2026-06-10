@@ -1,5 +1,13 @@
 # Friction log — append-only
 
+## 2026-06-09 - Resolution pass for three red findings
+
+| Finding | Resolution | Evidence |
+|---|---|---|
+| No undo | Added a visible spreadsheet Undo control plus Ctrl/Cmd+Z routing through the same CAS mutation path. | `src/app/store.tsx`, `src/ui/panels/Artifact.tsx` |
+| Proposal approval away from the cell | Added inline approve/reject controls on cells with pending proposals; trace strip remains the audit and bulk-accept path. Review-mode agents now treat pending approval as a handoff and duplicate pending writes are coalesced. | `src/ui/panels/Artifact.tsx`, `src/app/styles.css`, `src/agent/plans.ts`, `src/engine/roomEngine.ts` |
+| Re-import duplicates accounts | Changed research import to update existing rows by company/domain identity and preserve sourced research fields. | `src/engine/roomEngine.ts`, `convex/artifacts.ts`, `tests/roomEngine.test.ts` |
+
 Format (Stripe practice, Google stoplight — see [INTUITIVENESS_QA.md](./INTUITIVENESS_QA.md) §3B):
 log **while doing a real task**, never retrospectively. Every entry must end as a filed issue
 or a written won't-fix reason.

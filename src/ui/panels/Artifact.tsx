@@ -4,17 +4,17 @@
  * component renders the in-memory engine OR live Convex (optimistic edits).
  */
 
-import { Fragment, useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
 import { DndContext, useDraggable, type DragEndEvent } from "@dnd-kit/core";
 import { restrictToParentElement } from "@dnd-kit/modifiers";
 import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import {
   Table2, FileText, StickyNote, Users, GitMerge, Play, RotateCcw, History, Search, BookOpen,
-  Lock, Unlock, Ban, Pencil, Plus, Check, AlertTriangle, Eye, Circle, ChevronRight, Download, Trash2, type LucideIcon,
+  Lock, Unlock, Ban, Pencil, Plus, Check, AlertTriangle, Eye, Circle, ChevronRight, Download, Trash2, Undo2, type LucideIcon,
 } from "lucide-react";
 import { useStore, type RoomStore, type EditFeedback } from "../../app/store";
-import type { Actor, Artifact as Art, CellPayload, DataframeColumn, DocumentParseMeta, TraceEvent, ResearchRowInput } from "../../engine/types";
+import type { Actor, Artifact as Art, CellPayload, DataframeColumn, DocumentParseMeta, Proposal, TraceEvent, ResearchRowInput } from "../../engine/types";
 
 const WIKI_TITLE = "Agent wiki";
 const RESEARCH_TITLE = "Company research";
@@ -56,6 +56,18 @@ export function Artifact({ roomId, me, artId, onArt, collab, style }: {
   const [editErr, setEditErr] = useState<string | null>(null);
   useEffect(() => { if (!editErr) return; const t = setTimeout(() => setEditErr(null), 4000); return () => clearTimeout(t); }, [editErr]);
   useEffect(() => { setTab(tabForArt(artId)); }, [artId, wiki?.id, sheet?.id, research?.id, note?.id, wall?.id, arts.length]);
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (!(e.ctrlKey || e.metaKey) || e.shiftKey || e.key.toLowerCase() !== "z") return;
+      const target = e.target as HTMLElement | null;
+      const tag = target?.tagName;
+      if (tag === "INPUT" || tag === "TEXTAREA" || target?.isContentEditable) return;
+      e.preventDefault();
+      void store.undoLastEdit(roomId, me).then((f) => { if (!f.ok) setEditErr(editErrorMsg(f)); });
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [store, roomId, me]);
   if (arts.length === 0) return <div className="r-panel artifact"><div className="r-art-body" /></div>;
   const activeTab: TabId = artFor(tab) ? tab : fallbackTab;
   const pick = (t: TabId) => { const a = artFor(t); if (a) { onArt(a.id); setTab(t); } };
@@ -216,7 +228,10 @@ function Research({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) 
   const [busy, setBusy] = useState(false);
   const [pasteError, setPasteError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<string | null>(null);
+  const [pages, setPages] = useState(1); // QA P1: page the grid like GenericSheet — no unbounded DOM
+  const RESEARCH_PAGE_SIZE = 50;
   const rowIds = [...new Set(art.order.map((e) => e.split("__")[0]))];
+  const visibleRowIds = rowIds.slice(0, RESEARCH_PAGE_SIZE * pages);
   const cell = (rid: string, c: string) => displayCellValue(art.elements[`${rid}__${c}`]?.value);
   const pending = rowIds.filter((rid) => (cell(rid, "status") || "pending") === "pending").length;
   const complete = rowIds.filter((rid) => cell(rid, "status") === "complete").length;
@@ -258,7 +273,7 @@ function Research({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) 
       <div className="r-research-bar">
         <span className="tiny faint">{rowIds.length} accounts · {pending} pending · {complete} complete · multi-source research</span>
         <span className="grow" />
-        <button className="r-btn ghost" disabled={busy} onClick={() => setPasteOpen((v) => !v)}><Plus size={13} /> Add accounts</button>
+        <button className="r-btn ghost" disabled={busy} onClick={() => setPasteOpen((v) => !v)}><Plus size={13} /> Import accounts</button>
         <button className="r-btn ghost" disabled={busy || complete === 0} onClick={() => void refreshComplete()}><RotateCcw size={13} /> Requeue complete</button>
         <button className="r-btn ghost" onClick={() => downloadResearchCsv(art, rowIds, cell)}><Download size={13} /> CRM CSV</button>
         <button className="r-btn" data-testid="research-enrich" disabled={running || pending === 0} onClick={run}>{running ? "Researching..." : pending ? `Enrich ${pending} pending` : "All complete"}</button>
@@ -267,7 +282,7 @@ function Research({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) 
         <div className="r-research-import">
           <textarea value={pasteText} onChange={(e) => setPasteText(e.target.value)} rows={3} placeholder="Company, website, tier, intent, owner, CRM status" />
           {pasteError && <span className="r-wall-error" role="alert" data-testid="research-add-error">{pasteError}</span>}
-          <button className="r-btn primary" disabled={busy || parseResearchRows(pasteText).length === 0} onClick={() => void addRows()}>{busy ? "Adding…" : "Add pending rows"}</button>
+          <button className="r-btn primary" disabled={busy || parseResearchRows(pasteText).length === 0} onClick={() => void addRows()}>{busy ? "Importing..." : "Import / update rows"}</button>
         </div>
       )}
       <div className="r-research-scroll">
@@ -280,14 +295,15 @@ function Research({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) 
             <th className="frozen">Account</th><th>Status</th><th>GTM</th><th>Research</th><th>Signals</th><th>Sources</th><th>Freshness</th>
           </tr></thead>
           <tbody>
-            {rowIds.map((rid) => {
+            {visibleRowIds.map((rid) => {
               const status = cell(rid, "status") || "pending";
               const src = cell(rid, "source"), src2 = cell(rid, "source2"), last = cell(rid, "last_researched");
               const gtm = `${cell(rid, "tier") || "B"} · ${cell(rid, "intent") || "research"}`;
               const gtmFull = `${gtm} · ${cell(rid, "owner") || me.name} · ${cell(rid, "crm_status") || "Research"}`;
               const signals = [cell(rid, "funding"), cell(rid, "headcount"), cell(rid, "recent_signal")].filter(Boolean).join(" · ");
               const open = expanded === rid;
-              const detail: Array<[string, ReactNode]> = [
+              // QA P2 perf: only the expanded row renders its 12-entry detail — don't build it per-row per-render.
+              const detail: Array<[string, ReactNode]> = open ? [
                 ["Website", cell(rid, "website") || "—"],
                 ["Tier", cell(rid, "tier") || "—"], ["Intent", cell(rid, "intent") || "—"],
                 ["Owner", cell(rid, "owner") || me.name], ["CRM status", cell(rid, "crm_status") || "—"],
@@ -296,10 +312,12 @@ function Research({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) 
                 ["Recent signal", cell(rid, "recent_signal") || "—"],
                 ["Source", src ? srcLink(src) : "—"], ["Source 2", src2 ? srcLink(src2) : "—"],
                 ["Last researched", last || "never"],
-              ];
+              ] : [];
               return (
                 <Fragment key={rid}>
-                  <tr className="r-research-row" data-open={String(open)} aria-selected={open} onClick={() => setExpanded(open ? null : rid)}>
+                  <tr className="r-research-row" data-open={String(open)} aria-selected={open} aria-expanded={open} tabIndex={0}
+                    onClick={() => setExpanded(open ? null : rid)}
+                    onKeyDown={(e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); setExpanded(open ? null : rid); } }}>
                     <td className="r-research-co frozen" title={cell(rid, "company")}>{cell(rid, "company") || rid}</td>
                     <td><span className={"r-status r-status-" + status}>{status}</span></td>
                     <td className="r-research-gtm" title={gtmFull}>{gtm}</td>
@@ -324,6 +342,12 @@ function Research({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) 
             })}
           </tbody>
         </table>
+        {visibleRowIds.length < rowIds.length && (
+          <div className="row" style={{ padding: "8px 10px", gap: 8 }}>
+            <button className="r-mini-btn" onClick={() => setPages((n) => n + 1)}>Show next {Math.min(RESEARCH_PAGE_SIZE, rowIds.length - visibleRowIds.length)}</button>
+            <span className="tiny faint">{visibleRowIds.length} of {rowIds.length} accounts</span>
+          </div>
+        )}
       </div>
     </div>
   );
@@ -414,8 +438,10 @@ async function deleteElement(store: RoomStore, roomId: string, me: Actor, artId:
   return store.applyEdit({ roomId, op: { opId: crypto.randomUUID(), artifactId: artId, elementId, kind: "delete", value: null, baseVersion: el.version }, actor: me });
 }
 const editErrorMsg = (f: EditFeedback) =>
-  f.reason === "conflict" ? "That cell changed since you opened it — your edit was reverted. Re-open it to see the new value."
+  f.reason === "nothing_to_undo" ? "Nothing to undo yet."
+    : f.reason === "conflict" ? "That cell changed since you opened it — your edit was reverted. Re-open it to see the new value."
     : f.reason === "locked" ? "That cell is locked by an agent right now."
+      : f.reason === "pending_approval" ? "That agent edit is waiting for host approval."
       : "Edit could not be applied.";
 function lockedByOther(store: RoomStore, artId: string, elementId: string, me: Actor) {
   const lk = store.lockFor(artId, elementId);
@@ -463,10 +489,15 @@ function colsOf(art: Art): string[] {
 
 function GenericSheet({ art }: { art: Art }) {
   const [pages, setPages] = useState(1);
-  const rows = rowIdsOf(art);
-  const columns = columnsOf(art);
+  // QA P2 perf: derive rows/columns/pageSize once per artifact snapshot, not on every render
+  // (paging state changes alone shouldn't re-walk the full element order).
+  const { rows, columns, pageSize } = useMemo(() => {
+    const rows = rowIdsOf(art);
+    const columns = columnsOf(art);
+    const pageSize = Math.max(25, Math.min(250, Math.floor(GENERIC_SHEET_CELL_WINDOW / Math.max(columns.length, 1))));
+    return { rows, columns, pageSize };
+  }, [art]);
   const cols = columns.map((col) => col.id);
-  const pageSize = Math.max(25, Math.min(250, Math.floor(GENERIC_SHEET_CELL_WINDOW / Math.max(cols.length, 1))));
   const visibleRows = rows.slice(0, pageSize * pages);
   return (
     <>
@@ -534,7 +565,9 @@ function Sheet({ roomId, me, art, onError }: { roomId: string; me: Actor; art: A
   const store = useStore();
   const rows = rowIdsOf(art);
   const now = Date.now();
+  const proposals = store.listProposals(roomId).filter((p) => p.artifactId === art.id);
   const doCommit = (id: string, s: string) => { void commit(store, roomId, me, art.id, id, s).then((f) => { if (f && !f.ok) onError(f); }); };
+  const doUndo = () => { void store.undoLastEdit(roomId, me).then((f) => { if (!f.ok) onError(f); }); };
   return (
     <>
       <div className="r-art-body">
@@ -547,9 +580,11 @@ function Sheet({ roomId, me, art, onError }: { roomId: string; me: Actor; art: A
                 const vEl = art.elements[vId], nEl = art.elements[nId];
                 const lk = lockedByOther(store, art.id, vId, me);
                 const drafting = draftedFor(store, roomId, art.id, vId);
+                const vProposal = proposalFor(proposals, art.id, vId);
+                const nProposal = proposalFor(proposals, art.id, nId);
                 const committed = !lk && vEl && vEl.version > 1 && now - vEl.updatedAt < 1500;
                 const personalEditor = vEl?.updatedBy && (vEl.updatedBy as Actor).ownerId ? store.listMembers(roomId).find((mm) => mm.id === (vEl.updatedBy as Actor).ownerId) : undefined;
-                const vCls = "r-cell num" + (lk ? " locked" : "") + (drafting ? " draft" : "") + (committed ? " committed" : "");
+                const vCls = "r-cell num" + (lk ? " locked" : "") + (drafting ? " draft" : "") + (committed ? " committed" : "") + (vProposal ? " proposed" : "");
                 return (
                   <tr key={rid}>
                     <td className="rid">{rid}</td>
@@ -557,13 +592,15 @@ function Sheet({ roomId, me, art, onError }: { roomId: string; me: Actor; art: A
                     <td className="num"><span className="r-val-num">{cellVal(art, rid, "q2")}</span></td>
                     <td className="num"><span className="r-val-num">{cellVal(art, rid, "q3")}</span></td>
                     <td className={vCls} data-cell-key={vId} data-testid="sheet-cell">
-                      <EditableCell key={vId + ":" + (vEl?.version ?? 0)} value={String(vEl?.value ?? "")} disabled={!!lk || drafting} align="right" onCommit={(s) => doCommit(vId, s)} />
+                      <EditableCell key={vId + ":" + (vEl?.version ?? 0)} value={String(vEl?.value ?? "")} disabled={!!lk || drafting || !!vProposal} align="right" onCommit={(s) => doCommit(vId, s)} />
                       {lk && <span className="lockbadge"><Lock size={9} /> NA</span>}
                       {drafting && <span className="lockbadge"><Pencil size={9} /> draft</span>}
+                      {vProposal && <InlineProposal roomId={roomId} me={me} proposal={vProposal} onResolved={(f) => { if (!f.ok) onError(f); }} />}
                       {personalEditor && <span className="r-prov-dot" style={{ background: personalEditor.color }} title={`edited by ${personalEditor.name}'s agent`} />}
                     </td>
-                    <td className="r-cell" data-cell-key={nId} data-testid="sheet-cell">
-                      <EditableCell key={nId + ":" + (nEl?.version ?? 0)} value={String(nEl?.value ?? "")} disabled={!!lk} addLabel="note" onCommit={(s) => doCommit(nId, s)} />
+                    <td className={"r-cell" + (nProposal ? " proposed" : "")} data-cell-key={nId} data-testid="sheet-cell">
+                      <EditableCell key={nId + ":" + (nEl?.version ?? 0)} value={String(nEl?.value ?? "")} disabled={!!lk || !!nProposal} addLabel="note" onCommit={(s) => doCommit(nId, s)} />
+                      {nProposal && <InlineProposal roomId={roomId} me={me} proposal={nProposal} onResolved={(f) => { if (!f.ok) onError(f); }} />}
                     </td>
                   </tr>
                 );
@@ -575,10 +612,37 @@ function Sheet({ roomId, me, art, onError }: { roomId: string; me: Actor; art: A
       <div className="r-sheet-foot">
         <span className="kicker">versionedSpreadsheetSync</span>
         <span className="r-vpill next">v{art.version}</span>
+        <button className="r-mini-btn" disabled={!store.canUndo(roomId)} title="Undo last applied room edit (Ctrl+Z)" onClick={doUndo}><Undo2 size={12} /> Undo</button>
         <span className="grow" />
         <span className="mono tiny faint">click a Variance or Note cell to edit by hand</span>
       </div>
     </>
+  );
+}
+
+function proposalFor(proposals: Proposal[], artifactId: string, elementId: string): Proposal | undefined {
+  return proposals.find((p) => p.artifactId === artifactId && p.status === "pending" && p.op.elementId === elementId);
+}
+
+function InlineProposal({ roomId, me, proposal, onResolved }: { roomId: string; me: Actor; proposal: Proposal; onResolved: (fb: EditFeedback) => void }) {
+  const store = useStore();
+  const [busy, setBusy] = useState(false);
+  const host = store.listMembers(roomId).some((m) => m.id === me.id && m.role === "host");
+  const decide = async (approve: boolean) => {
+    setBusy(true);
+    try { onResolved(await store.resolveProposal(proposal.id, approve, me)); }
+    finally { setBusy(false); }
+  };
+  return (
+    <div className="r-inline-proposal" data-testid="proposal-inline">
+      <span className="r-inline-proposal-text" title={`${proposal.author.name} proposed ${String(proposal.op.value ?? "")}`}>{String(proposal.op.value ?? "")}</span>
+      {host ? (
+        <span className="r-inline-proposal-actions">
+          <button className="r-icon-btn ok" data-testid="proposal-inline-approve" aria-label={`Approve ${proposal.op.elementId}`} disabled={busy} onClick={() => void decide(true)}><Check size={11} /></button>
+          <button className="r-icon-btn" data-testid="proposal-inline-reject" aria-label={`Reject ${proposal.op.elementId}`} disabled={busy} onClick={() => void decide(false)}><Ban size={11} /></button>
+        </span>
+      ) : <span className="r-inline-awaiting">host</span>}
+    </div>
   );
 }
 
@@ -702,11 +766,19 @@ function Wall({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) {
 function Sticky({ roomId, me, artId, id, v, locked, author, rot, onDelete }: { roomId: string; me: Actor; artId: string; id: string; v: { text: string; x: number; y: number; color: string }; locked: boolean; author: string; rot: number; onDelete: (id: string) => void }) {
   const store = useStore();
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id, disabled: locked });
+  // QA P2 perf: the drag style is rebuilt only when its real inputs change, not on every wall render.
+  const style = useMemo<CSSProperties>(() => ({
+    left: v.x, top: v.y, background: v.color,
+    transform: `translate3d(${transform?.x ?? 0}px, ${transform?.y ?? 0}px, 0) rotate(${rot}deg)`,
+    zIndex: isDragging ? 9 : undefined, boxShadow: isDragging ? "var(--shadow-lg)" : undefined,
+  }), [v.x, v.y, v.color, transform?.x, transform?.y, rot, isDragging]);
   return (
     <div ref={setNodeRef} className={"r-postit" + (locked ? " locked" : "")} {...attributes} {...listeners}
-      style={{ left: v.x, top: v.y, background: v.color, transform: `translate3d(${transform?.x ?? 0}px, ${transform?.y ?? 0}px, 0) rotate(${rot}deg)`, zIndex: isDragging ? 9 : undefined, boxShadow: isDragging ? "var(--shadow-lg)" : undefined }}>
+      style={style}>
       <button className="r-postit-delete" disabled={locked} aria-label="Delete post-it" onPointerDown={(e) => e.stopPropagation()} onClick={(e) => { e.stopPropagation(); onDelete(id); }}><Trash2 size={12} /></button>
-      <div className="pt-text" contentEditable={!locked} suppressContentEditableWarning onPointerDown={(e) => e.stopPropagation()}
+      <div className="pt-text" contentEditable={!locked} suppressContentEditableWarning role="textbox" aria-label="Edit post-it text"
+        onPointerDown={(e) => e.stopPropagation()}
+        onKeyDown={(e) => { if (e.key === "Escape") (e.currentTarget as HTMLElement).blur(); }}
         onBlur={(e) => { const t = e.currentTarget.textContent ?? ""; if (t && t !== v.text) commit(store, roomId, me, artId, id, { ...v, text: t }); }}>{v.text}</div>
       <div className="pby">— {author}</div>
     </div>
@@ -770,7 +842,8 @@ function TraceStrip({ roomId, me }: { roomId: string; me: Actor }) {
       </div>
       <div className="r-trace-list" ref={ref} onScroll={onScroll} aria-live="polite" aria-label="Room activity log">
         {resolveMsg && <div className="r-wall-error" role="alert" data-testid="proposal-resolve-msg" style={{ margin: "2px 4px" }}>{resolveMsg} <button className="r-msg-act" onClick={() => setResolveMsg(null)}>Dismiss</button></div>}
-        {proposals.map((p) => <ProposalRow key={p.id} roomId={roomId} me={me} proposal={p} onResolved={(fb) => setResolveMsg(fb.ok ? null : proposalErrMsg(fb.reason))} />)}
+        {proposals.slice(0, 20).map((p) => <ProposalRow key={p.id} roomId={roomId} me={me} proposal={p} onResolved={(fb) => setResolveMsg(fb.ok ? null : proposalErrMsg(fb.reason))} />)}
+        {proposals.length > 20 && <div className="tiny faint" style={{ padding: "2px 4px" }}>+{proposals.length - 20} more pending — resolve these first (mirrors the 40-row trace cap)</div>}
         {shown.length === 0 && <div className="tiny faint" style={{ padding: "2px 4px" }}>Edit a cell, move a sticky, or run the collaboration — every change is recorded here.</div>}
         {shown.map((t) => <TraceRow key={t.id} t={t} />)}
       </div>

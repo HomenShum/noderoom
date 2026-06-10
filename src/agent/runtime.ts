@@ -50,6 +50,10 @@ export async function runAgent(opts: {
   journal?: StepJournal;
   /** LLM gateway spend ceiling — stop (with a resumable handoff) before a model call once the per-run token cap is hit. */
   spendLimits?: SpendLimits;
+  /** P0-4: price a completed step in USD so maxCostUsd actually fires — without this the gate
+   *  receives costUsd:0 and the dollar half of the ceiling is dead surface (HONEST_STATUS class).
+   *  Pass priceRun (src/agent/model.ts) or convexPriceRun (src/agent/convexModel.ts) from the caller. */
+  priceStep?: (modelName: string, inputTokens: number, outputTokens: number) => number;
   /** Keep the model's context bounded on long runs. */
   compaction?: CompactionOpts;
   /** Override the JIT context assembly. Defaults to buildContext. */
@@ -68,8 +72,11 @@ export async function runAgent(opts: {
   const messages: AgentMessage[] = [];
   const trace: AgentTraceEvent[] = [];
   let finalText = "";
-  let inputTokens = 0, outputTokens = 0, modelCalls = 0;
+  let inputTokens = 0, outputTokens = 0, modelCalls = 0, costUsd = 0;
   let attemptedSteps = 0;
+  // P1-3: tool calls not yet executed in the current turn — preserved on an error handoff so the
+  // resume cursor never carries unpaired assistant tool_use blocks.
+  let pendingToolCalls: ToolCall[] = [];
 
   const budget = (attempted: number) => {
     const t = now();
@@ -192,8 +199,10 @@ export async function runAgent(opts: {
           const handoff = emitHandoff(0, "time_budget", attemptedSteps, opts.resumeToolCalls.slice(opts.resumeToolCalls.indexOf(call)));
           return finish("time_budget", attemptedSteps, true, handoff);
         }
+        pendingToolCalls = opts.resumeToolCalls.slice(opts.resumeToolCalls.indexOf(call) + 1); // P1-3
         await executeCall(call, 0);
       }
+      pendingToolCalls = [];
     }
 
     for (let step = 0; step < maxSteps; step++) {
@@ -220,9 +229,11 @@ export async function runAgent(opts: {
       if (cached) {
         out = cached;
       } else {
-        // Gateway spend ceiling — stop before a billable call once the per-run token cap is hit (resumable).
+        // Gateway spend ceiling — stop before a billable call once the per-run token OR dollar cap
+        // is hit (resumable). costUsd accumulates via opts.priceStep (P0-4: previously hardcoded 0,
+        // which made maxCostUsd unable to ever fire).
         if (opts.spendLimits) {
-          const gate = checkSpendCeiling({ inputTokens, outputTokens, costUsd: 0 }, opts.spendLimits);
+          const gate = checkSpendCeiling({ inputTokens, outputTokens, costUsd }, opts.spendLimits);
           if (!gate.ok) {
             const handoff = emitHandoff(step, "spend_budget", attemptedSteps);
             return finish("spend_budget", attemptedSteps, true, handoff);
@@ -243,7 +254,11 @@ export async function runAgent(opts: {
         }
         await opts.journal?.record(step, fresh);
         modelCalls++; // count + bill ONLY a real model call (a replayed step was already billed)
-        if (fresh.usage) { inputTokens += fresh.usage.inputTokens; outputTokens += fresh.usage.outputTokens; }
+        if (fresh.usage) {
+          inputTokens += fresh.usage.inputTokens;
+          outputTokens += fresh.usage.outputTokens;
+          costUsd += opts.priceStep?.(model.name, fresh.usage.inputTokens, fresh.usage.outputTokens) ?? 0;
+        }
         out = fresh;
       }
       if (out.text) finalText = out.text;
@@ -260,15 +275,23 @@ export async function runAgent(opts: {
           const handoff = emitHandoff(step, "time_budget", attemptedSteps, out.toolCalls.slice(out.toolCalls.indexOf(call)));
           return finish("time_budget", attemptedSteps, true, handoff);
         }
+        // P1-3: remember the calls AFTER this one — if it throws, they are unexecuted and must ride
+        // the error handoff (the throwing call itself records a tool_result before re-throwing).
+        pendingToolCalls = out.toolCalls.slice(out.toolCalls.indexOf(call) + 1);
         await executeCall(call, step);
       }
+      pendingToolCalls = [];
     }
 
     const handoff = emitHandoff(maxSteps, "step_budget", maxSteps);
     return finish("step_budget", maxSteps, true, handoff);
   } catch (error) {
     if (error instanceof AgentRunError) throw error;
-    const handoff = makeHandoff("error", attemptedSteps);
+    // P1-3: preserve the unexecuted tool calls. With remainingToolCalls=[] (the old default), the
+    // checkpointed cursor held an assistant message whose trailing tool_use blocks had no paired
+    // tool_results — every durable-lane resume then 400'd at the provider until maxAttempts killed
+    // the job. Resume replays these via resumeToolCalls, completing the pairs before the next model call.
+    const handoff = makeHandoff("error", attemptedSteps, pendingToolCalls);
     throw new AgentRunError(error, finish("error", attemptedSteps, false, handoff));
   }
 }

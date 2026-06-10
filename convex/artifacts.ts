@@ -43,6 +43,28 @@ function displayValue(value: unknown): string {
   return JSON.stringify(raw);
 }
 
+function stableValueKey(value: unknown): string {
+  try { return JSON.stringify(value); }
+  catch { return String(value); }
+}
+
+function samePendingProposal(
+  proposal: { roomId: Id<"rooms">; artifactId: Id<"artifacts">; op: unknown; author: ActorValue; status: string },
+  a: ApplyCellEditArgs,
+  kind: "set" | "create" | "delete",
+): boolean {
+  const op = proposal.op as { elementId?: unknown; kind?: unknown; baseVersion?: unknown; value?: unknown } | null;
+  return proposal.status === "pending"
+    && String(proposal.roomId) === String(a.roomId)
+    && String(proposal.artifactId) === String(a.artifactId)
+    && proposal.author.kind === a.actor.kind
+    && proposal.author.id === a.actor.id
+    && op?.elementId === a.elementId
+    && op.kind === kind
+    && op.baseVersion === a.baseVersion
+    && stableValueKey(op.value) === stableValueKey(a.value);
+}
+
 function scoreText(text: string, terms: string[]): number {
   const lower = text.toLowerCase();
   return terms.reduce((score, term) => score + (lower.includes(term) ? 1 : 0), 0);
@@ -230,6 +252,9 @@ async function applyCellEditCore(ctx: MutationCtx, a: ApplyCellEditArgs) {
     }
     const room = await ctx.db.get(a.roomId);
     if (a.actor.kind === "agent" && room && !room.autoAllow) {
+      const pending = await ctx.db.query("proposals").withIndex("by_room_status", (q) => q.eq("roomId", a.roomId).eq("status", "pending")).collect();
+      const existing = pending.find((proposal) => samePendingProposal(proposal, a, kind));
+      if (existing) return { ok: false as const, reason: "pending_approval" as const, proposalId: existing._id };
       const proposalId = await ctx.db.insert("proposals", {
         roomId: a.roomId,
         artifactId: a.artifactId,
@@ -377,6 +402,37 @@ function defaultWebsite(company: string) {
   const host = company.toLowerCase().replace(/[^a-z0-9]+/g, "").slice(0, 32);
   return host ? `https://www.${host}.com` : "";
 }
+function normalizeResearchIdentity(value: string): string {
+  return value.toLowerCase().replace(/[^a-z0-9]+/g, "");
+}
+function normalizeResearchDomain(value?: string): string {
+  if (!value) return "";
+  const raw = value.trim();
+  if (!raw) return "";
+  try {
+    const url = new URL(/^https?:\/\//i.test(raw) ? raw : `https://${raw}`);
+    return url.hostname.toLowerCase().replace(/^www\./, "");
+  } catch {
+    return raw.toLowerCase().replace(/^https?:\/\//, "").replace(/^www\./, "").split(/[/?#]/)[0];
+  }
+}
+function displayResearchValue(value: unknown): string {
+  if (value === null || value === undefined) return "";
+  return typeof value === "string" ? value : String(value);
+}
+function rowIdsFromOrder(order: string[]): string[] {
+  return [...new Set(order.map((id) => id.split("__")[0]))];
+}
+function findExistingResearchRow(order: string[], byElementId: Map<string, { value: unknown }>, row: { company: string; website?: string }): string | null {
+  const wantedCompany = normalizeResearchIdentity(row.company);
+  const wantedDomain = normalizeResearchDomain(row.website);
+  return rowIdsFromOrder(order).find((rid) => {
+    const company = normalizeResearchIdentity(displayResearchValue(byElementId.get(`${rid}__company`)?.value));
+    if (wantedCompany && company === wantedCompany) return true;
+    const domain = normalizeResearchDomain(displayResearchValue(byElementId.get(`${rid}__website`)?.value));
+    return !!wantedDomain && domain === wantedDomain;
+  }) ?? null;
+}
 
 export const addResearchRows = mutation({
   args: { roomId: v.id("rooms"), artifactId: v.id("artifacts"), rows: v.array(researchRowInputV), requester: actorProofV },
@@ -385,41 +441,71 @@ export const addResearchRows = mutation({
     const art = await requireArtifactInRoom(ctx, roomId, artifactId);
     const now = Date.now();
     const nextOrder = [...art.order];
-    const added: string[] = [];
+    const existingElements = await ctx.db.query("elements").withIndex("by_artifact", (q) => q.eq("artifactId", artifactId)).collect();
+    const byElementId = new Map(existingElements.map((e) => [e.elementId, e]));
+    const touched: string[] = [];
+    let addedCount = 0;
+    let updatedCount = 0;
+    let changed = false;
     for (const row of rows) {
       const company = row.company.trim();
       if (!company) continue;
       const base = slugResearchRow(company);
-      let rowId = base, suffix = 1;
-      while (nextOrder.some((id) => id.startsWith(`${rowId}__`))) rowId = `${base}_${suffix++}`;
+      const existing = findExistingResearchRow(nextOrder, byElementId, { company, website: row.website });
+      let rowId = existing ?? base, suffix = 1;
+      while (!existing && nextOrder.some((id) => id.startsWith(`${rowId}__`))) rowId = `${base}_${suffix++}`;
       const vals: Record<(typeof researchCols)[number], string> = {
         company,
         website: row.website?.trim() || defaultWebsite(company),
-        status: "pending",
+        status: existing ? displayResearchValue(byElementId.get(`${rowId}__status`)?.value) || "pending" : "pending",
         tier: row.tier?.trim() || "B",
         intent: row.intent?.trim() ?? "",
         owner: row.owner?.trim() || actor.name,
         crm_status: row.crmStatus?.trim() || "Research",
-        summary: "",
-        funding: "",
-        headcount: "",
-        recent_signal: "",
-        source: "",
-        source2: "",
-        last_researched: "",
+        summary: existing ? displayResearchValue(byElementId.get(`${rowId}__summary`)?.value) : "",
+        funding: existing ? displayResearchValue(byElementId.get(`${rowId}__funding`)?.value) : "",
+        headcount: existing ? displayResearchValue(byElementId.get(`${rowId}__headcount`)?.value) : "",
+        recent_signal: existing ? displayResearchValue(byElementId.get(`${rowId}__recent_signal`)?.value) : "",
+        source: existing ? displayResearchValue(byElementId.get(`${rowId}__source`)?.value) : "",
+        source2: existing ? displayResearchValue(byElementId.get(`${rowId}__source2`)?.value) : "",
+        last_researched: existing ? displayResearchValue(byElementId.get(`${rowId}__last_researched`)?.value) : "",
       };
-      for (const col of researchCols) {
+      const writableCols = existing ? ["company", "website", "tier", "intent", "owner", "crm_status"] as const : researchCols;
+      for (const col of writableCols) {
         const elementId = `${rowId}__${col}`;
-        nextOrder.push(elementId);
-        await ctx.db.insert("elements", { artifactId, elementId, value: vals[col], version: 1, updatedAt: now, updatedBy: actor });
+        const prev = byElementId.get(elementId);
+        if (prev) {
+          if (Object.is(prev.value, vals[col])) continue;
+          await ctx.db.patch(prev._id, { value: vals[col], version: prev.version + 1, updatedAt: now, updatedBy: actor });
+          byElementId.set(elementId, { ...prev, value: vals[col], version: prev.version + 1, updatedAt: now, updatedBy: actor });
+        } else {
+          const inserted = await ctx.db.insert("elements", { artifactId, elementId, value: vals[col], version: 1, updatedAt: now, updatedBy: actor });
+          const row = await ctx.db.get(inserted);
+          if (row) byElementId.set(elementId, row);
+          nextOrder.push(elementId);
+        }
+        changed = true;
       }
-      added.push(rowId);
+      if (existing) updatedCount++;
+      else {
+        addedCount++;
+        for (const col of researchCols) {
+          const elementId = `${rowId}__${col}`;
+          if (byElementId.has(elementId)) continue;
+          const inserted = await ctx.db.insert("elements", { artifactId, elementId, value: vals[col], version: 1, updatedAt: now, updatedBy: actor });
+          const insertedRow = await ctx.db.get(inserted);
+          if (insertedRow) byElementId.set(elementId, insertedRow);
+          nextOrder.push(elementId);
+        }
+        changed = true;
+      }
+      touched.push(rowId);
     }
-    if (added.length) {
+    if (touched.length && changed) {
       await ctx.db.patch(artifactId, { order: nextOrder, version: art.version + 1, updatedAt: now });
-      await ctx.db.insert("traces", { roomId, ts: now, actor, type: "edit_applied", summary: `${actor.name} added ${added.length} research row(s)`, detail: `add_research_rows ${added.join(", ")}` });
+      await ctx.db.insert("traces", { roomId, ts: now, actor, type: "edit_applied", summary: `${actor.name} imported ${touched.length} research row(s)`, detail: `add_research_rows added=${addedCount} updated=${updatedCount} rows=${touched.join(", ")}` });
     }
-    return added;
+    return touched;
   },
 });
 

@@ -1,5 +1,5 @@
 /** Public room chat (`.r-panel.center`) and private agent (`.r-panel.right`). Reads via useStore(). */
-import { useEffect, useRef, useState, type CSSProperties, type ChangeEvent, type DragEvent, type KeyboardEvent } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties, type ChangeEvent, type DragEvent, type KeyboardEvent } from "react";
 import { Lock, MessageCircle, Globe, Send, Sparkles, Copy, Check, ArrowUpRight, Pencil, Paperclip, X, Timer, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
 import { useStore, type RoomStore } from "../app/store";
 import type { Actor, Channel, Message } from "../engine/types";
@@ -58,6 +58,7 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
   const feedRef = useRef<HTMLDivElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const nearBottom = useRef(true);
+  const thinkingStartCount = useRef(0);
   // Room-switch safety: an /ask or private-agent call is fire-and-forget. If the user leaves this room
   // before it resolves, the server action still finishes on its OWN room (every mutation is roomId-scoped,
   // so no cross-room bleed) — but the client must NOT setState or post into an unmounted/stale channel.
@@ -73,8 +74,13 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
   const latestAttempt = longJobAttempts.at(-1);
   const canCancelLongJob = !!longJob && !["completed", "failed", "cancelled"].includes(longJob.status);
   const canRetryLongJob = !!longJob && ["failed", "blocked", "cancelled", "paused", "retrying"].includes(longJob.status);
+  const beginThinking = () => { thinkingStartCount.current = messages.length; setThinking(true); };
 
   useEffect(() => { const el = feedRef.current; if (el && nearBottom.current) el.scrollTop = el.scrollHeight; }, [messages.length, thinking]);
+  useEffect(() => {
+    if (!thinking) return;
+    if (messages.slice(thinkingStartCount.current).some((m) => m.author.kind === "agent")) setThinking(false);
+  }, [messages, thinking]);
   const onScroll = () => { const el = feedRef.current; if (el) nearBottom.current = el.scrollHeight - el.scrollTop - el.clientHeight < 80; };
 
   const grow = () => { const el = taRef.current; if (el) { el.style.height = "auto"; el.style.height = Math.min(el.scrollHeight, 120) + "px"; } };
@@ -92,21 +98,21 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
 
     if (!isPrivate && /^\/ask\b/i.test(t)) {
       const goal = t.replace(/^\/ask\s*/i, "").trim() || "Recompute the Q3 variance from the audited NetSuite numbers.";
-      setThinking(true);
+      beginThinking();
       void store.askAgent({ goal, references: messageRefs }).finally(() => { if (aliveRef.current) setThinking(false); });
       return;
     }
 
     if (!isPrivate && /^\/free\b/i.test(t)) {
       const goal = t.replace(/^\/free\s*/i, "").trim() || "Recompute the Q3 variance from the audited NetSuite numbers.";
-      setThinking(true);
+      beginThinking();
       void store.startLongFreeAgent({ goal, references: messageRefs }).finally(() => { if (aliveRef.current) setThinking(false); });
       return;
     }
 
     if (isPrivate && store.mode === "memory") {
       const reduced = window.matchMedia?.("(prefers-reduced-motion:reduce)").matches ?? false;
-      setThinking(true);
+      beginThinking();
       privTimerRef.current = setTimeout(() => {
         privTimerRef.current = null;
         if (!aliveRef.current) return; // user left the room — don't post into a stale channel
@@ -128,7 +134,7 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
     if (isPrivate && store.mode === "convex" && t) {
       // Live private NodeAgent. Private lane → replies only to you. Room lane → acts in the shared room
       // (edits the sheet + posts public chat) as your personal agent, attributed to you.
-      setThinking(true);
+      beginThinking();
       void store.askPrivateAgent(t, { publish: roomLane }).finally(() => { if (aliveRef.current) setThinking(false); });
     }
   };
@@ -363,6 +369,8 @@ function Bubble({ m, roomId, variant, me, onPromote, onOpenArtifact }: { m: Mess
   const mine = !agent && m.author.id === me.id;
   const canPromote = agent && variant === "private";
   const pending = String(m.id).startsWith("opt-"); // optimistic, not yet confirmed by the server
+  // QA P2 perf: the avatar style depends only on the author's color — don't rebuild per feed render.
+  const avatarStyle = useMemo(() => ({ background: colorFor(store, roomId, m.author) }), [store, roomId, m.author]);
   const copy = () => { void navigator.clipboard?.writeText(m.text).then(() => { setCopied(true); setTimeout(() => setCopied(false), 1200); }); };
   const saveEdit = () => {
     const t = draft.trim();
@@ -374,7 +382,7 @@ function Bubble({ m, roomId, variant, me, onPromote, onOpenArtifact }: { m: Mess
 
   return (
     <div className={"r-msg" + (agent ? " agent" : "")} data-testid="chat-message" data-clientmsgid={m.clientMsgId} data-state={pending ? "pending" : "confirmed"} style={pending ? { opacity: 0.6 } : undefined}>
-      <span className={"r-avatar sm" + (agent ? " agent" : "")} style={{ background: colorFor(store, roomId, m.author) }}>{agent ? "N" : initials(m.author.name)}</span>
+      <span className={"r-avatar sm" + (agent ? " agent" : "")} style={avatarStyle}>{agent ? "N" : initials(m.author.name)}</span>
       <div className="body">
         <div className="meta">
           <span className="who">{m.author.name}</span>

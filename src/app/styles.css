@@ -224,6 +224,7 @@ input { font-family: inherit; }
 .r-cell { position: relative; cursor: default; }
 .r-cell.locked { background: rgba(217,119,87,.10); } .r-cell.locked-other { background: rgba(94,106,210,.10); }
 .r-cell.draft { background: rgba(31,138,91,.10); outline: 1px dashed rgba(31,138,91,.5); outline-offset: -1px; }
+.r-cell.proposed { background: rgba(217,119,87,.08); box-shadow: inset 0 0 0 1px rgba(217,119,87,.22); }
 .r-cell.committed { animation: wetink 1.4s var(--ease-out-expo); }
 @keyframes wetink { 0% { background: rgba(217,119,87,.28); } 100% { background: transparent; } }
 .r-cell .lockbadge { position: absolute; top: 50%; right: 6px; transform: translateY(-50%); display: inline-flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 5px; }
@@ -237,6 +238,13 @@ input { font-family: inherit; }
 .r-cell-edit .add-hint { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: var(--text-tertiary); font-family: var(--font-mono); }
 .r-cell-edit:hover .add-hint { color: var(--accent-ink); }
 .r-cell-input { width: 100%; min-width: 56px; background: var(--bg-primary); border: 1px solid var(--accent-border); border-radius: 6px; padding: 3px 6px; margin: -3px 0; color: var(--text-primary); font: inherit; font-size: 12.5px; outline: none; box-shadow: 0 0 0 3px var(--accent-tint); }
+.r-inline-proposal { margin-top: 4px; display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 2px 3px 2px 6px; border-radius: 6px; border: 1px solid rgba(217,119,87,.28); background: rgba(217,119,87,.12); color: var(--accent-ink); vertical-align: middle; }
+.r-inline-proposal-text { min-width: 0; max-width: 104px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10.5px; font-weight: 800; }
+.r-inline-proposal-actions { display: inline-flex; gap: 3px; flex: none; }
+.r-inline-awaiting { font-family: var(--font-mono); font-size: 9px; color: var(--text-tertiary); text-transform: uppercase; }
+.r-icon-btn { width: 20px; height: 20px; display: inline-grid; place-items: center; border-radius: 5px; border: 1px solid var(--line); background: var(--bg-secondary); color: var(--text-secondary); padding: 0; }
+.r-icon-btn.ok { background: var(--accent-primary); border-color: transparent; color: #fff; }
+.r-icon-btn:disabled { opacity: .55; cursor: default; }
 .r-sheet-foot { padding: 10px 14px; border-top: 1px solid var(--line); display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
 .r-vpill { font-family: var(--font-mono); font-size: 11px; font-weight: 700; padding: 2px 8px; border-radius: 6px; background: var(--bg-secondary); border: 1px solid var(--line); color: var(--text-muted); }
 .r-vpill.next { background: var(--accent-tint); border-color: var(--accent-border); color: var(--accent-ink); }
@@ -351,7 +359,9 @@ input { font-family: inherit; }
 .r-status-complete { color: var(--success-ink); background: rgba(31,138,91,.12); border: 1px solid rgba(31,138,91,.28); }
 .r-fresh { display: inline-flex; align-items: center; white-space: nowrap; font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 999px; border: 1px solid var(--line); }
 .r-fresh.fresh { color: var(--success-ink); background: rgba(31,138,91,.1); border-color: rgba(31,138,91,.25); }
-.r-fresh.stale { color: #a15b2d; background: rgba(217,119,87,.1); border-color: rgba(217,119,87,.28); }
+/* QA P1 contrast: #a15b2d on the orange tint failed WCAG AA in dark mode; theme-aware ink clears 4.5:1. */
+.r-fresh.stale { color: #8a4a20; background: rgba(217,119,87,.1); border-color: rgba(217,119,87,.28); }
+[data-theme="dark"] .r-fresh.stale { color: #EFA987; }
 .r-trace-list { overflow-y: auto; padding: 0 12px 12px; display: flex; flex-direction: column; gap: 7px; }
 .r-trace-item { display: flex; flex-direction: column; font-size: 11.5px; animation: msgIn .3s var(--ease-out-expo) both; }
 .r-trace-row { display: flex; gap: 9px; align-items: flex-start; width: 100%; text-align: left; background: transparent; border: none; padding: 3px 4px; margin: -1px -4px; color: inherit; cursor: pointer; border-radius: 6px; font: inherit; }
@@ -414,6 +424,10 @@ input { font-family: inherit; }
 @media (max-width: 980px) {
   .r-resize { display: none; }
   .r-panel.center { flex: 1; }
+  /* The full control set (incl. the panel toggles) can exceed the band's width — the BAR scrolls
+     horizontally instead of overflowing the page; every control stays reachable. */
+  .r-top { overflow-x: auto; scrollbar-width: none; }
+  .r-top::-webkit-scrollbar { display: none; }
   .r-panel.left, .r-panel.artifact, .r-panel.right {
     position: fixed; inset: 60px 8px 8px; z-index: 50;
     width: auto !important; max-width: none;

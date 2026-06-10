@@ -116,6 +116,12 @@ One convention-parity sweep over the code, same day the rulebook was assembled:
 Three reds, none of which correctness-QA or speed-QA could ever have caught. That's the lens
 earning its keep on day one.
 
+### Implementation update - 2026-06-09
+
+- F5 fixed: spreadsheet Undo is visible in the sheet footer and Ctrl/Cmd+Z routes through the same CAS edit path.
+- F6 fixed: pending spreadsheet proposals now render approve/reject controls on the affected cell; the trace strip remains the audit and Accept all path. Review-mode agent runs now create one pending proposal per target and stop retrying the same write.
+- F7 fixed: research imports now update existing accounts by company/domain identity instead of creating suffixed duplicates, while preserving sourced research fields.
+
 ## 6. Sources (all fetched, not recalled)
 
 [xl]: https://support.microsoft.com/en-us/office/keyboard-shortcuts-in-excel-1798d9d5-842a-42b8-9c99-9b7213f0040f

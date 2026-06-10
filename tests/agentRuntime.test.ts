@@ -39,6 +39,23 @@ describe("agent runtime — collaboration under concurrency", () => {
     expect(r.trace.some((t) => t.tool === "release_lock")).toBe(true);
   });
 
+  it("review mode creates one proposal per target, then releases the lock without duplicate retries", async () => {
+    const { engine, d, rt } = setup();
+    engine.toggleAutoAllow(d.roomId, d.members.homen);
+
+    const r = await runAgent({ rt, goal: "recompute variance for host review", model: scriptedModel(recomputeVariancePlan(TARGETS)), tools: ROOM_TOOLS, maxSteps: 14 });
+    const proposals = engine.listProposals(d.roomId);
+    const proposedCells = proposals.map((p) => p.op.elementId).sort();
+
+    expect(r.exhausted).toBe(false);
+    expect(r.finalText).toContain("Waiting for host approval");
+    expect(proposedCells).toEqual(["r_cogs__variance", "r_rev__variance"]);
+    expect(r.trace.filter((t) => t.tool === "edit_cell" && (t.result as { pendingApproval?: boolean })?.pendingApproval)).toHaveLength(2);
+    expect(engine.getArtifact(d.sheetId)!.elements["r_rev__variance"].value).toBe("");
+    expect(engine.getArtifact(d.sheetId)!.elements["r_cogs__variance"].value).toBe("");
+    expect(engine.lockFor(d.sheetId, "r_rev__variance")).toBeUndefined();
+  });
+
   it("CAS conflict (no lock): a concurrent human edit forces a re-read + retry — the stale write is rejected, not clobbered", async () => {
     const { engine, d, rt } = setup();
     let injected = false;

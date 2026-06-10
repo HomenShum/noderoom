@@ -19,6 +19,7 @@ import type * as agentWorkflows from "../agentWorkflows.js";
 import type * as artifacts from "../artifacts.js";
 import type * as collab from "../collab.js";
 import type * as convexRoomTools from "../convexRoomTools.js";
+import type * as crons from "../crons.js";
 import type * as drafts from "../drafts.js";
 import type * as embeddingRunner from "../embeddingRunner.js";
 import type * as embeddings from "../embeddings.js";
@@ -48,6 +49,7 @@ declare const fullApi: ApiFromModules<{
   artifacts: typeof artifacts;
   collab: typeof collab;
   convexRoomTools: typeof convexRoomTools;
+  crons: typeof crons;
   drafts: typeof drafts;
   embeddingRunner: typeof embeddingRunner;
   embeddings: typeof embeddings;

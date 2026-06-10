@@ -46,6 +46,16 @@ This verifies that the latest commit message mentions every changed file path.
 It does not judge prose quality; it catches the easy drift where a commit body
 describes the intent but omits a file that actually shipped.
 
+Before pushing several commits:
+
+```bash
+npm run commit:check:range -- origin/main..HEAD
+```
+
+CI runs the same range check against the pushed or pull-request commit range,
+skipping merge commits because GitHub-generated merge messages are not authored
+as release notes.
+
 ## Rules
 
 - Do not rewrite a pushed public commit just to improve wording unless the user

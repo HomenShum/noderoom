@@ -11,6 +11,8 @@ jobs:
     steps:
       - name: Checkout
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Setup Node
         uses: actions/setup-node@v4
@@ -25,7 +27,15 @@ jobs:
         run: npm run qa:matrix:check
 
       - name: Check commit message accuracy
-        run: npm run commit:check
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            npm run commit:check:range -- "${{ github.event.pull_request.base.sha }}..HEAD"
+          elif [ "${{ github.event.before }}" != "0000000000000000000000000000000000000000" ]; then
+            npm run commit:check:range -- "${{ github.event.before }}..HEAD"
+          else
+            npm run commit:check
+          fi
 
       - name: Typecheck app
         run: npm run typecheck -- --pretty false

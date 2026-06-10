@@ -50,6 +50,7 @@
     "content:fluency:check": "tsx scripts/content-fluency-check.ts",
     "commit:summary": "tsx scripts/commit-message.ts",
     "commit:check": "tsx scripts/commit-message.ts --check-last",
+    "commit:check:range": "tsx scripts/commit-message.ts --check-range",
     "eval:professional": "vitest run tests/professionalWorkflows.test.ts",
     "eval:credit": "tsx evals/creditEval.ts",
     "ladder": "tsx evals/ladder.ts",

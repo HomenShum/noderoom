@@ -49,16 +49,16 @@ function stagedChanges(): GitChange[] {
   return parseNameStatus(git(["diff", "--cached", "--name-status"]));
 }
 
-function lastCommitChanges(): GitChange[] {
-  return parseNameStatus(git(["show", "--format=", "--name-status", "HEAD"]));
+function commitChanges(ref: string): GitChange[] {
+  return parseNameStatus(git(["show", "--format=", "--name-status", ref]));
 }
 
-function lastCommitMessage(): string {
-  return git(["show", "-s", "--format=%B", "HEAD"]);
+function commitMessage(ref: string): string {
+  return git(["show", "-s", "--format=%B", ref]);
 }
 
-function isMergeCommit(): boolean {
-  const parents = git(["show", "-s", "--format=%P", "HEAD"]).trim().split(/\s+/).filter(Boolean);
+function isMergeCommit(ref: string): boolean {
+  const parents = git(["show", "-s", "--format=%P", ref]).trim().split(/\s+/).filter(Boolean);
   return parents.length > 1;
 }
 
@@ -73,29 +73,49 @@ function printSummary(): void {
   console.log("- ");
 }
 
-function checkLast(): void {
-  if (isMergeCommit()) {
-    console.log("merge commit detected; skipping file-list commit message check");
-    return;
+function checkCommit(ref: string): boolean {
+  if (isMergeCommit(ref)) {
+    console.log(`${ref}: merge commit detected; skipping file-list commit message check`);
+    return true;
   }
-  const changes = lastCommitChanges();
-  const message = lastCommitMessage();
+  const changes = commitChanges(ref);
+  const message = commitMessage(ref);
   const missing = missingMentionedPaths(message, changes);
   if (missing.length === 0) {
-    console.log(`commit message covers ${changes.length} changed file path(s)`);
-    return;
+    console.log(`${ref}: commit message covers ${changes.length} changed file path(s)`);
+    return true;
   }
-  console.error("Commit message is missing changed file path(s):");
+  console.error(`${ref}: commit message is missing changed file path(s):`);
   for (const change of missing) {
     console.error(`- ${change.path}`);
   }
-  process.exit(1);
+  return false;
+}
+
+function checkLast(): void {
+  if (!checkCommit("HEAD")) process.exit(1);
+}
+
+function checkRange(range: string): void {
+  const refs = git(["rev-list", "--reverse", range]).trim().split(/\s+/).filter(Boolean);
+  if (refs.length === 0) {
+    console.log(`${range}: no commits to check`);
+    return;
+  }
+  const ok = refs.map((ref) => checkCommit(ref)).every(Boolean);
+  if (!ok) process.exit(1);
 }
 
 function main(): void {
-  const args = new Set(process.argv.slice(2));
-  if (args.has("--check-last")) {
+  const args = process.argv.slice(2);
+  const flags = new Set(args);
+  if (flags.has("--check-last")) {
     checkLast();
+    return;
+  }
+  const rangeIndex = args.indexOf("--check-range");
+  if (rangeIndex >= 0) {
+    checkRange(args[rangeIndex + 1] ?? "HEAD");
     return;
   }
   printSummary();

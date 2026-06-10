@@ -199,10 +199,10 @@ Run-control QA:
   complete status report to `docs/eval/halo-runs/status-snapshots.jsonl`.
 - `npm run halo:snapshots` renders the JSONL trail into
   `docs/eval/halo-runs/status-snapshots.md` for a quick morning handoff read.
-  Latest generated report parses 64 snapshots, shows active deterministic runner
-  `20260609T183814Z` sleeping after cycle 28, records the router JSON artifact,
-  and records the earlier duplicate/missing-supervisor anomalies that have
-  since been closed.
+  Latest generated report parses 66 snapshots. The final snapshot records the
+  stopped state: active lock `20260609T183814Z`, runner PID `149656` dead,
+  supervisor process list empty, and no active process tree. Earlier snapshots
+  retain the duplicate/missing-supervisor anomalies that have since been closed.
 - A scheduled-task fire created a second supervisor at 2026-06-09T00:05 PT.
   The duplicate was stopped, `scripts/halo-supervise-until.ps1` now exits if an
   existing supervisor process is active. Later, after the first full-live runner
@@ -229,18 +229,26 @@ Run-control QA:
 - `scripts/halo-supervise-until.ps1` and `scripts/halo-cron.cmd` now target the
   June 10 handoff window instead of the original June 9 cutoff.
 
+## Stopped State
+
+The HALO runner was stopped by explicit user request on June 10, 2026 at about
+01:58 PT (`2026-06-10T08:58:49Z`). The supervisor PowerShell process `31284`
+and runner Node process `149656` were force-stopped, `halo:status --json
+--record` confirmed the active lock points to a dead PID with no supervisor
+processes, and the `halo-loop-10am-pt-handoff` automation was deleted so it
+will not restart the runner.
+
 ## Next Handoff Checks
 
-At or before the June 10 10:00 AM PT handoff:
+The automatic June 10 handoff loop is no longer active. If HALO is resumed
+manually:
 
 1. Read `docs/eval/halo-runs/20260609T183814Z/status.json`.
-2. Run `npm run halo:status -- --strict --require-supervisor --record` for a
-   normalized lock/status/artifact/supervisor summary that fails on missing
-   coverage and appends a durable snapshot.
+2. Run `npm run halo:status -- --json` first; strict supervisor mode is
+   expected to fail while the runner is intentionally stopped.
 3. If a new cycle rewrites `docs/eval/free-auto-router-ladder.json`, inspect it
    and rerun `npm run qa:matrix` plus `npm run halo:snapshots`.
-4. If the active run completed before June 10 and no supervisor is running,
-   start the lock-aware supervisor:
+4. Start a new lock-aware supervisor only after an explicit resume request:
    `npm run halo:supervise -- -Until "2026-06-10T17:00:00Z" -PollSeconds 300`.
 5. Run `npm run benchmark:charts` and `npm run qa:matrix:check` after any new benchmark output.
 6. Preserve red/yellow claims for live browser E2E, row-level professional fixtures, and free-auto collaboration promotion unless fresh evidence closes them.

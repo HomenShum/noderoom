@@ -1,13 +1,14 @@
 ﻿{
     "schema":  1,
     "pid":  31284,
-    "updatedAt":  "2026-06-09T18:41:09.8377944Z",
+    "updatedAt":  "2026-06-10T08:58:49.295Z",
     "until":  "2026-06-10T17:00:00Z",
     "pollSeconds":  300,
     "fullLive":  false,
     "skipE2e":  true,
-    "state":  "running-active-runner",
+    "state":  "stopped-by-user",
     "activeRunId":  "20260609T183814Z",
     "activePid":  149656,
-    "activePidAlive":  true
+    "activePidAlive":  false,
+    "note":  "HALO supervisor and runner were stopped by request; the heartbeat automation was deleted so no duplicate runner restarts."
 }

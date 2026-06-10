@@ -15,7 +15,7 @@ export type Step =
   | { kind: "type"; sel: string; text: string; caption: string; pressEnter?: boolean; afterCaption?: string; after?: After }
   | { kind: "key"; key: string; caption: string; after?: After }
   | { kind: "loading"; sel: string; caption: string; timeoutMs?: number }
-  | { kind: "waitResult"; predicate: "cellsFilled" | "chipsVisible" | "textVisible"; arg?: string; caption: string; timeoutMs?: number };
+  | { kind: "waitResult"; predicate: "cellsFilled" | "chipsVisible" | "textVisible" | "textGone"; arg?: string; sel?: string; caption: string; timeoutMs?: number };
 
 export type After =
   | { sel: string; state?: "visible" | "hidden"; timeoutMs?: number }
@@ -31,6 +31,9 @@ export type FeatureSpec = {
   setup: "createRoom" | "seedResearchRoom" | "memoryDemo";
   /** Real-LLM features get retries (fresh room per attempt); deterministic ones don't need them. */
   retries?: number;
+  /** Opt-in specs are SKIPPED by default runs — they need a special server (e.g. the naive
+   *  failure-replay build) and only run when named explicitly: `capture.ts naive-overwrite`. */
+  optIn?: boolean;
   steps: Step[];
 };
 
@@ -118,6 +121,33 @@ export const FEATURES: FeatureSpec[] = [
         afterCaption: "The existing row UPDATES — no duplicate, sourced research preserved",
       },
       { kind: "state", caption: "Still 4 accounts — re-import = update, never a duplicate (CRM convention)", settleMs: 1400, holdMs: 2400 },
+    ],
+  },
+  {
+    id: "naive-overwrite",
+    title: "Failure replay — the naive agent clobbers a human",
+    // FAILURE-REPLAY (episode scene `naive-problem`). Runs ONLY against the deliberately-naive
+    // build (branch demo/v0-naive-agent: agents skip locks, CAS, and traces — never merged,
+    // never deployed). Start it in the worktree:  npm run dev -- --port 5274  then capture with
+    //   WALKTHROUGH_BASE=http://localhost:5274 npx tsx scripts/walkthroughs/capture.ts naive-overwrite
+    // Honesty: the clip labels the build on screen; memory-mode scripted agent = deterministic.
+    setup: "memoryDemo",
+    optIn: true,
+    steps: [
+      { kind: "state", caption: "The NAIVE build (demo/v0-naive-agent) — same room, agent guards removed", holdMs: 2000 },
+      { kind: "click", sel: '[data-cell-key="r_gp__variance"] .r-cell-edit', caption: "Maya checked Gross profit by hand…" },
+      {
+        kind: "type", sel: '[data-cell-key="r_gp__variance"] input.r-cell-input', text: "+30.0% — Maya's manual calc",
+        caption: "…and commits her own figure", pressEnter: true,
+        afterCaption: "Her number is in the sheet — versioned, hers",
+        after: { textSel: '[data-cell-key="r_gp__variance"]', includes: "30.0" },
+      },
+      { kind: "type", sel: `${CENTER} [data-testid="chat-composer"]`, text: "/ask reconcile Q3 revenue", caption: "Someone asks the agent to reconcile — it read the sheet BEFORE Maya's edit", pressEnter: true },
+      {
+        kind: "waitResult", predicate: "textGone", sel: '[data-cell-key="r_gp__variance"]', arg: "30.0",
+        caption: "Maya's figure is GONE — no lock shown, no proposal, no trace. Silent overwrite.", timeoutMs: 30_000,
+      },
+      { kind: "state", caption: "This is why the room needed locks, versions, drafts, and review", holdMs: 2400 },
     ],
   },
   {

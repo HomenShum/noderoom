@@ -49,6 +49,11 @@ narrated). Aesthetic rule: quiet competence, not loud wealth.
 6. Quality gate before calling it done: all `ready` sources exist on disk · no secrets visible in
    frames · every claim in brief.md still points at real evidence · GIFs within size budget ·
    the app still runs (live-DOM check).
+6b. **Video judge (WIRED)**: `npx tsx scripts/walkthroughs/judge-video.ts <episodeId> [renders/x.mp4]`
+   — Gemini video understanding watches the actual render and scores 8 dimensions (state clarity,
+   caption sync, pacing, audio, legibility, proof-feel, safety, restraint) with timestamped
+   defects → `judge.md`/`judge.json`. P0 defects block publishing; P1 fix before posting; P2 log
+   and ship (do NOT enter a re-render polish loop for P2s — the judge said publish).
 7. **Trust-signal check** (for audience-targeted episodes): does the demo SHOW sensitive-context
    awareness (fixture data, fresh rooms)? source provenance? review-before-action? Does it avoid
    wealth stereotypes, imprecise language, and overclaiming?

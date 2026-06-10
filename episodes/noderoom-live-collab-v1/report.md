@@ -22,6 +22,12 @@ system; assembled by `scripts/walkthroughs/episode.ts` → `remotion/Episode.tsx
 - Audio: narration present on all 7 scenes; every visual outlasts its narration (+1.2s floor) ✅
 - Verified via ffprobe (streams/duration) + two rendered stills (video scene + card scene) ✅
 
+## Machine judge (Gemini 3.5 Flash video understanding)
+**Verdict: publish · 15/16** ([judge.md](./judge.md)) — 2/2 on state clarity, caption sync,
+pacing, audio, proof-feel, safety, restraint; 1/2 on mobile legibility (desktop footage in
+vertical format). One P2 logged: zoom the active sheet area in review-mode scenes — queued for
+the next render cycle, not worth a re-render loop now (judge passed it for publishing).
+
 ## Deferred — with reasons, not vibes
 - **failure-replay (the naive-overwrite clip):** checked history — the FIRST public commit
   (`c034223`) already ships the CAS engine; no pre-CAS version exists to replay. Needs a

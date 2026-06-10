@@ -46,9 +46,9 @@ Here the real agent has filled the variance column live on Convex.</sub>
 
 ### The headline, shown literally — two clients, one room, live
 
-![Two browser clients side by side: a message posted in Client A appears live in Client B with no refresh](docs/walkthroughs/two-client-live-sync.gif)
+![Two browser clients side by side: a chat message syncs from Client A to Client B, then a /ask agent run reconciles the sheet and broadcasts to both](docs/walkthroughs/two-client-live-sync.gif)
 
-<sub>Two <b>independent</b> browser clients in the same room, side by side — a message posted in <b>Client&nbsp;A</b> appears in <b>Client&nbsp;B</b> with no refresh (Convex reactive <code>useQuery</code>), in both directions. Captured <b>multi-pane</b> (one browser context per client) with the <a href="https://github.com/HomenShum/feature-walkthrough-gif#live-collaboration-multi-pane"><code>feature-walkthrough-gif</code></a> skill — single-cursor capture can't show cross-client sync; this can.</sub>
+<sub>Two <b>independent</b> browser clients in the same room, side by side. First a chat message posted in <b>Client&nbsp;A</b> lands in <b>Client&nbsp;B</b> with no refresh (Convex reactive <code>useQuery</code>); then Client&nbsp;A runs the <b>Room NodeAgent</b> (<code>/ask reconcile Q3 revenue</code>, a real LLM run) and its work — the reconciled variance + an explanation note — <b>broadcasts to both clients at once</b> (server-led). Captured <b>multi-pane</b> (one browser context per client) with the <a href="https://github.com/HomenShum/feature-walkthrough-gif#live-collaboration-multi-pane"><code>feature-walkthrough-gif</code></a> skill — a single cursor can't show cross-client sync or a server-led agent reaching every client; this can.</sub>
 
 </div>
 

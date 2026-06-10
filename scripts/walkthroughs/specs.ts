@@ -34,6 +34,9 @@ export type FeatureSpec = {
   /** Opt-in specs are SKIPPED by default runs — they need a special server (e.g. the naive
    *  failure-replay build) and only run when named explicitly: `capture.ts naive-overwrite`. */
   optIn?: boolean;
+  /** seedResearchRoom only: override the seeded accounts (episodes for high-trust audiences use
+   *  FICTIONAL companies — that restraint is itself the trust signal). */
+  seedCompanies?: Array<{ company: string; website?: string; tier?: string; owner?: string }>;
   steps: Step[];
 };
 
@@ -121,6 +124,34 @@ export const FEATURES: FeatureSpec[] = [
         afterCaption: "The existing row UPDATES — no duplicate, sourced research preserved",
       },
       { kind: "state", caption: "Still 4 accounts — re-import = update, never a duplicate (CRM convention)", settleMs: 1400, holdMs: 2400 },
+    ],
+  },
+  {
+    id: "ic-room",
+    title: "A private investment team's research room",
+    // Episode capture (private-investment-room-v1, family-office audience). Fictional companies
+    // only — per episodes/_audiences/family-office.yaml trust_signals_required. Not a README
+    // feature demo, so optIn.
+    setup: "seedResearchRoom",
+    optIn: true,
+    seedCompanies: [
+      { company: "Meridian Robotics", website: "https://example.com/meridian", tier: "A", owner: "Principal" },
+      { company: "Caldera Therapeutics", website: "https://example.com/caldera", tier: "A", owner: "CIO" },
+      { company: "Northwind Logistics", website: "https://example.com/northwind", tier: "B", owner: "Analyst" },
+    ],
+    steps: [
+      { kind: "state", caption: "Monday's IC meeting — targets, owners, and status in one room", holdMs: 2200 },
+      { kind: "click", sel: 'button:has-text("Import accounts")', caption: "A new opportunity arrives from an advisor" },
+      {
+        kind: "type", sel: ".r-research-import textarea", text: "Atlas Maritime Partners, https://example.com/atlas, A, growth equity, Principal",
+        caption: "Added like a CRM — company, tier, mandate, owner",
+      },
+      {
+        kind: "click", sel: '.r-research-import button:has-text("Import")', caption: "One click to file it",
+        afterCaption: "Versioned and attributed — the room records who added what, when",
+        after: { textSel: ".r-research", includes: "Atlas Maritime", timeoutMs: 15_000 },
+      },
+      { kind: "state", caption: "Every change in this room carries provenance — that's the point", settleMs: 1200, holdMs: 2400 },
     ],
   },
   {

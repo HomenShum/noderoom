@@ -67,7 +67,13 @@ async function createRoom(ctx: BrowserContext, code: string): Promise<Page> {
   return page;
 }
 
-async function seedResearch(page: Page, code: string) {
+const DEFAULT_SEED_COMPANIES = [
+  { company: "OpenAI", website: "https://openai.com", tier: "A", owner: "Maya" },
+  { company: "Stripe", website: "https://stripe.com", tier: "A", owner: "Maya" },
+  { company: "Figma", website: "https://figma.com", tier: "B", owner: "Sam" },
+];
+
+async function seedResearch(page: Page, code: string, companies = DEFAULT_SEED_COMPANIES) {
   // The room's OWN session token (from the browser) authorizes seeding a research artifact.
   const sess = JSON.parse(await page.evaluate((k) => localStorage.getItem(k) ?? "{}", `noderoom:live:${code}`));
   if (!sess.token) throw new Error(`seedResearch: no session in localStorage for ${code}`);
@@ -76,12 +82,7 @@ async function seedResearch(page: Page, code: string) {
   const proof = { actor: { kind: "user" as const, id: String(sess.memberId), name: String(sess.name) }, token: String(sess.token) };
   const artId = await client.mutation(api.artifacts.createArtifact, { roomId: sess.roomId, kind: "sheet", title: "Company research", seed: [], proof });
   await client.mutation(api.artifacts.addResearchRows, {
-    roomId: sess.roomId, artifactId: artId, requester: proof,
-    rows: [
-      { company: "OpenAI", website: "https://openai.com", tier: "A", owner: "Maya" },
-      { company: "Stripe", website: "https://stripe.com", tier: "A", owner: "Maya" },
-      { company: "Figma", website: "https://figma.com", tier: "B", owner: "Sam" },
-    ],
+    roomId: sess.roomId, artifactId: artId, requester: proof, rows: companies,
   });
   console.log(`  [seed] research artifact ${String(artId)} created in ${code}`);
   await page.reload({ waitUntil: "domcontentloaded" });
@@ -123,7 +124,7 @@ async function runFeature(spec: FeatureSpec, attempt: number): Promise<FeatureOu
   let n = 0;
   try {
     const page = spec.setup === "memoryDemo" ? await memoryDemo(ctx) : await createRoom(ctx, code);
-    if (spec.setup === "seedResearchRoom") await seedResearch(page, code);
+    if (spec.setup === "seedResearchRoom") await seedResearch(page, code, spec.seedCompanies);
 
     for (const step of spec.steps) {
       if (step.kind === "state") {

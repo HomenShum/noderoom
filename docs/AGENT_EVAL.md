@@ -24,12 +24,17 @@ or a room full of existing context — plus `pasted_content` for forwarded
 emails/transcripts, whose claims carry `quoted_third_party` provenance, below
 user-said. Every intake mode now has at least one declaring case (enforced by
 test), and every chat-started case declares an output contract (which surface
-the result lands on; person facts private-by-default). The implemented-vs-
-contract boundary is mechanical: `evals/harnessStatus.ts` maps each harness
-requirement to a real entry point or an honest `contract` status — the
-chat-intake requirements (`chat_intake_parser`, `entity_resolution`,
-`clarifying_question_gate`) are still contracts, not yet behaviorally graded
-the way the finance runtime grades lock/read/CAS/release.
+the result lands on; person facts private-by-default). The proof boundary is
+mechanical: `evals/harnessStatus.ts` maps each harness requirement to a real
+entry point or an honest `contract` status, while
+`evals/professionalCatalogProofs.ts` verifies every catalog case has intake,
+output-surface, provenance, trajectory, privacy/long-running/private-gold, and
+requirement-evidence checks. Current catalog proof is 21/21 with 0 unproofed
+cases (`npm run eval:professional:catalog-proofs`). That does not turn contract
+requirements into runtime behavior: chat-intake requirements
+(`chat_intake_parser`, `entity_resolution`, `clarifying_question_gate`) are
+catalog-proofed but still not behaviorally graded the way the finance runtime
+grades lock/read/CAS/release.
 
 The live company-research benchmark is a separate router/cost harness:
 
@@ -80,19 +85,22 @@ remaining targets without touching completed or human-revised cells.
 ## 0. The user → agent case checklist
 
 Every eval in this repo serves one of **six interaction modes** — the distinct ways a user puts
-NodeAgent to work. ✅ = running and recorded today. 🔜 = designed, sequenced, not yet built.
-This is the single inventory; if a case isn't on this list, we don't claim coverage of it.
+NodeAgent to work. ✅ = executable behavioral proof today. 🧾 = deterministic catalog proof:
+intake/output/provenance/trajectory/privacy contracts are fully specified, but runtime/live promotion
+is still separate. 🔜 = designed, sequenced, not yet built. This is the single inventory; if a case
+isn't on this list, we don't claim coverage of it.
 
 ### Mode 1 — "Do it for me" (autonomous solve)
 
 - ✅ Recompute the variance column with lock → CAS → release (`evals/cases.ts` S1)
 - ✅ Selective footnote — touch only matching cells, argument correctness (S2)
 - ✅ Note resolution + wall sticky through the same CAS path (use cases 6–7)
-- ✅ GTM tabular research enrichment — pending rows, sourced, status-gated (`tests/researchHarness.test.ts` + the v3 cheap/free smoke, 18/28 routes 9/9, content floor + judge)
-- ✅ Professional workflow pack — GTM account scoring vs a reusable rubric, finance reconciliation, contractor-time approval, activity summary with disclosure safety (`evals/professionalWorkflows.ts`)
-- ✅ Chat-first GTM intake contract — "just spoke with X / company Y raised $Z" becomes a structured watchlist/wiki workflow without requiring an upload; chat claims stay manual evidence until verified (`gtm-chat-lead-capture-enrich`, `gtm-chat-to-background-diligence-job`)
+- ✅ GTM tabular research enrichment — pending rows, sourced, status-gated (`tests/researchHarness.test.ts` + the v3 cheap/free live smoke, 18/28 routes 9/9, source fetches + content floor + judge)
+- ✅ Executable professional workflow subset — GTM runtime enrichment, messy spreadsheet parsing, cross-file note write, grounded wiki update, and deterministic finance reconciliation (`tests/workflowEvals.test.ts`)
+- 🧾 Professional workflow catalog — 21/21 cases in `evals/professionalWorkflows.ts` pass `npm run eval:professional:catalog-proofs`; the proof ledger has 0 unproofed cases but still separates live-provider and runtime promotion.
+- ✅ Chat-first GTM intake · **deterministic rung** — "just spoke with X / company Y raised $Z" graded through the real room runtime (`evals/chatIntakeRuntime.ts`, `npm run eval:chat-intake`): capture-first before the single clarifying question, chat claims stay manual evidence, CAS update over duplicate, ambiguous "Caldera" held at needs_review without guessing, private channel only — plus a naive-saboteur negative control proving the grader can fail (`tests/chatIntakeRuntime.test.ts`). `chat_intake_parser` / `entity_resolution` / `clarifying_question_gate` flipped to `implemented` in the same change; `gtm-chat-lead-capture-enrich` is `deterministic_runtime` in the proof ledger. 🔜 the live rung: a real route + recorded-HTTP enrichment canary (per the backlog, a scheduled canary — not the promotion gate). The pasted-content and background-job cases stay catalog-proofed until their own runners land.
 - ✅ Credit analysis — MM-banking ratio cascade + **cell-mapping rejection** (misbound inputs must be refused, `evals/creditEval.ts`)
-- ✅ **3-statement modeling test · Solve mode** — private workbook full solve **measured, not single-pass**: `deepseek/deepseek-v4-flash` 5/5 model-owned runs across base/distractor/concurrent-edit room variants (16/16 linked cells each, no answer-key leakage, median 102.3s, p95 $0.0996/run); free `nex-agi/nex-n2-pro:free` is promoted only through the income rung (`docs/eval/FINANCE_MODEL_EVAL.md`)
+- ✅ **3-statement modeling test · Solve mode** — private workbook full solve **measured, not single-pass**: `deepseek/deepseek-v4-flash` 5/5 model-owned runs across base/distractor/concurrent-edit room variants (16/16 linked cells each, no answer-key leakage, median 105.0s, p95 $0.1068/run); free `nex-agi/nex-n2-pro:free` is promoted only through the income rung (`docs/eval/FINANCE_MODEL_EVAL.md`)
 - 🔜 **SEC model build flagship** — tiered: XBRL fact tie-out → derived ratios with formulas → statement linkage + cited assumptions page
 - 🔜 Benchmark v4 — N-document targeted research with the comprehensive company-profile field set (business model, moat, SWOT, funding)
 - 🔜 File-drop ingestion — 10-K PDF / XLSX dropped in the room → extracted to the sheet with per-cell citations; receipts → formatted expense report
@@ -112,7 +120,7 @@ This is the single inventory; if a case isn't on this list, we don't claim cover
 ### Mode 3 — "Work under review" (proposals & approval)
 
 - ✅ Review-mode proposals — auto-allow off → inline cell proposals; room-policy briefing regression (born from a real dogfood bug, `docs/dogfood/FRICTION_LOG.md`)
-- ✅ Approval-shaped professional case — contractor-time review
+- 🔜 Contractor-time professional approval fixture — cataloged, but not yet a behavioral runner.
 - 🔜 L8 formalizes role-gated approve/promote/redact as a graded rung
 
 ### Mode 4 — "Advise me privately" (read-only consult)
@@ -250,9 +258,9 @@ pack for README media; passing `--gold` runs the same workflow against a private
 local workbook. Live private runs write full traces under gitignored
 `docs/eval/finance-model-runs/` and commit only the redacted
 `docs/eval/finance-model-live.json` summary. The current full Solve promotion is
-`deepseek/deepseek-v4-flash`: 16/16 linked forecast cells, 174.8s, $0.0792, and
-no answer-key leakage. That row is still a single live pass; promotion to a
-marketed reliability claim requires the new `--runs=5 --record` aggregate.
+`deepseek/deepseek-v4-flash`: 5/5 model-owned full solves, 16/16 linked forecast
+cells each run, no answer-key leakage, median 105.0s, p95 $0.1068/run, and zero
+provider-owned failures. That aggregate was recorded with `--runs=5 --record`.
 
 ---
 

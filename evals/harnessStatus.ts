@@ -29,16 +29,22 @@ export const PROFESSIONAL_HARNESS_STATUS = {
     notes: "Cataloged for professional fixtures, but no behavioral grader proves inferred schemas yet.",
   },
   chat_intake_parser: {
-    status: "contract",
-    notes: "Declared for chat-first cases; parser behavior is not yet graded outside catalog shape tests.",
+    status: "implemented",
+    entryPoint: "evals/chatIntakeRuntime.ts",
+    evidence: "tests/chatIntakeRuntime.test.ts",
+    notes: "Outcome-graded through the real room runtime: a chat note must land as the right rows/cells with manual-evidence payloads (the model is the parser; the rung is the gate). No standalone parser module — extraction is graded by final artifact state, with a naive saboteur proving the grader can fail.",
   },
   entity_resolution: {
-    status: "contract",
-    notes: "Declared for GTM/company cases; ambiguous-name resolution still needs a behavioral fixture.",
+    status: "implemented",
+    entryPoint: "evals/chatIntakeRuntime.ts",
+    evidence: "tests/chatIntakeRuntime.test.ts",
+    notes: "Behaviorally graded against a fixture with a known row (must CAS-update, not duplicate) and a deliberately ambiguous pair (must needs_review/clarify, never guess). Live registry-backed resolution remains the later live-canary rung.",
   },
   clarifying_question_gate: {
-    status: "contract",
-    notes: "Declared for chat-first cases; no trace grader yet proves clarify-vs-capture decisions.",
+    status: "implemented",
+    entryPoint: "evals/chatIntakeRuntime.ts",
+    evidence: "tests/chatIntakeRuntime.test.ts",
+    notes: "The capture-first budget is graded from the trace: provisional writes must precede any question, at most ONE clarifying question per intake, and upload demands fail outright.",
   },
   spreadsheet_semantic_index: {
     status: "contract",

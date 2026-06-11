@@ -1,0 +1,2794 @@
+{
+  "generatedAt": "2026-06-11T18:28:02.857Z",
+  "summary": {
+    "total": 21,
+    "deterministicCatalog": 21,
+    "fullyProofed": true,
+    "failedCaseIds": []
+  },
+  "rows": [
+    {
+      "caseId": "gtm-pitchbook-company-match-enrich",
+      "category": "gtm_company_research",
+      "proofLevel": "deterministic_catalog",
+      "checks": [
+        {
+          "id": "case_shape",
+          "pass": true,
+          "note": "case has concrete steps, assertions, and harness requirements"
+        },
+        {
+          "id": "requirement_registry",
+          "pass": true,
+          "note": "every required harness has a named proof method and evidence"
+        },
+        {
+          "id": "outcome_assertions",
+          "pass": true,
+          "note": "assertions include observable artifact/output outcomes"
+        },
+        {
+          "id": "trajectory_assertions",
+          "pass": true,
+          "note": "case declares trace, locking, versioning, checkpoint, or review behavior"
+        },
+        {
+          "id": "intake_surface_contract",
+          "pass": true,
+          "note": "chat/paste cases declare where results may land"
+        },
+        {
+          "id": "provenance_contract",
+          "pass": true,
+          "note": "case keeps source provenance instead of relying on unsupported memory"
+        },
+        {
+          "id": "privacy_contract",
+          "pass": true,
+          "note": "privacy-sensitive case states masking or boundary behavior"
+        },
+        {
+          "id": "long_running_contract",
+          "pass": true,
+          "note": "long-running case states checkpoint/resume/route audit behavior"
+        },
+        {
+          "id": "private_gold_contract",
+          "pass": true,
+          "note": "private gold case keeps answer material outside public artifacts and grades modes separately"
+        }
+      ],
+      "requirementProofs": [
+        {
+          "requirement": "artifact_refs",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/artifactRefs.test.ts",
+            "src/agent/roomTools.ts"
+          ],
+          "method": "Artifact ids and selected-room references must be canonical, clickable, and carried into tool context."
+        },
+        {
+          "requirement": "cell_payload_evidence",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/researchHarness.test.ts",
+            "tests/researchToolContract.test.ts",
+            "src/engine/types.ts"
+          ],
+          "method": "Mutating spreadsheet outputs must carry value, source/evidence, confidence, and status metadata."
+        },
+        {
+          "requirement": "schema_detection",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalCatalogProofs.test.ts",
+            "tests/spreadsheetParser.test.ts"
+          ],
+          "method": "Catalog cases must declare schema/layout failure modes before they can be promoted to runtime fixtures."
+        },
+        {
+          "requirement": "cross_file_context",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/workflowEvals.test.ts"
+          ],
+          "method": "Cross-file cases must cite source artifact/sheet/row and declare non-conflation or conflict behavior."
+        },
+        {
+          "requirement": "spreadsheet_semantic_index",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/spreadsheetIndex.test.ts",
+            "convex/spreadsheetIndexLib.ts",
+            "evals/professionalCatalogProofs.ts"
+          ],
+          "method": "Large, sparse, or multi-sheet catalog cases must declare retrieval/chunking semantics and not whole-file prompting."
+        },
+        {
+          "requirement": "privacy_redaction",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/promptInjection.test.ts",
+            "src/agent/context.ts"
+          ],
+          "method": "Public/private boundaries and prompt-injection fencing are runtime tested; catalog cases must state masking rules."
+        },
+        {
+          "requirement": "human_review",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/roomEngine.test.ts",
+            "src/engine/roomEngine.ts"
+          ],
+          "method": "Review-mode proposals and human approval paths are runtime tested; catalogs must state review conditions."
+        }
+      ],
+      "evidence": [
+        "evals/professionalWorkflows.ts",
+        "evals/professionalCatalogProofs.ts",
+        "tests/professionalCatalogProofs.test.ts",
+        "tests/agentRuntime.test.ts",
+        "tests/artifactRefs.test.ts",
+        "src/agent/roomTools.ts",
+        "tests/researchHarness.test.ts",
+        "tests/researchToolContract.test.ts",
+        "src/engine/types.ts",
+        "tests/spreadsheetParser.test.ts",
+        "tests/workflowEvals.test.ts",
+        "tests/spreadsheetIndex.test.ts",
+        "convex/spreadsheetIndexLib.ts",
+        "tests/promptInjection.test.ts",
+        "src/agent/context.ts",
+        "tests/roomEngine.test.ts",
+        "src/engine/roomEngine.ts"
+      ]
+    },
+    {
+      "caseId": "gtm-healthtech-sector-classification",
+      "category": "gtm_company_research",
+      "proofLevel": "deterministic_catalog",
+      "checks": [
+        {
+          "id": "case_shape",
+          "pass": true,
+          "note": "case has concrete steps, assertions, and harness requirements"
+        },
+        {
+          "id": "requirement_registry",
+          "pass": true,
+          "note": "every required harness has a named proof method and evidence"
+        },
+        {
+          "id": "outcome_assertions",
+          "pass": true,
+          "note": "assertions include observable artifact/output outcomes"
+        },
+        {
+          "id": "trajectory_assertions",
+          "pass": true,
+          "note": "case declares trace, locking, versioning, checkpoint, or review behavior"
+        },
+        {
+          "id": "intake_surface_contract",
+          "pass": true,
+          "note": "chat/paste cases declare where results may land"
+        },
+        {
+          "id": "provenance_contract",
+          "pass": true,
+          "note": "case keeps source provenance instead of relying on unsupported memory"
+        },
+        {
+          "id": "privacy_contract",
+          "pass": true,
+          "note": "privacy-sensitive case states masking or boundary behavior"
+        },
+        {
+          "id": "long_running_contract",
+          "pass": true,
+          "note": "long-running case states checkpoint/resume/route audit behavior"
+        },
+        {
+          "id": "private_gold_contract",
+          "pass": true,
+          "note": "private gold case keeps answer material outside public artifacts and grades modes separately"
+        }
+      ],
+      "requirementProofs": [
+        {
+          "requirement": "cell_payload_evidence",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/researchHarness.test.ts",
+            "tests/researchToolContract.test.ts",
+            "src/engine/types.ts"
+          ],
+          "method": "Mutating spreadsheet outputs must carry value, source/evidence, confidence, and status metadata."
+        },
+        {
+          "requirement": "schema_detection",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalCatalogProofs.test.ts",
+            "tests/spreadsheetParser.test.ts"
+          ],
+          "method": "Catalog cases must declare schema/layout failure modes before they can be promoted to runtime fixtures."
+        },
+        {
+          "requirement": "spreadsheet_semantic_index",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/spreadsheetIndex.test.ts",
+            "convex/spreadsheetIndexLib.ts",
+            "evals/professionalCatalogProofs.ts"
+          ],
+          "method": "Large, sparse, or multi-sheet catalog cases must declare retrieval/chunking semantics and not whole-file prompting."
+        },
+        {
+          "requirement": "long_running_free_auto",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentJobsRuntime.test.ts",
+            "tests/modelEvalMatrix.test.ts",
+            "convex/agentJobs.ts"
+          ],
+          "method": "Long-running work must use agentJobs, checkpoints, route audit, and duplicate-write prevention."
+        },
+        {
+          "requirement": "workflow_checkpoint_resume",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/agentJobsRuntime.test.ts",
+            "src/agent/runtime.ts"
+          ],
+          "method": "Workflow state must be resumable and preserve unexecuted tool calls and receipts."
+        },
+        {
+          "requirement": "resolved_model_audit",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/modelEvalMatrix.test.ts",
+            "src/agent/modelCatalog.ts",
+            "docs/eval/model-eval-matrix-plan.json"
+          ],
+          "method": "Every route proof records the resolved provider model instead of only the requested alias."
+        },
+        {
+          "requirement": "wiki_grounded_update",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/wikiSkill.test.ts",
+            "docs/skills/self-updating-wiki/SKILL.md"
+          ],
+          "method": "Wiki updates must be source-linked, idempotent, and respect public/private boundaries."
+        },
+        {
+          "requirement": "human_review",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/roomEngine.test.ts",
+            "src/engine/roomEngine.ts"
+          ],
+          "method": "Review-mode proposals and human approval paths are runtime tested; catalogs must state review conditions."
+        }
+      ],
+      "evidence": [
+        "evals/professionalWorkflows.ts",
+        "evals/professionalCatalogProofs.ts",
+        "tests/professionalCatalogProofs.test.ts",
+        "tests/researchHarness.test.ts",
+        "tests/researchToolContract.test.ts",
+        "src/engine/types.ts",
+        "tests/spreadsheetParser.test.ts",
+        "tests/spreadsheetIndex.test.ts",
+        "convex/spreadsheetIndexLib.ts",
+        "tests/agentJobsRuntime.test.ts",
+        "tests/modelEvalMatrix.test.ts",
+        "convex/agentJobs.ts",
+        "tests/agentRuntime.test.ts",
+        "src/agent/runtime.ts",
+        "src/agent/modelCatalog.ts",
+        "docs/eval/model-eval-matrix-plan.json",
+        "tests/wikiSkill.test.ts",
+        "docs/skills/self-updating-wiki/SKILL.md",
+        "tests/roomEngine.test.ts",
+        "src/engine/roomEngine.ts"
+      ]
+    },
+    {
+      "caseId": "gtm-intent-classifier-golden",
+      "category": "gtm_company_research",
+      "proofLevel": "deterministic_catalog",
+      "checks": [
+        {
+          "id": "case_shape",
+          "pass": true,
+          "note": "case has concrete steps, assertions, and harness requirements"
+        },
+        {
+          "id": "requirement_registry",
+          "pass": true,
+          "note": "every required harness has a named proof method and evidence"
+        },
+        {
+          "id": "outcome_assertions",
+          "pass": true,
+          "note": "assertions include observable artifact/output outcomes"
+        },
+        {
+          "id": "trajectory_assertions",
+          "pass": true,
+          "note": "case declares trace, locking, versioning, checkpoint, or review behavior"
+        },
+        {
+          "id": "intake_surface_contract",
+          "pass": true,
+          "note": "chat/paste cases declare where results may land"
+        },
+        {
+          "id": "provenance_contract",
+          "pass": true,
+          "note": "case keeps source provenance instead of relying on unsupported memory"
+        },
+        {
+          "id": "privacy_contract",
+          "pass": true,
+          "note": "privacy-sensitive case states masking or boundary behavior"
+        },
+        {
+          "id": "long_running_contract",
+          "pass": true,
+          "note": "long-running case states checkpoint/resume/route audit behavior"
+        },
+        {
+          "id": "private_gold_contract",
+          "pass": true,
+          "note": "private gold case keeps answer material outside public artifacts and grades modes separately"
+        }
+      ],
+      "requirementProofs": [
+        {
+          "requirement": "schema_detection",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalCatalogProofs.test.ts",
+            "tests/spreadsheetParser.test.ts"
+          ],
+          "method": "Catalog cases must declare schema/layout failure modes before they can be promoted to runtime fixtures."
+        },
+        {
+          "requirement": "cell_payload_evidence",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/researchHarness.test.ts",
+            "tests/researchToolContract.test.ts",
+            "src/engine/types.ts"
+          ],
+          "method": "Mutating spreadsheet outputs must carry value, source/evidence, confidence, and status metadata."
+        },
+        {
+          "requirement": "privacy_redaction",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/promptInjection.test.ts",
+            "src/agent/context.ts"
+          ],
+          "method": "Public/private boundaries and prompt-injection fencing are runtime tested; catalog cases must state masking rules."
+        },
+        {
+          "requirement": "human_review",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/roomEngine.test.ts",
+            "src/engine/roomEngine.ts"
+          ],
+          "method": "Review-mode proposals and human approval paths are runtime tested; catalogs must state review conditions."
+        }
+      ],
+      "evidence": [
+        "evals/professionalWorkflows.ts",
+        "evals/professionalCatalogProofs.ts",
+        "tests/professionalCatalogProofs.test.ts",
+        "tests/spreadsheetParser.test.ts",
+        "tests/researchHarness.test.ts",
+        "tests/researchToolContract.test.ts",
+        "src/engine/types.ts",
+        "tests/agentRuntime.test.ts",
+        "tests/promptInjection.test.ts",
+        "src/agent/context.ts",
+        "tests/roomEngine.test.ts",
+        "src/engine/roomEngine.ts"
+      ]
+    },
+    {
+      "caseId": "gtm-amo-signal-scorer",
+      "category": "gtm_company_research",
+      "proofLevel": "deterministic_catalog",
+      "checks": [
+        {
+          "id": "case_shape",
+          "pass": true,
+          "note": "case has concrete steps, assertions, and harness requirements"
+        },
+        {
+          "id": "requirement_registry",
+          "pass": true,
+          "note": "every required harness has a named proof method and evidence"
+        },
+        {
+          "id": "outcome_assertions",
+          "pass": true,
+          "note": "assertions include observable artifact/output outcomes"
+        },
+        {
+          "id": "trajectory_assertions",
+          "pass": true,
+          "note": "case declares trace, locking, versioning, checkpoint, or review behavior"
+        },
+        {
+          "id": "intake_surface_contract",
+          "pass": true,
+          "note": "chat/paste cases declare where results may land"
+        },
+        {
+          "id": "provenance_contract",
+          "pass": true,
+          "note": "case keeps source provenance instead of relying on unsupported memory"
+        },
+        {
+          "id": "privacy_contract",
+          "pass": true,
+          "note": "privacy-sensitive case states masking or boundary behavior"
+        },
+        {
+          "id": "long_running_contract",
+          "pass": true,
+          "note": "long-running case states checkpoint/resume/route audit behavior"
+        },
+        {
+          "id": "private_gold_contract",
+          "pass": true,
+          "note": "private gold case keeps answer material outside public artifacts and grades modes separately"
+        }
+      ],
+      "requirementProofs": [
+        {
+          "requirement": "spreadsheet_semantic_index",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/spreadsheetIndex.test.ts",
+            "convex/spreadsheetIndexLib.ts",
+            "evals/professionalCatalogProofs.ts"
+          ],
+          "method": "Large, sparse, or multi-sheet catalog cases must declare retrieval/chunking semantics and not whole-file prompting."
+        },
+        {
+          "requirement": "cell_payload_evidence",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/researchHarness.test.ts",
+            "tests/researchToolContract.test.ts",
+            "src/engine/types.ts"
+          ],
+          "method": "Mutating spreadsheet outputs must carry value, source/evidence, confidence, and status metadata."
+        },
+        {
+          "requirement": "long_running_free_auto",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentJobsRuntime.test.ts",
+            "tests/modelEvalMatrix.test.ts",
+            "convex/agentJobs.ts"
+          ],
+          "method": "Long-running work must use agentJobs, checkpoints, route audit, and duplicate-write prevention."
+        },
+        {
+          "requirement": "workflow_checkpoint_resume",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/agentJobsRuntime.test.ts",
+            "src/agent/runtime.ts"
+          ],
+          "method": "Workflow state must be resumable and preserve unexecuted tool calls and receipts."
+        },
+        {
+          "requirement": "resolved_model_audit",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/modelEvalMatrix.test.ts",
+            "src/agent/modelCatalog.ts",
+            "docs/eval/model-eval-matrix-plan.json"
+          ],
+          "method": "Every route proof records the resolved provider model instead of only the requested alias."
+        },
+        {
+          "requirement": "privacy_redaction",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/promptInjection.test.ts",
+            "src/agent/context.ts"
+          ],
+          "method": "Public/private boundaries and prompt-injection fencing are runtime tested; catalog cases must state masking rules."
+        },
+        {
+          "requirement": "human_review",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/roomEngine.test.ts",
+            "src/engine/roomEngine.ts"
+          ],
+          "method": "Review-mode proposals and human approval paths are runtime tested; catalogs must state review conditions."
+        }
+      ],
+      "evidence": [
+        "evals/professionalWorkflows.ts",
+        "evals/professionalCatalogProofs.ts",
+        "tests/professionalCatalogProofs.test.ts",
+        "tests/spreadsheetIndex.test.ts",
+        "convex/spreadsheetIndexLib.ts",
+        "tests/researchHarness.test.ts",
+        "tests/researchToolContract.test.ts",
+        "src/engine/types.ts",
+        "tests/agentJobsRuntime.test.ts",
+        "tests/modelEvalMatrix.test.ts",
+        "convex/agentJobs.ts",
+        "tests/agentRuntime.test.ts",
+        "src/agent/runtime.ts",
+        "src/agent/modelCatalog.ts",
+        "docs/eval/model-eval-matrix-plan.json",
+        "tests/promptInjection.test.ts",
+        "src/agent/context.ts",
+        "tests/roomEngine.test.ts",
+        "src/engine/roomEngine.ts"
+      ]
+    },
+    {
+      "caseId": "gtm-jpm-market-map-joins",
+      "category": "gtm_company_research",
+      "proofLevel": "deterministic_catalog",
+      "checks": [
+        {
+          "id": "case_shape",
+          "pass": true,
+          "note": "case has concrete steps, assertions, and harness requirements"
+        },
+        {
+          "id": "requirement_registry",
+          "pass": true,
+          "note": "every required harness has a named proof method and evidence"
+        },
+        {
+          "id": "outcome_assertions",
+          "pass": true,
+          "note": "assertions include observable artifact/output outcomes"
+        },
+        {
+          "id": "trajectory_assertions",
+          "pass": true,
+          "note": "case declares trace, locking, versioning, checkpoint, or review behavior"
+        },
+        {
+          "id": "intake_surface_contract",
+          "pass": true,
+          "note": "chat/paste cases declare where results may land"
+        },
+        {
+          "id": "provenance_contract",
+          "pass": true,
+          "note": "case keeps source provenance instead of relying on unsupported memory"
+        },
+        {
+          "id": "privacy_contract",
+          "pass": true,
+          "note": "privacy-sensitive case states masking or boundary behavior"
+        },
+        {
+          "id": "long_running_contract",
+          "pass": true,
+          "note": "long-running case states checkpoint/resume/route audit behavior"
+        },
+        {
+          "id": "private_gold_contract",
+          "pass": true,
+          "note": "private gold case keeps answer material outside public artifacts and grades modes separately"
+        }
+      ],
+      "requirementProofs": [
+        {
+          "requirement": "cross_file_context",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/workflowEvals.test.ts"
+          ],
+          "method": "Cross-file cases must cite source artifact/sheet/row and declare non-conflation or conflict behavior."
+        },
+        {
+          "requirement": "spreadsheet_semantic_index",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/spreadsheetIndex.test.ts",
+            "convex/spreadsheetIndexLib.ts",
+            "evals/professionalCatalogProofs.ts"
+          ],
+          "method": "Large, sparse, or multi-sheet catalog cases must declare retrieval/chunking semantics and not whole-file prompting."
+        },
+        {
+          "requirement": "cell_payload_evidence",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/researchHarness.test.ts",
+            "tests/researchToolContract.test.ts",
+            "src/engine/types.ts"
+          ],
+          "method": "Mutating spreadsheet outputs must carry value, source/evidence, confidence, and status metadata."
+        },
+        {
+          "requirement": "artifact_refs",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/artifactRefs.test.ts",
+            "src/agent/roomTools.ts"
+          ],
+          "method": "Artifact ids and selected-room references must be canonical, clickable, and carried into tool context."
+        },
+        {
+          "requirement": "privacy_redaction",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/promptInjection.test.ts",
+            "src/agent/context.ts"
+          ],
+          "method": "Public/private boundaries and prompt-injection fencing are runtime tested; catalog cases must state masking rules."
+        },
+        {
+          "requirement": "human_review",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/roomEngine.test.ts",
+            "src/engine/roomEngine.ts"
+          ],
+          "method": "Review-mode proposals and human approval paths are runtime tested; catalogs must state review conditions."
+        }
+      ],
+      "evidence": [
+        "evals/professionalWorkflows.ts",
+        "evals/professionalCatalogProofs.ts",
+        "tests/professionalCatalogProofs.test.ts",
+        "tests/workflowEvals.test.ts",
+        "tests/spreadsheetIndex.test.ts",
+        "convex/spreadsheetIndexLib.ts",
+        "tests/researchHarness.test.ts",
+        "tests/researchToolContract.test.ts",
+        "src/engine/types.ts",
+        "tests/agentRuntime.test.ts",
+        "tests/artifactRefs.test.ts",
+        "src/agent/roomTools.ts",
+        "tests/promptInjection.test.ts",
+        "src/agent/context.ts",
+        "tests/roomEngine.test.ts",
+        "src/engine/roomEngine.ts"
+      ]
+    },
+    {
+      "caseId": "gtm-sbb-one-column-extraction",
+      "category": "gtm_company_research",
+      "proofLevel": "deterministic_catalog",
+      "checks": [
+        {
+          "id": "case_shape",
+          "pass": true,
+          "note": "case has concrete steps, assertions, and harness requirements"
+        },
+        {
+          "id": "requirement_registry",
+          "pass": true,
+          "note": "every required harness has a named proof method and evidence"
+        },
+        {
+          "id": "outcome_assertions",
+          "pass": true,
+          "note": "assertions include observable artifact/output outcomes"
+        },
+        {
+          "id": "trajectory_assertions",
+          "pass": true,
+          "note": "case declares trace, locking, versioning, checkpoint, or review behavior"
+        },
+        {
+          "id": "intake_surface_contract",
+          "pass": true,
+          "note": "chat/paste cases declare where results may land"
+        },
+        {
+          "id": "provenance_contract",
+          "pass": true,
+          "note": "case keeps source provenance instead of relying on unsupported memory"
+        },
+        {
+          "id": "privacy_contract",
+          "pass": true,
+          "note": "privacy-sensitive case states masking or boundary behavior"
+        },
+        {
+          "id": "long_running_contract",
+          "pass": true,
+          "note": "long-running case states checkpoint/resume/route audit behavior"
+        },
+        {
+          "id": "private_gold_contract",
+          "pass": true,
+          "note": "private gold case keeps answer material outside public artifacts and grades modes separately"
+        }
+      ],
+      "requirementProofs": [
+        {
+          "requirement": "schema_detection",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalCatalogProofs.test.ts",
+            "tests/spreadsheetParser.test.ts"
+          ],
+          "method": "Catalog cases must declare schema/layout failure modes before they can be promoted to runtime fixtures."
+        },
+        {
+          "requirement": "cell_payload_evidence",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/researchHarness.test.ts",
+            "tests/researchToolContract.test.ts",
+            "src/engine/types.ts"
+          ],
+          "method": "Mutating spreadsheet outputs must carry value, source/evidence, confidence, and status metadata."
+        },
+        {
+          "requirement": "spreadsheet_semantic_index",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/spreadsheetIndex.test.ts",
+            "convex/spreadsheetIndexLib.ts",
+            "evals/professionalCatalogProofs.ts"
+          ],
+          "method": "Large, sparse, or multi-sheet catalog cases must declare retrieval/chunking semantics and not whole-file prompting."
+        },
+        {
+          "requirement": "artifact_refs",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/artifactRefs.test.ts",
+            "src/agent/roomTools.ts"
+          ],
+          "method": "Artifact ids and selected-room references must be canonical, clickable, and carried into tool context."
+        },
+        {
+          "requirement": "human_review",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/roomEngine.test.ts",
+            "src/engine/roomEngine.ts"
+          ],
+          "method": "Review-mode proposals and human approval paths are runtime tested; catalogs must state review conditions."
+        }
+      ],
+      "evidence": [
+        "evals/professionalWorkflows.ts",
+        "evals/professionalCatalogProofs.ts",
+        "tests/professionalCatalogProofs.test.ts",
+        "tests/spreadsheetParser.test.ts",
+        "tests/researchHarness.test.ts",
+        "tests/researchToolContract.test.ts",
+        "src/engine/types.ts",
+        "tests/spreadsheetIndex.test.ts",
+        "convex/spreadsheetIndexLib.ts",
+        "tests/agentRuntime.test.ts",
+        "tests/artifactRefs.test.ts",
+        "src/agent/roomTools.ts",
+        "tests/roomEngine.test.ts",
+        "src/engine/roomEngine.ts"
+      ]
+    },
+    {
+      "caseId": "gtm-company-deep-report",
+      "category": "gtm_company_research",
+      "proofLevel": "deterministic_catalog",
+      "checks": [
+        {
+          "id": "case_shape",
+          "pass": true,
+          "note": "case has concrete steps, assertions, and harness requirements"
+        },
+        {
+          "id": "requirement_registry",
+          "pass": true,
+          "note": "every required harness has a named proof method and evidence"
+        },
+        {
+          "id": "outcome_assertions",
+          "pass": true,
+          "note": "assertions include observable artifact/output outcomes"
+        },
+        {
+          "id": "trajectory_assertions",
+          "pass": true,
+          "note": "case declares trace, locking, versioning, checkpoint, or review behavior"
+        },
+        {
+          "id": "intake_surface_contract",
+          "pass": true,
+          "note": "chat/paste cases declare where results may land"
+        },
+        {
+          "id": "provenance_contract",
+          "pass": true,
+          "note": "case keeps source provenance instead of relying on unsupported memory"
+        },
+        {
+          "id": "privacy_contract",
+          "pass": true,
+          "note": "privacy-sensitive case states masking or boundary behavior"
+        },
+        {
+          "id": "long_running_contract",
+          "pass": true,
+          "note": "long-running case states checkpoint/resume/route audit behavior"
+        },
+        {
+          "id": "private_gold_contract",
+          "pass": true,
+          "note": "private gold case keeps answer material outside public artifacts and grades modes separately"
+        }
+      ],
+      "requirementProofs": [
+        {
+          "requirement": "artifact_refs",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/artifactRefs.test.ts",
+            "src/agent/roomTools.ts"
+          ],
+          "method": "Artifact ids and selected-room references must be canonical, clickable, and carried into tool context."
+        },
+        {
+          "requirement": "chat_intake_parser",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalWorkflows.test.ts"
+          ],
+          "method": "Chat-started cases must declare intake modes, output surfaces, provenance strength, and ambiguity handling."
+        },
+        {
+          "requirement": "entity_resolution",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalCatalogProofs.test.ts"
+          ],
+          "method": "Entity cases must include ambiguity/duplicate/conflict assertions rather than single-name guessing."
+        },
+        {
+          "requirement": "clarifying_question_gate",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalCatalogProofs.test.ts"
+          ],
+          "method": "Ambiguous chat-only cases must prove ask-or-review behavior before writes are considered complete."
+        },
+        {
+          "requirement": "cross_file_context",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/workflowEvals.test.ts"
+          ],
+          "method": "Cross-file cases must cite source artifact/sheet/row and declare non-conflation or conflict behavior."
+        },
+        {
+          "requirement": "provider_parser_adapter",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/providerParserAdapter.test.ts",
+            "scripts/provider-parser-smoke.ts",
+            "src/app/providerParserAdapter.ts"
+          ],
+          "method": "Provider parse adapters have unit and smoke coverage; catalog rows state which layout failure they depend on."
+        },
+        {
+          "requirement": "wiki_grounded_update",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/wikiSkill.test.ts",
+            "docs/skills/self-updating-wiki/SKILL.md"
+          ],
+          "method": "Wiki updates must be source-linked, idempotent, and respect public/private boundaries."
+        },
+        {
+          "requirement": "privacy_redaction",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/promptInjection.test.ts",
+            "src/agent/context.ts"
+          ],
+          "method": "Public/private boundaries and prompt-injection fencing are runtime tested; catalog cases must state masking rules."
+        },
+        {
+          "requirement": "human_review",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/roomEngine.test.ts",
+            "src/engine/roomEngine.ts"
+          ],
+          "method": "Review-mode proposals and human approval paths are runtime tested; catalogs must state review conditions."
+        }
+      ],
+      "evidence": [
+        "evals/professionalWorkflows.ts",
+        "evals/professionalCatalogProofs.ts",
+        "tests/professionalCatalogProofs.test.ts",
+        "tests/agentRuntime.test.ts",
+        "tests/artifactRefs.test.ts",
+        "src/agent/roomTools.ts",
+        "tests/professionalWorkflows.test.ts",
+        "tests/workflowEvals.test.ts",
+        "tests/providerParserAdapter.test.ts",
+        "scripts/provider-parser-smoke.ts",
+        "src/app/providerParserAdapter.ts",
+        "tests/wikiSkill.test.ts",
+        "docs/skills/self-updating-wiki/SKILL.md",
+        "tests/promptInjection.test.ts",
+        "src/agent/context.ts",
+        "tests/roomEngine.test.ts",
+        "src/engine/roomEngine.ts"
+      ]
+    },
+    {
+      "caseId": "gtm-chat-lead-capture-enrich",
+      "category": "gtm_company_research",
+      "proofLevel": "deterministic_catalog",
+      "checks": [
+        {
+          "id": "case_shape",
+          "pass": true,
+          "note": "case has concrete steps, assertions, and harness requirements"
+        },
+        {
+          "id": "requirement_registry",
+          "pass": true,
+          "note": "every required harness has a named proof method and evidence"
+        },
+        {
+          "id": "outcome_assertions",
+          "pass": true,
+          "note": "assertions include observable artifact/output outcomes"
+        },
+        {
+          "id": "trajectory_assertions",
+          "pass": true,
+          "note": "case declares trace, locking, versioning, checkpoint, or review behavior"
+        },
+        {
+          "id": "intake_surface_contract",
+          "pass": true,
+          "note": "chat/paste cases declare where results may land"
+        },
+        {
+          "id": "provenance_contract",
+          "pass": true,
+          "note": "case keeps source provenance instead of relying on unsupported memory"
+        },
+        {
+          "id": "privacy_contract",
+          "pass": true,
+          "note": "privacy-sensitive case states masking or boundary behavior"
+        },
+        {
+          "id": "long_running_contract",
+          "pass": true,
+          "note": "long-running case states checkpoint/resume/route audit behavior"
+        },
+        {
+          "id": "private_gold_contract",
+          "pass": true,
+          "note": "private gold case keeps answer material outside public artifacts and grades modes separately"
+        }
+      ],
+      "requirementProofs": [
+        {
+          "requirement": "chat_intake_parser",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalWorkflows.test.ts"
+          ],
+          "method": "Chat-started cases must declare intake modes, output surfaces, provenance strength, and ambiguity handling."
+        },
+        {
+          "requirement": "entity_resolution",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalCatalogProofs.test.ts"
+          ],
+          "method": "Entity cases must include ambiguity/duplicate/conflict assertions rather than single-name guessing."
+        },
+        {
+          "requirement": "clarifying_question_gate",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalCatalogProofs.test.ts"
+          ],
+          "method": "Ambiguous chat-only cases must prove ask-or-review behavior before writes are considered complete."
+        },
+        {
+          "requirement": "cell_payload_evidence",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/researchHarness.test.ts",
+            "tests/researchToolContract.test.ts",
+            "src/engine/types.ts"
+          ],
+          "method": "Mutating spreadsheet outputs must carry value, source/evidence, confidence, and status metadata."
+        },
+        {
+          "requirement": "wiki_grounded_update",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/wikiSkill.test.ts",
+            "docs/skills/self-updating-wiki/SKILL.md"
+          ],
+          "method": "Wiki updates must be source-linked, idempotent, and respect public/private boundaries."
+        },
+        {
+          "requirement": "privacy_redaction",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/promptInjection.test.ts",
+            "src/agent/context.ts"
+          ],
+          "method": "Public/private boundaries and prompt-injection fencing are runtime tested; catalog cases must state masking rules."
+        },
+        {
+          "requirement": "human_review",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/roomEngine.test.ts",
+            "src/engine/roomEngine.ts"
+          ],
+          "method": "Review-mode proposals and human approval paths are runtime tested; catalogs must state review conditions."
+        }
+      ],
+      "evidence": [
+        "evals/professionalWorkflows.ts",
+        "evals/professionalCatalogProofs.ts",
+        "tests/professionalCatalogProofs.test.ts",
+        "tests/professionalWorkflows.test.ts",
+        "tests/researchHarness.test.ts",
+        "tests/researchToolContract.test.ts",
+        "src/engine/types.ts",
+        "tests/wikiSkill.test.ts",
+        "docs/skills/self-updating-wiki/SKILL.md",
+        "tests/agentRuntime.test.ts",
+        "tests/promptInjection.test.ts",
+        "src/agent/context.ts",
+        "tests/roomEngine.test.ts",
+        "src/engine/roomEngine.ts"
+      ]
+    },
+    {
+      "caseId": "gtm-chat-to-background-diligence-job",
+      "category": "gtm_company_research",
+      "proofLevel": "deterministic_catalog",
+      "checks": [
+        {
+          "id": "case_shape",
+          "pass": true,
+          "note": "case has concrete steps, assertions, and harness requirements"
+        },
+        {
+          "id": "requirement_registry",
+          "pass": true,
+          "note": "every required harness has a named proof method and evidence"
+        },
+        {
+          "id": "outcome_assertions",
+          "pass": true,
+          "note": "assertions include observable artifact/output outcomes"
+        },
+        {
+          "id": "trajectory_assertions",
+          "pass": true,
+          "note": "case declares trace, locking, versioning, checkpoint, or review behavior"
+        },
+        {
+          "id": "intake_surface_contract",
+          "pass": true,
+          "note": "chat/paste cases declare where results may land"
+        },
+        {
+          "id": "provenance_contract",
+          "pass": true,
+          "note": "case keeps source provenance instead of relying on unsupported memory"
+        },
+        {
+          "id": "privacy_contract",
+          "pass": true,
+          "note": "privacy-sensitive case states masking or boundary behavior"
+        },
+        {
+          "id": "long_running_contract",
+          "pass": true,
+          "note": "long-running case states checkpoint/resume/route audit behavior"
+        },
+        {
+          "id": "private_gold_contract",
+          "pass": true,
+          "note": "private gold case keeps answer material outside public artifacts and grades modes separately"
+        }
+      ],
+      "requirementProofs": [
+        {
+          "requirement": "chat_intake_parser",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalWorkflows.test.ts"
+          ],
+          "method": "Chat-started cases must declare intake modes, output surfaces, provenance strength, and ambiguity handling."
+        },
+        {
+          "requirement": "entity_resolution",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalCatalogProofs.test.ts"
+          ],
+          "method": "Entity cases must include ambiguity/duplicate/conflict assertions rather than single-name guessing."
+        },
+        {
+          "requirement": "clarifying_question_gate",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalCatalogProofs.test.ts"
+          ],
+          "method": "Ambiguous chat-only cases must prove ask-or-review behavior before writes are considered complete."
+        },
+        {
+          "requirement": "cell_payload_evidence",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/researchHarness.test.ts",
+            "tests/researchToolContract.test.ts",
+            "src/engine/types.ts"
+          ],
+          "method": "Mutating spreadsheet outputs must carry value, source/evidence, confidence, and status metadata."
+        },
+        {
+          "requirement": "long_running_free_auto",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentJobsRuntime.test.ts",
+            "tests/modelEvalMatrix.test.ts",
+            "convex/agentJobs.ts"
+          ],
+          "method": "Long-running work must use agentJobs, checkpoints, route audit, and duplicate-write prevention."
+        },
+        {
+          "requirement": "workflow_checkpoint_resume",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/agentJobsRuntime.test.ts",
+            "src/agent/runtime.ts"
+          ],
+          "method": "Workflow state must be resumable and preserve unexecuted tool calls and receipts."
+        },
+        {
+          "requirement": "resolved_model_audit",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/modelEvalMatrix.test.ts",
+            "src/agent/modelCatalog.ts",
+            "docs/eval/model-eval-matrix-plan.json"
+          ],
+          "method": "Every route proof records the resolved provider model instead of only the requested alias."
+        },
+        {
+          "requirement": "wiki_grounded_update",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/wikiSkill.test.ts",
+            "docs/skills/self-updating-wiki/SKILL.md"
+          ],
+          "method": "Wiki updates must be source-linked, idempotent, and respect public/private boundaries."
+        },
+        {
+          "requirement": "human_review",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/roomEngine.test.ts",
+            "src/engine/roomEngine.ts"
+          ],
+          "method": "Review-mode proposals and human approval paths are runtime tested; catalogs must state review conditions."
+        }
+      ],
+      "evidence": [
+        "evals/professionalWorkflows.ts",
+        "evals/professionalCatalogProofs.ts",
+        "tests/professionalCatalogProofs.test.ts",
+        "tests/professionalWorkflows.test.ts",
+        "tests/researchHarness.test.ts",
+        "tests/researchToolContract.test.ts",
+        "src/engine/types.ts",
+        "tests/agentJobsRuntime.test.ts",
+        "tests/modelEvalMatrix.test.ts",
+        "convex/agentJobs.ts",
+        "tests/agentRuntime.test.ts",
+        "src/agent/runtime.ts",
+        "src/agent/modelCatalog.ts",
+        "docs/eval/model-eval-matrix-plan.json",
+        "tests/wikiSkill.test.ts",
+        "docs/skills/self-updating-wiki/SKILL.md",
+        "tests/roomEngine.test.ts",
+        "src/engine/roomEngine.ts"
+      ]
+    },
+    {
+      "caseId": "gtm-pasted-intro-email-capture",
+      "category": "gtm_company_research",
+      "proofLevel": "deterministic_catalog",
+      "checks": [
+        {
+          "id": "case_shape",
+          "pass": true,
+          "note": "case has concrete steps, assertions, and harness requirements"
+        },
+        {
+          "id": "requirement_registry",
+          "pass": true,
+          "note": "every required harness has a named proof method and evidence"
+        },
+        {
+          "id": "outcome_assertions",
+          "pass": true,
+          "note": "assertions include observable artifact/output outcomes"
+        },
+        {
+          "id": "trajectory_assertions",
+          "pass": true,
+          "note": "case declares trace, locking, versioning, checkpoint, or review behavior"
+        },
+        {
+          "id": "intake_surface_contract",
+          "pass": true,
+          "note": "chat/paste cases declare where results may land"
+        },
+        {
+          "id": "provenance_contract",
+          "pass": true,
+          "note": "case keeps source provenance instead of relying on unsupported memory"
+        },
+        {
+          "id": "privacy_contract",
+          "pass": true,
+          "note": "privacy-sensitive case states masking or boundary behavior"
+        },
+        {
+          "id": "long_running_contract",
+          "pass": true,
+          "note": "long-running case states checkpoint/resume/route audit behavior"
+        },
+        {
+          "id": "private_gold_contract",
+          "pass": true,
+          "note": "private gold case keeps answer material outside public artifacts and grades modes separately"
+        }
+      ],
+      "requirementProofs": [
+        {
+          "requirement": "chat_intake_parser",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalWorkflows.test.ts"
+          ],
+          "method": "Chat-started cases must declare intake modes, output surfaces, provenance strength, and ambiguity handling."
+        },
+        {
+          "requirement": "entity_resolution",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalCatalogProofs.test.ts"
+          ],
+          "method": "Entity cases must include ambiguity/duplicate/conflict assertions rather than single-name guessing."
+        },
+        {
+          "requirement": "clarifying_question_gate",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalCatalogProofs.test.ts"
+          ],
+          "method": "Ambiguous chat-only cases must prove ask-or-review behavior before writes are considered complete."
+        },
+        {
+          "requirement": "cell_payload_evidence",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/researchHarness.test.ts",
+            "tests/researchToolContract.test.ts",
+            "src/engine/types.ts"
+          ],
+          "method": "Mutating spreadsheet outputs must carry value, source/evidence, confidence, and status metadata."
+        },
+        {
+          "requirement": "privacy_redaction",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/promptInjection.test.ts",
+            "src/agent/context.ts"
+          ],
+          "method": "Public/private boundaries and prompt-injection fencing are runtime tested; catalog cases must state masking rules."
+        },
+        {
+          "requirement": "human_review",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/roomEngine.test.ts",
+            "src/engine/roomEngine.ts"
+          ],
+          "method": "Review-mode proposals and human approval paths are runtime tested; catalogs must state review conditions."
+        }
+      ],
+      "evidence": [
+        "evals/professionalWorkflows.ts",
+        "evals/professionalCatalogProofs.ts",
+        "tests/professionalCatalogProofs.test.ts",
+        "tests/professionalWorkflows.test.ts",
+        "tests/researchHarness.test.ts",
+        "tests/researchToolContract.test.ts",
+        "src/engine/types.ts",
+        "tests/agentRuntime.test.ts",
+        "tests/promptInjection.test.ts",
+        "src/agent/context.ts",
+        "tests/roomEngine.test.ts",
+        "src/engine/roomEngine.ts"
+      ]
+    },
+    {
+      "caseId": "gtm-pii-masking-and-public-private-boundary",
+      "category": "gtm_company_research",
+      "proofLevel": "deterministic_catalog",
+      "checks": [
+        {
+          "id": "case_shape",
+          "pass": true,
+          "note": "case has concrete steps, assertions, and harness requirements"
+        },
+        {
+          "id": "requirement_registry",
+          "pass": true,
+          "note": "every required harness has a named proof method and evidence"
+        },
+        {
+          "id": "outcome_assertions",
+          "pass": true,
+          "note": "assertions include observable artifact/output outcomes"
+        },
+        {
+          "id": "trajectory_assertions",
+          "pass": true,
+          "note": "case declares trace, locking, versioning, checkpoint, or review behavior"
+        },
+        {
+          "id": "intake_surface_contract",
+          "pass": true,
+          "note": "chat/paste cases declare where results may land"
+        },
+        {
+          "id": "provenance_contract",
+          "pass": true,
+          "note": "case keeps source provenance instead of relying on unsupported memory"
+        },
+        {
+          "id": "privacy_contract",
+          "pass": true,
+          "note": "privacy-sensitive case states masking or boundary behavior"
+        },
+        {
+          "id": "long_running_contract",
+          "pass": true,
+          "note": "long-running case states checkpoint/resume/route audit behavior"
+        },
+        {
+          "id": "private_gold_contract",
+          "pass": true,
+          "note": "private gold case keeps answer material outside public artifacts and grades modes separately"
+        }
+      ],
+      "requirementProofs": [
+        {
+          "requirement": "artifact_refs",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/artifactRefs.test.ts",
+            "src/agent/roomTools.ts"
+          ],
+          "method": "Artifact ids and selected-room references must be canonical, clickable, and carried into tool context."
+        },
+        {
+          "requirement": "privacy_redaction",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/promptInjection.test.ts",
+            "src/agent/context.ts"
+          ],
+          "method": "Public/private boundaries and prompt-injection fencing are runtime tested; catalog cases must state masking rules."
+        },
+        {
+          "requirement": "cross_file_context",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/workflowEvals.test.ts"
+          ],
+          "method": "Cross-file cases must cite source artifact/sheet/row and declare non-conflation or conflict behavior."
+        },
+        {
+          "requirement": "wiki_grounded_update",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/wikiSkill.test.ts",
+            "docs/skills/self-updating-wiki/SKILL.md"
+          ],
+          "method": "Wiki updates must be source-linked, idempotent, and respect public/private boundaries."
+        },
+        {
+          "requirement": "human_review",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/roomEngine.test.ts",
+            "src/engine/roomEngine.ts"
+          ],
+          "method": "Review-mode proposals and human approval paths are runtime tested; catalogs must state review conditions."
+        }
+      ],
+      "evidence": [
+        "evals/professionalWorkflows.ts",
+        "evals/professionalCatalogProofs.ts",
+        "tests/professionalCatalogProofs.test.ts",
+        "tests/agentRuntime.test.ts",
+        "tests/artifactRefs.test.ts",
+        "src/agent/roomTools.ts",
+        "tests/promptInjection.test.ts",
+        "src/agent/context.ts",
+        "tests/workflowEvals.test.ts",
+        "tests/wikiSkill.test.ts",
+        "docs/skills/self-updating-wiki/SKILL.md",
+        "tests/roomEngine.test.ts",
+        "src/engine/roomEngine.ts"
+      ]
+    },
+    {
+      "caseId": "finance-cost-reconciliation",
+      "category": "finance_ops",
+      "proofLevel": "deterministic_catalog",
+      "checks": [
+        {
+          "id": "case_shape",
+          "pass": true,
+          "note": "case has concrete steps, assertions, and harness requirements"
+        },
+        {
+          "id": "requirement_registry",
+          "pass": true,
+          "note": "every required harness has a named proof method and evidence"
+        },
+        {
+          "id": "outcome_assertions",
+          "pass": true,
+          "note": "assertions include observable artifact/output outcomes"
+        },
+        {
+          "id": "trajectory_assertions",
+          "pass": true,
+          "note": "case declares trace, locking, versioning, checkpoint, or review behavior"
+        },
+        {
+          "id": "intake_surface_contract",
+          "pass": true,
+          "note": "chat/paste cases declare where results may land"
+        },
+        {
+          "id": "provenance_contract",
+          "pass": true,
+          "note": "case keeps source provenance instead of relying on unsupported memory"
+        },
+        {
+          "id": "privacy_contract",
+          "pass": true,
+          "note": "privacy-sensitive case states masking or boundary behavior"
+        },
+        {
+          "id": "long_running_contract",
+          "pass": true,
+          "note": "long-running case states checkpoint/resume/route audit behavior"
+        },
+        {
+          "id": "private_gold_contract",
+          "pass": true,
+          "note": "private gold case keeps answer material outside public artifacts and grades modes separately"
+        }
+      ],
+      "requirementProofs": [
+        {
+          "requirement": "cell_payload_evidence",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/researchHarness.test.ts",
+            "tests/researchToolContract.test.ts",
+            "src/engine/types.ts"
+          ],
+          "method": "Mutating spreadsheet outputs must carry value, source/evidence, confidence, and status metadata."
+        },
+        {
+          "requirement": "formula_dependency_locks",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/financeModelReliability.test.ts",
+            "tests/financeModelRuntime.test.ts"
+          ],
+          "method": "Formula-sensitive cases must declare dependency locks, formula preservation, or derived-cell review behavior."
+        },
+        {
+          "requirement": "spreadsheet_semantic_index",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/spreadsheetIndex.test.ts",
+            "convex/spreadsheetIndexLib.ts",
+            "evals/professionalCatalogProofs.ts"
+          ],
+          "method": "Large, sparse, or multi-sheet catalog cases must declare retrieval/chunking semantics and not whole-file prompting."
+        },
+        {
+          "requirement": "cross_file_context",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/workflowEvals.test.ts"
+          ],
+          "method": "Cross-file cases must cite source artifact/sheet/row and declare non-conflation or conflict behavior."
+        },
+        {
+          "requirement": "artifact_refs",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/artifactRefs.test.ts",
+            "src/agent/roomTools.ts"
+          ],
+          "method": "Artifact ids and selected-room references must be canonical, clickable, and carried into tool context."
+        },
+        {
+          "requirement": "human_review",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/roomEngine.test.ts",
+            "src/engine/roomEngine.ts"
+          ],
+          "method": "Review-mode proposals and human approval paths are runtime tested; catalogs must state review conditions."
+        }
+      ],
+      "evidence": [
+        "evals/professionalWorkflows.ts",
+        "evals/professionalCatalogProofs.ts",
+        "tests/professionalCatalogProofs.test.ts",
+        "tests/researchHarness.test.ts",
+        "tests/researchToolContract.test.ts",
+        "src/engine/types.ts",
+        "tests/financeModelReliability.test.ts",
+        "tests/financeModelRuntime.test.ts",
+        "tests/spreadsheetIndex.test.ts",
+        "convex/spreadsheetIndexLib.ts",
+        "tests/workflowEvals.test.ts",
+        "tests/agentRuntime.test.ts",
+        "tests/artifactRefs.test.ts",
+        "src/agent/roomTools.ts",
+        "tests/roomEngine.test.ts",
+        "src/engine/roomEngine.ts"
+      ]
+    },
+    {
+      "caseId": "finance-three-statement-modeling-private-gold",
+      "category": "finance_ops",
+      "proofLevel": "deterministic_catalog",
+      "checks": [
+        {
+          "id": "case_shape",
+          "pass": true,
+          "note": "case has concrete steps, assertions, and harness requirements"
+        },
+        {
+          "id": "requirement_registry",
+          "pass": true,
+          "note": "every required harness has a named proof method and evidence"
+        },
+        {
+          "id": "outcome_assertions",
+          "pass": true,
+          "note": "assertions include observable artifact/output outcomes"
+        },
+        {
+          "id": "trajectory_assertions",
+          "pass": true,
+          "note": "case declares trace, locking, versioning, checkpoint, or review behavior"
+        },
+        {
+          "id": "intake_surface_contract",
+          "pass": true,
+          "note": "chat/paste cases declare where results may land"
+        },
+        {
+          "id": "provenance_contract",
+          "pass": true,
+          "note": "case keeps source provenance instead of relying on unsupported memory"
+        },
+        {
+          "id": "privacy_contract",
+          "pass": true,
+          "note": "privacy-sensitive case states masking or boundary behavior"
+        },
+        {
+          "id": "long_running_contract",
+          "pass": true,
+          "note": "long-running case states checkpoint/resume/route audit behavior"
+        },
+        {
+          "id": "private_gold_contract",
+          "pass": true,
+          "note": "private gold case keeps answer material outside public artifacts and grades modes separately"
+        }
+      ],
+      "requirementProofs": [
+        {
+          "requirement": "private_gold_pack",
+          "kind": "private_redacted_runner",
+          "evidence": [
+            "scripts/private-finance-model-gold.ts",
+            "docs/eval/FINANCE_MODEL_EVAL.md"
+          ],
+          "method": "Private gold workbooks run locally by content hash; committed evidence is redacted summaries only."
+        },
+        {
+          "requirement": "answer_key_formula_oracle",
+          "kind": "private_redacted_runner",
+          "evidence": [
+            "evals/financeModelLive.ts",
+            "docs/eval/finance-model-live.json",
+            "tests/financeModelLive.test.ts"
+          ],
+          "method": "The answer key is grader-only and never included in model-visible prompt or public traces."
+        },
+        {
+          "requirement": "formula_structure_equivalence",
+          "kind": "runtime_test",
+          "evidence": [
+            "evals/financeModelGold.ts",
+            "tests/financeModelReliability.test.ts"
+          ],
+          "method": "Formula judging checks structure, references, and tie-outs rather than exact pasted answer strings."
+        },
+        {
+          "requirement": "formula_dependency_locks",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/financeModelReliability.test.ts",
+            "tests/financeModelRuntime.test.ts"
+          ],
+          "method": "Formula-sensitive cases must declare dependency locks, formula preservation, or derived-cell review behavior."
+        },
+        {
+          "requirement": "privacy_redaction",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/promptInjection.test.ts",
+            "src/agent/context.ts"
+          ],
+          "method": "Public/private boundaries and prompt-injection fencing are runtime tested; catalog cases must state masking rules."
+        },
+        {
+          "requirement": "guide_mode_no_write",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalCatalogProofs.test.ts",
+            "evals/financeModelGold.ts"
+          ],
+          "method": "Guide-mode catalogs must explicitly assert zero answer-cell writes and hint-first behavior."
+        },
+        {
+          "requirement": "section_collaboration_locks",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalCatalogProofs.test.ts",
+            "tests/lockFencing.test.ts"
+          ],
+          "method": "Collaborate-mode catalogs must assert section leases, drafts when blocked, CAS on shared linkage rows, and human-edit preservation."
+        },
+        {
+          "requirement": "workflow_checkpoint_resume",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/agentJobsRuntime.test.ts",
+            "src/agent/runtime.ts"
+          ],
+          "method": "Workflow state must be resumable and preserve unexecuted tool calls and receipts."
+        },
+        {
+          "requirement": "human_review",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/roomEngine.test.ts",
+            "src/engine/roomEngine.ts"
+          ],
+          "method": "Review-mode proposals and human approval paths are runtime tested; catalogs must state review conditions."
+        }
+      ],
+      "evidence": [
+        "evals/professionalWorkflows.ts",
+        "evals/professionalCatalogProofs.ts",
+        "tests/professionalCatalogProofs.test.ts",
+        "scripts/private-finance-model-gold.ts",
+        "docs/eval/FINANCE_MODEL_EVAL.md",
+        "evals/financeModelLive.ts",
+        "docs/eval/finance-model-live.json",
+        "tests/financeModelLive.test.ts",
+        "evals/financeModelGold.ts",
+        "tests/financeModelReliability.test.ts",
+        "tests/financeModelRuntime.test.ts",
+        "tests/agentRuntime.test.ts",
+        "tests/promptInjection.test.ts",
+        "src/agent/context.ts",
+        "tests/lockFencing.test.ts",
+        "tests/agentJobsRuntime.test.ts",
+        "src/agent/runtime.ts",
+        "tests/roomEngine.test.ts",
+        "src/engine/roomEngine.ts"
+      ]
+    },
+    {
+      "caseId": "finance-accountant-template-population",
+      "category": "finance_ops",
+      "proofLevel": "deterministic_catalog",
+      "checks": [
+        {
+          "id": "case_shape",
+          "pass": true,
+          "note": "case has concrete steps, assertions, and harness requirements"
+        },
+        {
+          "id": "requirement_registry",
+          "pass": true,
+          "note": "every required harness has a named proof method and evidence"
+        },
+        {
+          "id": "outcome_assertions",
+          "pass": true,
+          "note": "assertions include observable artifact/output outcomes"
+        },
+        {
+          "id": "trajectory_assertions",
+          "pass": true,
+          "note": "case declares trace, locking, versioning, checkpoint, or review behavior"
+        },
+        {
+          "id": "intake_surface_contract",
+          "pass": true,
+          "note": "chat/paste cases declare where results may land"
+        },
+        {
+          "id": "provenance_contract",
+          "pass": true,
+          "note": "case keeps source provenance instead of relying on unsupported memory"
+        },
+        {
+          "id": "privacy_contract",
+          "pass": true,
+          "note": "privacy-sensitive case states masking or boundary behavior"
+        },
+        {
+          "id": "long_running_contract",
+          "pass": true,
+          "note": "long-running case states checkpoint/resume/route audit behavior"
+        },
+        {
+          "id": "private_gold_contract",
+          "pass": true,
+          "note": "private gold case keeps answer material outside public artifacts and grades modes separately"
+        }
+      ],
+      "requirementProofs": [
+        {
+          "requirement": "schema_detection",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalCatalogProofs.test.ts",
+            "tests/spreadsheetParser.test.ts"
+          ],
+          "method": "Catalog cases must declare schema/layout failure modes before they can be promoted to runtime fixtures."
+        },
+        {
+          "requirement": "cell_payload_evidence",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/researchHarness.test.ts",
+            "tests/researchToolContract.test.ts",
+            "src/engine/types.ts"
+          ],
+          "method": "Mutating spreadsheet outputs must carry value, source/evidence, confidence, and status metadata."
+        },
+        {
+          "requirement": "artifact_refs",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/artifactRefs.test.ts",
+            "src/agent/roomTools.ts"
+          ],
+          "method": "Artifact ids and selected-room references must be canonical, clickable, and carried into tool context."
+        },
+        {
+          "requirement": "privacy_redaction",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/promptInjection.test.ts",
+            "src/agent/context.ts"
+          ],
+          "method": "Public/private boundaries and prompt-injection fencing are runtime tested; catalog cases must state masking rules."
+        },
+        {
+          "requirement": "human_review",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/roomEngine.test.ts",
+            "src/engine/roomEngine.ts"
+          ],
+          "method": "Review-mode proposals and human approval paths are runtime tested; catalogs must state review conditions."
+        }
+      ],
+      "evidence": [
+        "evals/professionalWorkflows.ts",
+        "evals/professionalCatalogProofs.ts",
+        "tests/professionalCatalogProofs.test.ts",
+        "tests/spreadsheetParser.test.ts",
+        "tests/researchHarness.test.ts",
+        "tests/researchToolContract.test.ts",
+        "src/engine/types.ts",
+        "tests/agentRuntime.test.ts",
+        "tests/artifactRefs.test.ts",
+        "src/agent/roomTools.ts",
+        "tests/promptInjection.test.ts",
+        "src/agent/context.ts",
+        "tests/roomEngine.test.ts",
+        "src/engine/roomEngine.ts"
+      ]
+    },
+    {
+      "caseId": "finance-timesheet-invoice-review",
+      "category": "finance_ops",
+      "proofLevel": "deterministic_catalog",
+      "checks": [
+        {
+          "id": "case_shape",
+          "pass": true,
+          "note": "case has concrete steps, assertions, and harness requirements"
+        },
+        {
+          "id": "requirement_registry",
+          "pass": true,
+          "note": "every required harness has a named proof method and evidence"
+        },
+        {
+          "id": "outcome_assertions",
+          "pass": true,
+          "note": "assertions include observable artifact/output outcomes"
+        },
+        {
+          "id": "trajectory_assertions",
+          "pass": true,
+          "note": "case declares trace, locking, versioning, checkpoint, or review behavior"
+        },
+        {
+          "id": "intake_surface_contract",
+          "pass": true,
+          "note": "chat/paste cases declare where results may land"
+        },
+        {
+          "id": "provenance_contract",
+          "pass": true,
+          "note": "case keeps source provenance instead of relying on unsupported memory"
+        },
+        {
+          "id": "privacy_contract",
+          "pass": true,
+          "note": "privacy-sensitive case states masking or boundary behavior"
+        },
+        {
+          "id": "long_running_contract",
+          "pass": true,
+          "note": "long-running case states checkpoint/resume/route audit behavior"
+        },
+        {
+          "id": "private_gold_contract",
+          "pass": true,
+          "note": "private gold case keeps answer material outside public artifacts and grades modes separately"
+        }
+      ],
+      "requirementProofs": [
+        {
+          "requirement": "schema_detection",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalCatalogProofs.test.ts",
+            "tests/spreadsheetParser.test.ts"
+          ],
+          "method": "Catalog cases must declare schema/layout failure modes before they can be promoted to runtime fixtures."
+        },
+        {
+          "requirement": "formula_dependency_locks",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/financeModelReliability.test.ts",
+            "tests/financeModelRuntime.test.ts"
+          ],
+          "method": "Formula-sensitive cases must declare dependency locks, formula preservation, or derived-cell review behavior."
+        },
+        {
+          "requirement": "cell_payload_evidence",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/researchHarness.test.ts",
+            "tests/researchToolContract.test.ts",
+            "src/engine/types.ts"
+          ],
+          "method": "Mutating spreadsheet outputs must carry value, source/evidence, confidence, and status metadata."
+        },
+        {
+          "requirement": "provider_parser_adapter",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/providerParserAdapter.test.ts",
+            "scripts/provider-parser-smoke.ts",
+            "src/app/providerParserAdapter.ts"
+          ],
+          "method": "Provider parse adapters have unit and smoke coverage; catalog rows state which layout failure they depend on."
+        },
+        {
+          "requirement": "liteparse_layout_fallback",
+          "kind": "runtime_test",
+          "evidence": [
+            "npm run liteparse:smoke",
+            "src/app/liteparseAdapter.ts"
+          ],
+          "method": "Fallback parse smoke covers local parser availability for layout-heavy files."
+        },
+        {
+          "requirement": "privacy_redaction",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/promptInjection.test.ts",
+            "src/agent/context.ts"
+          ],
+          "method": "Public/private boundaries and prompt-injection fencing are runtime tested; catalog cases must state masking rules."
+        },
+        {
+          "requirement": "human_review",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/roomEngine.test.ts",
+            "src/engine/roomEngine.ts"
+          ],
+          "method": "Review-mode proposals and human approval paths are runtime tested; catalogs must state review conditions."
+        }
+      ],
+      "evidence": [
+        "evals/professionalWorkflows.ts",
+        "evals/professionalCatalogProofs.ts",
+        "tests/professionalCatalogProofs.test.ts",
+        "tests/spreadsheetParser.test.ts",
+        "tests/financeModelReliability.test.ts",
+        "tests/financeModelRuntime.test.ts",
+        "tests/researchHarness.test.ts",
+        "tests/researchToolContract.test.ts",
+        "src/engine/types.ts",
+        "tests/providerParserAdapter.test.ts",
+        "scripts/provider-parser-smoke.ts",
+        "src/app/providerParserAdapter.ts",
+        "npm run liteparse:smoke",
+        "src/app/liteparseAdapter.ts",
+        "tests/agentRuntime.test.ts",
+        "tests/promptInjection.test.ts",
+        "src/agent/context.ts",
+        "tests/roomEngine.test.ts",
+        "src/engine/roomEngine.ts"
+      ]
+    },
+    {
+      "caseId": "finance-transaction-activity-summary",
+      "category": "finance_ops",
+      "proofLevel": "deterministic_catalog",
+      "checks": [
+        {
+          "id": "case_shape",
+          "pass": true,
+          "note": "case has concrete steps, assertions, and harness requirements"
+        },
+        {
+          "id": "requirement_registry",
+          "pass": true,
+          "note": "every required harness has a named proof method and evidence"
+        },
+        {
+          "id": "outcome_assertions",
+          "pass": true,
+          "note": "assertions include observable artifact/output outcomes"
+        },
+        {
+          "id": "trajectory_assertions",
+          "pass": true,
+          "note": "case declares trace, locking, versioning, checkpoint, or review behavior"
+        },
+        {
+          "id": "intake_surface_contract",
+          "pass": true,
+          "note": "chat/paste cases declare where results may land"
+        },
+        {
+          "id": "provenance_contract",
+          "pass": true,
+          "note": "case keeps source provenance instead of relying on unsupported memory"
+        },
+        {
+          "id": "privacy_contract",
+          "pass": true,
+          "note": "privacy-sensitive case states masking or boundary behavior"
+        },
+        {
+          "id": "long_running_contract",
+          "pass": true,
+          "note": "long-running case states checkpoint/resume/route audit behavior"
+        },
+        {
+          "id": "private_gold_contract",
+          "pass": true,
+          "note": "private gold case keeps answer material outside public artifacts and grades modes separately"
+        }
+      ],
+      "requirementProofs": [
+        {
+          "requirement": "schema_detection",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalCatalogProofs.test.ts",
+            "tests/spreadsheetParser.test.ts"
+          ],
+          "method": "Catalog cases must declare schema/layout failure modes before they can be promoted to runtime fixtures."
+        },
+        {
+          "requirement": "cell_payload_evidence",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/researchHarness.test.ts",
+            "tests/researchToolContract.test.ts",
+            "src/engine/types.ts"
+          ],
+          "method": "Mutating spreadsheet outputs must carry value, source/evidence, confidence, and status metadata."
+        },
+        {
+          "requirement": "artifact_refs",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/artifactRefs.test.ts",
+            "src/agent/roomTools.ts"
+          ],
+          "method": "Artifact ids and selected-room references must be canonical, clickable, and carried into tool context."
+        },
+        {
+          "requirement": "privacy_redaction",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/promptInjection.test.ts",
+            "src/agent/context.ts"
+          ],
+          "method": "Public/private boundaries and prompt-injection fencing are runtime tested; catalog cases must state masking rules."
+        },
+        {
+          "requirement": "human_review",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/roomEngine.test.ts",
+            "src/engine/roomEngine.ts"
+          ],
+          "method": "Review-mode proposals and human approval paths are runtime tested; catalogs must state review conditions."
+        }
+      ],
+      "evidence": [
+        "evals/professionalWorkflows.ts",
+        "evals/professionalCatalogProofs.ts",
+        "tests/professionalCatalogProofs.test.ts",
+        "tests/spreadsheetParser.test.ts",
+        "tests/researchHarness.test.ts",
+        "tests/researchToolContract.test.ts",
+        "src/engine/types.ts",
+        "tests/agentRuntime.test.ts",
+        "tests/artifactRefs.test.ts",
+        "src/agent/roomTools.ts",
+        "tests/promptInjection.test.ts",
+        "src/agent/context.ts",
+        "tests/roomEngine.test.ts",
+        "src/engine/roomEngine.ts"
+      ]
+    },
+    {
+      "caseId": "eval-template-to-harness-run",
+      "category": "eval_harness",
+      "proofLevel": "deterministic_catalog",
+      "checks": [
+        {
+          "id": "case_shape",
+          "pass": true,
+          "note": "case has concrete steps, assertions, and harness requirements"
+        },
+        {
+          "id": "requirement_registry",
+          "pass": true,
+          "note": "every required harness has a named proof method and evidence"
+        },
+        {
+          "id": "outcome_assertions",
+          "pass": true,
+          "note": "assertions include observable artifact/output outcomes"
+        },
+        {
+          "id": "trajectory_assertions",
+          "pass": true,
+          "note": "case declares trace, locking, versioning, checkpoint, or review behavior"
+        },
+        {
+          "id": "intake_surface_contract",
+          "pass": true,
+          "note": "chat/paste cases declare where results may land"
+        },
+        {
+          "id": "provenance_contract",
+          "pass": true,
+          "note": "case keeps source provenance instead of relying on unsupported memory"
+        },
+        {
+          "id": "privacy_contract",
+          "pass": true,
+          "note": "privacy-sensitive case states masking or boundary behavior"
+        },
+        {
+          "id": "long_running_contract",
+          "pass": true,
+          "note": "long-running case states checkpoint/resume/route audit behavior"
+        },
+        {
+          "id": "private_gold_contract",
+          "pass": true,
+          "note": "private gold case keeps answer material outside public artifacts and grades modes separately"
+        }
+      ],
+      "requirementProofs": [
+        {
+          "requirement": "long_running_free_auto",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentJobsRuntime.test.ts",
+            "tests/modelEvalMatrix.test.ts",
+            "convex/agentJobs.ts"
+          ],
+          "method": "Long-running work must use agentJobs, checkpoints, route audit, and duplicate-write prevention."
+        },
+        {
+          "requirement": "workflow_checkpoint_resume",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/agentJobsRuntime.test.ts",
+            "src/agent/runtime.ts"
+          ],
+          "method": "Workflow state must be resumable and preserve unexecuted tool calls and receipts."
+        },
+        {
+          "requirement": "resolved_model_audit",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/modelEvalMatrix.test.ts",
+            "src/agent/modelCatalog.ts",
+            "docs/eval/model-eval-matrix-plan.json"
+          ],
+          "method": "Every route proof records the resolved provider model instead of only the requested alias."
+        },
+        {
+          "requirement": "privacy_redaction",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/promptInjection.test.ts",
+            "src/agent/context.ts"
+          ],
+          "method": "Public/private boundaries and prompt-injection fencing are runtime tested; catalog cases must state masking rules."
+        },
+        {
+          "requirement": "human_review",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/roomEngine.test.ts",
+            "src/engine/roomEngine.ts"
+          ],
+          "method": "Review-mode proposals and human approval paths are runtime tested; catalogs must state review conditions."
+        }
+      ],
+      "evidence": [
+        "evals/professionalWorkflows.ts",
+        "evals/professionalCatalogProofs.ts",
+        "tests/professionalCatalogProofs.test.ts",
+        "tests/agentJobsRuntime.test.ts",
+        "tests/modelEvalMatrix.test.ts",
+        "convex/agentJobs.ts",
+        "tests/agentRuntime.test.ts",
+        "src/agent/runtime.ts",
+        "src/agent/modelCatalog.ts",
+        "docs/eval/model-eval-matrix-plan.json",
+        "tests/promptInjection.test.ts",
+        "src/agent/context.ts",
+        "tests/roomEngine.test.ts",
+        "src/engine/roomEngine.ts"
+      ]
+    },
+    {
+      "caseId": "eval-ui-action-execution-map",
+      "category": "eval_harness",
+      "proofLevel": "deterministic_catalog",
+      "checks": [
+        {
+          "id": "case_shape",
+          "pass": true,
+          "note": "case has concrete steps, assertions, and harness requirements"
+        },
+        {
+          "id": "requirement_registry",
+          "pass": true,
+          "note": "every required harness has a named proof method and evidence"
+        },
+        {
+          "id": "outcome_assertions",
+          "pass": true,
+          "note": "assertions include observable artifact/output outcomes"
+        },
+        {
+          "id": "trajectory_assertions",
+          "pass": true,
+          "note": "case declares trace, locking, versioning, checkpoint, or review behavior"
+        },
+        {
+          "id": "intake_surface_contract",
+          "pass": true,
+          "note": "chat/paste cases declare where results may land"
+        },
+        {
+          "id": "provenance_contract",
+          "pass": true,
+          "note": "case keeps source provenance instead of relying on unsupported memory"
+        },
+        {
+          "id": "privacy_contract",
+          "pass": true,
+          "note": "privacy-sensitive case states masking or boundary behavior"
+        },
+        {
+          "id": "long_running_contract",
+          "pass": true,
+          "note": "long-running case states checkpoint/resume/route audit behavior"
+        },
+        {
+          "id": "private_gold_contract",
+          "pass": true,
+          "note": "private gold case keeps answer material outside public artifacts and grades modes separately"
+        }
+      ],
+      "requirementProofs": [
+        {
+          "requirement": "artifact_refs",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/artifactRefs.test.ts",
+            "src/agent/roomTools.ts"
+          ],
+          "method": "Artifact ids and selected-room references must be canonical, clickable, and carried into tool context."
+        },
+        {
+          "requirement": "workflow_checkpoint_resume",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/agentJobsRuntime.test.ts",
+            "src/agent/runtime.ts"
+          ],
+          "method": "Workflow state must be resumable and preserve unexecuted tool calls and receipts."
+        },
+        {
+          "requirement": "long_running_free_auto",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentJobsRuntime.test.ts",
+            "tests/modelEvalMatrix.test.ts",
+            "convex/agentJobs.ts"
+          ],
+          "method": "Long-running work must use agentJobs, checkpoints, route audit, and duplicate-write prevention."
+        },
+        {
+          "requirement": "resolved_model_audit",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/modelEvalMatrix.test.ts",
+            "src/agent/modelCatalog.ts",
+            "docs/eval/model-eval-matrix-plan.json"
+          ],
+          "method": "Every route proof records the resolved provider model instead of only the requested alias."
+        },
+        {
+          "requirement": "privacy_redaction",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/promptInjection.test.ts",
+            "src/agent/context.ts"
+          ],
+          "method": "Public/private boundaries and prompt-injection fencing are runtime tested; catalog cases must state masking rules."
+        },
+        {
+          "requirement": "human_review",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/roomEngine.test.ts",
+            "src/engine/roomEngine.ts"
+          ],
+          "method": "Review-mode proposals and human approval paths are runtime tested; catalogs must state review conditions."
+        }
+      ],
+      "evidence": [
+        "evals/professionalWorkflows.ts",
+        "evals/professionalCatalogProofs.ts",
+        "tests/professionalCatalogProofs.test.ts",
+        "tests/agentRuntime.test.ts",
+        "tests/artifactRefs.test.ts",
+        "src/agent/roomTools.ts",
+        "tests/agentJobsRuntime.test.ts",
+        "src/agent/runtime.ts",
+        "tests/modelEvalMatrix.test.ts",
+        "convex/agentJobs.ts",
+        "src/agent/modelCatalog.ts",
+        "docs/eval/model-eval-matrix-plan.json",
+        "tests/promptInjection.test.ts",
+        "src/agent/context.ts",
+        "tests/roomEngine.test.ts",
+        "src/engine/roomEngine.ts"
+      ]
+    },
+    {
+      "caseId": "analytics-weighted-ranking",
+      "category": "analytics_optimization",
+      "proofLevel": "deterministic_catalog",
+      "checks": [
+        {
+          "id": "case_shape",
+          "pass": true,
+          "note": "case has concrete steps, assertions, and harness requirements"
+        },
+        {
+          "id": "requirement_registry",
+          "pass": true,
+          "note": "every required harness has a named proof method and evidence"
+        },
+        {
+          "id": "outcome_assertions",
+          "pass": true,
+          "note": "assertions include observable artifact/output outcomes"
+        },
+        {
+          "id": "trajectory_assertions",
+          "pass": true,
+          "note": "case declares trace, locking, versioning, checkpoint, or review behavior"
+        },
+        {
+          "id": "intake_surface_contract",
+          "pass": true,
+          "note": "chat/paste cases declare where results may land"
+        },
+        {
+          "id": "provenance_contract",
+          "pass": true,
+          "note": "case keeps source provenance instead of relying on unsupported memory"
+        },
+        {
+          "id": "privacy_contract",
+          "pass": true,
+          "note": "privacy-sensitive case states masking or boundary behavior"
+        },
+        {
+          "id": "long_running_contract",
+          "pass": true,
+          "note": "long-running case states checkpoint/resume/route audit behavior"
+        },
+        {
+          "id": "private_gold_contract",
+          "pass": true,
+          "note": "private gold case keeps answer material outside public artifacts and grades modes separately"
+        }
+      ],
+      "requirementProofs": [
+        {
+          "requirement": "spreadsheet_semantic_index",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/spreadsheetIndex.test.ts",
+            "convex/spreadsheetIndexLib.ts",
+            "evals/professionalCatalogProofs.ts"
+          ],
+          "method": "Large, sparse, or multi-sheet catalog cases must declare retrieval/chunking semantics and not whole-file prompting."
+        },
+        {
+          "requirement": "formula_dependency_locks",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/financeModelReliability.test.ts",
+            "tests/financeModelRuntime.test.ts"
+          ],
+          "method": "Formula-sensitive cases must declare dependency locks, formula preservation, or derived-cell review behavior."
+        },
+        {
+          "requirement": "cell_payload_evidence",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/researchHarness.test.ts",
+            "tests/researchToolContract.test.ts",
+            "src/engine/types.ts"
+          ],
+          "method": "Mutating spreadsheet outputs must carry value, source/evidence, confidence, and status metadata."
+        },
+        {
+          "requirement": "artifact_refs",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/artifactRefs.test.ts",
+            "src/agent/roomTools.ts"
+          ],
+          "method": "Artifact ids and selected-room references must be canonical, clickable, and carried into tool context."
+        }
+      ],
+      "evidence": [
+        "evals/professionalWorkflows.ts",
+        "evals/professionalCatalogProofs.ts",
+        "tests/professionalCatalogProofs.test.ts",
+        "tests/spreadsheetIndex.test.ts",
+        "convex/spreadsheetIndexLib.ts",
+        "tests/financeModelReliability.test.ts",
+        "tests/financeModelRuntime.test.ts",
+        "tests/researchHarness.test.ts",
+        "tests/researchToolContract.test.ts",
+        "src/engine/types.ts",
+        "tests/agentRuntime.test.ts",
+        "tests/artifactRefs.test.ts",
+        "src/agent/roomTools.ts"
+      ]
+    },
+    {
+      "caseId": "analytics-workout-progress-dashboard",
+      "category": "analytics_optimization",
+      "proofLevel": "deterministic_catalog",
+      "checks": [
+        {
+          "id": "case_shape",
+          "pass": true,
+          "note": "case has concrete steps, assertions, and harness requirements"
+        },
+        {
+          "id": "requirement_registry",
+          "pass": true,
+          "note": "every required harness has a named proof method and evidence"
+        },
+        {
+          "id": "outcome_assertions",
+          "pass": true,
+          "note": "assertions include observable artifact/output outcomes"
+        },
+        {
+          "id": "trajectory_assertions",
+          "pass": true,
+          "note": "case declares trace, locking, versioning, checkpoint, or review behavior"
+        },
+        {
+          "id": "intake_surface_contract",
+          "pass": true,
+          "note": "chat/paste cases declare where results may land"
+        },
+        {
+          "id": "provenance_contract",
+          "pass": true,
+          "note": "case keeps source provenance instead of relying on unsupported memory"
+        },
+        {
+          "id": "privacy_contract",
+          "pass": true,
+          "note": "privacy-sensitive case states masking or boundary behavior"
+        },
+        {
+          "id": "long_running_contract",
+          "pass": true,
+          "note": "long-running case states checkpoint/resume/route audit behavior"
+        },
+        {
+          "id": "private_gold_contract",
+          "pass": true,
+          "note": "private gold case keeps answer material outside public artifacts and grades modes separately"
+        }
+      ],
+      "requirementProofs": [
+        {
+          "requirement": "schema_detection",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/professionalCatalogProofs.test.ts",
+            "tests/spreadsheetParser.test.ts"
+          ],
+          "method": "Catalog cases must declare schema/layout failure modes before they can be promoted to runtime fixtures."
+        },
+        {
+          "requirement": "cell_payload_evidence",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/researchHarness.test.ts",
+            "tests/researchToolContract.test.ts",
+            "src/engine/types.ts"
+          ],
+          "method": "Mutating spreadsheet outputs must carry value, source/evidence, confidence, and status metadata."
+        },
+        {
+          "requirement": "cross_file_context",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/workflowEvals.test.ts"
+          ],
+          "method": "Cross-file cases must cite source artifact/sheet/row and declare non-conflation or conflict behavior."
+        },
+        {
+          "requirement": "artifact_refs",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/artifactRefs.test.ts",
+            "src/agent/roomTools.ts"
+          ],
+          "method": "Artifact ids and selected-room references must be canonical, clickable, and carried into tool context."
+        },
+        {
+          "requirement": "privacy_redaction",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/promptInjection.test.ts",
+            "src/agent/context.ts"
+          ],
+          "method": "Public/private boundaries and prompt-injection fencing are runtime tested; catalog cases must state masking rules."
+        },
+        {
+          "requirement": "human_review",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/roomEngine.test.ts",
+            "src/engine/roomEngine.ts"
+          ],
+          "method": "Review-mode proposals and human approval paths are runtime tested; catalogs must state review conditions."
+        }
+      ],
+      "evidence": [
+        "evals/professionalWorkflows.ts",
+        "evals/professionalCatalogProofs.ts",
+        "tests/professionalCatalogProofs.test.ts",
+        "tests/spreadsheetParser.test.ts",
+        "tests/researchHarness.test.ts",
+        "tests/researchToolContract.test.ts",
+        "src/engine/types.ts",
+        "tests/workflowEvals.test.ts",
+        "tests/agentRuntime.test.ts",
+        "tests/artifactRefs.test.ts",
+        "src/agent/roomTools.ts",
+        "tests/promptInjection.test.ts",
+        "src/agent/context.ts",
+        "tests/roomEngine.test.ts",
+        "src/engine/roomEngine.ts"
+      ]
+    },
+    {
+      "caseId": "legacy-output-migration",
+      "category": "legacy_agent_outputs",
+      "proofLevel": "deterministic_catalog",
+      "checks": [
+        {
+          "id": "case_shape",
+          "pass": true,
+          "note": "case has concrete steps, assertions, and harness requirements"
+        },
+        {
+          "id": "requirement_registry",
+          "pass": true,
+          "note": "every required harness has a named proof method and evidence"
+        },
+        {
+          "id": "outcome_assertions",
+          "pass": true,
+          "note": "assertions include observable artifact/output outcomes"
+        },
+        {
+          "id": "trajectory_assertions",
+          "pass": true,
+          "note": "case declares trace, locking, versioning, checkpoint, or review behavior"
+        },
+        {
+          "id": "intake_surface_contract",
+          "pass": true,
+          "note": "chat/paste cases declare where results may land"
+        },
+        {
+          "id": "provenance_contract",
+          "pass": true,
+          "note": "case keeps source provenance instead of relying on unsupported memory"
+        },
+        {
+          "id": "privacy_contract",
+          "pass": true,
+          "note": "privacy-sensitive case states masking or boundary behavior"
+        },
+        {
+          "id": "long_running_contract",
+          "pass": true,
+          "note": "long-running case states checkpoint/resume/route audit behavior"
+        },
+        {
+          "id": "private_gold_contract",
+          "pass": true,
+          "note": "private gold case keeps answer material outside public artifacts and grades modes separately"
+        }
+      ],
+      "requirementProofs": [
+        {
+          "requirement": "artifact_refs",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/artifactRefs.test.ts",
+            "src/agent/roomTools.ts"
+          ],
+          "method": "Artifact ids and selected-room references must be canonical, clickable, and carried into tool context."
+        },
+        {
+          "requirement": "wiki_grounded_update",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/wikiSkill.test.ts",
+            "docs/skills/self-updating-wiki/SKILL.md"
+          ],
+          "method": "Wiki updates must be source-linked, idempotent, and respect public/private boundaries."
+        },
+        {
+          "requirement": "privacy_redaction",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/promptInjection.test.ts",
+            "src/agent/context.ts"
+          ],
+          "method": "Public/private boundaries and prompt-injection fencing are runtime tested; catalog cases must state masking rules."
+        },
+        {
+          "requirement": "cross_file_context",
+          "kind": "deterministic_catalog_judge",
+          "evidence": [
+            "evals/professionalCatalogProofs.ts",
+            "tests/workflowEvals.test.ts"
+          ],
+          "method": "Cross-file cases must cite source artifact/sheet/row and declare non-conflation or conflict behavior."
+        },
+        {
+          "requirement": "human_review",
+          "kind": "runtime_test",
+          "evidence": [
+            "tests/agentRuntime.test.ts",
+            "tests/roomEngine.test.ts",
+            "src/engine/roomEngine.ts"
+          ],
+          "method": "Review-mode proposals and human approval paths are runtime tested; catalogs must state review conditions."
+        }
+      ],
+      "evidence": [
+        "evals/professionalWorkflows.ts",
+        "evals/professionalCatalogProofs.ts",
+        "tests/professionalCatalogProofs.test.ts",
+        "tests/agentRuntime.test.ts",
+        "tests/artifactRefs.test.ts",
+        "src/agent/roomTools.ts",
+        "tests/wikiSkill.test.ts",
+        "docs/skills/self-updating-wiki/SKILL.md",
+        "tests/promptInjection.test.ts",
+        "src/agent/context.ts",
+        "tests/workflowEvals.test.ts",
+        "tests/roomEngine.test.ts",
+        "src/engine/roomEngine.ts"
+      ]
+    }
+  ]
+}

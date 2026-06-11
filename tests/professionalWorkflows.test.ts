@@ -63,7 +63,7 @@ const harnessRequirements: ProfessionalHarnessRequirement[] = [
   "human_review",
 ];
 
-describe("professional workflow eval catalog — contract-shape (declares contracts; behavioral grading lives in the runtime evals)", () => {
+describe("professional workflow eval catalog — typed contracts; proof tiers live in the proof ledger", () => {
   it("records the redacted shape of the reviewed workbook set", () => {
     expect(PROFESSIONAL_FILE_PROFILE_SUMMARY.manifestFiles).toBe(70);
     expect(PROFESSIONAL_FILE_PROFILE_SUMMARY.csvFiles).toBe(23);
@@ -128,9 +128,12 @@ describe("professional workflow eval catalog — contract-shape (declares contra
 
   it("keeps declared harness contracts separate from implemented behavioral graders", () => {
     expect(Object.keys(PROFESSIONAL_HARNESS_STATUS).sort()).toEqual([...harnessRequirements].sort());
-    expect(PROFESSIONAL_HARNESS_STATUS.chat_intake_parser.status).toBe("contract");
-    expect(PROFESSIONAL_HARNESS_STATUS.entity_resolution.status).toBe("contract");
-    expect(PROFESSIONAL_HARNESS_STATUS.clarifying_question_gate.status).toBe("contract");
+    // Flipped contract -> implemented 2026-06-11 in the same change as the implementation:
+    // evals/chatIntakeRuntime.ts grades capture-first, question budget, dedupe, and
+    // ambiguity-without-guessing through the real room runtime (tests/chatIntakeRuntime.test.ts).
+    expect(PROFESSIONAL_HARNESS_STATUS.chat_intake_parser.status).toBe("implemented");
+    expect(PROFESSIONAL_HARNESS_STATUS.entity_resolution.status).toBe("implemented");
+    expect(PROFESSIONAL_HARNESS_STATUS.clarifying_question_gate.status).toBe("implemented");
     // Range locks on target cells are graded; locking formula CHILDREN on parent edits is not.
     expect(PROFESSIONAL_HARNESS_STATUS.formula_dependency_locks.status).toBe("contract");
     expect(PROFESSIONAL_HARNESS_STATUS.guide_mode_no_write.status).toBe("contract");

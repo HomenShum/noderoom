@@ -61,7 +61,7 @@ Every feature eval should declare which starting surfaces it supports:
 | `chat_only` | "Just spoke with Sarah at Nira; they do AI QA for clinics and raised $4M." | **Capture first**: write the provisional row/note immediately with `needs_review` status — never block capture on perfect identity. At most **one** clarifying question, asked alongside (not before) the write; the answer upgrades the row asynchronously. Preserve the user statement as manual evidence. **Person-subject facts (who the user met, when) default to private visibility**; company facts may go to shared surfaces; promotion of person facts to shared/public requires explicit user action. |
 | `pasted_content` | User pastes a forwarded intro email, a call-transcript chunk, or a LinkedIn blurb into chat. | Detect that the text is third-party authored (headers, signatures, speaker labels). Record provenance as `quoted_third_party` — **below** `user_said`, above unverified — and attribute claims to the original author, never to the user. Redact the sender's contact details by default. This is the most common real GTM capture behavior; treating it as `chat_only` would inflate a founder's "we're growing 40% MoM" to user-asserted evidence. |
 | `upload` | User drops an XLSX/CSV/PDF and asks NodeAgent to solve, classify, reconcile, or summarize it. | Parse/render the file, ground writes in artifact evidence, preserve formulas/layout, and keep private gold out of public traces. |
-| `selected_artifact` | User selects a sheet/wiki row and says "update this from public sources." | Use artifact refs and versions, read before write, and avoid unrelated artifacts. **Currently a type-only mode: zero declaring eval cases.** Either a case lands or the claim of five-mode coverage comes out of the docs. |
+| `selected_artifact` | User selects a sheet/wiki row and says "update this from public sources." | Use artifact refs and versions, read before write, and avoid unrelated artifacts. Declared on the finance reconciliation case; an intake coverage test fails if any mode loses its declaring case. |
 | `mixed_room_state` | Chat note plus existing watchlist/wiki plus prior agent trace. | Fuse available evidence by provenance tier: `user_said` > `quoted_third_party` > room artifact > fetched source > computed. Chat-tier claims are never silently upgraded to sourced facts. |
 | `external_retrieval` | "This company just raised; verify and add comps." | Fetch/cite public sources, separate unverified chat claims from sourced facts, and record failureOwner when retrieval/provider issues block proof. |
 
@@ -118,11 +118,11 @@ starting a third lane before then is scope gravity, not progress.
 - A full model bakeoff before the harness has a cheap smoke and a targeted
   intermediate rung. The finance lane now uses smoke -> income -> full for
   exactly this reason.
-- **Catalog-only contracts counted as coverage.** A vitest that checks the
-  catalog *declares* `chat_intake_parser` is a contract-shape test, not a
-  behavioral test — green CI from shape tests must never be presented as
-  eval coverage. Label the describe() blocks `contract-shape` and track
-  implemented-vs-contract in a manifest (see Harness Hardening).
+- **Catalog proof counted as behavior.** The professional catalog now has a real
+  deterministic proof gate, but it still proves specification quality, not
+  model execution. Green catalog proof must be presented as catalog proof;
+  runtime and live-provider promotion still require final artifact diffs,
+  traces, and route evidence in the proof ledger.
 - **Best-of-N champion claims.** Keeping the best of several manual reruns as
   the committed proof is a max-statistic; it measures "can it ever", not
   "will it". Either commit the aggregate or label the proof single-pass.

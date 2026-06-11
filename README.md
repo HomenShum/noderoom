@@ -10,7 +10,7 @@ through the same versioned concurrency control.**
 
 `multi-panel room` · `public + private agents` · `affected-range lock` · `draft-for-merge` · `per-room traces` · `live Convex + real LLM`
 
-[Why Convex](#why-convex-and-why-not) · [Audience fluency](#audience-world-proof-artifacts) · [Lessons](#lessons-from-building-noderoom) · [Sequences](#live-collaboration-sequence) · [Why & HALO](docs/WHY_NODEAGENT_AND_HALO.md) · [Quickstart](#quickstart) · [Agent runtime](docs/AGENT_RUNTIME.md) · [Agent eval](docs/AGENT_EVAL.md) · [Model eval matrix](docs/eval/MODEL_EVAL_MATRIX.md) · [Agent wiki](docs/AGENT_WIKI.md) · [Design](docs/DESIGN.md) · [Stack](docs/STACK.md) · [Walkthrough](docs/WALKTHROUGH.md) · [Architecture](docs/ARCHITECTURE.md) · [Open gaps](docs/GAPS_NOT_DONE.md)
+[Why Convex](#why-convex-and-why-not) · [Audience fluency](#audience-world-proof-artifacts) · [Lessons](#lessons-from-building-noderoom) · [Sequences](#live-collaboration-sequence) · [Why & HALO](docs/WHY_NODEAGENT_AND_HALO.md) · [Quickstart](#quickstart) · [Agent runtime](docs/AGENT_RUNTIME.md) · [Agent eval](docs/AGENT_EVAL.md) · [Model eval matrix](docs/eval/MODEL_EVAL_MATRIX.md) · [Feature eval backlog](docs/eval/FEATURE_EVAL_BACKLOG.md) · [Agent wiki](docs/AGENT_WIKI.md) · [Design](docs/DESIGN.md) · [Stack](docs/STACK.md) · [Walkthrough](docs/WALKTHROUGH.md) · [Architecture](docs/ARCHITECTURE.md) · [Open gaps](docs/GAPS_NOT_DONE.md)
 
 [Interview notes](docs/INTERVIEW_NOTES.md) · [Over-engineering audit](docs/OVERENGINEERING_AUDIT.md) · [Improvement roadmap](docs/IMPROVEMENT_ROADMAP.md) · [Operating budget](docs/OPERATING_BUDGET.md) · [Audience workloads](docs/AUDIENCE_WORKLOADS.md)
 
@@ -184,22 +184,27 @@ handoff evidence.
 User uploads a three-statement modeling test and asks NodeAgent to solve it.
 The eval seeds the `Your Model` sheet, locks the critical forecast cells, reads
 versions, writes linked formulas through CAS, releases the lock, and grades the
-final artifact plus trace against a gold oracle. The GIF above is a trace replay
-of the **best live run to date** — a real route writing real linked formulas
-(`=E7*(1+'Historical Data'!D98)` is the model's own work). The private workbook
-runs locally and its answer-key formulas never enter the agent's context or the
-repo (`evals/financeModelLive.ts`; content-based leakage gate).
+final artifact plus trace against a gold oracle. The GIF above is a committed
+synthetic trace replay so the media can stay public; the private workbook runs
+locally and its answer-key formulas never enter the agent's context or the repo
+(`evals/financeModelLive.ts`; content-based leakage gate). The private live
+proof is the redacted summary in `docs/eval/finance-model-live.json`.
 
-**The live scoreboard is the point, and it's honest:** after a six-iteration
-HALO loop (harness fixes only — the oracle never moved), every live route runs
-the full lock → read → CAS-write → release protocol cleanly, but **no supported
-route clears the full IB answer-key bar yet**: `gemini-3.5-flash` leads at 9/16
-oracle-exact formulas (+2 formula-true with value slips), `minimax` 7/16; the
-misses are real finance conventions (which debt rows feed interest, dividends
-vs. paydown, subtotal linkage). Like the benchmark's "Why v3 exists," this is
-evidence of the gap — a published bar that models must earn, refreshed with
-`npx tsx evals/financeModelLive.ts --real <route>` (redacted summary:
-`docs/eval/finance-model-live.json`).
+**The live scoreboard is the point, and it's honest:** the full-solve champion
+claim is a **measured reliability batch, not a best run**.
+`deepseek/deepseek-v4-flash` passed **5/5 model-owned runs** of the full
+private-workbook lane (16/16 linked forecast cells each, lock → read →
+CAS-write → release, no answer-key leakage) **across three room variants** —
+clean room, a room salted with distractor artifacts that reuse the target cell
+ids, and a concurrent human edit landing mid-run (the human's cell survives;
+their write into the locked range is rejected). Median 102.3s, p95 $0.0996/run,
+$0.41 total, zero provider-owned failures
+(`docs/eval/finance-model-live.json`, attempt-by-attempt ledger included; the
+claim goes stale-red in CI 30 days after `generatedAt` — `npm run
+proofs:staleness`). The free route `nex-agi/nex-n2-pro:free` is promoted only
+through the income rung for now (6/6 in 74.1s at $0); its full rerun hit an
+OpenRouter invalid-JSON provider failure after lock/read — recorded as
+`failureOwner: provider`, not a model failure, and not a promotion.
 
 The HALO ladder also renders trace-replayed skill previews from real ladder JSON
 (`l1-read` through `l6-long-horizon`) in `docs/eval/workflow-previews/`, so a
@@ -314,7 +319,7 @@ and [`evals/professionalWorkflows.ts`](evals/professionalWorkflows.ts).
 
 | Workflow | User job | Harness lesson |
 |---|---|---|
-| GTM sales / company research | Upload PitchBook, ParselyFi, JPM, sector-tagging, and AMO-style lists; classify and enrich accounts; preserve CRM fields; cite sources. | Do not let the agent write loose text. ENRICH / CLASSIFY / RESOLVE writes need `CellPayload` values with status, confidence, and evidence. |
+| GTM sales / company research | Upload PitchBook, ParselyFi, JPM, sector-tagging, and AMO-style lists **or start from chat**: "just spoke with X at startup Y" / "company Y just raised $Z"; classify, enrich, create/update watchlists, preserve CRM fields, and cite sources. | Do not let the agent write loose text. ENRICH / CLASSIFY / RESOLVE writes need `CellPayload` values with status, confidence, and evidence; chat claims stay `manual` evidence until verified by fetched or artifact sources. |
 | Finance / banker workflows | Upload spend exports, transaction files, timecards, timesheets, and income/expense templates; reconcile or populate bounded cells. | Preserve formulas and layout, skip already-correct cells, cite source rows, and mask sensitive values in public output. |
 | Parser and document workflows | Work across CSV/XLSX plus PDFs, Office files, screenshots, OCR, and layout/bounding boxes. | Keep raw room files canonical; provider file ids are cache metadata. Provider extraction and LiteParse-style local parsing both normalize into evidence-bearing artifacts. |
 | Long-running research / ops | Run slow free models, bulk classification, and multi-file enrichment past one action window. | Split work into budgeted slices, compact context, checkpoint state, record attempts, and resume through durable jobs rather than trusting one giant call. |
@@ -637,6 +642,8 @@ and releases, live (the real `runRoomAgent` action when on Convex; the real in-m
 - **Evaluation framework** → [`docs/AGENT_EVAL.md`](docs/AGENT_EVAL.md). Who the users are, their use
   cases, the golden-case schema, single/multi/long-running references, and 10 metrics led by
   **no-silent-clobber rate**. Runnable: `npm run eval` (deterministic) / `npm run eval:real`.
+- **Feature eval backlog** → [`docs/eval/FEATURE_EVAL_BACKLOG.md`](docs/eval/FEATURE_EVAL_BACKLOG.md).
+  Public/private gold sources, workflow contracts, and route-proof gates for the next features.
 
 ### The user → agent eval checklist
 
@@ -646,7 +653,7 @@ NodeAgent to work**. The full per-case inventory (with file refs and recorded re
 
 | Interaction mode | Running today | Designed, to build |
 |---|---|---|
-| **1 · Do it for me** (autonomous solve) | variance/footnote/note/wall goldens · GTM research enrichment (v3 cheap/free smoke, 18/28 routes 9/9) · professional workflow pack (GTM scoring, finance reconciliation, approvals, disclosure safety) · credit cascade + cell-mapping rejection | 3-statement modeling test (Solve, private answer-key gold) · SEC model-build flagship · N-doc research (benchmark v4) · file-drop ingestion (10-K/XLSX/receipts) · knowledge-organization pack |
+| **1 · Do it for me** (autonomous solve) | variance/footnote/note/wall goldens · GTM research enrichment (v3 cheap/free smoke, 18/28 routes 9/9) · chat-first lead capture/research intake · professional workflow pack (GTM scoring, finance reconciliation, approvals, disclosure safety) · credit cascade + cell-mapping rejection · 3-statement modeling test Solve (private full lane, measured: `deepseek/deepseek-v4-flash` 5/5 model-owned across base/distractor/concurrent-edit rooms, median 102.3s, p95 $0.0996/run) | SEC model-build flagship · N-doc research (benchmark v4) · file-drop ingestion (10-K/XLSX/receipts) · knowledge-organization pack |
 | **2 · Do it with us** (live collaboration) | ladder **L1–L7 scripted** + **L1–L4 live** across 11 routes (full passes: `gemini-3.5-flash`, `nemotron-3-ultra` — the research champion fails L1/L4, proving lanes promote separately) · multi-turn provenance · sustained concurrent room · lease fencing/takeover | L5–L7 live · modeling test (Collaborate: split IS/BS/CF under locks) · L8 roles/redaction · L9 entity resolution · L10 cross-artifact · live adversarial-source rung |
 | **3 · Work under review** (proposals) | review-mode inline proposals + room-policy briefing regression · approval-shaped professional case | L8 formalizes role-gated approve/promote/redact |
 | **4 · Advise me privately** (read-only consult) | private no-tools reply path · private-draft redaction · prompt-injection fencing 4/4 | sensitive-query guardrail (decline with stated reason) |

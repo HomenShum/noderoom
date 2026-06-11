@@ -87,12 +87,15 @@ Rerun:
   under the gitignored private run directory.
 - Live income rung: `nex-agi/nex-n2-pro:free` passed 6/6 targets in 74.1s at
   $0.0000. It is promoted for income-statement smoke/income demos only.
-- Live full rung: `deepseek/deepseek-v4-flash` passed all 16 targets in 174.8s
-  at $0.0792. Latest redacted summary:
-  `docs/eval/finance-model-live.json`. **This is a single live pass —
-  reliability rate not yet measured.** The current runner can now produce the
-  required aggregate; marketing the full-solve feature requires `--runs=5`
-  across room variants with the aggregate committed, not a selected best run.
+- Live full rung — **measured promotion batch (2026-06-11)**:
+  `deepseek/deepseek-v4-flash` passed **5/5 model-owned runs** with room
+  variants rotating (base x2, distractors x2, concurrent_edit x1 — every
+  variant cleared), 16/16 linked targets each run, zero provider-owned
+  failures, median 102.3s, p95 $0.0996/run, $0.41 total. Verdict `passed`,
+  promotion bar (>= 4/5) exceeded. Redacted aggregate with the per-attempt
+  ledger: `docs/eval/finance-model-live.json`; recorded to the eval store for
+  `eval:diff` champion-regression tracking. The earlier single-pass result
+  (174.8s, $0.0792) is superseded by this batch.
 - Live full route boundary: `nex-agi/nex-n2-pro:free` is not promoted for full
   solve yet; one run wrote all 16 linked formulas but failed a then-overstrict
   value gate, and the corrected rerun hit an OpenRouter invalid-JSON provider

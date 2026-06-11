@@ -122,7 +122,7 @@ describe("spreadsheet parser", () => {
     const ws = workbook.addWorksheet("Model");
     ws.getColumn(2).width = 28;
     ws.getCell("B2").value = "INCOME STATEMENT";
-    ws.getCell("B2").font = { bold: true };
+    ws.getCell("B2").font = { bold: true, underline: true, color: { argb: "FFFFFFFF" } };
     ws.getCell("B2").fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1F4E79" } };
     ws.getCell("D9").value = 0.3374;
     ws.getCell("D9").numFmt = "0.0%";
@@ -142,6 +142,8 @@ describe("spreadsheet parser", () => {
     const grid = artifact.meta?.excelGrid;
     expect(grid?.styles?.["B2"]?.b).toBe(1);
     expect(grid?.styles?.["B2"]?.bg).toBe("#1F4E79");
+    expect(grid?.styles?.["B2"]?.fc).toBe("#FFFFFF"); // file's explicit white font, not the heuristic
+    expect(grid?.styles?.["B2"]?.u).toBe(1);
     expect(grid?.numFmts?.[grid?.styles?.["D9"]?.f ?? -1]).toBe("0.0%");
     expect(grid?.numFmts?.[grid?.styles?.["D15"]?.f ?? -1]).toBe("#,##0.0");
     expect(grid?.styles?.["D15"]?.bt).toBe(1);

@@ -540,12 +540,40 @@ function GenericSheet({ art }: { art: Art }) {
   );
 }
 
-/** Dark fills need light ink — the parser doesn't capture font color, so derive it. */
+/** Dark fills need light ink — used only when the file carries no explicit font color. */
 function fillNeedsLightInk(hex: string): boolean {
   const m = hex.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
   if (!m) return false;
   const [r, g, b] = [m[1], m[2], m[3]].map((c) => parseInt(c, 16));
   return 0.299 * r + 0.587 * g + 0.114 * b < 120;
+}
+
+/** "B" -> 2 (1-based, inverse of columnLetters) */
+function lettersToColIndex(letters: string): number {
+  let n = 0;
+  for (const ch of letters) n = n * 26 + (ch.charCodeAt(0) - 64);
+  return n;
+}
+
+/** Expand "B2:D2" merge ranges into an anchor->span map + the set of covered (skipped) cells.
+ *  Pathological ranges (>1k cells) are ignored rather than expanded — render-only, BOUND. */
+function expandMerges(merges: string[] | undefined): { mergeAnchor: Map<string, { colSpan: number; rowSpan: number }>; mergeCovered: Set<string> } {
+  const mergeAnchor = new Map<string, { colSpan: number; rowSpan: number }>();
+  const mergeCovered = new Set<string>();
+  for (const range of merges ?? []) {
+    const m = range.match(/^([A-Z]+)(\d+):([A-Z]+)(\d+)$/);
+    if (!m) continue;
+    const c1 = lettersToColIndex(m[1]), r1 = Number(m[2]), c2 = lettersToColIndex(m[3]), r2 = Number(m[4]);
+    if (c2 < c1 || r2 < r1 || (c2 - c1 + 1) * (r2 - r1 + 1) > 1_000) continue;
+    mergeAnchor.set(`${m[1]}${r1}`, { colSpan: c2 - c1 + 1, rowSpan: r2 - r1 + 1 });
+    for (let r = r1; r <= r2; r++) {
+      for (let c = c1; c <= c2; c++) {
+        if (r === r1 && c === c1) continue;
+        mergeCovered.add(`${columnLetters(c - 1)}${r}`);
+      }
+    }
+  }
+  return { mergeAnchor, mergeCovered };
 }
 
 /**
@@ -569,6 +597,7 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
     const visibleRows = Array.from({ length: Math.min(rowCount, pageSize * pages) }, (_, idx) => idx + 1);
     return { columns, visibleRows, pageSize };
   }, [grid?.columns, grid?.rows, pages]);
+  const { mergeAnchor, mergeCovered } = useMemo(() => expandMerges(grid?.merges), [grid?.merges]);
   if (!grid) return null;
   const cellStyles = grid.styles ?? {};
   const numFmts = grid.numFmts ?? [];
@@ -608,6 +637,10 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
                     <td className={"xl-rowhead" + (selMatch && Number(selMatch[2]) === rowNumber ? " hl" : "")}>{rowNumber}</td>
                     {columns.map((col) => {
                       const elementId = `${col}${rowNumber}`;
+                      if (mergeCovered.has(elementId)) return null; // absorbed by a merge anchor's span
+                      const span = mergeAnchor.get(elementId);
+                      const colSpan = span ? Math.min(span.colSpan, columns.length - lettersToColIndex(col) + 1) : undefined;
+                      const rowSpan = span ? Math.min(span.rowSpan, visibleRows.length - rowNumber + 1) : undefined;
                       const el = art.elements[elementId];
                       const payload = el ? asCellPayload(el.value) : null;
                       const rawVal = payload ? payload.value : el?.value;
@@ -624,9 +657,11 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
                       const alignRight = numCandidate !== undefined || st?.a === "r";
                       const cls = "xl-cell" + (alignRight ? " num" : "") + (st?.a === "c" ? " ctr" : "") + (lk ? " locked" : "") + (sel === elementId ? " sel" : "");
                       const inline: Record<string, string | number> = {};
-                      if (st?.bg) { inline.background = st.bg; if (fillNeedsLightInk(st.bg)) inline.color = "#fff"; }
+                      if (st?.bg) { inline.background = st.bg; if (!st?.fc && fillNeedsLightInk(st.bg)) inline.color = "#fff"; }
+                      if (st?.fc) inline.color = st.fc; // the FILE's font color wins over the heuristic
                       if (st?.b) inline.fontWeight = 700;
                       if (st?.i) inline.fontStyle = "italic";
+                      if (st?.u) inline.textDecoration = "underline";
                       if (st?.ind) inline.paddingLeft = 6 + st.ind * 12;
                       if (st?.bt) inline.borderTop = "1px solid #5f6368";
                       if (st?.bb) inline.borderBottom = "1px solid #5f6368";
@@ -638,6 +673,8 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
                           style={inline}
                           title={title}
                           data-cell-key={elementId}
+                          colSpan={colSpan}
+                          rowSpan={rowSpan}
                           onClick={() => setSel(elementId)}
                           onDoubleClick={() => { if (!lk) setEditingId(elementId); }}
                         >

@@ -116,8 +116,10 @@ export interface ExcelCellStyle {
   f?: number;
   b?: 1;          // bold
   i?: 1;          // italic
+  u?: 1;          // underline
   a?: "r" | "c";  // horizontal alignment override (numbers right-align by default)
   bg?: string;    // fill color "#RRGGBB"
+  fc?: string;    // font color "#RRGGBB" — overrides the dark-fill light-ink heuristic
   ind?: number;   // indent level
   bt?: 1;         // top border (totals rule)
   bb?: 1;         // bottom border

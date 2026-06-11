@@ -31,6 +31,13 @@ function captureCellStyle(
   }
   if (cell.font?.bold) out.b = 1;
   if (cell.font?.italic) out.i = 1;
+  if (cell.font?.underline) out.u = 1;
+  // Font color: explicit ARGB only (theme/indexed colors have no argb and fall back to the
+  // renderer's dark-fill light-ink heuristic). Skip default black — it's not a style choice.
+  const fontColor = (cell.font?.color as { argb?: string } | undefined)?.argb;
+  if (fontColor && fontColor.length === 8 && !["FF000000", "00000000"].includes(fontColor.toUpperCase())) {
+    out.fc = `#${fontColor.slice(2)}`;
+  }
   const h = cell.alignment?.horizontal;
   if (h === "right") out.a = "r";
   else if (h === "center" || h === "centerContinuous") out.a = "c";

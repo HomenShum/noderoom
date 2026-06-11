@@ -18,8 +18,9 @@ async function styledWorkbookFile(): Promise<string> {
   const ws = workbook.addWorksheet("Model");
   ws.getColumn(2).width = 26;
   ws.getCell("B2").value = "INCOME STATEMENT";
-  ws.getCell("B2").font = { bold: true };
+  ws.getCell("B2").font = { bold: true, color: { argb: "FFFFFFFF" } };
   ws.getCell("B2").fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1F4E79" } };
+  ws.mergeCells("B2:D2");
   ws.getCell("B4").value = "Gross margin %";
   ws.getCell("D4").value = 0.3374;
   ws.getCell("D4").numFmt = "0.0%";
@@ -49,10 +50,15 @@ test("uploaded workbook renders as Excel paper with file formats, formula bar, a
   await expect(paper.locator('[data-cell-key="D4"]')).toHaveText("33.7%");
   await expect(paper.locator('[data-cell-key="D5"]')).toHaveText("65.8");
 
-  // 3. The file's styles render: bold + dark fill with auto light ink on the section header.
+  // 3. The file's styles render: bold, the FILE's white font color, and the B2:D2 merge as a
+  //    real spanned cell (C2/D2 are absorbed, not rendered as empty cells).
   const header = paper.locator('[data-cell-key="B2"]');
   await expect(header).toHaveText("INCOME STATEMENT");
   await expect(header).toHaveCSS("font-weight", "700");
+  await expect(header).toHaveCSS("color", "rgb(255, 255, 255)");
+  await expect(header).toHaveAttribute("colspan", "3");
+  await expect(paper.locator('[data-cell-key="C2"]')).toHaveCount(0);
+  await expect(paper.locator('[data-cell-key="D2"]')).toHaveCount(0);
 
   // 4. Selection drives the formula bar (Name box + value) and highlights headers.
   await paper.locator('[data-cell-key="D4"]').click();

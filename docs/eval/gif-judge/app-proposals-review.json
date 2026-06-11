@@ -1,0 +1,26 @@
+{
+  "workflow": "app-proposals-review",
+  "judgeModel": "gemini-3.5-flash",
+  "judgedAt": "2026-06-11T09:26:11.058Z",
+  "frameCount": 8,
+  "sampledFrames": 8,
+  "scores": {
+    "readability": 8,
+    "pacing": 7,
+    "narrative_completeness": 8,
+    "visual_polish": 9,
+    "honesty_no_artifacts": 10
+  },
+  "average": 8.4,
+  "pass": true,
+  "topIssues": [
+    "Frame 7: The approval of the '+24%' proposal happens instantly without any cursor interaction, hover state, or click animation, making the transition feel abrupt.",
+    "Frame 5 & 7: The display times (900ms) are too short for first-time viewers to easily track the subtle changes, such as the calculation of dependent rows in Frame 5 and the approval state change in Frame 7.",
+    "Frame 4: The 'draft' badge and dashed green border appear suddenly on Gross Profit and Net Income, which can confuse viewers on the causal relationship before the values actually calculate in Frame 5."
+  ],
+  "fixSuggestions": [
+    "Add a cursor layer showing a click animation on the checkmark button of the Revenue row between Frame 6 and Frame 7 to clearly signal the host's approval action.",
+    "Increase the duration of Frame 5 and Frame 7 to at least 1500ms so the viewer has adequate time to register the calculated values and the approved state.",
+    "Slightly increase the contrast or size of the row helper labels (e.g., 'r_rev', 'r_cogs') on the far left to improve readability on smaller screens."
+  ]
+}

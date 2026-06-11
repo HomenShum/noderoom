@@ -1,0 +1,26 @@
+{
+  "workflow": "app-research-enrich",
+  "judgeModel": "gemini-3.5-flash",
+  "judgedAt": "2026-06-11T09:26:26.443Z",
+  "frameCount": 22,
+  "sampledFrames": 12,
+  "scores": {
+    "readability": 6,
+    "pacing": 8,
+    "narrative_completeness": 9,
+    "visual_polish": 6,
+    "honesty_no_artifacts": 7
+  },
+  "average": 7.2,
+  "pass": true,
+  "topIssues": [
+    "Frame 3: The 'COMPLETE' status badge displays trailing double dots ('COMPLETE ..'), indicating a layout truncation or rendering bug that persists across all completed rows.",
+    "Frame 2: The 'Researching...' button has extremely low color contrast (dark blue text on a dark grey/blue background), making it difficult to read.",
+    "Frame 3: The 'Room trace' log displays raw, unformatted JSON strings (e.g., `{\"value\":\"complete\",\"status\":\"complete\"}`) and raw database keys with double underscores, which is highly technical and hard to parse quickly."
+  ],
+  "fixSuggestions": [
+    "Adjust the width of the 'STATUS' column or the badge padding to eliminate the 'COMPLETE ..' truncation artifact.",
+    "Increase the contrast of the 'Researching...' button state by using a lighter text color (e.g., white or light blue) to match the style of other active elements.",
+    "Format the 'Room trace' logs to parse and hide raw JSON syntax and database keys, replacing them with clean, human-readable status updates."
+  ]
+}

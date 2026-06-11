@@ -1,24 +1,26 @@
 {
   "workflow": "l1-read",
   "judgeModel": "gemini-3.5-flash",
-  "judgedAt": "2026-06-11T08:16:01.517Z",
+  "judgedAt": "2026-06-11T09:24:00.638Z",
   "frameCount": 3,
   "sampledFrames": 3,
   "scores": {
     "readability": 8,
     "pacing": 9,
-    "narrative_completeness": 10,
+    "narrative_completeness": 7,
     "visual_polish": 8,
-    "honesty_no_artifacts": 10
+    "honesty_no_artifacts": 7
   },
-  "average": 9,
+  "average": 7.8,
   "pass": true,
   "topIssues": [
-    "frame 1: Low contrast on secondary text elements such as 'Revenue / variance', 'V1', and the subtitle 'Report a value without changing anything' against the dark background, which reduces legibility.",
-    "frame 2: The orange highlight indicator on the left edge of the 'Net income / variance' row is a sharp vertical bar that sits awkwardly close to the rounded corner of the outer container, creating a minor visual misalignment."
+    "Frame 2 & 3: The main table UI is completely static between these frames. Only the bottom status bar text changes, which fails to visually demonstrate the 'report' action actually occurring in the interface.",
+    "Frame 1-3: Low contrast on the gray text elements (such as 'Revenue / variance', 'V1', and the subtitle) against the dark background, making them hard to read quickly.",
+    "Frame 2: The AI is 'reading' a row (Net income / variance) that has no actual value (represented by a dash '-'), making the narrative of 'reporting a value' confusing to the viewer."
   ],
   "fixSuggestions": [
-    "Increase the brightness/contrast of the muted gray text elements (labels and subtitles) to meet WCAG AA accessibility standards.",
-    "Adjust the left orange highlight bar in frames 2 and 3 to either respect the border-radius of the parent container or be inset slightly so it doesn't clash with the rounded corner."
+    "Add a temporary visual confirmation in the main UI during Frame 3, such as a subtle green flash, a checkmark icon next to the 'V1' label, or a toast notification confirming the value was successfully reported.",
+    "Increase the font weight or brightness of the gray text labels to meet WCAG AA contrast guidelines for dark mode.",
+    "Use a row with an actual numerical value (like 'Gross profit / variance' at +21.7%) for the walkthrough to make the 'read and report' action logical and satisfying."
   ]
 }

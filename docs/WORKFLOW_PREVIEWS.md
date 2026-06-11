@@ -4,7 +4,7 @@ These are product-facing previews of the workflows HALO is allowed to improve.
 Room/trace previews are generated with:
 
 ```bash
-npm run workflow:previews
+npm run workflow:trace-previews
 ```
 
 The heavier app-capture previews are refreshed with:
@@ -15,7 +15,7 @@ npm run workflow:previews:all
 
 The GIFs have explicit evidence levels:
 
-- `workflow-preview-gifs.ts` builds screenshot-composed product preview cards.
+- `e2e/capture-previews.spec.ts` records the REAL app UI (memory mode) into GIFs; every shipped GIF is gated by the gemini-3.5-flash judge (`npm run qa:gif`). The old screenshot-slideshow generator was retired for honesty defects.
 - `render-workflow-preview.ts` builds trace replays from recorded ladder JSON.
 - `workflow:app-previews` captures the real NodeRoom DOM in memory mode.
 
@@ -37,13 +37,13 @@ improve one of these user-agent workflows:
    receipt path, not hidden client-local state.
 3. The trace shows what the agent read, locked, wrote, skipped, or proposed.
 4. The README preview points to live evidence and the relevant eval gate.
-5. If the workflow shape changes, `npm run workflow:previews` is refreshed.
+5. If the workflow shape changes, `npm run workflow:previews:all` is refreshed.
 
 ## Preview Cards
 
 ### Public `/ask` Spreadsheet Reconciliation
 
-![Public ask spreadsheet preview](eval/workflow-previews/ask-spreadsheet-cas.gif)
+![Public ask spreadsheet preview](eval/workflow-previews/app-ask-reconcile.gif)
 
 - **User interaction:** type `/ask reconcile Q3 revenue` in public chat.
 - **Agent contract:** create/reuse an `agentJobs` root, lock exact cells, read
@@ -55,7 +55,7 @@ improve one of these user-agent workflows:
 
 ### GTM Research Enrichment
 
-![Research enrichment preview](eval/workflow-previews/research-enrichment.gif)
+![Research enrichment preview](eval/workflow-previews/app-research-enrich.gif)
 
 - **User interaction:** add/requeue companies, then run sourced enrichment.
 - **Agent contract:** preserve CRM fields, update only pending/stale rows, carry
@@ -69,7 +69,8 @@ improve one of these user-agent workflows:
 
 ### Grounded Wiki And Note Update
 
-![Wiki note grounding preview](eval/workflow-previews/wiki-note-grounding.gif)
+*(Preview retired after Gemini 3.5 Flash review: the app capture showed native
+Note → Spreadsheet navigation, but not the grounding action itself.)*
 
 - **User interaction:** ask the agent to summarize a room artifact into the wiki
   or note.
@@ -82,7 +83,7 @@ improve one of these user-agent workflows:
 
 ### Proposal Review And Wall Collaboration
 
-![Proposal and wall preview](eval/workflow-previews/proposals-wall-review.gif)
+![Proposal and wall preview](eval/workflow-previews/app-proposals-review.gif)
 
 - **User interaction:** turn Auto-allow off, inspect proposed edits, approve or
   reject, and collaborate on the wall.
@@ -94,7 +95,7 @@ improve one of these user-agent workflows:
 
 ### Long-Running `/free` Job And HALO Handoff
 
-![Free job HALO preview](eval/workflow-previews/free-job-halo.gif)
+*(Preview retired pending a judged real-app recording.)*
 
 - **User interaction:** type `/free <goal>` for slow free-auto work and inspect
   job status, attempts, details, trace, and receipts.
@@ -105,6 +106,25 @@ improve one of these user-agent workflows:
   `docs/eval/halo-runs/20260609T060208Z/summary.jsonl`.
 - **Gate:** `scripts/halo-overnight.ts`, `evals/evalStore.ts`,
   `evals/evalDiff.ts`, `tests/evalStore.test.ts`.
+
+### Finance Model Solve
+
+![Finance model solve preview](eval/workflow-previews/finance-model-solve.gif)
+
+- **User interaction:** upload a three-statement modeling test and ask NodeAgent
+  to complete the forecast model.
+- **Agent contract:** lock the critical forecast cells, read versions, write
+  linked formulas through CAS, release the range, and grade both final artifact
+  values and trace receipts.
+- **Evidence:** `docs/eval/traces/finance-model/finance_model_solve_synthetic.json`
+  for committed media; `docs/eval/finance-model-live.json` for the latest
+  redacted private live proof; full private traces stay under gitignored
+  `docs/eval/finance-model-runs/`.
+- **Gate:** `npm run eval:finance-model`, `npm run eval:finance-model -- --gold
+  "C:\path\to\modeling-test.xlsx"`, `tests/financeModelRuntime.test.ts`,
+  `evals/financeModelRuntime.ts`, and `evals/financeModelLive.ts --level=full`.
+  Current full live promotion: `deepseek/deepseek-v4-flash` (16/16, 174.8s,
+  $0.0792).
 
 ## HALO Trace Skill Previews
 

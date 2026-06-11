@@ -458,7 +458,7 @@ function EditableCell({ value, disabled, align, onCommit, addLabel }: { value: s
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   useEffect(() => setDraft(value), [value]);
-  if (disabled) return value ? <span className="r-val-pos">{value}</span> : <span className="nullcell">null</span>;
+  if (disabled) return value ? <span className="r-val-pos">{value}</span> : <span className="nullcell">—</span>;
   if (editing) {
     return (
       <input className="r-cell-input" autoFocus value={draft} style={align === "right" ? { textAlign: "right" } : undefined}

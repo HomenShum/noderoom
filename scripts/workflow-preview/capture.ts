@@ -65,7 +65,7 @@ export const WORKFLOWS: Workflow[] = [
     id: "finance-model-solve",
     title: "Finance Model Solve",
     badge: "Professional / 3-statement",
-    subtitle: "Lock the forecast cells, read current versions, write linked formulas, release for review",
+    subtitle: "Stylized trace replay: lock forecast cells, read versions, write linked formulas, release for review",
     tracePattern: /finance_model_solve/,
     cells: FINANCE_MODEL_CELLS,
   },

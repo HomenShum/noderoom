@@ -51,11 +51,7 @@ Here the real agent has filled the variance column live on Convex.</sub>
 
 A change in one client appears in the other **with no refresh**, and a **server-led agent**'s work reaches **every** client. Captured **multi-pane** — one browser context per client — with the [`feature-walkthrough-gif`](https://github.com/HomenShum/feature-walkthrough-gif#live-collaboration-multi-pane) skill (a single cursor can't show cross-client sync; this can). Two angles:
 
-**① A fresh room, from empty.** Client&nbsp;A creates a brand-new room — a Q3 sheet with an **empty variance column** — and Client&nbsp;B joins. Client&nbsp;A runs the real Room NodeAgent (`/ask reconcile Q3 revenue`); the agent fills the empty variance **live on both clients** — the clean empty→reconciled reveal:
-
-![Fresh room, two clients side by side: the Room NodeAgent fills an empty Q3 variance column live on both, ending with green +$2,400 / +24% values and a reconciliation note](docs/walkthroughs/two-client-fresh-room.gif)
-
-**② The busy shared room.** The same capability in the live `Q3DEMO` room (with dozens of real guests already present): a human chat message syncs A→B, then `/ask reconcile Q3 revenue` runs and its result broadcasts to all — authentic, amid real concurrent activity:
+**The busy shared room.** In the live `Q3DEMO` room (with dozens of real guests already present): a human chat message syncs A→B, then `/ask reconcile Q3 revenue` runs and its result broadcasts to all — authentic, amid real concurrent activity. The older fresh-room side-by-side clip is retired from the README until it is re-captured at a more legible zoom; Gemini 3.5 Flash marked it `fix-then-publish` for small text.
 
 ![Busy shared room, two clients side by side: a chat message syncs from Client A to Client B, then a /ask agent run reconciles the sheet and broadcasts to both](docs/walkthroughs/two-client-live-sync.gif)
 
@@ -87,7 +83,7 @@ progress bar. Regenerate any time with `npm run walkthroughs` (capture) + `npm r
 ![Spreadsheet edit and undo — walkthrough](docs/walkthroughs/sheet-undo.gif)
 
 ### Ask the Room agent to do the work (`/ask`)
-![Room agent fills the variance column — walkthrough](docs/walkthroughs/ask-agent.gif)
+![/ask reconcile drives the sheet through chat](docs/eval/workflow-previews/app-ask-reconcile.gif)
 
 ### GTM research import — updates, never duplicates
 ![CRM-style research import upsert — walkthrough](docs/walkthroughs/research-upsert.gif)
@@ -127,21 +123,24 @@ Latest aggregate:
 
 HALO is only useful if it changes the actual user-agent interaction, not just a
 score file. Each workflow below has a visual preview, the user contract it must
-preserve, and the eval/trace evidence that gates promotion. Refresh them with
-`npm run workflow:previews`. Evidence levels are explicit:
-`workflow-preview-gifs.ts` produces screenshot-composed workflow cards,
-`render-workflow-preview.ts` produces trace replays, and `workflow:app-previews`
-captures the real DOM in memory mode. A GIF is visual evidence, not a production
-gate. Full evidence and research links:
+preserve, and the eval/trace evidence that gates promotion. Refresh trace
+previews with `npm run workflow:previews`, or refresh both trace previews and
+real DOM captures with `npm run workflow:previews:all`. Evidence levels are
+explicit: `render-workflow-preview.ts` produces trace replays, and
+`workflow:app-previews` captures the real DOM in memory mode. A GIF is visual
+evidence, not a production gate. Full evidence and research links:
 [`docs/WORKFLOW_PREVIEWS.md`](docs/WORKFLOW_PREVIEWS.md).
 
-Current media QA marks the public `/ask` spreadsheet preview and proposal/wall
-preview as visual `fix-then-publish`; the workflow contracts remain documented,
-but those GIFs should be rerendered before being treated as showcase assets.
+Every shipped GIF below is gated by the gemini-3.5-flash GIF judge
+(`npm run qa:gif` — verdicts in `docs/eval/gif-judge/`). The earlier
+screenshot-slideshow previews were retired after the judge found structural
+honesty defects (frames from different sessions, reversed narratives); the
+replacements are recorded from the REAL app UI driven by the real agent
+runtime in memory mode (`e2e/capture-previews.spec.ts`).
 
 ### Public `/ask` Spreadsheet Reconciliation
 
-![Public /ask spreadsheet reconciliation](docs/eval/workflow-previews/ask-spreadsheet-cas.gif)
+![/ask reconcile drives the sheet through chat](docs/eval/workflow-previews/app-ask-reconcile.gif)
 
 User types `/ask reconcile Q3 revenue`; the Room NodeAgent creates/reuses an
 `agentJobs` root, locks exact cells, reads versions, writes with CAS, releases,
@@ -149,33 +148,33 @@ and leaves visible room trace receipts.
 
 ### GTM Research Enrichment
 
-![GTM research enrichment](docs/eval/workflow-previews/research-enrichment.gif)
+![GTM research enrichment (real app)](docs/eval/workflow-previews/app-research-enrich.gif)
 
 User adds or requeues accounts, then the agent enriches only pending/stale rows
 with source-backed `CellPayload` values, CRM fields, citations, and freshness.
 
 ### Grounded Wiki And Note Update
 
-![Grounded wiki and note update](docs/eval/workflow-previews/wiki-note-grounding.gif)
-
 User asks for a room summary; the NodeAgent discovers artifacts, reads the
 source sheet, writes a grounded note/wiki update, and keeps private context out
-of public surfaces unless promoted.
+of public surfaces unless promoted. *(Preview remains retired: Gemini 3.5 Flash
+accepted the UI navigation capture as honest, but correctly rejected it as not
+showing the grounding action itself. The contract is tested; the demo needs a
+native grounded-update flow before it is README-ready.)*
 
 ### Proposal Review And Wall Collaboration
 
-![Proposal review and wall collaboration](docs/eval/workflow-previews/proposals-wall-review.gif)
+![Review mode: agent edits arrive as proposals](docs/eval/workflow-previews/app-proposals-review.gif)
 
 With Auto-allow off, agent writes become host-reviewed proposals. Wall edits and
 approvals stay versioned artifact mutations with conflicts surfaced in the UI.
 
 ### Long-Running `/free` Job And HALO Handoff
 
-![Long-running free job and HALO handoff](docs/eval/workflow-previews/free-job-halo.gif)
-
 User starts slow free-auto work through `/free`; the same `agentJobs` contract
 shows status, attempts, details, traces, receipts, and the HALO regression
-handoff evidence.
+handoff evidence. *(Preview retired pending a judged real-app recording; the
+contract is tested in `tests/agentJobsRuntime.test.ts` and the L7 RESUME rung.)*
 
 ### Finance Model Solve
 
@@ -197,8 +196,8 @@ private-workbook lane (16/16 linked forecast cells each, lock → read →
 CAS-write → release, no answer-key leakage) **across three room variants** —
 clean room, a room salted with distractor artifacts that reuse the target cell
 ids, and a concurrent human edit landing mid-run (the human's cell survives;
-their write into the locked range is rejected). Median 102.3s, p95 $0.0996/run,
-$0.41 total, zero provider-owned failures
+their write into the locked range is rejected). Median 105.0s, p95 $0.1068/run,
+$0.4424 total, zero provider-owned failures
 (`docs/eval/finance-model-live.json`, attempt-by-attempt ledger included; the
 claim goes stale-red in CI 30 days after `generatedAt` — `npm run
 proofs:staleness`). The free route `nex-agi/nex-n2-pro:free` is promoted only
@@ -653,9 +652,9 @@ NodeAgent to work**. The full per-case inventory (with file refs and recorded re
 
 | Interaction mode | Running today | Designed, to build |
 |---|---|---|
-| **1 · Do it for me** (autonomous solve) | variance/footnote/note/wall goldens · GTM research enrichment (v3 cheap/free smoke, 18/28 routes 9/9) · chat-first lead capture/research intake · professional workflow pack (GTM scoring, finance reconciliation, approvals, disclosure safety) · credit cascade + cell-mapping rejection · 3-statement modeling test Solve (private full lane, measured: `deepseek/deepseek-v4-flash` 5/5 model-owned across base/distractor/concurrent-edit rooms, median 102.3s, p95 $0.0996/run) | SEC model-build flagship · N-doc research (benchmark v4) · file-drop ingestion (10-K/XLSX/receipts) · knowledge-organization pack |
+| **1 · Do it for me** (autonomous solve) | variance/footnote/note/wall goldens · GTM research enrichment (v3 cheap/free smoke, 18/28 routes 9/9) · executable professional subset (GTM runtime enrichment, messy-sheet parsing, cross-file note write, grounded wiki update, finance reconciliation) · credit cascade + cell-mapping rejection · 3-statement modeling test Solve (private full lane, measured: `deepseek/deepseek-v4-flash` 5/5 model-owned across base/distractor/concurrent-edit rooms, median 105.0s, p95 $0.1068/run) | chat-first lead capture/research intake · SEC model-build flagship · N-doc research (benchmark v4) · file-drop ingestion (10-K/XLSX/receipts) · knowledge-organization pack |
 | **2 · Do it with us** (live collaboration) | ladder **L1–L7 scripted** + **L1–L4 live** across 11 routes (full passes: `gemini-3.5-flash`, `nemotron-3-ultra` — the research champion fails L1/L4, proving lanes promote separately) · multi-turn provenance · sustained concurrent room · lease fencing/takeover | L5–L7 live · modeling test (Collaborate: split IS/BS/CF under locks) · L8 roles/redaction · L9 entity resolution · L10 cross-artifact · live adversarial-source rung |
-| **3 · Work under review** (proposals) | review-mode inline proposals + room-policy briefing regression · approval-shaped professional case | L8 formalizes role-gated approve/promote/redact |
+| **3 · Work under review** (proposals) | review-mode inline proposals + room-policy briefing regression | contractor-time professional approval fixture · L8 formalizes role-gated approve/promote/redact |
 | **4 · Advise me privately** (read-only consult) | private no-tools reply path · private-draft redaction · prompt-injection fencing 4/4 | sensitive-query guardrail (decline with stated reason) |
 | **5 · Work in the background** (resumable jobs) | durable `agentJobs` + exactly-once journal · L7 RESUME scripted · spend caps (slice/day/month) with breach attribution | L7 live across routes · 100-row checkpointed batch with partial-success reporting |
 | **6 · Teach me** (guided solve) | — | modeling test (Guide): **zero writes to answer cells**, hint quality, student convergence — restraint as a first-class eval axis |
@@ -726,10 +725,6 @@ not mockups, not slideshows.
 *The Room NodeAgent fills the Q3 variance column — lock → read the version → CAS-edit → release — with the room trace updating live:*
 
 ![Real-app capture — the Room NodeAgent fills the variance column with lock + CAS](docs/eval/workflow-previews/app-variance-fill.gif)
-
-*A human edits a variance cell by hand — the same versioned CAS path the agent uses, so neither side clobbers the other:*
-
-![Real-app capture — a human edits a variance cell](docs/eval/workflow-previews/app-manual-edit.gif)
 
 *GTM research enrichment — the agent enriches only the pending accounts with source-backed values:*
 
@@ -844,7 +839,7 @@ feedback, reusable evals, a validation gate, and a Codex handoff — then it rep
 | 4 | **Record** | append-only store keyed by `(commit + worktree, case, ts)` with per-check booleans + trace ref | `evals/evalStore.ts` → `docs/eval/eval-runs.jsonl` |
 | 5 | **Gate** | cross-version diff names the degraded case **and the exact check that broke** | `npm run eval:diff` (exit 1 on regression) |
 | 6 | **Handoff** | the failing trace + ranked recommendations become a Codex / Claude Code packet | [`docs/WHY_NODEAGENT_AND_HALO.md`](docs/WHY_NODEAGENT_AND_HALO.md) handoff contract |
-| 7 | **Fix** | the smallest necessary workflow/harness change lands; previews refresh if user interaction changed; the loop re-gates | `npm run workflow:previews` Â· back to stage 1 |
+| 7 | **Fix** | the smallest necessary workflow/harness change lands; previews refresh if user interaction changed; the loop re-gates | `npm run workflow:previews:all` Â· back to stage 1 |
 
 The repo-owned runner is:
 

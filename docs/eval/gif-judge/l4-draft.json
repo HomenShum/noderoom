@@ -1,24 +1,24 @@
 {
   "workflow": "l4-draft",
   "judgeModel": "gemini-3.5-flash",
-  "judgedAt": "2026-06-11T08:16:43.126Z",
+  "judgedAt": "2026-06-11T09:24:38.200Z",
   "frameCount": 6,
   "sampledFrames": 6,
   "scores": {
     "readability": 9,
-    "pacing": 9,
-    "narrative_completeness": 10,
+    "pacing": 7,
+    "narrative_completeness": 8,
     "visual_polish": 9,
-    "honesty_no_artifacts": 9
+    "honesty_no_artifacts": 10
   },
-  "average": 9.2,
+  "average": 8.6,
   "pass": true,
   "topIssues": [
-    "frame 3: The bottom status text says 'sees version v1', but the UI row displays 'LOCKED' on the right instead of 'V1' (which was visible in frame 1), creating a slight mismatch between what the AI 'sees' and what is visually represented.",
-    "frame 5: The transition from '-' to '+22.4%' and 'LOCKED' to 'DRAFT' happens instantly without any visual transition or typing indicator, making the draft action feel slightly abrupt."
+    "frame 3: The main UI is completely identical to frame 2 and frame 4, creating 4.2 seconds of visual 'dead air' where only the bottom status text changes.",
+    "frame 3: The status text says 'sees version v1', but the 'V1' badge on the right of the Net Income row has been replaced by 'LOCKED', meaning the user cannot actually see 'v1' in the active row."
   ],
   "fixSuggestions": [
-    "In frame 3, consider showing a small 'V1' indicator alongside or nested near the 'LOCKED' badge to visually validate the AI's observation of the version history.",
-    "Add a brief cursor or fade-in animation for the '+22.4%' text in frame 5 to make the drafting action feel more organic and less like a sudden state jump."
+    "Consolidate frames 2, 3, and 4 or significantly reduce their display times (e.g., to 800ms) to keep the pacing snappy while the main UI remains static.",
+    "Add a subtle visual cue in frame 3 (like a hover state, tooltip, or split badge showing both 'LOCKED' and 'V1') to visually support the claim that the AI is reading 'version v1'."
   ]
 }

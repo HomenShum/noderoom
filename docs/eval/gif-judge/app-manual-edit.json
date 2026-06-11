@@ -1,0 +1,26 @@
+{
+  "workflow": "app-manual-edit",
+  "judgeModel": "gemini-3.5-flash",
+  "judgedAt": "2026-06-11T09:22:22.556Z",
+  "frameCount": 3,
+  "sampledFrames": 3,
+  "scores": {
+    "readability": 6,
+    "pacing": 7,
+    "narrative_completeness": 6,
+    "visual_polish": 5,
+    "honesty_no_artifacts": 7
+  },
+  "average": 6.2,
+  "pass": false,
+  "topIssues": [
+    "Frame 1: Low contrast on row IDs (e.g., 'r_rev') and '+ add' placeholders makes them difficult to read against the dark background.",
+    "Frame 2: The orange input border feels unpolished and lacks cohesive styling with the rest of the dark UI.",
+    "Frame 3: The green text inside the variance badge has poor contrast against the dark green pill background."
+  ],
+  "fixSuggestions": [
+    "Increase the contrast of the row IDs and placeholder text to improve overall readability.",
+    "Replace the harsh orange input border with a subtler, brand-consistent focus ring.",
+    "Adjust the badge colors in Frame 3 to ensure the text meets accessibility standards."
+  ]
+}

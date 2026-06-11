@@ -1,0 +1,26 @@
+{
+  "workflow": "app-ask-reconcile",
+  "judgeModel": "gemini-3.5-flash",
+  "judgedAt": "2026-06-11T09:25:58.822Z",
+  "frameCount": 10,
+  "sampledFrames": 10,
+  "scores": {
+    "readability": 8,
+    "pacing": 8,
+    "narrative_completeness": 10,
+    "visual_polish": 9,
+    "honesty_no_artifacts": 9
+  },
+  "average": 8.8,
+  "pass": true,
+  "topIssues": [
+    "Frame 4: This frame is virtually identical to Frame 3, representing 'dead air' where the agent is just 'thinking' without any new visual progress or log updates.",
+    "Frame 3-10: The 'Room trace' log in the bottom-right corner has extremely low contrast (dark gray text on a near-black background), making the step-by-step execution details very difficult to read.",
+    "Frame 1-10: Technical row identifiers (e.g., 'r_rev', 'r_cogs') are very small and low-contrast compared to the main account names."
+  ],
+  "fixSuggestions": [
+    "Consolidate Frame 3 and Frame 4 into a single frame or introduce a distinct visual change (like an active loading spinner state) to keep the pacing tight.",
+    "Increase the font contrast/brightness for the 'Room trace' log text to improve readability of the background agent actions.",
+    "Slightly increase the font size or contrast of the row keys on the far left of the spreadsheet to match the high polish of the rest of the table."
+  ]
+}

@@ -264,6 +264,9 @@ input { font-family: inherit; }
 .r-cell.committed { animation: wetink 1.4s var(--ease-out-expo); }
 @keyframes wetink { 0% { background: rgba(217,119,87,.28); } 100% { background: transparent; } }
 .r-cell .lockbadge { position: absolute; top: 50%; right: 6px; transform: translateY(-50%); display: inline-flex; align-items: center; gap: 3px; font-size: 9px; font-weight: 700; padding: 1px 5px; border-radius: 5px; }
+/* Reserve the badge's footprint: values are right-aligned, so without this the badge renders ON
+   TOP of the cell text (caught by the gemini GIF judge on the real-app recordings). */
+.r-cell.locked, .r-cell.draft { padding-right: 56px; }
 .r-cell.locked .lockbadge { background: rgba(217,119,87,.2); color: var(--accent-ink); }
 .r-cell.draft .lockbadge { background: rgba(31,138,91,.2); color: #2E9E6B; }
 .r-val-num { font-variant-numeric: tabular-nums; font-weight: 600; color: var(--text-primary); }
@@ -273,7 +276,7 @@ input { font-family: inherit; }
 .r-cell-edit:hover { background: var(--bg-hover); }
 .r-cell-edit .add-hint { display: inline-flex; align-items: center; gap: 3px; font-size: 11px; color: var(--text-tertiary); font-family: var(--font-mono); }
 .r-cell-edit:hover .add-hint { color: var(--accent-ink); }
-.r-cell-input { width: 100%; min-width: 56px; background: var(--bg-primary); border: 1px solid var(--accent-border); border-radius: 6px; padding: 3px 6px; margin: -3px 0; color: var(--text-primary); font: inherit; font-size: 12.5px; outline: none; box-shadow: 0 0 0 3px var(--accent-tint); }
+.r-cell-input { width: 100%; min-width: 56px; background: var(--bg-primary); border: 1.5px solid var(--accent-primary); border-radius: 6px; padding: 3px 6px; margin: -3px 0; color: var(--text-primary); font: inherit; font-size: 12.5px; outline: none; box-shadow: 0 0 0 3px var(--accent-tint); }
 .r-inline-proposal { margin-top: 4px; display: inline-flex; align-items: center; gap: 5px; max-width: 100%; padding: 2px 3px 2px 6px; border-radius: 6px; border: 1px solid rgba(217,119,87,.28); background: rgba(217,119,87,.12); color: var(--accent-ink); vertical-align: middle; }
 .r-inline-proposal-text { min-width: 0; max-width: 104px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 10.5px; font-weight: 800; }
 .r-inline-proposal-actions { display: inline-flex; gap: 3px; flex: none; }
@@ -389,7 +392,7 @@ input { font-family: inherit; }
 .r-detail-k { font-size: 9.5px; text-transform: uppercase; letter-spacing: .1em; color: var(--text-tertiary); font-weight: 700; }
 .r-detail-v { font-size: 12px; color: var(--text-primary); word-break: break-word; line-height: 1.4; }
 .r-detail-v a { color: var(--accent-ink); word-break: break-all; }
-.r-status { display: inline-flex; align-items: center; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 2px 8px; border-radius: 999px; }
+.r-status { display: inline-flex; align-items: center; font-size: 9.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; padding: 2px 8px; border-radius: 999px; white-space: nowrap; }
 .r-status-pending { color: var(--text-muted); background: var(--bg-secondary); border: 1px solid var(--line); }
 .r-status-running { color: #5b9bf5; background: rgba(91,155,245,.12); border: 1px solid rgba(91,155,245,.3); }
 .r-status-complete { color: var(--success-ink); background: rgba(31,138,91,.12); border: 1px solid rgba(31,138,91,.28); }

@@ -15,7 +15,7 @@
   .badge { font-size:10px; text-transform:uppercase; letter-spacing:.18em; color:var(--acc); font-weight:700; }
   .sub { color:var(--mut); font-size:12px; margin-top:3px; }
   .sheet { margin-top:20px; border:1px solid var(--edge); border-radius:12px; overflow:hidden; background:var(--panel); }
-  .row { display:grid; grid-template-columns:170px 1fr 96px; align-items:center; height:42px; border-bottom:1px solid var(--edge);
+  .row { display:grid; grid-template-columns:170px 1fr 112px; align-items:center; height:42px; border-bottom:1px solid var(--edge);
     font-size:13px; transition:background .2s, box-shadow .2s; }
   .row:last-child { border-bottom:none; }
   .row .lab { padding:0 14px; color:var(--mut); font-family:ui-monospace,'JetBrains Mono',monospace; font-size:11.5px; }
@@ -28,7 +28,7 @@
      saturated" — .19 with a soft single-edge accent is the midpoint that stays on-palette. */
   .row.conflict { background:rgba(224,86,78,.19); box-shadow:inset 3px 0 0 var(--bad); }
   .row.conflict .val { color:#f4a59d; font-weight:700; }
-  .row.conflict .tag { color:#f8d8d4; font-weight:700; padding-right:18px; }
+  .row.conflict .tag { color:#f8d8d4; font-weight:700; padding-right:18px; letter-spacing:.03em; }
   .row.draft { background:rgba(228,197,103,.14); box-shadow:inset 3px 0 0 #e4c567; }
   .row.draft .val { color:#f0d986; }
   .row.draft .tag { color:#f0d986; }
@@ -42,6 +42,14 @@
   .ticker { position:absolute; left:30px; right:30px; bottom:24px; display:flex; align-items:center; gap:12px; }
   .who { width:30px; height:30px; border-radius:9px; display:grid; place-items:center; font-weight:800; font-size:13px; flex:none;
     background:linear-gradient(135deg,var(--acc),#b9532f); color:#160d08; }
+  .who.human { background:linear-gradient(135deg,#5aa8e0,#2f6da8); color:#0a1218; }
+  /* A human-authored change gets the human's blue, never the agent's orange — the actor of every
+     row state must be readable from color alone (gemini judge: "lacks a visual input indicator"). */
+  .row.human { background:rgba(90,168,224,.13); box-shadow:inset 3px 0 0 #5aa8e0; }
+  .row.human .val { color:#9cc8ea; font-weight:700; }
+  .row.human .tag { color:#9cc8ea; }
+  .row.human .val::after { content:" human edit"; margin-left:10px; padding:2px 6px; border-radius:999px; color:#0a1218; background:#9cc8ea; font-size:9px; font-family:ui-monospace,'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.05em; }
+  .row.conflict .val::after { content:" CAS rejected"; margin-left:10px; padding:2px 6px; border-radius:999px; color:#240a08; background:#f4a59d; font-size:9px; font-family:ui-monospace,'JetBrains Mono',monospace; text-transform:uppercase; letter-spacing:.05em; }
   .act { font-size:13px; color:var(--ink); }
   .act b { color:var(--acc); }
   .step { position:absolute; right:30px; bottom:27px; font-size:10px; color:var(--mut); font-family:ui-monospace,monospace; letter-spacing:.08em; }
@@ -78,7 +86,9 @@ if (offIds.size) { rest = { id:'__rest', label:'… +' + offIds.size + ' more mo
 // Each frame is the state AFTER applying step i (frame 0 = initial). `hold` (ms) overrides the
 // default per-frame delay for moments that need reading time (conflicts, denials, asides).
 const frames = [];
-function snap(act, hold) { frames.push({ cells: cells.map(c => ({ ...c })), act, hold }); }
+// `who`: which actor the ticker attributes the step to — 'AI' (default) or 'H' (human). The
+// gemini judge flagged human actions as indistinguishable from agent actions without this.
+function snap(act, hold, who) { frames.push({ cells: cells.map(c => ({ ...c })), act, hold, who: who || 'AI' }); }
 // Footer references use the human LABEL when the cell is visible (raw ids like r_ni__variance are
 // developer-speak), and ALWAYS name the write target — an unnamed "writes =F7*(...)" next to a
 // visible F7 cell holding a different formula reads as a lie (gemini judge finding, 2026-06-11).
@@ -101,7 +111,7 @@ for (let ti = 0; ti < WF.trace.length; ti++) {
   const tool = ev.tool;
   const ids = (ev.args && ev.args.elementIds) || (ev.args && ev.args.elementId ? [ev.args.elementId] : []);
   const res = ev.result || {};
-  for (const c of cells) c.state = c.state === 'conflict' ? '' : c.state; // clear transient
+  for (const c of cells) c.state = (c.state === 'conflict' || c.state === 'human') ? '' : c.state; // clear transient
   let act = tool;
   if (tool === 'read_range') {
     for (const c of cells) if (c.state === 'active') c.state = '';
@@ -133,14 +143,15 @@ for (let ti = 0; ti < WF.trace.length; ti++) {
       // Three-beat conflict sequence (gemini judge iterations): (1) the agent's write ATTEMPT,
       // value held in the status bar only — it never lands; (2) the human's commit ARRIVING,
       // value looked ahead from the agent's own later re-read (same trace, no invention);
-      // (3) CAS rejecting the agent's stale write while the human's version is KEPT.
+      // (3) CAS rejecting the agent's stale write while the human's version stays visible.
       const human = byId[id] ? lookAheadValue(ti + 1, id) : null;
       if (byId[id]) {
         byId[id].state = 'active';
         snap('<b>attempts write ' + labelOf(id) + '</b> &rarr; ' + (v != null ? String(v) : '') + ' &middot; based on v' + (res.expected != null ? res.expected : '?'), 1600);
         if (human && human.value != null) byId[id].value = String(human.value);
         if (res.actual != null) byId[id].version = res.actual;
-        snap('<i>meanwhile</i> &mdash; a human commits ' + labelOf(id) + ' v' + (res.actual != null ? res.actual : '?') + (human && human.value != null ? ' &rarr; ' + human.value : ''), 2100);
+        byId[id].state = 'human';
+        snap('<i>meanwhile</i> &mdash; a human commits ' + labelOf(id) + ' v' + (res.actual != null ? res.actual : '?') + (human && human.value != null ? ' &rarr; ' + human.value : ''), 2100, 'H');
         byId[id].state = 'conflict';
       }
       act = 'CAS <b>rejects the agent\'s stale write</b> &mdash; ' + labelOf(id) + ' keeps the human\'s v' + (res.actual != null ? res.actual : '?');
@@ -192,8 +203,11 @@ window.frameCount = () => frames.length;
 window.frameHold = (i) => frames[Math.max(0,Math.min(i,frames.length-1))].hold ?? null;
 window.showFrame = (i) => {
   const f = frames[Math.max(0,Math.min(i,frames.length-1))];
+  const who = el('stage').querySelector('.who');
+  who.textContent = f.who || 'AI';
+  who.className = 'who' + (f.who === 'H' ? ' human' : '');
   el('sheet').innerHTML = f.cells.map(c =>
-    `<div class="row ${c.state}"><div class="lab">${c.label}</div><div class="val">${c.value===''?'&mdash;':c.value}</div><div class="tag">${c.id==='__rest'?(c.version?c.version+' &check;':'&mdash;'):c.state==='locked'?'locked':c.state==='conflict'?'v'+c.version+' kept':c.state==='draft'?'draft':c.state==='committed'?'&check; v'+c.version:'v'+c.version}</div></div>`
+    `<div class="row ${c.state}"><div class="lab">${c.label}</div><div class="val">${c.value===''?'&mdash;':c.value}</div><div class="tag">${c.id==='__rest'?(c.version?c.version+' &check;':'&mdash;'):c.state==='locked'?'locked':c.state==='draft'?'draft':c.state==='committed'?'&check; v'+c.version:'v'+c.version}</div></div>`
   ).join('');
   el('act').innerHTML = f.act;
   el('stepn').textContent = i+'/'+(frames.length-1);

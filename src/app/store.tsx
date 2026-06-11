@@ -18,6 +18,14 @@ import { InMemoryRoomTools } from "../agent/roomTools";
 import { ROOM_TOOLS } from "../agent/tools";
 import { runAgent as runHarness } from "../agent/runtime";
 import { scriptedModel } from "../agent/scripted";
+import type { AgentModel } from "../agent/types";
+
+/** Demo-mode pacing: yield ~`ms` between scripted agent steps so the UI paints every CAS beat.
+ *  The steps are real engine mutations — this only makes them watchable (a run that completes in
+ *  one tick demos as a dishonest-looking 0->100% jump; gemini GIF-judge finding, 2026-06-11). */
+function paced(model: AgentModel, ms: number): AgentModel {
+  return { ...model, next: async (args) => { await new Promise((r) => setTimeout(r, ms)); return model.next(args); } };
+}
 import { recomputeVariancePlan, companyResearchPlan } from "../agent/plans";
 import { buildResearchContext } from "../agent/context";
 import { RESEARCH_PLAN } from "../engine/demoRoom";
@@ -194,6 +202,12 @@ function referenceNames(refs?: ArtifactRef[]): string {
   return refs?.length ? refs.map((ref) => ref.title).join(", ") : "the referenced artifact";
 }
 
+function sheetContextLabel(sheet: Artifact): string {
+  const grid = sheet.meta?.excelGrid;
+  if (grid) return `Excel workbook grid (${grid.sheetName}, ${grid.rows} rows x ${grid.columns} columns)`;
+  return `structured dataframe context (${sheet.meta?.dataframe?.rowCount ?? "unknown"} rows)`;
+}
+
 function withReferenceContext(goal: string, refs?: ArtifactRef[]): string {
   if (!refs?.length) return goal;
   const context = refs.map((ref) => `${ref.title} (${ref.kind}, id=${ref.id})`).join("; ");
@@ -284,7 +298,7 @@ export function EngineStoreProvider({ roomId, children }: { roomId: string; me: 
           roomId,
           channel: "public",
           author: actor,
-          text: `I received ${referenceNames(references)} as structured dataframe context (${sheet.meta?.dataframe?.rowCount ?? "unknown"} rows). Dynamic ENRICH/CLASSIFY execution is staged next; variance recompute only runs on Q3 variance.`,
+          text: `I received ${referenceNames(references)} as ${sheetContextLabel(sheet)}. Dynamic ENRICH/CLASSIFY execution is staged next; variance recompute only runs on Q3 variance.`,
           clientMsgId: crypto.randomUUID(),
           kind: "agent",
         });
@@ -297,7 +311,7 @@ export function EngineStoreProvider({ roomId, children }: { roomId: string; me: 
         return;
       }
       const rt = new InMemoryRoomTools(engine, roomId, sheet.id, actor, sess.id);
-      const result = await runHarness({ rt, goal, model: scriptedModel(recomputeVariancePlan(targets, { lock: true })), tools: ROOM_TOOLS, maxSteps: 16 });
+      const result = await runHarness({ rt, goal, model: paced(scriptedModel(recomputeVariancePlan(targets, { lock: true })), 140), tools: ROOM_TOOLS, maxSteps: 16 });
       // The scripted plan narrates via the model's text, not the say tool — post that summary to the room
       // (the live path narrates through the real say tool inside the action).
       if (result.finalText) engine.postMessage({ roomId, channel: "public", author: actor, text: result.finalText, clientMsgId: crypto.randomUUID(), kind: "agent" });
@@ -322,7 +336,7 @@ export function EngineStoreProvider({ roomId, children }: { roomId: string; me: 
       const result = await runHarness({
         rt,
         goal: withReferenceContext(input.goal, references),
-        model: scriptedModel(recomputeVariancePlan({ r_gp__variance: "+21.7%", r_ni__variance: "+22.4%" }, { lock: true })),
+        model: paced(scriptedModel(recomputeVariancePlan({ r_gp__variance: "+21.7%", r_ni__variance: "+22.4%" }, { lock: true })), 140),
         tools: ROOM_TOOLS,
         maxSteps: 16,
       });
@@ -341,7 +355,7 @@ export function EngineStoreProvider({ roomId, children }: { roomId: string; me: 
         return;
       }
       const rt = new InMemoryRoomTools(engine, roomId, research.id, actor, sess.id);
-      const result = await runHarness({ rt, goal: "Research every pending company.", model: scriptedModel(companyResearchPlan(pending)), tools: ROOM_TOOLS, contextBuilder: buildResearchContext, maxSteps: 60 });
+      const result = await runHarness({ rt, goal: "Research every pending company.", model: paced(scriptedModel(companyResearchPlan(pending)), 240), tools: ROOM_TOOLS, contextBuilder: buildResearchContext, maxSteps: 60 });
       if (result.finalText) engine.postMessage({ roomId, channel: "public", author: actor, text: result.finalText, clientMsgId: crypto.randomUUID(), kind: "agent" });
     },
     lastRun: () => null, // the in-memory scripted agent makes no API calls — no token/cost telemetry

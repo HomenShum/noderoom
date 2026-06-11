@@ -1,0 +1,24 @@
+{
+  "workflow": "app-wiki-note-grounding",
+  "judgeModel": "gemini-3.5-flash",
+  "judgedAt": "2026-06-11T09:23:21.354Z",
+  "frameCount": 2,
+  "sampledFrames": 2,
+  "scores": {
+    "readability": 8,
+    "pacing": 9,
+    "narrative_completeness": 6,
+    "visual_polish": 9,
+    "honesty_no_artifacts": 10
+  },
+  "average": 8.4,
+  "pass": true,
+  "topIssues": [
+    "Frame 2: The narrative connection between the 'diligence note' (which discusses null cells and sync reliability in Frame 1) and the spreadsheet is weak. The spreadsheet does not display any null cells or highlight the specific rows/cells that ground the note's claims.",
+    "Frame 2: Low contrast text for the helper instruction 'click a Variance or Note cell to edit by hand' and the technical row IDs (e.g., 'r_rev', 'r_cogs') makes them difficult to read against the dark background."
+  ],
+  "fixSuggestions": [
+    "Add visual grounding cues, such as highlighting a specific row or cell in Frame 2 that directly relates to the 'null cells' or 'sync reliability' topic discussed in the Note in Frame 1.",
+    "Increase the font contrast/brightness for the helper text and row IDs in Frame 2 to improve readability on dark backgrounds."
+  ]
+}

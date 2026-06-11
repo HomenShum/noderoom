@@ -1,7 +1,7 @@
 {
   "workflow": "l6-long-horizon",
   "judgeModel": "gemini-3.5-flash",
-  "judgedAt": "2026-06-11T08:17:20.457Z",
+  "judgedAt": "2026-06-11T09:25:27.117Z",
   "frameCount": 38,
   "sampledFrames": 12,
   "scores": {
@@ -9,16 +9,18 @@
     "pacing": 9,
     "narrative_completeness": 8,
     "visual_polish": 9,
-    "honesty_no_artifacts": 9
+    "honesty_no_artifacts": 10
   },
-  "average": 8.8,
+  "average": 9,
   "pass": true,
   "topIssues": [
-    "frame 8: The value of 'Gross profit / variance' suddenly changes from +21.7% (V1) to +19% (V2) under the generic status 'compaction' without explaining that a human conflict or background update occurred, unlike the clear explanation in frame 2.",
-    "frame 11: 'Opex / variance' suddenly updates to +20.5% (✓ V2) under the generic 'compaction' label, making it hard to track who or what initiated this specific value change."
+    "frame 8: The value for 'Gross profit / variance' suddenly changes to '+19% V2' during a 'compaction' step without showing the preceding human edit action, unlike the clear 'meanwhile' explanation provided in frame 2.",
+    "frame 4: The term 'compaction' is used as a bare status label without explaining what is being compacted or why it is occurring, which may confuse first-time viewers unfamiliar with context-window compaction.",
+    "frame 11: Multiple state changes occur simultaneously (Opex updates to +20.5% V2 while Net Income is highlighted for compaction), making it harder to track which action caused which update."
   ],
   "fixSuggestions": [
-    "In frames 8 and 11, replace the generic 'compaction' status text with more descriptive labels (e.g., 'compaction — human concurrently updates Gross profit' or 'compaction — applying Opex update') to maintain the high narrative clarity established in the early frames.",
-    "Increase the color contrast of the orange/brown row highlight background to improve readability against the dark background for users with low-contrast sensitivity."
+    "Insert a brief 'meanwhile' frame before frame 8 to show the human committing the +19% edit to Gross Profit, maintaining narrative consistency with the Revenue step.",
+    "Expand the 'compaction' label to be more descriptive, e.g., 'compacting edit history' or 'reducing context size' to clarify the system's internal action.",
+    "Ensure the progress bar ticks at the bottom have slightly higher contrast against the dark background to improve progress readability."
   ]
 }

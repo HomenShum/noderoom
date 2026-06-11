@@ -1,24 +1,24 @@
 {
   "workflow": "l2-edit",
   "judgeModel": "gemini-3.5-flash",
-  "judgedAt": "2026-06-11T08:16:14.947Z",
+  "judgedAt": "2026-06-11T09:24:11.356Z",
   "frameCount": 5,
   "sampledFrames": 5,
   "scores": {
     "readability": 9,
     "pacing": 8,
-    "narrative_completeness": 9,
+    "narrative_completeness": 8,
     "visual_polish": 9,
-    "honesty_no_artifacts": 10
+    "honesty_no_artifacts": 9
   },
-  "average": 9,
+  "average": 8.6,
   "pass": true,
   "topIssues": [
-    "frame 3: There is no visual change in the main table area compared to Frame 2. The 'read' action is only communicated via the bottom caption, making the UI feel static for 1400ms.",
-    "frame 4: The transition from locked to written happens instantly, losing the visual connection of comparing the version (V1) before setting the new value (V2)."
+    "frame 3: The 'reads version v1' action has no visual representation in the main table UI; the row still just shows 'LOCKED' on the right, missing an opportunity to highlight the 'V1' badge being read.",
+    "frame 5: The main table UI is completely identical to frame 4, meaning the final 2000ms frame only updates the bottom caption text, creating a static visual plateau at the end of the GIF."
   ],
   "fixSuggestions": [
-    "In frame 3, add a subtle highlight or pulse effect specifically around the 'V1' badge on the right to visually represent the 'read version' action.",
-    "Slightly reduce the duration of frame 3 to 1000ms to keep the pacing snappy, as the visual layout remains largely identical to frame 2."
+    "In frame 3, temporarily highlight or pulse the 'V1' text in the Net income row to visually represent the 'read' action described in the bottom caption.",
+    "Keep the row highlighted/locked in frame 4 while the write is happening, and only release the highlight/lock styling in frame 5 to make the 'lock released' caption in the final frame feel visually earned and dynamic."
   ]
 }

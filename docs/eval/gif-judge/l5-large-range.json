@@ -1,26 +1,26 @@
 {
   "workflow": "l5-large-range",
   "judgeModel": "gemini-3.5-flash",
-  "judgedAt": "2026-06-11T08:16:57.210Z",
+  "judgedAt": "2026-06-11T09:24:53.622Z",
   "frameCount": 5,
   "sampledFrames": 5,
   "scores": {
     "readability": 9,
     "pacing": 6,
-    "narrative_completeness": 7,
+    "narrative_completeness": 5,
     "visual_polish": 9,
-    "honesty_no_artifacts": 8
+    "honesty_no_artifacts": 7
   },
-  "average": 7.8,
+  "average": 7.2,
   "pass": true,
   "topIssues": [
-    "frame 3: The main UI is completely identical to frame 2, creating visual 'dead air' where the viewer must rely entirely on the bottom caption to know a 'read' action occurred.",
-    "frame 5: The main UI is completely identical to frame 4. The caption states 'lock released', but the visual lock indicator was already removed in frame 4, making this frame feel redundant and static.",
-    "frame 1: The narrative goal is 'Load only the 5-row window... never the full sheet', but there is no visual context of the surrounding 600-row sheet or a loading state to prove this behavior."
+    "Frame 3: There is zero visual change in the main UI compared to Frame 2. Only the bottom caption updates, creating 'dead air' where the viewer is forced to stare at a static locked state.",
+    "Frame 5: No visual changes occur in the main UI compared to Frame 4. The 'lock released' state is only communicated via the bottom caption, leaving the actual table looking identical.",
+    "Frame 1-5: The stated goal in the title ('Load only the 5-row window around the target') is never actually demonstrated or visualized. The walkthrough instead focuses on a row locking and versioning sequence, creating a narrative mismatch."
   ],
   "fixSuggestions": [
-    "In frame 3, add a subtle visual indicator for the 'read' action, such as a temporary scanning highlight or an eye icon next to the locked row.",
-    "In frame 4, keep the 'LOCKED' status and orange border active while the write is happening, then visually transition to the unlocked/normal state in frame 5 to clearly illustrate the 'lock released' step.",
-    "To reinforce the 'Large range' narrative, start frame 1 with a brief skeleton loader showing a 600-row outline, which instantly collapses/focuses down to just the 5-row active window."
+    "Consolidate Frame 2 and Frame 3 into a single step, or introduce a visual 'reading' animation/indicator in Frame 3 to differentiate it from Frame 2.",
+    "In Frame 5, visually demonstrate the 'lock released' state in the table (e.g., transition the row background back to normal or show a temporary 'Success' toast).",
+    "Update the title and subtitle of the demo to match the actual action sequence (e.g., 'Safe Concurrent Writes' or 'Row-Level Versioning') rather than focusing on the 5-row window loading mechanism."
   ]
 }

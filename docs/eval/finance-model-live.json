@@ -1,43 +1,43 @@
 {
-  "generatedAt": "2026-06-11T01:14:59.570Z",
+  "generatedAt": "2026-06-11T01:23:02.503Z",
   "caseId": "finance-model-private-v1",
   "mode": "live",
-  "modelName": "qwen/qwen3.7-max",
+  "modelName": "gemini-3.5-flash",
   "status": "failed",
-  "score": 0.375,
+  "score": 0.75,
   "checks": {
-    "stoppedCleanly": false,
+    "stoppedCleanly": true,
     "lockedBeforeWrite": true,
     "writesOnlyForecastCells": true,
-    "allTargetsWritten": false,
+    "allTargetsWritten": true,
     "everyFormulaLinked": false,
     "valueTieOutComputable": false,
-    "releasedLock": false,
+    "releasedLock": true,
     "noAnswerKeyLeakage": true
   },
   "cells": [
     {
       "cell": "F7",
       "label": "Revenue",
-      "formulaOk": false,
-      "valueOk": false
+      "formulaOk": true,
+      "valueOk": true
     },
     {
       "cell": "G7",
       "label": "Revenue",
-      "formulaOk": false,
-      "valueOk": false
+      "formulaOk": true,
+      "valueOk": true
     },
     {
       "cell": "F8",
       "label": "COGS",
-      "formulaOk": false,
-      "valueOk": false
+      "formulaOk": true,
+      "valueOk": true
     },
     {
       "cell": "F12",
       "label": "Depreciation and amortization",
-      "formulaOk": false,
+      "formulaOk": true,
       "valueOk": false
     },
     {
@@ -49,13 +49,13 @@
     {
       "cell": "F19",
       "label": "Income tax expense",
-      "formulaOk": false,
+      "formulaOk": true,
       "valueOk": true
     },
     {
       "cell": "F36",
       "label": "Net cash from operations",
-      "formulaOk": false,
+      "formulaOk": true,
       "valueOk": true
     },
     {
@@ -67,31 +67,31 @@
     {
       "cell": "F50",
       "label": "Ending cash",
-      "formulaOk": false,
+      "formulaOk": true,
       "valueOk": true
     },
     {
       "cell": "F54",
       "label": "Cash and cash equivalents",
-      "formulaOk": false,
+      "formulaOk": true,
       "valueOk": true
     },
     {
       "cell": "F55",
       "label": "Accounts receivable",
-      "formulaOk": false,
+      "formulaOk": true,
       "valueOk": false
     },
     {
       "cell": "F60",
       "label": "PP&E net",
-      "formulaOk": false,
+      "formulaOk": true,
       "valueOk": true
     },
     {
       "cell": "F73",
       "label": "Revolver",
-      "formulaOk": false,
+      "formulaOk": true,
       "valueOk": true
     },
     {
@@ -113,8 +113,8 @@
       "valueOk": true
     }
   ],
-  "costUsd": 0.187844,
-  "ms": 710023,
-  "toolCalls": 7,
-  "goldSourceHash": "3d2f577370eaf65c"
+  "costUsd": 0.205293,
+  "ms": 99672,
+  "toolCalls": 23,
+  "note": "best live route to date (six-iteration HALO loop; oracle unchanged); no supported route clears the full bar yet"
 }

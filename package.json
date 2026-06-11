@@ -56,6 +56,8 @@
     "commit:check": "tsx scripts/commit-message.ts --check-last",
     "commit:check:range": "tsx scripts/commit-message.ts --check-range",
     "eval:professional": "vitest run tests/professionalWorkflows.test.ts",
+    "eval:finance-model": "tsx scripts/finance-model-eval.ts",
+    "eval:finance-model-private": "tsx scripts/private-finance-model-gold.ts",
     "eval:credit": "tsx evals/creditEval.ts",
     "ladder": "tsx evals/ladder.ts",
     "ladder:real": "tsx evals/ladder.ts --real",

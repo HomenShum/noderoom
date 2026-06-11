@@ -177,9 +177,53 @@ User starts slow free-auto work through `/free`; the same `agentJobs` contract
 shows status, attempts, details, traces, receipts, and the HALO regression
 handoff evidence.
 
+### Finance Model Solve
+
+![Finance model solve](docs/eval/workflow-previews/finance-model-solve.gif)
+
+User uploads a three-statement modeling test and asks NodeAgent to solve it.
+The eval seeds the `Your Model` sheet, locks the critical forecast cells, reads
+versions, writes linked formulas through CAS, releases the lock, and grades the
+final artifact plus trace against a gold oracle. The GIF above is a trace replay
+of the **best live run to date** — a real route writing real linked formulas
+(`=E7*(1+'Historical Data'!D98)` is the model's own work). The private workbook
+runs locally and its answer-key formulas never enter the agent's context or the
+repo (`evals/financeModelLive.ts`; content-based leakage gate).
+
+**The live scoreboard is the point, and it's honest:** after a six-iteration
+HALO loop (harness fixes only — the oracle never moved), every live route runs
+the full lock → read → CAS-write → release protocol cleanly, but **no supported
+route clears the full IB answer-key bar yet**: `gemini-3.5-flash` leads at 9/16
+oracle-exact formulas (+2 formula-true with value slips), `minimax` 7/16; the
+misses are real finance conventions (which debt rows feed interest, dividends
+vs. paydown, subtotal linkage). Like the benchmark's "Why v3 exists," this is
+evidence of the gap — a published bar that models must earn, refreshed with
+`npx tsx evals/financeModelLive.ts --real <route>` (redacted summary:
+`docs/eval/finance-model-live.json`).
+
 The HALO ladder also renders trace-replayed skill previews from real ladder JSON
 (`l1-read` through `l6-long-horizon`) in `docs/eval/workflow-previews/`, so a
 workflow change has a small visual proof, not only a text score.
+
+### Where the walkthroughs go next
+
+The clip set expands along the **six user → agent interaction modes** from the
+[eval checklist](docs/AGENT_EVAL.md) — every mode that earns a passing eval
+earns a captured walkthrough, in this order:
+
+1. **Teach me (Guide mode)** — the agent coaches a student through the model
+   with **zero writes to answer cells**; the clip shows hints landing while the
+   sheet stays agent-untouched (restraint is the visual).
+2. **Modeling test · Collaborate** — agent + two humans split IS/BS/CF under
+   range locks; drafts smart-merge on release across shared linkage rows.
+3. **L7 RESUME live** — slice death mid-job, a human revises a cell while the
+   agent is dead, the cold continuation finishes only what remains.
+4. **File-drop ingestion** — a 10-K PDF + XLSX dropped into the room becomes a
+   cited sheet (plus the receipts → expense-report variant).
+5. **Sensitive-query guardrail** — the private agent declining specific
+   financial advice *with a stated reason* (the discretion clip).
+6. **Spend-cap breach attribution** — `global_monthly_spend_cap:rooms=N`
+   rendered as the growth-vs-runaway diagnosis it encodes.
 
 ## Audience-World Proof Artifacts
 
@@ -602,7 +646,7 @@ NodeAgent to work**. The full per-case inventory (with file refs and recorded re
 
 | Interaction mode | Running today | Designed, to build |
 |---|---|---|
-| **1 · Do it for me** (autonomous solve) | variance/footnote/note/wall goldens · GTM research enrichment (v3 benchmark, 8/11 routes 9/9) · professional workflow pack (GTM scoring, finance reconciliation, approvals, disclosure safety) · credit cascade + cell-mapping rejection | 3-statement modeling test (Solve, private answer-key gold) · SEC model-build flagship · N-doc research (benchmark v4) · file-drop ingestion (10-K/XLSX/receipts) · knowledge-organization pack |
+| **1 · Do it for me** (autonomous solve) | variance/footnote/note/wall goldens · GTM research enrichment (v3 cheap/free smoke, 18/28 routes 9/9) · professional workflow pack (GTM scoring, finance reconciliation, approvals, disclosure safety) · credit cascade + cell-mapping rejection | 3-statement modeling test (Solve, private answer-key gold) · SEC model-build flagship · N-doc research (benchmark v4) · file-drop ingestion (10-K/XLSX/receipts) · knowledge-organization pack |
 | **2 · Do it with us** (live collaboration) | ladder **L1–L7 scripted** + **L1–L4 live** across 11 routes (full passes: `gemini-3.5-flash`, `nemotron-3-ultra` — the research champion fails L1/L4, proving lanes promote separately) · multi-turn provenance · sustained concurrent room · lease fencing/takeover | L5–L7 live · modeling test (Collaborate: split IS/BS/CF under locks) · L8 roles/redaction · L9 entity resolution · L10 cross-artifact · live adversarial-source rung |
 | **3 · Work under review** (proposals) | review-mode inline proposals + room-policy briefing regression · approval-shaped professional case | L8 formalizes role-gated approve/promote/redact |
 | **4 · Advise me privately** (read-only consult) | private no-tools reply path · private-draft redaction · prompt-injection fencing 4/4 | sensitive-query guardrail (decline with stated reason) |
@@ -660,7 +704,7 @@ This section is generated from `docs/qa/production-matrix.json`. When the system
 | `gpt-5.4-nano` | OpenAI | PASS | FAIL | FAIL | FAIL | research benchmark winner candidate only when collaboration safety is not required |
 | `gpt-5.4` | OpenAI | PASS | FAIL | PASS | PASS | requires rerun because L2 time-budget failure blocks promotion |
 
-Research benchmark route: `openrouter/free-auto -> nvidia/nemotron-3-super-120b-a12b:free` is the cheapest current v3 composite-synthesis model clearing 9/9 checks at $0.0000 per run. Collaboration routing still uses the ladder gate above, not benchmark cost alone.
+Research benchmark route: `nex-agi/nex-n2-pro:free` is the fastest $0 current v3 composite-synthesis model clearing 9/9 checks at $0.0000 per run. Collaboration routing still uses the ladder gate above, not benchmark cost alone.
 
 Full QA ledger: [`docs/PRODUCTION_GUARANTEE_MATRIX.md`](docs/PRODUCTION_GUARANTEE_MATRIX.md).
 <!-- QA_COCKPIT_END -->
@@ -869,16 +913,20 @@ validates with zod and does the CAS writes, citations, freshness, status, and lo
 from-memory text with no derivation from the fetched evidence, and the LLM judge grades the
 model-authored summaries against the actual fetched snippets.
 
-Latest verified v3 run (3 companies, per-row trace refs in `docs/eval/traces/benchmark/`):
+Latest verified v3 run (2026-06-11 OpenRouter cheap/free catalog smoke, 1 company,
+route snapshot `fabbcd520e971ec7`, per-row trace refs in `docs/eval/traces/benchmark/`):
 
 | Route | Gate | Cost/run | Time | What the gate saw |
 |---|---|---|---|---|
-| `deepseek/deepseek-v4-flash` | **9/9** | $0.0034 | 91s | Real grounded synthesis on every row ("Anthropic is an AI safety and research company best known for creating Claude…") |
-| `openrouter/free-auto` → `nemotron-3-super-120b:free` | 7/9 | $0.0000 | 216s | Failed `STRUCTURED_FIELDS` + `NO_FABRICATION`: wrote "the snippets do not contain a description…" — the exact disclaimer-shaped non-answer the content floor exists to reject |
+| `nex-agi/nex-n2-pro:free` | **9/9** | $0.0000 | 6.2s | Fastest free route that completed the current smoke. |
+| `ibm-granite/granite-4.1-8b` | **9/9** | $0.0009 | 6.3s | Cheapest paid route that completed the current smoke. |
+| `z-ai/glm-4.7-flash` | **9/9** | $0.0013 | 17.5s | Low-cost paid route with successful sourced synthesis. |
+| `deepseek/deepseek-v4-flash` | **9/9** | $0.0020 | 38.7s | Prior 3-company champion still clears the cheaper smoke. |
 
-That contrast is the point: the gate now **differentiates synthesis quality** instead of grading
-harness choreography. The cheapest route clearing the full gate is promotion evidence for the
-background research workflow only; collaboration routing still uses the lock/CAS/draft ladder.
+The run attempted 28 current cheap/free or very low-cost OpenRouter routes; 18 cleared 9/9 and 10
+were recorded as provider, harness, or model failures instead of being hidden. This is promotion
+evidence for the background research workflow only; collaboration routing still uses the
+lock/CAS/draft ladder.
 Run `npm run benchmark` or `npm run benchmark:free` to refresh it.
 
 The broader supported-model bakeoff is tracked separately in

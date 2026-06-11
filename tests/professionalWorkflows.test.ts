@@ -4,6 +4,14 @@ import {
   PROFESSIONAL_WORKFLOW_CASES,
   type ProfessionalWorkflowCategory,
 } from "../evals/professionalWorkflows";
+import {
+  FINANCE_MODEL_CRITICAL_FORMULAS,
+  FINANCE_MODEL_MODE_CONTRACTS,
+  FINANCE_MODEL_REQUIRED_SHEETS,
+  PRIVATE_FINANCE_MODEL_GOLD_ENV,
+  formulaMentionsAllRefs,
+  normalizeExcelFormula,
+} from "../evals/financeModelGold";
 
 const categories: ProfessionalWorkflowCategory[] = [
   "gtm_company_research",
@@ -89,5 +97,40 @@ describe("professional workflow eval catalog", () => {
     expect(json).not.toMatch(/C:[/\\]Users/i);
     expect(json).not.toMatch(/Downloads[/\\]/i);
   });
-});
 
+  it("tracks the private 3-statement modeling gold pack without committing the workbook", () => {
+    const modeling = PROFESSIONAL_WORKFLOW_CASES.find((c) => c.id === "finance-three-statement-modeling-private-gold");
+    expect(modeling).toBeTruthy();
+    expect(modeling?.requiredHarness).toEqual(expect.arrayContaining([
+      "private_gold_pack",
+      "answer_key_formula_oracle",
+      "formula_structure_equivalence",
+      "guide_mode_no_write",
+      "section_collaboration_locks",
+    ]));
+    expect(modeling?.evalSteps.join(" ")).toMatch(/Solve mode/i);
+    expect(modeling?.evalSteps.join(" ")).toMatch(/Guide mode/i);
+    expect(modeling?.evalSteps.join(" ")).toMatch(/Collaborate mode/i);
+    expect(modeling?.fixtureStrategy).toContain("outside the public repo");
+    expect(modeling?.productionNotes.join(" ")).toContain("beginning debt balances");
+  });
+
+  it("defines a finance-model oracle around required sheets and formula structure, not pasted values", () => {
+    expect(FINANCE_MODEL_REQUIRED_SHEETS).toEqual([
+      "Test Prompt",
+      "Historical Data",
+      "Your Model",
+      "Answer Key",
+    ]);
+    expect(PRIVATE_FINANCE_MODEL_GOLD_ENV).toBe("NODEAGENT_FINANCE_MODEL_GOLD_XLSX");
+    expect(FINANCE_MODEL_MODE_CONTRACTS.map((contract) => contract.mode)).toEqual([
+      "solve",
+      "guide",
+      "collaborate",
+    ]);
+    expect(FINANCE_MODEL_CRITICAL_FORMULAS.length).toBeGreaterThanOrEqual(12);
+    expect(FINANCE_MODEL_CRITICAL_FORMULAS.some((check) => check.cell === "F85" && check.label === "Balance check")).toBe(true);
+    expect(normalizeExcelFormula(" = e7 * ( 1 + 'Historical Data'!$D$98 ) ")).toBe("E7*(1+'HISTORICALDATA'!D98)");
+    expect(formulaMentionsAllRefs("=E7*(1+'Historical Data'!D98)", ["E7", "'Historical Data'!D98"])).toBe(true);
+  });
+});

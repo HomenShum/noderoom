@@ -29,7 +29,9 @@ playwright-report/
 playwright/.cache/
 
 # local scratch
+.tmp/
 .tmp-qa/
+docs/eval/finance-model-runs/
 
 # Walkthrough capture intermediates (regenerable: npm run walkthroughs)
 remotion/public/frames/

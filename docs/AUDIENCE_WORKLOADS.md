@@ -32,8 +32,12 @@ not revenue — MLH mandates free tooling); finance + founder + GTM + affluent a
 **The line that dwarfs infra:** LLM spend. At the prosumer-wedge mix, ~60k agent tasks/mo costs
 $200–16,000/mo depending entirely on routing (v3-composite cheap routes vs premium). Infra is
 5–15% of total spend — **model routing is the cost lever, not the database** (see
-`docs/OPERATING_BUDGET.md`). With the v3 composite shape measured at $0.0034/task on
-`deepseek-v4-flash`, the experiment envelope supports hundreds of power users.
+`docs/OPERATING_BUDGET.md`). With the v3 composite shape now smoke-tested at
+$0 on `nex-agi/nex-n2-pro:free`, $0.0009 on `ibm-granite/granite-4.1-8b`, and
+$0.0020 on `deepseek-v4-flash` for a 1-company sourced row, the experiment
+envelope supports hundreds of power users. The older 3-company champion evidence
+still belongs to `deepseek-v4-flash`; the free/ultra-cheap routes need repeated
+larger runs before default promotion.
 
 ## Bill-shock guardrails (from 16 real reported bills, HN meta-analysis)
 

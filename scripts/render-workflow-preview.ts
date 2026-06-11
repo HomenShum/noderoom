@@ -32,6 +32,15 @@ const VARIANCE_ROWS: Cell[] = [
   { id: "r_ni__variance", label: "Net income / variance", value: "" },
 ];
 
+const FINANCE_MODEL_CELLS: Cell[] = [
+  { id: "F7", label: "F7 / revenue", value: "" },
+  { id: "F16", label: "F16 / interest expense", value: "" },
+  { id: "F44", label: "F44 / revolver logic", value: "" },
+  { id: "F73", label: "F73 / revolver balance", value: "" },
+  { id: "F85", label: "F85 / balance check", value: "" },
+  { id: "G85", label: "G85 / balance check", value: "" },
+];
+
 const WORKFLOWS: Workflow[] = [
   { id: "l1-read", title: "Read", badge: "L1 / context", subtitle: "Report a value without changing anything", tracePattern: /ladder_L1_read/, cells: VARIANCE_ROWS },
   { id: "l2-edit", title: "Edit with CAS", badge: "L2 / single write", subtitle: "Claim the cell, read its version, write with compare-and-set", tracePattern: /ladder_L2_edit/, cells: VARIANCE_ROWS },
@@ -49,6 +58,14 @@ const WORKFLOWS: Workflow[] = [
     ],
   },
   { id: "l6-long-horizon", title: "Long horizon", badge: "L6 / multi-cell + recovery", subtitle: "Fill five cells under repeated conflicts, compacting context, never locking", tracePattern: /ladder_L6_long/, cells: VARIANCE_ROWS },
+  {
+    id: "finance-model-solve",
+    title: "Finance Model Solve",
+    badge: "Professional / 3-statement",
+    subtitle: "Lock the forecast cells, read current versions, write linked formulas, release for review",
+    tracePattern: /finance_model_solve/,
+    cells: FINANCE_MODEL_CELLS,
+  },
 ];
 
 function findTrace(pattern: RegExp): string | null {

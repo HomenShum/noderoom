@@ -1,18 +1,18 @@
 {
   "benchmarkVersion": "company-research-v3-composite-synthesis",
-  "generatedAt": "2026-06-10T21:48:08.700Z",
+  "generatedAt": "2026-06-11T01:13:04.423Z",
   "task": "company-research",
-  "companies": 3,
+  "companies": 1,
   "judge": "gemini-3.1-flash-lite",
   "routeSnapshot": {
     "routeSnapshotId": "fabbcd520e971ec7",
-    "fetchedAt": "2026-06-10T21:42:45.656Z",
+    "fetchedAt": "2026-06-11T01:11:16.651Z",
     "source": "openrouter"
   },
   "timeouts": {
-    "modelTimeoutMs": null,
-    "reserveMs": null,
-    "rowHardTimeoutMs": null
+    "modelTimeoutMs": 120000,
+    "reserveMs": 10000,
+    "rowHardTimeoutMs": 150000
   },
   "checks": [
     "ALL_COMPLETE",
@@ -28,34 +28,70 @@
   "models": [
     {
       "benchmarkVersion": "company-research-v3-composite-synthesis",
-      "model": "openrouter/free-auto",
-      "requestedModel": "openrouter/free-auto",
-      "resolvedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "model": "nex-agi/nex-n2-pro:free",
+      "requestedModel": "nex-agi/nex-n2-pro:free",
+      "resolvedModel": "nex-agi/nex-n2-pro:free",
       "resolvedModels": [
-        "nvidia/nemotron-3-super-120b-a12b:free"
+        "nex-agi/nex-n2-pro:free"
       ],
-      "ok": false,
+      "ok": true,
       "checks": {
         "ALL_COMPLETE": true,
         "EVERY_ROW_SOURCED": true,
         "EVERY_ROW_MULTI_SOURCE": true,
         "SOURCES_FETCHED": true,
-        "STRUCTURED_FIELDS": false,
+        "STRUCTURED_FIELDS": true,
         "FRESHNESS_WRITTEN": true,
         "COMPLETED_IN_BUDGET": true,
-        "NO_FABRICATION": false,
+        "NO_FABRICATION": true,
         "RIGHT_ENTITY": true
       },
-      "passed": 7,
+      "passed": 9,
       "total": 9,
-      "inputTokens": 35988,
-      "outputTokens": 6373,
+      "inputTokens": 7725,
+      "outputTokens": 206,
       "costUsd": 0,
-      "ms": 216015,
-      "steps": 11,
-      "toolCalls": 9,
-      "failureOwner": "model",
-      "failureReason": "failed checks: STRUCTURED_FIELDS, NO_FABRICATION",
+      "ms": 6225,
+      "steps": 4,
+      "toolCalls": 2,
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0,
+        "outputPer1M": 0,
+        "contextWindow": 262144,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      },
+      "traceRef": "docs/eval/traces/benchmark/20260611T0050542-nex-agi-nex-n2-pro-free-nex-agi-nex-n2-pro-free.json"
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "requestedModel": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "resolvedModel": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "resolvedModels": [
+        "nvidia/nemotron-3-ultra-550b-a55b:free"
+      ],
+      "ok": true,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "EVERY_ROW_MULTI_SOURCE": true,
+        "SOURCES_FETCHED": true,
+        "STRUCTURED_FIELDS": true,
+        "FRESHNESS_WRITTEN": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 9,
+      "total": 9,
+      "inputTokens": 10793,
+      "outputTokens": 1164,
+      "costUsd": 0,
+      "ms": 65034,
+      "steps": 5,
+      "toolCalls": 3,
       "routeSnapshotId": "fabbcd520e971ec7",
       "pricingAtRun": {
         "source": "openrouter_snapshot",
@@ -64,7 +100,459 @@
         "contextWindow": 1000000,
         "routeSnapshotId": "fabbcd520e971ec7"
       },
-      "traceRef": "docs/eval/traces/benchmark/20260610T2146296-openrouter-free-auto-nvidia-nemotron-3-super-120b-a12b-free.json"
+      "traceRef": "docs/eval/traces/benchmark/20260611T0052128-nvidia-nemotron-3-ultra-550b-a55b-free-nvidia-nemotron-3-ultra-550b-a55b-free.json"
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "nvidia/nemotron-3-super-120b-a12b:free",
+      "requestedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModel": "nvidia/nemotron-3-super-120b-a12b:free",
+      "resolvedModels": [
+        "nvidia/nemotron-3-super-120b-a12b:free"
+      ],
+      "ok": true,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "EVERY_ROW_MULTI_SOURCE": true,
+        "SOURCES_FETCHED": true,
+        "STRUCTURED_FIELDS": true,
+        "FRESHNESS_WRITTEN": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 9,
+      "total": 9,
+      "inputTokens": 10523,
+      "outputTokens": 2386,
+      "costUsd": 0,
+      "ms": 46273,
+      "steps": 5,
+      "toolCalls": 3,
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0,
+        "outputPer1M": 0,
+        "contextWindow": 1000000,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      },
+      "traceRef": "docs/eval/traces/benchmark/20260611T0053075-nvidia-nemotron-3-super-120b-a12b-free-nvidia-nemotron-3-super-120b-a12b-free.json"
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "qwen/qwen3-coder:free",
+      "requestedModel": "qwen/qwen3-coder:free",
+      "resolvedModel": "qwen/qwen3-coder:free",
+      "resolvedModels": [],
+      "ok": false,
+      "checks": {},
+      "passed": 0,
+      "total": 9,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "costUsd": 0,
+      "ms": 45008,
+      "steps": 0,
+      "toolCalls": 0,
+      "error": "route smoke failed: Delay was aborted",
+      "failureOwner": "provider",
+      "failureReason": "route smoke failed: Delay was aborted",
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0,
+        "outputPer1M": 0,
+        "contextWindow": 1048576,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      }
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "openrouter/owl-alpha",
+      "requestedModel": "openrouter/owl-alpha",
+      "resolvedModel": "openrouter/owl-alpha",
+      "resolvedModels": [],
+      "ok": false,
+      "checks": {},
+      "passed": 0,
+      "total": 9,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "costUsd": 0,
+      "ms": 5578,
+      "steps": 0,
+      "toolCalls": 0,
+      "error": "AI_APICallError: Invalid JSON response",
+      "failureOwner": "harness",
+      "failureReason": "AI_APICallError: Invalid JSON response",
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0,
+        "outputPer1M": 0,
+        "contextWindow": 1048756,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      }
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "qwen/qwen3-next-80b-a3b-instruct:free",
+      "requestedModel": "qwen/qwen3-next-80b-a3b-instruct:free",
+      "resolvedModel": "qwen/qwen3-next-80b-a3b-instruct:free",
+      "resolvedModels": [
+        "qwen/qwen3-next-80b-a3b-instruct:free"
+      ],
+      "ok": false,
+      "checks": {},
+      "passed": 0,
+      "total": 9,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "costUsd": 0,
+      "ms": 45011,
+      "steps": 0,
+      "toolCalls": 0,
+      "error": "route smoke failed: Delay was aborted",
+      "failureOwner": "provider",
+      "failureReason": "route smoke failed: Delay was aborted",
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0,
+        "outputPer1M": 0,
+        "contextWindow": 262144,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      }
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "google/gemma-4-26b-a4b-it:free",
+      "requestedModel": "google/gemma-4-26b-a4b-it:free",
+      "resolvedModel": "google/gemma-4-26b-a4b-it:free",
+      "resolvedModels": [],
+      "ok": false,
+      "checks": {},
+      "passed": 0,
+      "total": 9,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "costUsd": 0,
+      "ms": 7272,
+      "steps": 0,
+      "toolCalls": 0,
+      "error": "route smoke failed: Failed after 3 attempts. Last error: Provider returned error",
+      "failureOwner": "provider",
+      "failureReason": "route smoke failed: Failed after 3 attempts. Last error: Provider returned error",
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0,
+        "outputPer1M": 0,
+        "contextWindow": 262144,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      }
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "google/gemma-4-31b-it:free",
+      "requestedModel": "google/gemma-4-31b-it:free",
+      "resolvedModel": "google/gemma-4-31b-it:free",
+      "resolvedModels": [
+        "google/gemma-4-31b-it:free"
+      ],
+      "ok": true,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "EVERY_ROW_MULTI_SOURCE": true,
+        "SOURCES_FETCHED": true,
+        "STRUCTURED_FIELDS": true,
+        "FRESHNESS_WRITTEN": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 9,
+      "total": 9,
+      "inputTokens": 12835,
+      "outputTokens": 505,
+      "costUsd": 0,
+      "ms": 24079,
+      "steps": 7,
+      "toolCalls": 10,
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0,
+        "outputPer1M": 0,
+        "contextWindow": 262144,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      },
+      "traceRef": "docs/eval/traces/benchmark/20260611T0055281-google-gemma-4-31b-it-free-google-gemma-4-31b-it-free.json"
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "openai/gpt-oss-120b:free",
+      "requestedModel": "openai/gpt-oss-120b:free",
+      "resolvedModel": "openai/gpt-oss-120b:free",
+      "resolvedModels": [
+        "openai/gpt-oss-120b:free"
+      ],
+      "ok": true,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "EVERY_ROW_MULTI_SOURCE": true,
+        "SOURCES_FETCHED": true,
+        "STRUCTURED_FIELDS": true,
+        "FRESHNESS_WRITTEN": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 9,
+      "total": 9,
+      "inputTokens": 7861,
+      "outputTokens": 487,
+      "costUsd": 0,
+      "ms": 23221,
+      "steps": 5,
+      "toolCalls": 3,
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0,
+        "outputPer1M": 0,
+        "contextWindow": 131072,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      },
+      "traceRef": "docs/eval/traces/benchmark/20260611T0055565-openai-gpt-oss-120b-free-openai-gpt-oss-120b-free.json"
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "meta-llama/llama-3.3-70b-instruct:free",
+      "requestedModel": "meta-llama/llama-3.3-70b-instruct:free",
+      "resolvedModel": "meta-llama/llama-3.3-70b-instruct:free",
+      "resolvedModels": [],
+      "ok": false,
+      "checks": {},
+      "passed": 0,
+      "total": 9,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "costUsd": 0,
+      "ms": 38017,
+      "steps": 0,
+      "toolCalls": 0,
+      "error": "route smoke failed: Failed after 3 attempts. Last error: Provider returned error",
+      "failureOwner": "provider",
+      "failureReason": "route smoke failed: Failed after 3 attempts. Last error: Provider returned error",
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0,
+        "outputPer1M": 0,
+        "contextWindow": 131072,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      }
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "openrouter/free",
+      "requestedModel": "openrouter/free",
+      "resolvedModel": "openrouter/free",
+      "resolvedModels": [
+        "openrouter/free"
+      ],
+      "ok": false,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "EVERY_ROW_MULTI_SOURCE": true,
+        "SOURCES_FETCHED": true,
+        "STRUCTURED_FIELDS": true,
+        "FRESHNESS_WRITTEN": true,
+        "COMPLETED_IN_BUDGET": false,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 8,
+      "total": 9,
+      "inputTokens": 12962,
+      "outputTokens": 10410,
+      "costUsd": 0,
+      "ms": 110020,
+      "steps": 7,
+      "toolCalls": 6,
+      "failureOwner": "model",
+      "failureReason": "agent did not complete within the benchmark budget",
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0,
+        "outputPer1M": 0,
+        "contextWindow": 200000,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      },
+      "traceRef": "docs/eval/traces/benchmark/20260611T0058347-openrouter-free-openrouter-free.json"
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "nvidia/nemotron-nano-9b-v2:free",
+      "requestedModel": "nvidia/nemotron-nano-9b-v2:free",
+      "resolvedModel": "nvidia/nemotron-nano-9b-v2:free",
+      "resolvedModels": [
+        "nvidia/nemotron-nano-9b-v2:free"
+      ],
+      "ok": false,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "EVERY_ROW_MULTI_SOURCE": true,
+        "SOURCES_FETCHED": true,
+        "STRUCTURED_FIELDS": true,
+        "FRESHNESS_WRITTEN": true,
+        "COMPLETED_IN_BUDGET": false,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 8,
+      "total": 9,
+      "inputTokens": 3254,
+      "outputTokens": 1151,
+      "costUsd": 0,
+      "ms": 110019,
+      "steps": 3,
+      "toolCalls": 3,
+      "failureOwner": "model",
+      "failureReason": "agent did not complete within the benchmark budget",
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0,
+        "outputPer1M": 0,
+        "contextWindow": 128000,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      },
+      "traceRef": "docs/eval/traces/benchmark/20260611T0100495-nvidia-nemotron-nano-9b-v2-free-nvidia-nemotron-nano-9b-v2-free.json"
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "poolside/laguna-m.1:free",
+      "requestedModel": "poolside/laguna-m.1:free",
+      "resolvedModel": "poolside/laguna-m.1:free",
+      "resolvedModels": [
+        "poolside/laguna-m.1:free"
+      ],
+      "ok": true,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "EVERY_ROW_MULTI_SOURCE": true,
+        "SOURCES_FETCHED": true,
+        "STRUCTURED_FIELDS": true,
+        "FRESHNESS_WRITTEN": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 9,
+      "total": 9,
+      "inputTokens": 7564,
+      "outputTokens": 1646,
+      "costUsd": 0,
+      "ms": 94246,
+      "steps": 4,
+      "toolCalls": 2,
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0,
+        "outputPer1M": 0,
+        "contextWindow": 262144,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      },
+      "traceRef": "docs/eval/traces/benchmark/20260611T0102340-poolside-laguna-m.1-free-poolside-laguna-m.1-free.json"
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "openai/gpt-oss-20b:free",
+      "requestedModel": "openai/gpt-oss-20b:free",
+      "resolvedModel": "openai/gpt-oss-20b:free",
+      "resolvedModels": [
+        "openai/gpt-oss-20b:free"
+      ],
+      "ok": false,
+      "checks": {
+        "ALL_COMPLETE": false,
+        "EVERY_ROW_SOURCED": false,
+        "EVERY_ROW_MULTI_SOURCE": false,
+        "SOURCES_FETCHED": false,
+        "STRUCTURED_FIELDS": false,
+        "FRESHNESS_WRITTEN": false,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": false,
+        "RIGHT_ENTITY": false
+      },
+      "passed": 1,
+      "total": 9,
+      "inputTokens": 13945,
+      "outputTokens": 757,
+      "costUsd": 0,
+      "ms": 20357,
+      "steps": 8,
+      "toolCalls": 6,
+      "failureOwner": "model",
+      "failureReason": "failed checks: ALL_COMPLETE, EVERY_ROW_SOURCED, EVERY_ROW_MULTI_SOURCE, SOURCES_FETCHED, STRUCTURED_FIELDS, FRESHNESS_WRITTEN, NO_FABRICATION, RIGHT_ENTITY",
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0,
+        "outputPer1M": 0,
+        "contextWindow": 131072,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      },
+      "traceRef": "docs/eval/traces/benchmark/20260611T0103001-openai-gpt-oss-20b-free-openai-gpt-oss-20b-free.json"
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "poolside/laguna-xs.2:free",
+      "requestedModel": "poolside/laguna-xs.2:free",
+      "resolvedModel": "poolside/laguna-xs.2:free",
+      "resolvedModels": [
+        "poolside/laguna-xs.2:free"
+      ],
+      "ok": true,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "EVERY_ROW_MULTI_SOURCE": true,
+        "SOURCES_FETCHED": true,
+        "STRUCTURED_FIELDS": true,
+        "FRESHNESS_WRITTEN": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 9,
+      "total": 9,
+      "inputTokens": 22672,
+      "outputTokens": 2596,
+      "costUsd": 0,
+      "ms": 33204,
+      "steps": 9,
+      "toolCalls": 7,
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0,
+        "outputPer1M": 0,
+        "contextWindow": 262144,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      },
+      "traceRef": "docs/eval/traces/benchmark/20260611T0103384-poolside-laguna-xs.2-free-poolside-laguna-xs.2-free.json"
     },
     {
       "benchmarkVersion": "company-research-v3-composite-synthesis",
@@ -88,12 +576,12 @@
       },
       "passed": 9,
       "total": 9,
-      "inputTokens": 29193,
-      "outputTokens": 2533,
-      "costUsd": 0.0033676596999999996,
-      "ms": 91274,
-      "steps": 9,
-      "toolCalls": 9,
+      "inputTokens": 16900,
+      "outputTokens": 1766,
+      "costUsd": 0.0020084656,
+      "ms": 38651,
+      "steps": 7,
+      "toolCalls": 5,
       "routeSnapshotId": "fabbcd520e971ec7",
       "pricingAtRun": {
         "source": "openrouter_snapshot",
@@ -103,7 +591,459 @@
         "contextWindow": 1048576,
         "routeSnapshotId": "fabbcd520e971ec7"
       },
-      "traceRef": "docs/eval/traces/benchmark/20260610T2148086-deepseek-deepseek-v4-flash-deepseek-deepseek-v4-flash.json"
+      "traceRef": "docs/eval/traces/benchmark/20260611T0104243-deepseek-deepseek-v4-flash-deepseek-deepseek-v4-flash.json"
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "z-ai/glm-4.7-flash",
+      "requestedModel": "z-ai/glm-4.7-flash",
+      "resolvedModel": "z-ai/glm-4.7-flash",
+      "resolvedModels": [
+        "z-ai/glm-4.7-flash"
+      ],
+      "ok": true,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "EVERY_ROW_MULTI_SOURCE": true,
+        "SOURCES_FETCHED": true,
+        "STRUCTURED_FIELDS": true,
+        "FRESHNESS_WRITTEN": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 9,
+      "total": 9,
+      "inputTokens": 9670,
+      "outputTokens": 1835,
+      "costUsd": 0.0013141999999999997,
+      "ms": 17493,
+      "steps": 5,
+      "toolCalls": 12,
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0.06,
+        "outputPer1M": 0.39999999999999997,
+        "cachedInputPer1M": 0.01,
+        "contextWindow": 202752,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      },
+      "traceRef": "docs/eval/traces/benchmark/20260611T0104472-z-ai-glm-4.7-flash-z-ai-glm-4.7-flash.json"
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "xiaomi/mimo-v2.5",
+      "requestedModel": "xiaomi/mimo-v2.5",
+      "resolvedModel": "xiaomi/mimo-v2.5",
+      "resolvedModels": [
+        "xiaomi/mimo-v2.5"
+      ],
+      "ok": true,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "EVERY_ROW_MULTI_SOURCE": true,
+        "SOURCES_FETCHED": true,
+        "STRUCTURED_FIELDS": true,
+        "FRESHNESS_WRITTEN": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 9,
+      "total": 9,
+      "inputTokens": 8011,
+      "outputTokens": 1600,
+      "costUsd": 0.0015695400000000001,
+      "ms": 31057,
+      "steps": 4,
+      "toolCalls": 2,
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0.14,
+        "outputPer1M": 0.28,
+        "cachedInputPer1M": 0.0028,
+        "contextWindow": 1048576,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      },
+      "traceRef": "docs/eval/traces/benchmark/20260611T0105322-xiaomi-mimo-v2.5-xiaomi-mimo-v2.5.json"
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "minimax/minimax-m3",
+      "requestedModel": "minimax/minimax-m3",
+      "resolvedModel": "minimax/minimax-m3",
+      "resolvedModels": [
+        "minimax/minimax-m3"
+      ],
+      "ok": true,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "EVERY_ROW_MULTI_SOURCE": true,
+        "SOURCES_FETCHED": true,
+        "STRUCTURED_FIELDS": true,
+        "FRESHNESS_WRITTEN": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 9,
+      "total": 9,
+      "inputTokens": 11302,
+      "outputTokens": 1617,
+      "costUsd": 0.005331,
+      "ms": 41460,
+      "steps": 5,
+      "toolCalls": 3,
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0.3,
+        "outputPer1M": 1.2,
+        "cachedInputPer1M": 0.06,
+        "contextWindow": 1048576,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      },
+      "traceRef": "docs/eval/traces/benchmark/20260611T0106193-minimax-minimax-m3-minimax-minimax-m3.json"
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "stepfun/step-3.7-flash",
+      "requestedModel": "stepfun/step-3.7-flash",
+      "resolvedModel": "stepfun/step-3.7-flash",
+      "resolvedModels": [
+        "stepfun/step-3.7-flash"
+      ],
+      "ok": true,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "EVERY_ROW_MULTI_SOURCE": true,
+        "SOURCES_FETCHED": true,
+        "STRUCTURED_FIELDS": true,
+        "FRESHNESS_WRITTEN": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 9,
+      "total": 9,
+      "inputTokens": 7354,
+      "outputTokens": 1456,
+      "costUsd": 0.0031452,
+      "ms": 22128,
+      "steps": 4,
+      "toolCalls": 2,
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0.19999999999999998,
+        "outputPer1M": 1.15,
+        "cachedInputPer1M": 0.04,
+        "contextWindow": 256000,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      },
+      "traceRef": "docs/eval/traces/benchmark/20260611T0106475-stepfun-step-3.7-flash-stepfun-step-3.7-flash.json"
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "inclusionai/ring-2.6-1t",
+      "requestedModel": "inclusionai/ring-2.6-1t",
+      "resolvedModel": "inclusionai/ring-2.6-1t",
+      "resolvedModels": [
+        "inclusionai/ring-2.6-1t"
+      ],
+      "ok": true,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "EVERY_ROW_MULTI_SOURCE": true,
+        "SOURCES_FETCHED": true,
+        "STRUCTURED_FIELDS": true,
+        "FRESHNESS_WRITTEN": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 9,
+      "total": 9,
+      "inputTokens": 10214,
+      "outputTokens": 1145,
+      "costUsd": 0.001481675,
+      "ms": 16819,
+      "steps": 5,
+      "toolCalls": 3,
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0.075,
+        "outputPer1M": 0.625,
+        "cachedInputPer1M": 0.015,
+        "contextWindow": 262144,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      },
+      "traceRef": "docs/eval/traces/benchmark/20260611T0107103-inclusionai-ring-2.6-1t-inclusionai-ring-2.6-1t.json"
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "google/gemini-3.1-flash-lite",
+      "requestedModel": "google/gemini-3.1-flash-lite",
+      "resolvedModel": "google/gemini-3.1-flash-lite",
+      "resolvedModels": [
+        "google/gemini-3.1-flash-lite"
+      ],
+      "ok": true,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "EVERY_ROW_MULTI_SOURCE": true,
+        "SOURCES_FETCHED": true,
+        "STRUCTURED_FIELDS": true,
+        "FRESHNESS_WRITTEN": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 9,
+      "total": 9,
+      "inputTokens": 15808,
+      "outputTokens": 398,
+      "costUsd": 0.004549,
+      "ms": 19458,
+      "steps": 9,
+      "toolCalls": 8,
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0.25,
+        "outputPer1M": 1.5,
+        "cachedInputPer1M": 0.024999999999999998,
+        "contextWindow": 1048576,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      },
+      "traceRef": "docs/eval/traces/benchmark/20260611T0107333-google-gemini-3.1-flash-lite-google-gemini-3.1-flash-lite.json"
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "ibm-granite/granite-4.1-8b",
+      "requestedModel": "ibm-granite/granite-4.1-8b",
+      "resolvedModel": "ibm-granite/granite-4.1-8b",
+      "resolvedModels": [
+        "ibm-granite/granite-4.1-8b"
+      ],
+      "ok": true,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "EVERY_ROW_MULTI_SOURCE": true,
+        "SOURCES_FETCHED": true,
+        "STRUCTURED_FIELDS": true,
+        "FRESHNESS_WRITTEN": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 9,
+      "total": 9,
+      "inputTokens": 16090,
+      "outputTokens": 626,
+      "costUsd": 0.0008670999999999999,
+      "ms": 6294,
+      "steps": 7,
+      "toolCalls": 5,
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0.049999999999999996,
+        "outputPer1M": 0.09999999999999999,
+        "cachedInputPer1M": 0.049999999999999996,
+        "contextWindow": 131072,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      },
+      "traceRef": "docs/eval/traces/benchmark/20260611T0107418-ibm-granite-granite-4.1-8b-ibm-granite-granite-4.1-8b.json"
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "deepseek/deepseek-v4-pro",
+      "requestedModel": "deepseek/deepseek-v4-pro",
+      "resolvedModel": "deepseek/deepseek-v4-pro",
+      "resolvedModels": [
+        "deepseek/deepseek-v4-pro"
+      ],
+      "ok": true,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "EVERY_ROW_MULTI_SOURCE": true,
+        "SOURCES_FETCHED": true,
+        "STRUCTURED_FIELDS": true,
+        "FRESHNESS_WRITTEN": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 9,
+      "total": 9,
+      "inputTokens": 7792,
+      "outputTokens": 1089,
+      "costUsd": 0.00433695,
+      "ms": 32786,
+      "steps": 4,
+      "toolCalls": 2,
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0.435,
+        "outputPer1M": 0.87,
+        "cachedInputPer1M": 0.003625,
+        "contextWindow": 1048576,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      },
+      "traceRef": "docs/eval/traces/benchmark/20260611T0108230-deepseek-deepseek-v4-pro-deepseek-deepseek-v4-pro.json"
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "inclusionai/ling-2.6-flash",
+      "requestedModel": "inclusionai/ling-2.6-flash",
+      "resolvedModel": "inclusionai/ling-2.6-flash",
+      "resolvedModels": [
+        "inclusionai/ling-2.6-flash"
+      ],
+      "ok": false,
+      "checks": {},
+      "passed": 0,
+      "total": 9,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "costUsd": 0,
+      "ms": 16736,
+      "steps": 0,
+      "toolCalls": 0,
+      "error": "AI_RetryError: Failed after 3 attempts. Last error: Provider returned error",
+      "failureOwner": "provider",
+      "failureReason": "AI_RetryError: Failed after 3 attempts. Last error: Provider returned error",
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0.01,
+        "outputPer1M": 0.03,
+        "cachedInputPer1M": 0.002,
+        "contextWindow": 262144,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      }
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "tencent/hy3-preview",
+      "requestedModel": "tencent/hy3-preview",
+      "resolvedModel": "tencent/hy3-preview",
+      "resolvedModels": [
+        "tencent/hy3-preview"
+      ],
+      "ok": false,
+      "checks": {},
+      "passed": 0,
+      "total": 9,
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "costUsd": 0,
+      "ms": 21989,
+      "steps": 0,
+      "toolCalls": 0,
+      "error": "AI_APICallError: Invalid JSON response",
+      "failureOwner": "harness",
+      "failureReason": "AI_APICallError: Invalid JSON response",
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0.063,
+        "outputPer1M": 0.21,
+        "cachedInputPer1M": 0.020999999999999998,
+        "contextWindow": 262144,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      }
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "qwen/qwen3.7-plus",
+      "requestedModel": "qwen/qwen3.7-plus",
+      "resolvedModel": "qwen/qwen3.7-plus",
+      "resolvedModels": [
+        "qwen/qwen3.7-plus"
+      ],
+      "ok": true,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "EVERY_ROW_MULTI_SOURCE": true,
+        "SOURCES_FETCHED": true,
+        "STRUCTURED_FIELDS": true,
+        "FRESHNESS_WRITTEN": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 9,
+      "total": 9,
+      "inputTokens": 10164,
+      "outputTokens": 3475,
+      "costUsd": 0.009625599999999998,
+      "ms": 67309,
+      "steps": 5,
+      "toolCalls": 3,
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0.39999999999999997,
+        "outputPer1M": 1.5999999999999999,
+        "cachedInputPer1M": 0.08,
+        "contextWindow": 1000000,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      },
+      "traceRef": "docs/eval/traces/benchmark/20260611T0112336-qwen-qwen3.7-plus-qwen-qwen3.7-plus.json"
+    },
+    {
+      "benchmarkVersion": "company-research-v3-composite-synthesis",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b",
+      "requestedModel": "nvidia/nemotron-3-ultra-550b-a55b",
+      "resolvedModel": "nvidia/nemotron-3-ultra-550b-a55b",
+      "resolvedModels": [
+        "nvidia/nemotron-3-ultra-550b-a55b"
+      ],
+      "ok": true,
+      "checks": {
+        "ALL_COMPLETE": true,
+        "EVERY_ROW_SOURCED": true,
+        "EVERY_ROW_MULTI_SOURCE": true,
+        "SOURCES_FETCHED": true,
+        "STRUCTURED_FIELDS": true,
+        "FRESHNESS_WRITTEN": true,
+        "COMPLETED_IN_BUDGET": true,
+        "NO_FABRICATION": true,
+        "RIGHT_ENTITY": true
+      },
+      "passed": 9,
+      "total": 9,
+      "inputTokens": 8120,
+      "outputTokens": 928,
+      "costUsd": 0.00638,
+      "ms": 26340,
+      "steps": 4,
+      "toolCalls": 2,
+      "routeSnapshotId": "fabbcd520e971ec7",
+      "pricingAtRun": {
+        "source": "openrouter_snapshot",
+        "inputPer1M": 0.5,
+        "outputPer1M": 2.5,
+        "cachedInputPer1M": 0.15,
+        "contextWindow": 1000000,
+        "routeSnapshotId": "fabbcd520e971ec7"
+      },
+      "traceRef": "docs/eval/traces/benchmark/20260611T0113043-nvidia-nemotron-3-ultra-550b-a55b-nvidia-nemotron-3-ultra-550b-a55b.json"
     }
   ]
 }

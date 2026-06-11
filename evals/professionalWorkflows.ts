@@ -18,6 +18,11 @@ export type ProfessionalHarnessRequirement =
   | "long_running_free_auto"
   | "workflow_checkpoint_resume"
   | "resolved_model_audit"
+  | "private_gold_pack"
+  | "answer_key_formula_oracle"
+  | "formula_structure_equivalence"
+  | "guide_mode_no_write"
+  | "section_collaboration_locks"
   | "wiki_grounded_update"
   | "human_review";
 
@@ -417,6 +422,51 @@ export const PROFESSIONAL_WORKFLOW_CASES: ProfessionalEvalCase[] = [
     productionNotes: [
       "This maps directly to finance close/reconciliation interviews: source data, derived outputs, explainable differences, and no blind overwrites.",
       "The current reconcile_cell tool covers the deterministic core; broader financial math fixtures should expand next.",
+    ],
+  },
+  {
+    id: "finance-three-statement-modeling-private-gold",
+    category: "finance_ops",
+    persona: "Investment-banking candidate or finance team completing a 3-statement modeling test",
+    workflow: "Upload a private three-statement modeling-test workbook with a hidden answer key, then ask NodeAgent to solve it, guide the user through it, or collaborate with teammates by section.",
+    sourcePatterns: [
+      "[rareliquid] 3 Statement Modeling Test.xlsx",
+      "Ben Chon / RareLiquid-style 3-statement modeling test",
+      "private local gold pack with Test Prompt, Historical Data, Your Model, Answer Key",
+    ],
+    agentGoal:
+      "Use the uploaded workbook as a private gold pack: in solve mode, fill FY2025E/FY2026E formulas in the user's model; in guide mode, coach without writing answer cells; in collaborate mode, edit only leased statement sections while preserving teammate changes and cross-statement checks.",
+    fixtureStrategy:
+      "Keep the copyrighted workbook and answer key outside the public repo. The public eval stores only the contract; the private runner validates the local workbook by content hash and skips honestly when the file is absent.",
+    evalSteps: [
+      "Validate the private workbook has Test Prompt, Historical Data, Your Model, and Answer Key sheets.",
+      "Solve mode: run NodeAgent against a fresh copy of the user model and compare forecast formulas and values against the Answer Key tolerance.",
+      "Guide mode: inject a scripted student mistake, require a targeted hint, and assert no forecast answer cells are written.",
+      "Collaborate mode: assign income statement, cash flow, and balance sheet ranges to teammates and NodeAgent; require section locks, drafts when blocked, CAS on linkage rows, and final balance checks.",
+    ],
+    assertions: [
+      "Forecast cells are formulas and mention the correct driver/assumption references; pasted answer-key values fail.",
+      "Historical Data, Test Prompt, assumptions, and non-target sections remain unchanged.",
+      "Cash flow ending cash ties to balance sheet cash, retained earnings rolls forward, debt/revolver links hold, and balance checks equal zero.",
+      "Guide mode writes no answer cells and produces the next useful hint instead of dumping the answer key.",
+      "Collaborate mode touches only the leased section, drafts when blocked, and preserves human edits to shared linkage rows.",
+      "Private workbook contents and answer-key values are never copied into public repo artifacts or public room summaries.",
+    ],
+    requiredHarness: [
+      "private_gold_pack",
+      "answer_key_formula_oracle",
+      "formula_structure_equivalence",
+      "formula_dependency_locks",
+      "privacy_redaction",
+      "guide_mode_no_write",
+      "section_collaboration_locks",
+      "workflow_checkpoint_resume",
+      "human_review",
+    ],
+    productionNotes: [
+      "This is the first finance-modeling gold pack: deterministic enough to grade without an LLM judge, but private because the educational workbook is not ours to commit.",
+      "It should run before the SEC flagship because it validates spreadsheet mechanics before adding XBRL extraction and filing citation complexity.",
+      "The prompt ambiguity must be explicit in the eval: interest uses beginning debt balances per the workbook note to avoid circularity.",
     ],
   },
   {

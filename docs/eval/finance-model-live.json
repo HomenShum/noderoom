@@ -1,0 +1,120 @@
+{
+  "generatedAt": "2026-06-11T01:14:59.570Z",
+  "caseId": "finance-model-private-v1",
+  "mode": "live",
+  "modelName": "qwen/qwen3.7-max",
+  "status": "failed",
+  "score": 0.375,
+  "checks": {
+    "stoppedCleanly": false,
+    "lockedBeforeWrite": true,
+    "writesOnlyForecastCells": true,
+    "allTargetsWritten": false,
+    "everyFormulaLinked": false,
+    "valueTieOutComputable": false,
+    "releasedLock": false,
+    "noAnswerKeyLeakage": true
+  },
+  "cells": [
+    {
+      "cell": "F7",
+      "label": "Revenue",
+      "formulaOk": false,
+      "valueOk": false
+    },
+    {
+      "cell": "G7",
+      "label": "Revenue",
+      "formulaOk": false,
+      "valueOk": false
+    },
+    {
+      "cell": "F8",
+      "label": "COGS",
+      "formulaOk": false,
+      "valueOk": false
+    },
+    {
+      "cell": "F12",
+      "label": "Depreciation and amortization",
+      "formulaOk": false,
+      "valueOk": false
+    },
+    {
+      "cell": "F16",
+      "label": "Interest expense",
+      "formulaOk": false,
+      "valueOk": false
+    },
+    {
+      "cell": "F19",
+      "label": "Income tax expense",
+      "formulaOk": false,
+      "valueOk": true
+    },
+    {
+      "cell": "F36",
+      "label": "Net cash from operations",
+      "formulaOk": false,
+      "valueOk": true
+    },
+    {
+      "cell": "F44",
+      "label": "Revolver draw / paydown",
+      "formulaOk": false,
+      "valueOk": true
+    },
+    {
+      "cell": "F50",
+      "label": "Ending cash",
+      "formulaOk": false,
+      "valueOk": true
+    },
+    {
+      "cell": "F54",
+      "label": "Cash and cash equivalents",
+      "formulaOk": false,
+      "valueOk": true
+    },
+    {
+      "cell": "F55",
+      "label": "Accounts receivable",
+      "formulaOk": false,
+      "valueOk": false
+    },
+    {
+      "cell": "F60",
+      "label": "PP&E net",
+      "formulaOk": false,
+      "valueOk": true
+    },
+    {
+      "cell": "F73",
+      "label": "Revolver",
+      "formulaOk": false,
+      "valueOk": true
+    },
+    {
+      "cell": "F80",
+      "label": "Retained earnings",
+      "formulaOk": false,
+      "valueOk": true
+    },
+    {
+      "cell": "F85",
+      "label": "Balance check",
+      "formulaOk": false,
+      "valueOk": true
+    },
+    {
+      "cell": "G85",
+      "label": "Balance check",
+      "formulaOk": false,
+      "valueOk": true
+    }
+  ],
+  "costUsd": 0.187844,
+  "ms": 710023,
+  "toolCalls": 7,
+  "goldSourceHash": "3d2f577370eaf65c"
+}

@@ -21,7 +21,7 @@ three-statement modeling test run only when the local workbook path is provided.
 The live company-research benchmark is a separate router/cost harness:
 
 ```bash
-npm run benchmark -- deepseek/deepseek-v4-flash,openrouter/free-auto --no-merge --companies=3 --model-timeout-ms=240000 --model-reserve-ms=10000 --row-hard-timeout-ms=270000
+npm run benchmark -- nex-agi/nex-n2-pro:free,ibm-granite/granite-4.1-8b,deepseek/deepseek-v4-flash,z-ai/glm-4.7-flash --no-merge --companies=1 --model-timeout-ms=120000 --model-reserve-ms=10000 --row-hard-timeout-ms=150000
 npm run benchmark:charts
 ```
 
@@ -30,6 +30,8 @@ The supported route bakeoff is generated from a route/scenario registry:
 ```bash
 npm run eval:model-matrix -- --json-out docs/eval/model-eval-matrix-plan.json
 npm run eval:model-matrix:live
+npm run eval:finance-model
+npm run eval:finance-model -- --gold "C:\path\to\modeling-test.xlsx"
 ```
 
 `docs/eval/MODEL_EVAL_MATRIX.md` defines the supported OpenRouter/native routes
@@ -47,11 +49,12 @@ floor in `STRUCTURED_FIELDS` rejects disclaimer-shaped non-answers and
 from-memory text with no derivation from the fetched evidence — the two
 strategies that gamed earlier generations (v2's "9/9" was a deterministic
 template grading itself and was invalidated on review; see the README's
-"Why v3 exists"). Latest verified v3 run: 8 of 11 supported research routes
-cleared 9/9, including `deepseek/deepseek-v4-flash` at $0.0029/run and
-`openrouter/free-auto` at $0. That saturation is useful routing evidence but no
-longer discriminates deep workflow competence. Treat a 9/9 as proof for the
-background research workflow only. Interactive collaboration still needs the L1-L7
+"Why v3 exists"). Latest verified v3 run: a 2026-06-11 OpenRouter cheap/free
+catalog smoke attempted 28 current tool-capable free or very low-cost routes;
+18 cleared 9/9. Fastest free clearer was `nex-agi/nex-n2-pro:free` at $0 and
+6.2s; cheapest paid clearer was `ibm-granite/granite-4.1-8b` at $0.0009.
+Treat a 9/9 as proof for the background research workflow only. Interactive
+collaboration still needs the L1-L7
 lock/CAS/draft ladder below — L7 (RESUME) is the rung that gates checkpointed
 background jobs: a forced slice death mid-task, a human revision landing while
 the agent is dead, and a cold-context continuation that must finish only the
@@ -70,10 +73,10 @@ This is the single inventory; if a case isn't on this list, we don't claim cover
 - ✅ Recompute the variance column with lock → CAS → release (`evals/cases.ts` S1)
 - ✅ Selective footnote — touch only matching cells, argument correctness (S2)
 - ✅ Note resolution + wall sticky through the same CAS path (use cases 6–7)
-- ✅ GTM tabular research enrichment — pending rows, sourced, status-gated (`tests/researchHarness.test.ts` + the v3 benchmark, 8/11 routes 9/9, content floor + judge)
+- ✅ GTM tabular research enrichment — pending rows, sourced, status-gated (`tests/researchHarness.test.ts` + the v3 cheap/free smoke, 18/28 routes 9/9, content floor + judge)
 - ✅ Professional workflow pack — GTM account scoring vs a reusable rubric, finance reconciliation, contractor-time approval, activity summary with disclosure safety (`evals/professionalWorkflows.ts`)
 - ✅ Credit analysis — MM-banking ratio cascade + **cell-mapping rejection** (misbound inputs must be refused, `evals/creditEval.ts`)
-- 🔜 **3-statement modeling test · Solve mode** — per-cell value *and* formula gold from a private answer-key workbook (private gold pack: runs only when the local workbook is present, never committed)
+- ✅ **3-statement modeling test · Solve mode** — NodeAgent locks, reads, CAS-writes, releases, and grades per-cell formulas/values against a gold oracle (`npm run eval:finance-model`; private workbook path stays local)
 - 🔜 **SEC model build flagship** — tiered: XBRL fact tie-out → derived ratios with formulas → statement linkage + cited assumptions page
 - 🔜 Benchmark v4 — N-document targeted research with the comprehensive company-profile field set (business model, moat, SWOT, funding)
 - 🔜 File-drop ingestion — 10-K PDF / XLSX dropped in the room → extracted to the sheet with per-cell citations; receipts → formatted expense report
@@ -82,7 +85,7 @@ This is the single inventory; if a case isn't on this list, we don't claim cover
 ### Mode 2 — "Do it with us" (live collaboration)
 
 - ✅ Ladder L1–L7 scripted (read-only · CAS edit · conflict re-read · blocked→draft · large-range discipline · long-horizon compaction · **resume after slice death**)
-- ✅ Ladder L1–L4 **live** across 11 supported routes (`docs/eval/model-ladder-supported.json`): full passes are `gemini-3.5-flash` and `nvidia/nemotron-3-ultra-550b`; the research champion `deepseek-v4-flash` fails L1/L4 — **proof the two lanes promote separately**
+- ✅ Ladder L1–L4 **live** across the recorded route set (`docs/eval/model-ladder-supported.json`): full passes are `gemini-3.5-flash` and `nvidia/nemotron-3-ultra-550b`; the research champion `deepseek-v4-flash` fails L1/L4 — **proof the two lanes promote separately**
 - ✅ Multi-turn refinement with fresh-read provenance (M1) + sustained concurrent room (golden L1)
 - ✅ Lock lease fencing, expiry, janitor sweep, host takeover (`tests/lockFencing.test.ts` et al.)
 - 🔜 Ladder L5–L7 live across supported routes (config landed at `--levels=1-7`; next matrix run)
@@ -224,8 +227,11 @@ Outcome metrics say *what* happened; trajectory metrics say *how*. A planning ag
 Private answer-key workbooks are handled separately from committed goldens.
 `eval:finance-model-private` validates a local three-statement modeling workbook
 and its answer-key formulas without storing the workbook or expected values in
-git. That eval has three modes: solve the model, guide the user without writing
-answer cells, and collaborate by statement section under locks/CAS.
+git. `eval:finance-model` runs the actual NodeAgent tool workflow: lock the
+forecast cells, read versions, CAS-write formulas, release, then grade both the
+artifact and trace. Its default committed trace uses an owned synthetic gold
+pack for README media; passing `--gold` runs the same workflow against a private
+local workbook and writes the trace under `.tmp/`.
 
 ---
 

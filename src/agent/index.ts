@@ -1,8 +1,8 @@
 /** Agent harness — public surface. See docs/AGENT_RUNTIME.md. */
 export * from "./types";
-export { SYSTEM_PROMPT } from "./systemPrompt";
+export { MANAGED_LOCK_SYSTEM_PROMPT, SYSTEM_PROMPT } from "./systemPrompt";
 export { buildContext, buildResearchContext } from "./context";
-export { ROOM_TOOLS, TOOL_NAMES } from "./tools";
+export { MANAGED_LOCK_TOOLS, PRODUCTION_ROOM_TOOLS, PRODUCTION_TOOL_NAMES, ROOM_TOOLS, TOOL_NAMES } from "./tools";
 export { InMemoryRoomTools } from "./roomTools";
 export { anthropicModel, model, priceRun } from "./model";
 export {

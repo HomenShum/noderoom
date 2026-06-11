@@ -11,7 +11,7 @@
  */
 
 import { z } from "zod";
-import type { AgentTool } from "./types";
+import type { AgentTool, EditOutcome, RoomTools } from "./types";
 import type { CellEvidence, CellPayload, CellStatus } from "../engine/types";
 
 const opSchema = z.object({ elementId: z.string(), value: z.any(), baseVersion: z.number().int() });
@@ -51,6 +51,253 @@ function cellPayload(args: {
   };
 }
 
+async function writeWithManagedLock(args: {
+  elementId: string;
+  value: unknown;
+  baseVersion: number;
+  reason?: string;
+  kind?: "set" | "create" | "delete";
+  artifactId?: string;
+}, rt: RoomTools): Promise<EditOutcome & { coordination: Record<string, unknown>; drafted?: boolean; draftId?: string }> {
+  const reason = args.reason?.trim() || `write ${args.elementId}`;
+  const lock = await rt.proposeLock([args.elementId], reason, args.artifactId);
+  if (!lock.ok) {
+    if (args.kind !== "create" && args.kind !== "delete" && lock.lockId) {
+      const draft = await rt.createDraft(
+        [{ elementId: args.elementId, value: args.value, baseVersion: args.baseVersion }],
+        lock.lockId,
+        `Managed-lock draft: ${reason}`,
+        args.artifactId,
+      );
+      return {
+        ok: false,
+        locked: true,
+        holder: lock.reason,
+        drafted: true,
+        draftId: draft.draftId,
+        coordination: {
+          mode: "managed_lock",
+          targetIds: [args.elementId],
+          acquired: false,
+          blockingLockId: lock.lockId,
+          drafted: true,
+        },
+      };
+    }
+    return {
+      ok: false,
+      locked: true,
+      holder: lock.reason,
+      coordination: {
+        mode: "managed_lock",
+        targetIds: [args.elementId],
+        acquired: false,
+        blockingLockId: lock.lockId,
+        drafted: false,
+      },
+    };
+  }
+
+  let edit: EditOutcome | undefined;
+  let release: Awaited<ReturnType<RoomTools["releaseLock"]>> | undefined;
+  try {
+    edit = await rt.editCell(args.elementId, args.value, args.baseVersion, args.artifactId, args.kind);
+  } finally {
+    release = await rt.releaseLock(lock.lockId);
+  }
+  return {
+    ...(edit ?? { ok: false as const, error: "managed write did not run" }),
+    coordination: {
+      mode: "managed_lock",
+      targetIds: [args.elementId],
+      acquired: true,
+      lockId: lock.lockId,
+      released: release?.ok !== false,
+      mergedDrafts: release?.merged?.length ?? 0,
+      releaseReason: release?.reason,
+    },
+  };
+}
+
+async function writeBatchWithManagedLock(args: {
+  ops: Array<{ elementId: string; value: unknown; baseVersion: number; kind?: "set" | "create" | "delete" }>;
+  reason?: string;
+  artifactId?: string;
+}, rt: RoomTools): Promise<Record<string, unknown>> {
+  const elementIds = args.ops.map((op) => op.elementId);
+  const reason = args.reason?.trim() || `write ${elementIds.length} cell(s)`;
+  const lock = await rt.proposeLock(elementIds, reason, args.artifactId);
+  if (!lock.ok) {
+    const canDraft = args.ops.every((op) => op.kind !== "create" && op.kind !== "delete") && !!lock.lockId;
+    if (canDraft && lock.lockId) {
+      const draft = await rt.createDraft(
+        args.ops.map((op) => ({ elementId: op.elementId, value: op.value, baseVersion: op.baseVersion })),
+        lock.lockId,
+        `Managed-lock batch draft: ${reason}`,
+        args.artifactId,
+      );
+      return {
+        ok: false,
+        locked: true,
+        holder: lock.reason,
+        drafted: true,
+        draftId: draft.draftId,
+        results: [],
+        coordination: {
+          mode: "managed_lock_batch",
+          targetIds: elementIds,
+          acquired: false,
+          blockingLockId: lock.lockId,
+          drafted: true,
+        },
+      };
+    }
+    return {
+      ok: false,
+      locked: true,
+      holder: lock.reason,
+      drafted: false,
+      results: [],
+      coordination: {
+        mode: "managed_lock_batch",
+        targetIds: elementIds,
+        acquired: false,
+        blockingLockId: lock.lockId,
+        drafted: false,
+      },
+    };
+  }
+
+  const results: Array<EditOutcome & { elementId: string }> = [];
+  let release: Awaited<ReturnType<RoomTools["releaseLock"]>> | undefined;
+  try {
+    for (const op of args.ops) {
+      const edit = await rt.editCell(op.elementId, op.value, op.baseVersion, args.artifactId, op.kind);
+      results.push({ ...edit, elementId: op.elementId });
+      if (!edit.ok && !("pendingApproval" in edit && edit.pendingApproval)) break;
+    }
+  } finally {
+    release = await rt.releaseLock(lock.lockId);
+  }
+  const accepted = results.length === args.ops.length && results.every((result) => result.ok || ("pendingApproval" in result && result.pendingApproval));
+  return {
+    ok: accepted,
+    results,
+    coordination: {
+      mode: "managed_lock_batch",
+      targetIds: elementIds,
+      acquired: true,
+      lockId: lock.lockId,
+      released: release?.ok !== false,
+      mergedDrafts: release?.merged?.length ?? 0,
+      releaseReason: release?.reason,
+    },
+  };
+}
+
+const WRITE_LOCKED_CELL_TOOL: AgentTool = {
+  name: "write_locked_cell",
+  description: "Production write path for a simple scalar cell. The runtime acquires the exact-cell lock, writes with CAS, releases in finally, and returns coordination evidence. Use this instead of propose_lock/edit_cell/release_lock when it is available.",
+  schema: z.object({
+    elementId: z.string(),
+    value: z.any(),
+    baseVersion: z.number().int(),
+    reason: z.string().optional().describe("one short phrase shown in the room trace"),
+    kind: z.enum(["set", "create", "delete"]).optional().describe("'set' updates an existing element; 'create' adds a new one; 'delete' removes one"),
+    artifactId: z.string().optional(),
+  }),
+  execute: (a: { elementId: string; value: unknown; baseVersion: number; reason?: string; kind?: "set" | "create" | "delete"; artifactId?: string }, rt) =>
+    writeWithManagedLock(a, rt),
+};
+
+const WRITE_LOCKED_CELLS_TOOL: AgentTool = {
+  name: "write_locked_cells",
+  description: "Production batch write path for scalar cells. The runtime acquires one exact-range lock, writes every op with CAS, releases in finally, and returns per-cell results plus coordination evidence. Prefer this over separate lock/edit/release calls for multi-cell work.",
+  schema: z.object({
+    reason: z.string().optional().describe("one short phrase shown in the room trace"),
+    artifactId: z.string().optional(),
+    ops: z.array(z.object({
+      elementId: z.string(),
+      value: z.any(),
+      baseVersion: z.number().int(),
+      kind: z.enum(["set", "create", "delete"]).optional(),
+    })).min(1),
+  }),
+  execute: (a: { reason?: string; artifactId?: string; ops: Array<{ elementId: string; value: unknown; baseVersion: number; kind?: "set" | "create" | "delete" }> }, rt) =>
+    writeBatchWithManagedLock(a, rt),
+};
+
+const WRITE_LOCKED_CELL_RESULT_TOOL: AgentTool = {
+  name: "write_locked_cell_result",
+  description: "Production write path for ENRICH, CLASSIFY, RESOLVE, CAPTURE, and COMPUTE cells. The runtime acquires/releases the lock around an evidence-bearing CellPayload so the model spends one write call instead of separate lock/edit/release calls.",
+  schema: z.object({
+    elementId: z.string(),
+    value: z.any(),
+    baseVersion: z.number().int(),
+    status: cellStatusSchema.default("complete"),
+    confidence: z.number().min(0).max(1).optional(),
+    normalizedValue: z.any().optional(),
+    error: z.string().optional(),
+    evidence: z.array(evidenceSchema).min(1),
+    reason: z.string().optional().describe("one short phrase shown in the room trace"),
+    kind: z.enum(["set", "create"]).optional().describe("'set' updates an existing result cell; 'create' adds a new one"),
+    artifactId: z.string().optional(),
+  }),
+  execute: (a: {
+    elementId: string;
+    value: unknown;
+    baseVersion: number;
+    status: CellStatus;
+    confidence?: number;
+    normalizedValue?: unknown;
+    error?: string;
+    evidence: CellEvidence[];
+    reason?: string;
+    kind?: "set" | "create";
+    artifactId?: string;
+  }, rt) => writeWithManagedLock({ ...a, value: cellPayload(a) }, rt),
+};
+
+const WRITE_LOCKED_CELL_RESULTS_TOOL: AgentTool = {
+  name: "write_locked_cell_results",
+  description: "Production batch write path for ENRICH, CLASSIFY, RESOLVE, CAPTURE, and COMPUTE cells. The runtime acquires one exact-range lock around evidence-bearing CellPayload writes, so the model spends one tool call for the range instead of separate lock/write/release calls.",
+  schema: z.object({
+    reason: z.string().optional().describe("one short phrase shown in the room trace"),
+    artifactId: z.string().optional(),
+    ops: z.array(z.object({
+      elementId: z.string(),
+      value: z.any(),
+      baseVersion: z.number().int(),
+      status: cellStatusSchema.default("complete"),
+      confidence: z.number().min(0).max(1).optional(),
+      normalizedValue: z.any().optional(),
+      error: z.string().optional(),
+      evidence: z.array(evidenceSchema).min(1),
+      kind: z.enum(["set", "create"]).optional(),
+    })).min(1),
+  }),
+  execute: (a: {
+    reason?: string;
+    artifactId?: string;
+    ops: Array<{
+      elementId: string;
+      value: unknown;
+      baseVersion: number;
+      status: CellStatus;
+      confidence?: number;
+      normalizedValue?: unknown;
+      error?: string;
+      evidence: CellEvidence[];
+      kind?: "set" | "create";
+    }>;
+  }, rt) => writeBatchWithManagedLock({
+    reason: a.reason,
+    artifactId: a.artifactId,
+    ops: a.ops.map((op) => ({ ...op, value: cellPayload(op) })),
+  }, rt),
+};
+
+
 export const ROOM_TOOLS: AgentTool[] = [
   {
     name: "read_range",
@@ -82,7 +329,7 @@ export const ROOM_TOOLS: AgentTool[] = [
   },
   {
     name: "write_cell_result",
-    description: "Write an agent-produced dataframe result as { value, status, evidence[], confidence }. Use this for ENRICH, CLASSIFY, RESOLVE, and COMPUTE cells instead of scalar edit_cell. baseVersion MUST be the version you last read.",
+    description: "Write an agent-produced dataframe result as { value, status, evidence[], confidence }. Use this for ENRICH, CLASSIFY, RESOLVE, CAPTURE, and COMPUTE cells instead of scalar edit_cell. baseVersion MUST be the version you last read. `kind` defaults to \"set\"; pass \"create\" when adding a new row/cell.",
     schema: z.object({
       elementId: z.string(),
       value: z.any(),
@@ -92,6 +339,7 @@ export const ROOM_TOOLS: AgentTool[] = [
       normalizedValue: z.any().optional(),
       error: z.string().optional(),
       evidence: z.array(evidenceSchema).min(1),
+      kind: z.enum(["set", "create"]).optional().describe("'set' updates an existing result cell; 'create' adds a new one"),
       artifactId: z.string().optional().describe("another file's id from list_artifacts; omit for the primary file"),
     }),
     execute: (a: {
@@ -103,8 +351,9 @@ export const ROOM_TOOLS: AgentTool[] = [
       normalizedValue?: unknown;
       error?: string;
       evidence: CellEvidence[];
+      kind?: "set" | "create";
       artifactId?: string;
-    }, rt) => rt.editCell(a.elementId, cellPayload(a), a.baseVersion, a.artifactId),
+    }, rt) => rt.editCell(a.elementId, cellPayload(a), a.baseVersion, a.artifactId, a.kind),
   },
   {
     name: "list_artifacts",
@@ -123,7 +372,13 @@ export const ROOM_TOOLS: AgentTool[] = [
       elementId: z.string().optional().describe("the doc element to write; defaults to 'doc'"),
     }),
     execute: (a: { artifactId: string; content: string; citesArtifactIds: string[]; baseVersion: number; elementId?: string }, rt) =>
-      rt.editCell(a.elementId ?? "doc", `${a.content}\n\n<p class="wiki-sources">Sources: ${a.citesArtifactIds.join(", ")}</p>`, a.baseVersion, a.artifactId),
+      writeWithManagedLock({
+        elementId: a.elementId ?? "doc",
+        value: `${a.content}\n\n<p class="wiki-sources">Sources: ${a.citesArtifactIds.join(", ")}</p>`,
+        baseVersion: a.baseVersion,
+        artifactId: a.artifactId,
+        reason: "grounded wiki update",
+      }, rt),
   },
   {
     name: "reconcile_cell",
@@ -139,7 +394,13 @@ export const ROOM_TOOLS: AgentTool[] = [
       const raw = cur?.value;
       const curScalar = raw && typeof raw === "object" && "value" in (raw as Record<string, unknown>) ? (raw as { value: unknown }).value : raw;
       if (String(curScalar ?? "") === String(a.expectedValue ?? "")) return { ok: true as const, skipped: true as const, version: cur?.version ?? 0 };
-      const res = await rt.editCell(a.elementId, a.expectedValue, a.baseVersion, a.artifactId);
+      const res = await writeWithManagedLock({
+        elementId: a.elementId,
+        value: a.expectedValue,
+        baseVersion: a.baseVersion,
+        artifactId: a.artifactId,
+        reason: "reconcile expected value",
+      }, rt);
       return res.ok ? { ok: true as const, corrected: true as const, version: res.version } : res;
     },
   },
@@ -170,3 +431,14 @@ export const ROOM_TOOLS: AgentTool[] = [
 ];
 
 export const TOOL_NAMES = ROOM_TOOLS.map((t) => t.name);
+export const MANAGED_LOCK_TOOLS: AgentTool[] = [
+  WRITE_LOCKED_CELL_TOOL,
+  WRITE_LOCKED_CELLS_TOOL,
+  WRITE_LOCKED_CELL_RESULT_TOOL,
+  WRITE_LOCKED_CELL_RESULTS_TOOL,
+];
+export const PRODUCTION_ROOM_TOOLS: AgentTool[] = [
+  ...ROOM_TOOLS.filter((toolDef) => !new Set(["propose_lock", "release_lock", "edit_cell", "write_cell_result", "create_draft"]).has(toolDef.name)),
+  ...MANAGED_LOCK_TOOLS,
+];
+export const PRODUCTION_TOOL_NAMES = PRODUCTION_ROOM_TOOLS.map((t) => t.name);

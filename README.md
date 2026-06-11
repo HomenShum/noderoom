@@ -10,7 +10,7 @@ through the same versioned concurrency control.**
 
 `multi-panel room` · `public + private agents` · `affected-range lock` · `draft-for-merge` · `per-room traces` · `live Convex + real LLM`
 
-[Why Convex](#why-convex-and-why-not) · [Audience fluency](#audience-world-proof-artifacts) · [Lessons](#lessons-from-building-noderoom) · [Sequences](#live-collaboration-sequence) · [Why & HALO](docs/WHY_NODEAGENT_AND_HALO.md) · [Quickstart](#quickstart) · [Agent runtime](docs/AGENT_RUNTIME.md) · [Agent eval](docs/AGENT_EVAL.md) · [Model eval matrix](docs/eval/MODEL_EVAL_MATRIX.md) · [Feature eval backlog](docs/eval/FEATURE_EVAL_BACKLOG.md) · [Agent wiki](docs/AGENT_WIKI.md) · [Design](docs/DESIGN.md) · [Stack](docs/STACK.md) · [Walkthrough](docs/WALKTHROUGH.md) · [Architecture](docs/ARCHITECTURE.md) · [Open gaps](docs/GAPS_NOT_DONE.md)
+[Why Convex](#why-convex-and-why-not) · [Audience fluency](#audience-world-proof-artifacts) · [Lessons](#lessons-from-building-noderoom) · [Managed locks](#managed-locks-what-to-give-the-agent) · [Multi-user proof](docs/eval/MULTI_USER_COORDINATION_PROOF.md) · [Sequences](#live-collaboration-sequence) · [Why & HALO](docs/WHY_NODEAGENT_AND_HALO.md) · [Quickstart](#quickstart) · [Agent runtime](docs/AGENT_RUNTIME.md) · [Agent eval](docs/AGENT_EVAL.md) · [Model eval matrix](docs/eval/MODEL_EVAL_MATRIX.md) · [Feature eval backlog](docs/eval/FEATURE_EVAL_BACKLOG.md) · [Agent wiki](docs/AGENT_WIKI.md) · [Design](docs/DESIGN.md) · [Stack](docs/STACK.md) · [Walkthrough](docs/WALKTHROUGH.md) · [Architecture](docs/ARCHITECTURE.md) · [Open gaps](docs/GAPS_NOT_DONE.md)
 
 [Interview notes](docs/INTERVIEW_NOTES.md) · [Over-engineering audit](docs/OVERENGINEERING_AUDIT.md) · [Improvement roadmap](docs/IMPROVEMENT_ROADMAP.md) · [Operating budget](docs/OPERATING_BUDGET.md) · [Audience workloads](docs/AUDIENCE_WORKLOADS.md)
 
@@ -227,6 +227,21 @@ OpenRouter invalid-JSON provider failure after lock/read — recorded as
 The HALO ladder also renders trace-replayed skill previews from real ladder JSON
 (`l1-read` through `l6-long-horizon`) in `docs/eval/workflow-previews/`, so a
 workflow change has a small visual proof, not only a text score.
+
+### Managed Locks: What To Give The Agent
+
+The first lock/CAS evals intentionally made the model call `propose_lock -> edit_cell -> release_lock` so we could prove it understood the collaboration protocol. Production should not keep paying for that once the invariant is proven. The production bundle now exposes `write_locked_cells` / `write_locked_cell_results`: the model supplies target cells, values/formulas/evidence, and base versions; the runtime acquires the range lock, writes with CAS, drafts if blocked, releases in `finally`, and returns coordination evidence.
+
+| Lane | Evidence | Model calls | Agent tool calls | Model-visible lock calls | Tool trace |
+|---|---:|---:|---:|---:|---|
+| Explicit lock tools | deterministic runtime | 7 | 6 | 2 | `propose_lock -> read_range -> edit_cell -> read_range -> edit_cell -> release_lock` |
+| Runtime-managed lock | deterministic runtime | 3 | 2 | 0 | `read_range -> write_locked_cells` |
+| Explicit lock tools | live `deepseek/deepseek-v4-flash` | 5 | 5 | 2 | `read_range -> propose_lock -> edit_cell -> edit_cell -> release_lock` |
+| Runtime-managed lock | live `deepseek/deepseek-v4-flash` | 4 | 3 | 0 | `read_range -> write_locked_cells -> read_range` |
+
+The safety invariant did not move to the model: `tests/managedLockTools.test.ts` injects a human write during the managed write and proves it is blocked while the runtime-held lock is active. `npm run eval:multiuser-coordination` extends that to a multi-actor proof: human-vs-human same-cell edits converge with one winner and one CAS conflict, target writes are blocked, non-target peer writes continue, stale bases conflict, blocked second agents draft, and every path releases its lock. The eval artifacts are [`docs/eval/managed-lock-performance.json`](docs/eval/managed-lock-performance.json), [`docs/eval/managed-lock-performance-live.json`](docs/eval/managed-lock-performance-live.json), [`docs/eval/multi-user-coordination-proof.json`](docs/eval/multi-user-coordination-proof.json), [`docs/eval/MANAGED_LOCK_PERF.md`](docs/eval/MANAGED_LOCK_PERF.md), and [`docs/eval/MULTI_USER_COORDINATION_PROOF.md`](docs/eval/MULTI_USER_COORDINATION_PROOF.md).
+
+**Rule of thumb:** give the agent business intent, target cells, formulas/values/evidence, and base versions. Take away lock acquisition, unlock sequencing, range coordination, draft-on-blocked mechanics, and release cleanup. Deterministic coordination belongs in the harness.
 
 ### Where the walkthroughs go next
 
@@ -629,9 +644,9 @@ sequenceDiagram
   else retry of completed step
     DB-->>Agent: replay model output, no provider call
   end
-  Agent->>Mutation: propose_lock / read_range / edit_cell / release_lock
-  Mutation->>DB: permission, schema, lock, CAS, evidence checks
-  Mutation->>DB: commit safe write or create proposal/draft
+  Agent->>Mutation: read_range / write_locked_cells / write_locked_cell_results
+  Mutation->>DB: permission, schema, managed range lock, CAS, evidence checks
+  Mutation->>DB: commit safe write, create proposal, or create blocked draft
   DB-->>Host: inline chips, trace, job status
   DB-->>Peer: same public receipts
   alt budget remains and goal is done
@@ -643,6 +658,46 @@ sequenceDiagram
   end
 ```
 
+Production uses managed write tools. The explicit `propose_lock -> edit_cell -> release_lock`
+sequence remains useful in ladder evals and debug traces, but the production bundle hides those
+coordination tools from the model. One visible `write_locked_cells` call expands inside the
+runtime/mutation layer like this:
+
+```mermaid
+sequenceDiagram
+  autonumber
+  participant Agent as "NodeAgent"
+  participant Mutation as "Convex mutation"
+  participant Peer as "Peer browser"
+  participant DB as "Convex DB"
+
+  Agent->>Mutation: write_locked_cells(ops, baseVersions)
+  Mutation->>DB: acquire exact target-range lock
+  par peer edits target cell
+    Peer->>Mutation: applyCellEdit(target, peerBaseVersion)
+    Mutation-->>Peer: locked result as data
+  and peer edits outside target range
+    Peer->>Mutation: applyCellEdit(otherCell, currentVersion)
+    Mutation->>DB: CAS commit allowed
+  end
+  Mutation->>DB: apply each target op with CAS
+  alt target base is current
+    Mutation->>DB: write element, bump version, receipt
+  else target base is stale
+    Mutation-->>Agent: conflict result as data
+  end
+  Mutation->>DB: release lock in finally
+  Mutation->>DB: merge blocked drafts or flag review conflicts
+  DB-->>Peer: reactive canonical state
+```
+
+`npm run eval:multiuser-coordination` is the deterministic proof for that expansion: human-vs-human
+same-cell edits converge with one winner and one CAS conflict, target writes block, non-target writes
+continue, stale writes conflict, blocked agents draft, smart-merge runs on release, and all scenarios end
+with zero active locks. The generated artifact is
+[`docs/eval/multi-user-coordination-proof.json`](docs/eval/multi-user-coordination-proof.json),
+with the method documented in [`docs/eval/MULTI_USER_COORDINATION_PROOF.md`](docs/eval/MULTI_USER_COORDINATION_PROOF.md). The next promotion layer is the gated browser/live Convex spec: `E2E_LIVE=1 E2E_REQUIRE_REVIEW_MODE=1 npx playwright test e2e/three-user-collab.spec.ts --project=chromium`.
+
 The long form, including file/provider extraction and architecture alternatives
 against client-side SSE, REST polling, CRDT/local-first, and worker-queue
 designs, lives in
@@ -651,8 +706,7 @@ designs, lives in
 ## The agent — runtime, context, eval
 
 The agent is the centerpiece, built to be *explained* and *trusted*. **Type `/ask <goal>`
-in the public chat to drive the Room NodeAgent end-to-end** — it claims a lock, reads, CAS-edits,
-and releases, live (the real `runRoomAgent` action when on Convex; the real in-memory harness with no keys).
+in the public chat to drive the Room NodeAgent end-to-end** - it reads current versions, calls managed write tools, and lets the runtime expand lock/CAS/draft/release internally (the real `runRoomAgent` action when on Convex; the real in-memory harness with no keys).
 
 - **Runtime + context engineering + tool backend** → [`docs/AGENT_RUNTIME.md`](docs/AGENT_RUNTIME.md).
   Three seams (model · tools · RoomTools), the loop, the system-prompt protocol + JIT context, and
@@ -671,7 +725,7 @@ NodeAgent to work**. The full per-case inventory (with file refs and recorded re
 
 | Interaction mode | Running today | Designed, to build |
 |---|---|---|
-| **1 · Do it for me** (autonomous solve) | variance/footnote/note/wall goldens · GTM research enrichment (v3 cheap/free smoke, 18/28 routes 9/9) · executable professional subset (GTM runtime enrichment, messy-sheet parsing, cross-file note write, grounded wiki update, finance reconciliation) · credit cascade + cell-mapping rejection · 3-statement modeling test Solve (private full lane, measured: `deepseek/deepseek-v4-flash` 5/5 model-owned across base/distractor/concurrent-edit rooms, median 105.0s, p95 $0.1068/run) | chat-first lead capture/research intake · SEC model-build flagship · N-doc research (benchmark v4) · file-drop ingestion (10-K/XLSX/receipts) · knowledge-organization pack |
+| **1 � Do it for me** (autonomous solve) | variance/footnote/note/wall goldens � GTM research enrichment (v3 cheap/free smoke, 18/28 routes 9/9) � executable professional subset (GTM runtime enrichment, messy-sheet parsing, cross-file note write, grounded wiki update, finance reconciliation) � chat-first lead capture through live room tools (`deepseek/deepseek-v4-flash`, 100%) � credit cascade + cell-mapping rejection � 3-statement modeling test Solve (private full lane, measured: `deepseek/deepseek-v4-flash` 5/5 model-owned across base/distractor/concurrent-edit rooms, median 105.0s, p95 $0.1068/run) | background chat-to-research intake � SEC model-build flagship � N-doc research (benchmark v4) � file-drop ingestion (10-K/XLSX/receipts) � knowledge-organization pack |
 | **2 · Do it with us** (live collaboration) | ladder **L1–L7 scripted** + **L1–L4 live** across 11 routes (full passes: `gemini-3.5-flash`, `nemotron-3-ultra` — the research champion fails L1/L4, proving lanes promote separately) · multi-turn provenance · sustained concurrent room · lease fencing/takeover | L5–L7 live · modeling test (Collaborate: split IS/BS/CF under locks) · L8 roles/redaction · L9 entity resolution · L10 cross-artifact · live adversarial-source rung |
 | **3 · Work under review** (proposals) | review-mode inline proposals + room-policy briefing regression | contractor-time professional approval fixture · L8 formalizes role-gated approve/promote/redact |
 | **4 · Advise me privately** (read-only consult) | private no-tools reply path · private-draft redaction · prompt-injection fencing 4/4 | sensitive-query guardrail (decline with stated reason) |
@@ -682,14 +736,15 @@ Cross-cutting and always on: the eval store + `eval:diff` regression gate, the s
 model matrix (research and collaboration promote **separately**), the HALO improvement loop, and
 the Gemini media judge on every published clip.
 
-Professional catalog proof state: `npm run eval:professional:catalog-proofs`
-currently proves **21/21** professional catalog cases at the deterministic
-catalog layer, and `npm run eval:professional:proofs` records **0 unproofed**
-cases in `docs/eval/professional-proof-ledger.json`. The ledger still keeps
-live-provider proof separate: current coverage is **1 partial live-provider**
-case, **2 deterministic runtime** cases, and **18 deterministic catalog** cases.
-That is intentional; catalog proof prevents vague feature claims, while live
-provider promotion still requires a real route to produce the trace/output.
+Professional proof state:
+
+- `npm run eval:professional:catalog-proofs` proves **21/21** professional catalog cases at the deterministic catalog layer.
+- `npm run eval:professional:live-catalog -- --real deepseek/deepseek-v4-flash --require-full` proves **21/21** catalog contracts with a live OpenRouter route.
+- Route cross-checks: `ibm-granite/granite-4.1-8b` completed the full catalog at **19/21** (`finance-cost-reconciliation` missed `validCaseId`; `eval-ui-action-execution-map` missed `reviewIfNeeded`), `z-ai/glm-4.7-flash` passed a 3-case smoke but full-catalog timing is too slow for the current runner, and `nex-agi/nex-n2-pro:free` passed a 1-case smoke after the full sweep timed out.
+- `npm run eval:chat-intake:live` proves the chat-first GTM workflow through the real room runtime with `deepseek/deepseek-v4-flash`: lock, evidenced writes, CAS duplicate prevention, unresolved Caldera, one private clarifying question, release, and no public PII leak.
+- `npm run eval:professional:proofs` now records **1 full live-runtime**, **1 partial live-runtime**, **17 live-provider catalog**, **2 deterministic runtime**, and **0 contract-shape** cases in `docs/eval/professional-proof-ledger.json`.
+
+That distinction is intentional: catalog proof prevents vague feature claims, while full product promotion still requires a real route to produce the runtime trace/output for that workflow.
 - **Context compaction** (`src/agent/compaction.ts`) — elides stale `read_range` results (Claude
   "context editing" pattern), preserves the turn structure (Hermes), keeps the latest state + recent turns.
 - **Library stack** (TipTap, dnd-kit, lucide, assistant-ui, the `@convex-dev/*` components) → [`docs/STACK.md`](docs/STACK.md).

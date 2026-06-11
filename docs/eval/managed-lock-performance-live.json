@@ -1,0 +1,92 @@
+{
+  "generatedAt": "2026-06-11T20:42:17.888Z",
+  "mode": "live_provider",
+  "route": "deepseek/deepseek-v4-flash",
+  "caseId": "managed-lock-production-target-v1",
+  "explicit": {
+    "lane": "explicit_agent_lock",
+    "status": "passed",
+    "elapsedMs": 25663,
+    "modelName": "deepseek/deepseek-v4-flash",
+    "modelCalls": 5,
+    "agentToolCalls": 5,
+    "coordinationToolCalls": 2,
+    "managedBatchCalls": 0,
+    "traceTools": [
+      "read_range",
+      "propose_lock",
+      "edit_cell",
+      "edit_cell",
+      "release_lock"
+    ],
+    "valuesOk": true,
+    "released": true,
+    "exhausted": false,
+    "stopReason": "done",
+    "usage": {
+      "inputTokens": 21391,
+      "outputTokens": 544,
+      "modelCalls": 5
+    },
+    "coordinationEvidence": []
+  },
+  "managed": {
+    "lane": "runtime_managed_lock",
+    "status": "passed",
+    "elapsedMs": 5782,
+    "modelName": "deepseek/deepseek-v4-flash",
+    "modelCalls": 4,
+    "agentToolCalls": 3,
+    "coordinationToolCalls": 0,
+    "managedBatchCalls": 1,
+    "traceTools": [
+      "read_range",
+      "write_locked_cells",
+      "read_range"
+    ],
+    "valuesOk": true,
+    "released": true,
+    "exhausted": false,
+    "stopReason": "done",
+    "usage": {
+      "inputTokens": 16675,
+      "outputTokens": 514,
+      "modelCalls": 4
+    },
+    "coordinationEvidence": [
+      {
+        "mode": "managed_lock_batch",
+        "targetIds": [
+          "r_rev__variance",
+          "r_cogs__variance"
+        ],
+        "acquired": true,
+        "lockId": "lock_21",
+        "released": true,
+        "mergedDrafts": 0
+      }
+    ]
+  },
+  "delta": {
+    "modelCallsSaved": 1,
+    "agentToolCallsSaved": 2,
+    "coordinationToolCallsRemovedFromModelTrace": 2,
+    "agentToolCallReductionPct": 40
+  },
+  "lesson": {
+    "giveAgent": [
+      "business intent",
+      "target cells",
+      "values/formulas/evidence",
+      "base versions from reads"
+    ],
+    "takeAwayFromAgent": [
+      "lock acquisition",
+      "unlock sequencing",
+      "range coordination",
+      "draft-on-blocked mechanics",
+      "release-in-finally cleanup"
+    ],
+    "invariant": "The model-visible trace has fewer coordination calls, while the runtime result still carries lock coordination evidence and the room ends with no active locks."
+  }
+}

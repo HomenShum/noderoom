@@ -58,6 +58,8 @@ export async function runAgent(opts: {
   compaction?: CompactionOpts;
   /** Override the JIT context assembly. Defaults to buildContext. */
   contextBuilder?: (rt: RoomTools, goal: string) => Promise<AgentMessage[]>;
+  /** Override the concurrency protocol prompt. Defaults to the explicit lock/CAS prompt. */
+  systemPrompt?: string;
   onTrace?: (e: AgentTraceEvent) => void;
   onHandoff?: (handoff: AgentHandoff) => void;
   now?: () => number;
@@ -190,11 +192,15 @@ export async function runAgent(opts: {
 
   // Goal-progress accounting for the two harness guards (read-loop breaker + done-without-writes
   // bounce). Counts WRITE-intent tool calls across the whole run; each guard fires at most once.
-  const WRITE_TOOLS = new Set(["edit_cell", "create_draft", "update_wiki", "write_cell_result"]);
+  const WRITE_TOOLS = new Set(["edit_cell", "create_draft", "update_wiki", "write_cell_result", "write_locked_cell", "write_locked_cell_result", "write_locked_cells", "write_locked_cell_results"]);
   let writeCalls = 0;
   let lockCalls = 0;
   let readNudged = false;
   let doneNudged = false;
+  const managedWriteToolsAvailable = tools.some((tool) => tool.name.startsWith("write_locked_cell"));
+  const finishWriteInstruction = managedWriteToolsAvailable
+    ? "Finish the task now: use read_range if you still need current versions, then call write_locked_cells or write_locked_cell_results for the affected range when possible (pendingApproval or drafted results are SUCCESS - never retry them)."
+    : "Finish the task now: propose_lock the target cells, then edit_cell each of them with the values implied by what you read (batch the edit_cell calls in one turn; a pendingApproval result is SUCCESS - never retry it).";
 
   try {
     if (opts.initialMessages?.length) messages.push(...opts.initialMessages);
@@ -250,7 +256,7 @@ export async function runAgent(opts: {
         const signal = modelSignal();
         let fresh: AgentStep;
         try {
-          fresh = await model.next({ system: SYSTEM_PROMPT, messages: modelInput, tools, signal: signal.signal });
+          fresh = await model.next({ system: opts.systemPrompt ?? SYSTEM_PROMPT, messages: modelInput, tools, signal: signal.signal });
         } catch (error) {
           if (signal.signal?.aborted || (shouldHandoffForTime() && isAbortLike(error))) {
             const handoff = emitHandoff(step, "time_budget", attemptedSteps);
@@ -279,7 +285,7 @@ export async function runAgent(opts: {
         if (writeCalls === 0 && lockCalls === 0 && !doneNudged && step < maxSteps - 1) {
           doneNudged = true;
           if (out.text) messages.push({ role: "assistant", content: out.text });
-          messages.push({ role: "user", content: "HARNESS NOTE: this run cannot be complete — no cells were written or proposed. You already have the data you need in context. Finish the task now: propose_lock the target cells, then edit_cell each of them with the values implied by what you read (batch the edit_cell calls in one turn; a pendingApproval result is SUCCESS — never retry it)." });
+          messages.push({ role: "user", content: `HARNESS NOTE: this run cannot be complete - no cells were written or proposed. You already have the data you need in context. ${finishWriteInstruction}` });
           continue;
         }
         if (out.text) messages.push({ role: "assistant", content: out.text });
@@ -311,7 +317,7 @@ export async function runAgent(opts: {
       // re-reading otherwise (the trio-room 0/3 incident's other half).
       if (step >= 2 && writeCalls === 0 && lockCalls === 0 && !readNudged) {
         readNudged = true;
-        messages.push({ role: "user", content: "HARNESS NOTE: every tool call so far has been a read. The table in your context already holds the data — stop reading. Next turn: propose_lock the target cells, then edit_cell each of them (batch multiple edit_cell calls in one turn; pendingApproval results are SUCCESS)." });
+        messages.push({ role: "user", content: `HARNESS NOTE: every tool call so far has been a read. The table in your context already holds the data - stop reading. Next turn: ${finishWriteInstruction}` });
       }
     }
 

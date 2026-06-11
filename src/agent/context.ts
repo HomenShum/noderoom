@@ -34,9 +34,9 @@ export function fenceUntrusted(body: string): string {
 function policyLine(aware: AwarenessView): string {
   if (aware.autoAllow !== false) return "";
   return [
-    `ROOM POLICY — REVIEW MODE (auto-allow is OFF): every edit_cell you make files a PROPOSAL for the host to approve.`,
+    `ROOM POLICY — REVIEW MODE (auto-allow is OFF): every managed write or edit_cell files a PROPOSAL for the host to approve.`,
     `A result of {ok:false, pendingApproval:true, proposalId} is SUCCESS — the proposal is filed. NEVER retry that write.`,
-    `Move straight to the next cell and file proposals for ALL target cells (you may batch several edit_cell calls in one turn).`,
+    `Move straight to the next cell and file proposals for ALL target cells (prefer one write_locked_cells/write_locked_cell_results batch when available).`,
   ].join(" ");
 }
 
@@ -67,7 +67,7 @@ export async function buildContext(rt: RoomTools, goal: string): Promise<AgentMe
     fenceUntrusted(agents),
     aware.recentTrace.length ? `\nRECENT ACTIVITY (member-authored log):\n${fenceUntrusted(aware.recentTrace.map((t) => "  - " + t).join("\n"))}` : "",
     ``,
-    `Claim the cells you need, edit them with the versions shown (CAS), then release. If a cell you need is LOCKED, draft around it instead.`,
+    `Use write_locked_cells/write_locked_cell_results when available: the runtime claims the cells, writes with the versions shown (CAS), releases, and drafts if blocked. In explicit-tool eval mode, claim/edit/release manually.`,
     `Your run is COMPLETE only when the target cells have values (or filed proposals). The table above is your context — do not browse other artifacts unless the task names them.`,
   ]
     .filter((l) => l !== "")
@@ -99,7 +99,7 @@ export async function buildResearchContext(rt: RoomTools, goal: string): Promise
     `COMPANY RESEARCH SHEET (artifact "${snap.artifactId}", v${snap.version}). Editable cells per row: ${editable.map((c) => `\`{rowId}__${c}\``).join(", ")}. Rows below are member-authored data:`,
     fenceUntrusted(table),
     ``,
-    `Process rows whose status is "pending" or whose last_researched is stale for the user's request. For each row: propose_lock the editable cells, set status to "running", fetch_source the website plus one corroborating source when available, then use write_cell_result for summary/funding/headcount/recent_signal/source/source2/last_researched/status so every agent-filled cell stores value, evidence, confidence, and status. Set last_researched to today's ISO date, set status to "complete", then release the lock. Cite only sources you actually fetched. Preserve tier, intent, owner, and crm_status unless explicitly asked to change them.`,
+    `Process rows whose status is "pending" or whose last_researched is stale for the user's request. For each row: read the editable cells for base versions, set status to "running", fetch_source the website plus one corroborating source when available, then prefer one write_locked_cell_results batch for summary/funding/headcount/recent_signal/source/source2/last_researched/status so every agent-filled cell stores value, evidence, confidence, and status. Set last_researched to today's ISO date and status to "complete" in that managed batch. Cite only sources you actually fetched. Preserve tier, intent, owner, and crm_status unless explicitly asked to change them.`,
     ``,
     `ACTIVE LOCKS (read-only held by others):`,
     locks,
@@ -115,7 +115,7 @@ function elementText(value: unknown): string {
 }
 
 /** JIT context for a NOTE artifact: one editable `doc` element (HTML body). The agent reads the
- *  current body + version, then rewrites it with CAS (edit_cell on `doc`, or update_wiki). */
+ *  current body + version, then rewrites it with CAS (write_locked_cell on `doc`, or update_wiki). */
 export async function buildNoteContext(rt: RoomTools, goal: string): Promise<AgentMessage[]> {
   const [snap, aware] = await Promise.all([rt.snapshot(), rt.awareness()]);
   const els = snap.elements ?? [];
@@ -133,7 +133,7 @@ export async function buildNoteContext(rt: RoomTools, goal: string): Promise<Age
     fenceUntrusted(preview),
     others.length ? `\nOther editable elements: ${others.map((e) => `${e.id} (v${e.version})`).join(", ")}.` : "",
     ``,
-    `To update the note: edit the \`${docId}\` element with kind "set" and the new full HTML, using version ${doc?.version ?? 0} for CAS — or use update_wiki (it appends a Sources footer for grounding). Preserve existing structure unless asked to rewrite. If \`${docId}\` is LOCKED, create_draft instead.`,
+    `To update the note: use write_locked_cell on \`${docId}\` with kind "set" and the new full HTML, using version ${doc?.version ?? 0} for CAS — or use update_wiki (it appends a Sources footer for grounding and uses the same managed lock path). Preserve existing structure unless asked to rewrite.`,
     policyLine(aware),
     locks ? `\nACTIVE LOCKS:\n${locks}` : "",
   ].filter((l) => l !== "").join("\n");
@@ -141,7 +141,7 @@ export async function buildNoteContext(rt: RoomTools, goal: string): Promise<Age
 }
 
 /** JIT context for a post-it WALL: each element's value is { text, x, y, color }. The agent can ADD
- *  (edit_cell kind "create", fresh id, baseVersion 0), EDIT (kind "set" + CAS), or DELETE post-its. */
+ *  (write_locked_cell kind "create", fresh id, baseVersion 0), EDIT (kind "set" + CAS), or DELETE post-its. */
 export async function buildWallContext(rt: RoomTools, goal: string): Promise<AgentMessage[]> {
   const [snap, aware] = await Promise.all([rt.snapshot(), rt.awareness()]);
   const els = snap.elements ?? [];
@@ -156,8 +156,8 @@ export async function buildWallContext(rt: RoomTools, goal: string): Promise<Age
     `This artifact (id "${snap.artifactId}", v${snap.version}) is a POST-IT WALL. Each post-it is an element whose value is an object { text, x, y, color }.`,
     els.length ? `CURRENT POST-ITS (member-authored text):\n${fenceUntrusted(stickies)}` : `The wall is empty.`,
     ``,
-    `To ADD a post-it: edit_cell with a NEW elementId (e.g. "s_idea1"), kind "create", baseVersion 0, value { "text": "…", "x": <40–560>, "y": <40–360>, "color": "#FDE68A" }. Vary x/y by ~120px so notes don't overlap.`,
-    `To EDIT an existing post-it: edit_cell on its id with kind "set" and the version shown (CAS). To REMOVE one: kind "delete". If a post-it is LOCKED, create_draft instead.`,
+    `To ADD a post-it: use write_locked_cell with a NEW elementId (e.g. "s_idea1"), kind "create", baseVersion 0, value { "text": "…", "x": <40–560>, "y": <40–360>, "color": "#FDE68A" }. Vary x/y by ~120px so notes don't overlap.`,
+    `To EDIT an existing post-it: use write_locked_cell on its id with kind "set" and the version shown (CAS). To REMOVE one: use kind "delete".`,
     policyLine(aware),
   ].filter((l) => l !== "").join("\n");
   return [{ role: "user", content }];

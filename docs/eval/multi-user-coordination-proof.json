@@ -1,0 +1,200 @@
+{
+  "generatedAt": "2026-06-11T21:07:28.697Z",
+  "target": "deterministic multi-user coordination contract used by production Convex mutations",
+  "summary": {
+    "passed": true,
+    "scenarios": 5,
+    "passedScenarios": 5,
+    "failedScenarios": []
+  },
+  "invariants": [
+    "A runtime-managed range lock blocks peer writes to target cells while allowing non-target writes.",
+    "A stale base version returns conflict data and preserves the canonical value.",
+    "A second agent blocked by an active lock drafts instead of forcing a write, then smart-merges on release.",
+    "Managed writes release their lock in finally even when the CAS write conflicts.",
+    "Every scenario ends with zero active locks."
+  ],
+  "scenarios": [
+    {
+      "id": "managed_batch_blocks_target_not_room",
+      "checks": {
+        "managedWriteSucceeded": true,
+        "peerTargetBlocked": true,
+        "peerOutsideWriteOk": true,
+        "releaseRecorded": true,
+        "noLockLeak": true,
+        "finalTargetPreserved": true,
+        "outsideWritePreserved": true
+      },
+      "evidence": {
+        "traceTypes": [
+          "room_created",
+          "member_joined",
+          "member_joined",
+          "agent_session_started",
+          "agent_session_started",
+          "lock_acquired",
+          "agent_status",
+          "edit_blocked",
+          "edit_applied",
+          "edit_applied",
+          "edit_applied",
+          "lock_released",
+          "agent_status"
+        ],
+        "finalValues": {
+          "r_rev__variance": "+24%",
+          "r_cogs__variance": "+27.5%",
+          "r_opex__note": "peer can still update a non-target cell"
+        }
+      },
+      "passed": true
+    },
+    {
+      "id": "stale_base_returns_conflict_data",
+      "checks": {
+        "firstWriteSucceeded": true,
+        "staleWriteRejected": true,
+        "canonicalValuePreserved": true,
+        "noLockLeak": true
+      },
+      "evidence": {
+        "staleResult": {
+          "ok": false,
+          "reason": "conflict",
+          "expected": 1,
+          "actual": 2
+        },
+        "finalValue": "+10%"
+      },
+      "passed": true
+    },
+    {
+      "id": "human_vs_human_same_cell_no_clobber",
+      "checks": {
+        "oneWinnerPerOrder": true,
+        "loserGetsConflictData": true,
+        "canonicalWinnerPreserved": true,
+        "versionBumpedOncePerOrder": true,
+        "noLockLeak": true
+      },
+      "evidence": {
+        "orders": [
+          {
+            "firstActor": "homen",
+            "firstWrite": {
+              "ok": true,
+              "element": {
+                "id": "r_rev__variance",
+                "version": 2,
+                "value": "+24pct-Homen",
+                "updatedAt": 1750000021000,
+                "updatedBy": {
+                  "kind": "user",
+                  "id": "mem_2",
+                  "name": "Homen"
+                }
+              },
+              "fromVersion": 1,
+              "toVersion": 2
+            },
+            "secondWrite": {
+              "ok": false,
+              "reason": "conflict",
+              "expected": 1,
+              "actual": 2
+            },
+            "finalValue": "+24pct-Homen",
+            "finalVersion": 2,
+            "noLockLeak": true
+          },
+          {
+            "firstActor": "priya",
+            "firstWrite": {
+              "ok": true,
+              "element": {
+                "id": "r_rev__variance",
+                "version": 2,
+                "value": "+19pct-Priya",
+                "updatedAt": 1750000021000,
+                "updatedBy": {
+                  "kind": "user",
+                  "id": "mem_4",
+                  "name": "Priya"
+                }
+              },
+              "fromVersion": 1,
+              "toVersion": 2
+            },
+            "secondWrite": {
+              "ok": false,
+              "reason": "conflict",
+              "expected": 1,
+              "actual": 2
+            },
+            "finalValue": "+19pct-Priya",
+            "finalVersion": 2,
+            "noLockLeak": true
+          }
+        ]
+      },
+      "passed": true
+    },
+    {
+      "id": "blocked_agent_drafts_and_smart_merges",
+      "checks": {
+        "privateAgentDrafted": true,
+        "blockingLockRecorded": true,
+        "lockedValueUnchangedBeforeRelease": true,
+        "releaseMergedDraft": true,
+        "finalDraftValueApplied": true,
+        "noLockLeak": true
+      },
+      "evidence": {
+        "draftId": "draft_24",
+        "release": [
+          {
+            "draftId": "draft_24",
+            "applied": [
+              "6c5887e4-2972-4d89-bdcc-e1481332d799"
+            ],
+            "conflicts": 0,
+            "verdict": "clean"
+          }
+        ],
+        "finalValue": "+21.7%"
+      },
+      "passed": true
+    },
+    {
+      "id": "managed_write_releases_after_conflict",
+      "checks": {
+        "humanWriteSucceeded": true,
+        "staleManagedWriteConflicted": true,
+        "releaseStillRan": true,
+        "canonicalValuePreserved": true,
+        "noLockLeak": true
+      },
+      "evidence": {
+        "staleManaged": {
+          "ok": false,
+          "conflict": true,
+          "expected": 1,
+          "actual": 2,
+          "coordination": {
+            "mode": "managed_lock",
+            "targetIds": [
+              "r_ni__variance"
+            ],
+            "acquired": true,
+            "lockId": "lock_22",
+            "released": true,
+            "mergedDrafts": 0
+          }
+        },
+        "finalValue": "+5%"
+      },
+      "passed": true
+    }
+  ]
+}

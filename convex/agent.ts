@@ -31,7 +31,8 @@ type RunResult = {
   modelCalls: number; runId: Id<"agentRuns">; handoff: unknown | null;
 };
 import { AgentRunError, runAgent } from "../src/agent/runtime";
-import { ROOM_TOOLS } from "../src/agent/tools";
+import { PRODUCTION_ROOM_TOOLS } from "../src/agent/tools";
+import { MANAGED_LOCK_SYSTEM_PROMPT } from "../src/agent/systemPrompt";
 import { convexModel as agentModel, convexPriceRun as priceRun } from "../src/agent/convexModel";
 import { buildResearchContext, buildNoteContext, buildWallContext } from "../src/agent/context";
 import { runIdempotencyKey } from "../src/agent/idempotency";
@@ -137,22 +138,35 @@ export const runRoomAgent = action({
       return typeof error === "string" ? error : JSON.stringify(error) ?? String(error);
     };
     const stepStatus = (e: { tool: string; result: unknown }): "ok" | "conflict" | "locked" | "error" => {
-      const r = (e.result ?? {}) as { ok?: boolean; conflict?: boolean; locked?: boolean; error?: unknown; pendingApproval?: boolean };
+      const r = (e.result ?? {}) as { ok?: boolean; conflict?: boolean; locked?: boolean; error?: unknown; pendingApproval?: boolean; drafted?: boolean };
       if (e.tool === "edit_cell") { if (r.conflict) return "conflict"; if (r.locked) return "locked"; }
+      if (e.tool.startsWith("write_locked_cell") && r.drafted) return "ok";
       if (r.pendingApproval) return "ok"; // review mode: proposal filed = success, not an error
       if (r.error || r.ok === false) return "error";
       return "ok";
     };
     const traceStep = (e: { tool: string; args: unknown; result: unknown; ms: number }, i: number) => {
-      const elementId = e.tool === "edit_cell" ? (String((e.args as { elementId?: string }).elementId ?? "") || undefined) : undefined;
+      const elementId = e.tool === "edit_cell" || e.tool === "write_locked_cell" || e.tool === "write_locked_cell_result"
+        ? (String((e.args as { elementId?: string }).elementId ?? "") || undefined)
+        : undefined;
+      const affectedObjectIds = elementId
+        ? [elementId]
+        : e.tool === "write_locked_cells" || e.tool === "write_locked_cell_results"
+          ? ((e.args as { ops?: Array<{ elementId?: string }> }).ops ?? []).map((op) => String(op.elementId ?? "")).filter(Boolean)
+          : undefined;
       const mutationReceiptId = typeof (e.result as { mutationReceiptId?: unknown } | null)?.mutationReceiptId === "string"
         ? (e.result as { mutationReceiptId: Id<"agentMutationReceipts"> }).mutationReceiptId
         : undefined;
+      const batchMutationReceiptIds = Array.isArray((e.result as { results?: unknown[] } | null)?.results)
+        ? ((e.result as { results: Array<{ mutationReceiptId?: unknown }> }).results)
+          .map((result) => typeof result.mutationReceiptId === "string" ? result.mutationReceiptId as Id<"agentMutationReceipts"> : undefined)
+          .filter((id): id is Id<"agentMutationReceipts"> => Boolean(id))
+        : [];
       return {
         idx: i, tool: e.tool, args: cap(JSON.stringify(e.args)), result: cap(JSON.stringify(e.result)), status: stepStatus(e), ms: e.ms,
         elementId,
-        affectedObjectIds: elementId ? [elementId] : undefined,
-        mutationReceiptIds: mutationReceiptId ? [mutationReceiptId] : undefined,
+        affectedObjectIds,
+        mutationReceiptIds: mutationReceiptId ? [mutationReceiptId] : batchMutationReceiptIds.length ? batchMutationReceiptIds : undefined,
       };
     };
     const checkpointCursor = async (r: {
@@ -294,7 +308,8 @@ export const runRoomAgent = action({
         rt,
         goal: a.goal,
         model,
-        tools: ROOM_TOOLS,
+        tools: PRODUCTION_ROOM_TOOLS,
+        systemPrompt: MANAGED_LOCK_SYSTEM_PROMPT,
         maxSteps,
         // Route the JIT context by artifact kind so the agent can edit ANY artifact, not just the
         // variance sheet: research sheet → research builder; note → note builder; wall → wall builder;

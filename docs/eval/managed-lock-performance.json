@@ -1,0 +1,92 @@
+{
+  "generatedAt": "2026-06-11T20:40:15.018Z",
+  "mode": "deterministic_runtime",
+  "route": "scripted",
+  "caseId": "managed-lock-production-target-v1",
+  "explicit": {
+    "lane": "explicit_agent_lock",
+    "status": "passed",
+    "elapsedMs": 16,
+    "modelName": "scripted-explicit-lock",
+    "modelCalls": 7,
+    "agentToolCalls": 6,
+    "coordinationToolCalls": 2,
+    "managedBatchCalls": 0,
+    "traceTools": [
+      "propose_lock",
+      "read_range",
+      "edit_cell",
+      "read_range",
+      "edit_cell",
+      "release_lock"
+    ],
+    "valuesOk": true,
+    "released": true,
+    "exhausted": false,
+    "stopReason": "done",
+    "usage": {
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "modelCalls": 7
+    },
+    "coordinationEvidence": []
+  },
+  "managed": {
+    "lane": "runtime_managed_lock",
+    "status": "passed",
+    "elapsedMs": 4,
+    "modelName": "scripted-managed-lock",
+    "modelCalls": 3,
+    "agentToolCalls": 2,
+    "coordinationToolCalls": 0,
+    "managedBatchCalls": 1,
+    "traceTools": [
+      "read_range",
+      "write_locked_cells"
+    ],
+    "valuesOk": true,
+    "released": true,
+    "exhausted": false,
+    "stopReason": "done",
+    "usage": {
+      "inputTokens": 0,
+      "outputTokens": 0,
+      "modelCalls": 3
+    },
+    "coordinationEvidence": [
+      {
+        "mode": "managed_lock_batch",
+        "targetIds": [
+          "r_rev__variance",
+          "r_cogs__variance"
+        ],
+        "acquired": true,
+        "lockId": "lock_21",
+        "released": true,
+        "mergedDrafts": 0
+      }
+    ]
+  },
+  "delta": {
+    "modelCallsSaved": 4,
+    "agentToolCallsSaved": 4,
+    "coordinationToolCallsRemovedFromModelTrace": 2,
+    "agentToolCallReductionPct": 66.7
+  },
+  "lesson": {
+    "giveAgent": [
+      "business intent",
+      "target cells",
+      "values/formulas/evidence",
+      "base versions from reads"
+    ],
+    "takeAwayFromAgent": [
+      "lock acquisition",
+      "unlock sequencing",
+      "range coordination",
+      "draft-on-blocked mechanics",
+      "release-in-finally cleanup"
+    ],
+    "invariant": "The model-visible trace has fewer coordination calls, while the runtime result still carries lock coordination evidence and the room ends with no active locks."
+  }
+}

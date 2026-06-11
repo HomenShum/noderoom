@@ -12,7 +12,8 @@ import { internalAction } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { ConvexRoomTools } from "./convexRoomTools";
 import { AgentRunError, runAgent } from "../src/agent/runtime";
-import { ROOM_TOOLS } from "../src/agent/tools";
+import { PRODUCTION_ROOM_TOOLS } from "../src/agent/tools";
+import { MANAGED_LOCK_SYSTEM_PROMPT } from "../src/agent/systemPrompt";
 import { convexModel as agentModel, convexPriceRun as priceRun } from "../src/agent/convexModel";
 import { buildResearchContext } from "../src/agent/context";
 import { compactMessages } from "../src/agent/compaction";
@@ -76,17 +77,30 @@ function errorText(error: unknown): string {
 }
 
 function stepStatus(e: { tool: string; result: unknown }): "ok" | "conflict" | "locked" | "error" {
-  const r = (e.result ?? {}) as { ok?: boolean; conflict?: boolean; locked?: boolean; error?: unknown };
+  const r = (e.result ?? {}) as { ok?: boolean; conflict?: boolean; locked?: boolean; error?: unknown; drafted?: boolean };
   if (e.tool === "edit_cell") { if (r.conflict) return "conflict"; if (r.locked) return "locked"; }
+  if (e.tool.startsWith("write_locked_cell") && r.drafted) return "ok";
   if (r.error || r.ok === false) return "error";
   return "ok";
 }
 
 function traceStep(e: AgentTraceEvent, i: number) {
-  const elementId = e.tool === "edit_cell" ? (String((e.args as { elementId?: string }).elementId ?? "") || undefined) : undefined;
+  const elementId = e.tool === "edit_cell" || e.tool === "write_locked_cell" || e.tool === "write_locked_cell_result"
+    ? (String((e.args as { elementId?: string }).elementId ?? "") || undefined)
+    : undefined;
+  const affectedObjectIds = elementId
+    ? [elementId]
+    : e.tool === "write_locked_cells" || e.tool === "write_locked_cell_results"
+      ? ((e.args as { ops?: Array<{ elementId?: string }> }).ops ?? []).map((op) => String(op.elementId ?? "")).filter(Boolean)
+      : undefined;
   const mutationReceiptId = typeof (e.result as { mutationReceiptId?: unknown } | null)?.mutationReceiptId === "string"
     ? (e.result as { mutationReceiptId: Id<"agentMutationReceipts"> }).mutationReceiptId
     : undefined;
+  const batchMutationReceiptIds = Array.isArray((e.result as { results?: unknown[] } | null)?.results)
+    ? ((e.result as { results: Array<{ mutationReceiptId?: unknown }> }).results)
+      .map((result) => typeof result.mutationReceiptId === "string" ? result.mutationReceiptId as Id<"agentMutationReceipts"> : undefined)
+      .filter((id): id is Id<"agentMutationReceipts"> => Boolean(id))
+    : [];
   return {
     idx: i,
     tool: e.tool,
@@ -95,8 +109,8 @@ function traceStep(e: AgentTraceEvent, i: number) {
     status: stepStatus(e),
     ms: e.ms,
     elementId,
-    affectedObjectIds: elementId ? [elementId] : undefined,
-    mutationReceiptIds: mutationReceiptId ? [mutationReceiptId] : undefined,
+    affectedObjectIds,
+    mutationReceiptIds: mutationReceiptId ? [mutationReceiptId] : batchMutationReceiptIds.length ? batchMutationReceiptIds : undefined,
   };
 }
 
@@ -229,7 +243,8 @@ export const runFreeAutoJobSlice = internalAction({
         rt,
         goal: claimed.goal,
         model,
-        tools: ROOM_TOOLS,
+        tools: PRODUCTION_ROOM_TOOLS,
+        systemPrompt: MANAGED_LOCK_SYSTEM_PROMPT,
         maxSteps,
         initialMessages,
         resumeToolCalls,

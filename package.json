@@ -59,6 +59,8 @@
     "eval:professional:live-catalog": "tsx evals/professionalLiveCatalog.ts --record",
     "eval:professional:proofs": "tsx evals/professionalProofLedger.ts",
     "eval:chat-intake:live": "tsx evals/chatIntakeRuntime.ts --real deepseek/deepseek-v4-flash --record",
+    "eval:managed-lock": "tsx evals/managedLockPerf.ts --strict",
+    "eval:multiuser-coordination": "tsx evals/multiUserCoordinationProof.ts --strict",
     "eval:finance-model": "tsx scripts/finance-model-eval.ts",
     "eval:finance-model-private": "tsx scripts/private-finance-model-gold.ts",
     "eval:credit": "tsx evals/creditEval.ts",

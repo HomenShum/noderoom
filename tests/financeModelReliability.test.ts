@@ -12,6 +12,7 @@ import {
   classifyRunFailure,
   runFinanceModelLiveSolve,
   PROVIDER_INCONCLUSIVE_SHARE,
+  type FinanceRoomVariant,
   type LiveReport,
 } from "../evals/financeModelLive";
 import { financeModelSolvePlan, makeSyntheticFinanceModelGold } from "../evals/financeModelRuntime";
@@ -26,6 +27,7 @@ function liveReport(partial: Partial<LiveReport>): LiveReport {
     caseId: "finance-model-private-v1-full",
     mode: "live",
     modelName: "test-route",
+    roomVariant: "base" as FinanceRoomVariant,
     status: "passed",
     score: 1,
     checks: { ...PASS_CHECKS },
@@ -130,6 +132,52 @@ describe("finance live failure attribution — structure over message text", () 
   it("attributes deadline aborts to the model and unknown shapes to the harness", () => {
     expect(classifyRunFailure(new Error("AbortError: This operation was aborted"))).toBe("model");
     expect(classifyRunFailure(new TypeError("Cannot read properties of undefined (reading 'rows')"))).toBe("harness");
+  });
+});
+
+describe("finance live room variants — the passed-once-then-0/3 class", () => {
+  it("solves cleanly in a room full of distractor artifacts that reuse the target cell ids", async () => {
+    const gold = makeSyntheticFinanceModelGold();
+    const report = await runFinanceModelLiveSolve({
+      gold,
+      pack: null,
+      agent: scriptedModel(financeModelSolvePlan(gold), "scripted-finance-solver"),
+      modelName: "scripted",
+      roomVariant: "distractors",
+    });
+    expect(report.status).toBe("passed");
+    expect(report.roomVariant).toBe("distractors");
+    expect(report.checks.distractorsUntouched).toBe(true);
+  });
+
+  it("survives a human committing mid-run and blocks the human's write into the locked range", async () => {
+    const gold = makeSyntheticFinanceModelGold();
+    const report = await runFinanceModelLiveSolve({
+      gold,
+      pack: null,
+      agent: scriptedModel(financeModelSolvePlan(gold), "scripted-finance-solver"),
+      modelName: "scripted",
+      roomVariant: "concurrent_edit",
+    });
+    expect(report.status).toBe("passed");
+    expect(report.checks.humanEditSurvived).toBe(true);
+    expect(report.checks.lockHeldAgainstMidRunWrite).toBe(true);
+  });
+
+  it("fails the batch when a measured variant goes 0-for, even with enough total passes", () => {
+    const result = aggregateFinanceLiveReports({
+      reports: [
+        liveReport({}), liveReport({}), liveReport({}), liveReport({}),
+        liveReport({ roomVariant: "distractors", status: "failed", score: 0.5, checks: { ...FAIL_CHECKS }, failureOwner: "model" }),
+      ],
+      runsRequested: 5,
+      level: "full",
+      targetCells: ["F7"],
+      cells: [],
+    });
+    expect(result.passCount).toBe(4);
+    expect(result.aggregateChecks["variant:distractors"]).toBe(false);
+    expect(result.verdict).toBe("failed");
   });
 });
 

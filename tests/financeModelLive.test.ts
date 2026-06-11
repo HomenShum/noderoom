@@ -25,6 +25,7 @@ function report(overrides: Partial<LiveReport> = {}): LiveReport {
     mode: "live",
     requestedModelName: "deepseek/deepseek-v4-flash",
     modelName: "deepseek/deepseek-v4-flash",
+    roomVariant: "base",
     status,
     score: Object.values(checks).filter(Boolean).length / Object.values(checks).length,
     checks,

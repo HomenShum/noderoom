@@ -142,6 +142,9 @@ coverage: `tests/financeModelReliability.test.ts` and
 - ~~Reliability proof: add `--runs N` aggregation~~ **Landed 2026-06-11**:
   model-owned pass rate, provider-share inconclusive verdict, budget gates,
   per-attempt failureOwner ledger, `--record` into the eval store for
-  cross-commit `eval:diff`. What remains is the actual 5-run live promotion
-  batch for the deepseek champion (and room-variant perturbation, Harness
-  Hardening #6).
+  cross-commit `eval:diff`. Room-variant rotation also landed (`--variants`,
+  default rotation on multi-run batches: base / distractors that reuse the
+  target cell ids / concurrent human edit mid-run; no measured variant may go
+  0-for), plus the proof staleness gate (`npm run proofs:staleness`, 30-day
+  window, enforced in vitest). What remains is keeping the committed aggregate
+  current — the staleness gate now enforces that mechanically.

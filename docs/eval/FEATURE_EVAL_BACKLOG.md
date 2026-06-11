@@ -152,15 +152,20 @@ starting a third lane before then is scope gravity, not progress.
 These convert the promotion rule from prose to code. Anchors are current as
 of 2026-06-11.
 
-Status: items 1-5 are now implemented — `evals/financeModelLive.ts` (runs
-aggregation, budget gates, structured attribution, model-owned pass rate with
-the >40%-provider-share `inconclusive` verdict), `evals/harnessStatus.ts`
+Status: **all seven items are implemented.** Items 1-5: `evals/financeModelLive.ts`
+(runs aggregation, budget gates, structured attribution, model-owned pass rate
+with the >40%-provider-share `inconclusive` verdict), `evals/harnessStatus.ts`
 (implemented-vs-contract manifest with on-disk entry-point checks), and the
 catalog (`pasted_content` intake mode, output contracts on every chat-started
-case, `selected_artifact` declared on the reconciliation case). Scenario
+case, `selected_artifact` declared on the reconciliation case). Item 6:
+`--variants` room rotation (base / distractors-with-colliding-cell-ids /
+concurrent human edit mid-run) with a no-variant-goes-0-for aggregate gate.
+Item 7: `npm run proofs:staleness` + `tests/proofStaleness.test.ts` — every
+marketed proof in `evals/proofStaleness.ts` MARKETED_PROOFS goes red in CI 30
+days after its `generatedAt`; rerun the batch or pull the claim. Scenario
 coverage: `tests/financeModelReliability.test.ts`,
-`tests/financeModelLive.test.ts`, `tests/professionalWorkflows.test.ts`.
-Items 6-7 remain open.
+`tests/financeModelLive.test.ts`, `tests/proofStaleness.test.ts`,
+`tests/professionalWorkflows.test.ts`.
 
 1. `--runs N` on `evals/financeModelLive.ts` main(): loop the solve, commit
    the aggregate `{passRate, medianMs, p95CostUsd, perCheckPassCounts}` with

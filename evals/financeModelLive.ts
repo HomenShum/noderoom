@@ -53,6 +53,19 @@ const VALUE_COMPUTABLE_IN_SLICE = new Set(["F7", "G7", "F8", "F12", "F16", "F56"
 const FINANCE_LIVE_LEVELS = ["smoke", "income", "full"] as const;
 type FinanceLiveLevel = typeof FINANCE_LIVE_LEVELS[number];
 
+/** Room-setup perturbation (Harness Hardening #6). The shipped passed-once-then-0/3 bug was
+ *  exactly a single-environment overfit: the agent pattern-matched one room shape. Promotion runs
+ *  rotate through these variants and no measured variant may go 0-for.
+ *  - base: the clean fixture room.
+ *  - distractors: extra artifacts in the room (a note + a stale scratch sheet that REUSES the
+ *    target cell ids) — the agent must keep writing to the bound primary artifact only.
+ *  - concurrent_edit: a human commits a non-target cell mid-run (must survive) and attempts a
+ *    locked target cell (must be blocked) — the live form of the L1/L4 ladder discipline. */
+export const FINANCE_ROOM_VARIANTS = ["base", "distractors", "concurrent_edit"] as const;
+export type FinanceRoomVariant = typeof FINANCE_ROOM_VARIANTS[number];
+const HUMAN_NOTE_CELL = "humanNote";
+const HUMAN_MID_RUN_VALUE = "reviewed by analyst mid-run";
+
 const DEFAULT_LEVEL_BUDGETS: Record<FinanceLiveLevel, { maxCostUsd: number; maxMs: number }> = {
   smoke: { maxCostUsd: 0.02, maxMs: 120_000 },
   income: { maxCostUsd: 0.06, maxMs: 240_000 },
@@ -420,6 +433,7 @@ export type LiveReport = {
   mode: "scripted" | "live";
   requestedModelName?: string;
   modelName: string;
+  roomVariant: FinanceRoomVariant;
   status: "passed" | "failed";
   score: number;
   checks: Record<string, boolean>;
@@ -495,8 +509,10 @@ export async function runFinanceModelLiveSolve(options: {
   deadlineMs?: number;
   maxCostUsd?: number;
   maxMs?: number;
+  roomVariant?: FinanceRoomVariant;
 }): Promise<LiveReport & { trace: unknown[]; messages: AgentMessage[] }> {
   const { gold, pack, agent, modelName } = options;
+  const variant: FinanceRoomVariant = options.roomVariant ?? "base";
   const engine = new RoomEngine();
   const { room, host } = engine.createRoom({ title: "Finance modeling eval room", hostName: "Analyst", autoAllow: true });
   const artifact = engine.createArtifact({
@@ -505,20 +521,70 @@ export async function runFinanceModelLiveSolve(options: {
     title: "Your Model",
     by: { kind: "user", id: host.id, name: host.name },
     seed: [
+      { id: HUMAN_NOTE_CELL, value: "analyst working notes" },
       ...(options.pack?.seedCells ?? []),
       ...gold.cells.map((cell) => ({ id: cell.cell, value: "" })),
     ],
   });
+  const humanActor = { kind: "user" as const, id: host.id, name: host.name };
+  const distractorArtifacts = variant === "distractors"
+    ? [
+      engine.createArtifact({
+        roomId: room.id, kind: "note", title: "Q3 close checklist (not part of the test)",
+        by: humanActor, seed: [{ id: "doc", value: "Working notes for the close — not part of the modeling test." }],
+      }),
+      // Deliberately reuses the target cell ids: an agent that drifts off the bound artifact
+      // (or trusts a title match over the artifact id) lands here and fails distractorsUntouched.
+      engine.createArtifact({
+        roomId: room.id, kind: "sheet", title: "Your Model (stale scratch copy)",
+        by: humanActor, seed: [{ id: "B7", value: "Revenue" }, ...gold.cells.map((cell) => ({ id: cell.cell, value: "stale-draft" }))],
+      }),
+    ]
+    : [];
+  const distractorBaseline = distractorArtifacts.map((d) => ({
+    id: d.id,
+    versions: Object.fromEntries(Object.entries(d.elements).map(([eid, el]) => [eid, el.version])),
+  }));
   const session = engine.startSession({ roomId: room.id, agentId: "nodeagent-finance-model", agentName: "NodeAgent", scope: "private", ownerId: host.id });
   const rt = new InMemoryRoomTools(engine, room.id, artifact.id,
     { kind: "agent", id: "nodeagent-finance-model", name: "NodeAgent", scope: "private", ownerId: host.id }, session.id);
+
+  // concurrent_edit: on the agent's SECOND model turn (lock already claimed by a protocol-following
+  // agent), a human commits the non-target note cell and attempts a locked target cell. Injected at
+  // the model seam so it lands mid-protocol, not before or after the run.
+  let humanMidRun: { editApplied: boolean; lockBlocked: boolean } | undefined;
+  let modelCalls = 0;
+  const agentModel: AgentModel = variant !== "concurrent_edit" ? agent : {
+    name: agent.name,
+    next: (input) => {
+      modelCalls += 1;
+      if (modelCalls === 2 && !humanMidRun) {
+        const sheet = engine.getArtifact(artifact.id);
+        const edit = engine.applyEdit({
+          roomId: room.id,
+          op: { opId: crypto.randomUUID(), artifactId: artifact.id, elementId: HUMAN_NOTE_CELL, kind: "set", value: HUMAN_MID_RUN_VALUE, baseVersion: sheet?.elements[HUMAN_NOTE_CELL]?.version ?? 0 },
+          actor: humanActor,
+        });
+        const firstTarget = gold.cells[0]?.cell;
+        const blocked = firstTarget
+          ? engine.applyEdit({
+            roomId: room.id,
+            op: { opId: crypto.randomUUID(), artifactId: artifact.id, elementId: firstTarget, kind: "set", value: "human-overwrite-attempt", baseVersion: sheet?.elements[firstTarget]?.version ?? 0 },
+            actor: humanActor,
+          })
+          : { ok: true as const };
+        humanMidRun = { editApplied: !!edit.ok, lockBlocked: !blocked.ok && (blocked as { reason?: string }).reason === "locked" };
+      }
+      return agent.next(input);
+    },
+  };
 
   const t0 = Date.now();
   let runError: AgentRunError | undefined;
   const result = await runAgent({
     rt,
     goal: "Complete the three-statement modeling test by filling the listed forecast cells with LINKED formulas.",
-    model: agent,
+    model: agentModel,
     tools: ROOM_TOOLS,
     contextBuilder: pack ? buildLiveContext(pack, gold.cells) : undefined,
     // Steps are cheap in-memory; the wall-clock deadline is the honest budget. 24 starved
@@ -600,6 +666,17 @@ export async function runFinanceModelLiveSolve(options: {
     noAnswerKeyLeakage: !oracleLeaked,
     withinCostBudget: options.maxCostUsd === undefined || costUsd <= options.maxCostUsd,
     withinTimeBudget: options.maxMs === undefined || ms <= options.maxMs,
+    // Variant invariants — vacuously true outside their variant so the check vector stays uniform
+    // across a mixed-variant batch (the aggregate compares per-check pass counts).
+    distractorsUntouched: variant !== "distractors" || distractorBaseline.every(({ id, versions }) => {
+      const after = engine.getArtifact(id);
+      return !!after
+        && Object.keys(after.elements).length === Object.keys(versions).length
+        && Object.entries(versions).every(([eid, v]) => after.elements[eid]?.version === v);
+    }),
+    humanEditSurvived: variant !== "concurrent_edit"
+      || (humanMidRun?.editApplied === true && finalArtifact?.elements[HUMAN_NOTE_CELL]?.value === HUMAN_MID_RUN_VALUE),
+    lockHeldAgainstMidRunWrite: variant !== "concurrent_edit" || humanMidRun?.lockBlocked === true,
   };
   const passed = Object.values(checks).every(Boolean);
   const failure = passed ? undefined : classifyFinanceFailure({
@@ -614,6 +691,7 @@ export async function runFinanceModelLiveSolve(options: {
     mode: pack ? "live" : "scripted",
     requestedModelName: modelName,
     modelName: resolvedName,
+    roomVariant: variant,
     status: passed ? "passed" : "failed",
     score: Object.values(checks).filter(Boolean).length / Object.values(checks).length,
     checks,
@@ -665,6 +743,7 @@ function selectFinanceModelCells(gold: FinanceModelGold, level: FinanceLiveLevel
 
 export type FinanceLiveAttemptSummary = {
   run: number;
+  roomVariant: FinanceRoomVariant;
   status: LiveReport["status"];
   score: number;
   checks: Record<string, boolean>;
@@ -706,6 +785,8 @@ export type FinanceLiveAggregate = {
   p95CostUsd: number;
   totalCostUsd: number;
   perCheckPassCounts: Record<string, number>;
+  /** Per room variant, over model-owned attempts. No measured variant may go 0-for (gate below). */
+  variantStats: Record<string, { runs: number; passes: number }>;
   aggregateChecks: Record<string, boolean>;
   cells: Array<{ cell: string; label: string; formulaOk: boolean; valueOk: boolean }>;
   attempts: FinanceLiveAttemptSummary[];
@@ -764,11 +845,23 @@ export function aggregateFinanceLiveReports(args: {
   const perCheckPassCounts = Object.fromEntries(
     allCheckNames.map((name) => [name, modelOwned.filter((r) => r.checks[name]).length]),
   );
+  const variantStats: Record<string, { runs: number; passes: number }> = {};
+  for (const r of modelOwned) {
+    const v = r.roomVariant ?? "base";
+    variantStats[v] = variantStats[v] ?? { runs: 0, passes: 0 };
+    variantStats[v].runs += 1;
+    if (r.status === "passed") variantStats[v].passes += 1;
+  }
   const aggregateChecks: Record<string, boolean> = {
     passThresholdMet: modelOwned.length > 0 && passCount >= requiredPasses,
     allRunsCompleted: reports.length === runsRequested,
     providerNoiseBounded: providerFailureShare <= PROVIDER_INCONCLUSIVE_SHARE,
   };
+  // Harness Hardening #6: a variant the batch measured may not go 0-for — passing only the clean
+  // room while failing every distractor/concurrent-edit run is the passed-once-then-0/3 bug again.
+  for (const [v, s] of Object.entries(variantStats)) {
+    aggregateChecks[`variant:${v}`] = s.passes >= 1;
+  }
   for (const name of allCheckNames) {
     aggregateChecks[`check:${name}`] = (perCheckPassCounts[name] ?? 0) >= requiredPasses;
   }
@@ -803,6 +896,7 @@ export function aggregateFinanceLiveReports(args: {
     p95CostUsd: percentile(reports.map((r) => r.costUsd), 0.95),
     totalCostUsd: reports.reduce((sum, r) => sum + r.costUsd, 0),
     perCheckPassCounts,
+    variantStats,
     aggregateChecks,
     cells: (representative?.cellResults ?? []).map((c) => ({
       cell: c.cell,
@@ -812,6 +906,7 @@ export function aggregateFinanceLiveReports(args: {
     })),
     attempts: reports.map((r, index) => ({
       run: index + 1,
+      roomVariant: r.roomVariant ?? "base",
       status: r.status,
       score: r.score,
       checks: r.checks,
@@ -914,11 +1009,21 @@ async function main(): Promise<void> {
   const defaults = DEFAULT_LEVEL_BUDGETS[level];
   const maxCostUsd = Number(optionValue("--max-cost-usd") ?? defaults.maxCostUsd);
   const maxMs = Number(optionValue("--max-ms") ?? Math.min(deadlineMs, defaults.maxMs));
+  // Room-variant rotation (Harness Hardening #6): multi-run promotion batches rotate through the
+  // perturbed rooms by default; single dev runs stay on the clean fixture unless asked.
+  const variantsRaw = optionValue("--variants");
+  const variantCycle: FinanceRoomVariant[] = variantsRaw
+    ? variantsRaw.split(",").map((v) => v.trim()).filter((v): v is FinanceRoomVariant => (FINANCE_ROOM_VARIANTS as readonly string[]).includes(v))
+    : runs >= 3 ? [...FINANCE_ROOM_VARIANTS] : ["base"];
+  if (variantsRaw && !variantCycle.length) {
+    throw new Error(`invalid --variants=${variantsRaw}; expected csv of ${FINANCE_ROOM_VARIANTS.join("|")}`);
+  }
   const reports: Array<LiveReport & { trace: unknown[]; messages: AgentMessage[] }> = [];
   const traceRefs: string[] = [];
 
   for (let run = 1; run <= runs; run++) {
     const agent = scripted ? scriptedModel(financeModelSolvePlan(gold), `scripted-finance-solver-${run}`) : realModel(route);
+    const roomVariant = variantCycle[(run - 1) % variantCycle.length];
     const report = await runFinanceModelLiveSolve({
       gold, pack, agent,
       modelName: scripted ? "scripted" : route,
@@ -926,12 +1031,13 @@ async function main(): Promise<void> {
       deadlineMs,
       maxCostUsd,
       maxMs,
+      roomVariant,
     });
     reports.push(report);
     traceRefs.push(writePrivateFinanceTrace(report, run));
     const requested = report.requestedModelName ?? report.modelName;
     const routeLabel = report.modelName !== requested ? `${requested} -> ${report.modelName}` : report.modelName;
-    console.log(`\nrun ${run}/${runs} ${report.mode.toUpperCase()} - ${routeLabel} - ${report.status.toUpperCase()} (${(report.score * 100).toFixed(0)}%) - $${report.costUsd.toFixed(4)} - ${(report.ms / 1000).toFixed(1)}s - ${report.toolCalls} tools`);
+    console.log(`\nrun ${run}/${runs} ${report.mode.toUpperCase()} - ${routeLabel} - room=${report.roomVariant} - ${report.status.toUpperCase()} (${(report.score * 100).toFixed(0)}%) - $${report.costUsd.toFixed(4)} - ${(report.ms / 1000).toFixed(1)}s - ${report.toolCalls} tools`);
     if (report.failureOwner) console.log(`  failureOwner=${report.failureOwner} reason=${report.failureReason ?? "(none)"}`);
     for (const [name, ok] of Object.entries(report.checks)) console.log(`  ${ok ? "ok " : "X  "} ${name}`);
     const failing = report.cellResults.filter((c) => !c.formulaOk || !c.valueOk);

@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import ExcelJS from "exceljs";
 import { parseSpreadsheetArtifacts } from "../src/app/spreadsheetParser";
-import type { CellPayload } from "../src/engine/types";
+import { InMemoryRoomTools } from "../src/agent/roomTools";
+import { RoomEngine } from "../src/engine/roomEngine";
+import type { Actor, CellPayload } from "../src/engine/types";
 
 function payloadValue(value: unknown) {
   return (value as CellPayload).value;
@@ -24,11 +26,13 @@ describe("spreadsheet parser", () => {
     expect((artifact.seed.find((s) => s.id === "u1__company")?.value as CellPayload).evidence?.[0]?.kind).toBe("upload");
   });
 
-  it("parses each XLSX worksheet into a separate dataframe artifact", async () => {
+  it("parses each XLSX worksheet into a separate Excel grid artifact with cell addresses", async () => {
     const workbook = new ExcelJS.Workbook();
     const first = workbook.addWorksheet("PitchBook");
     first.addRow(["Company", "PBId", "Score"]);
     first.addRow(["Acme AI", "pb-1", "High"]);
+    first.getCell("E7").value = 100;
+    first.getCell("F7").value = { formula: "E7*1.1", result: 110 };
     const second = workbook.addWorksheet("Rubric");
     second.addRow(["Company", "Tier"]);
     second.addRow(["Globex", "A"]);
@@ -42,9 +46,50 @@ describe("spreadsheet parser", () => {
     });
 
     expect(artifacts.map((a) => a.title)).toEqual(["corpus.xlsx / PitchBook", "corpus.xlsx / Rubric"]);
+    expect(artifacts[0].meta?.excelGrid).toMatchObject({ sheetName: "PitchBook", rows: 7, columns: 6 });
     expect(artifacts[0].meta?.dataframe?.sheetNames).toEqual(["PitchBook", "Rubric"]);
-    expect(payloadValue(artifacts[0].seed.find((s) => s.id === "u1__pbid")?.value)).toBe("pb-1");
-    expect(payloadValue(artifacts[1].seed.find((s) => s.id === "u1__tier")?.value)).toBe("A");
+    expect(artifacts[0].meta?.dataframe?.columns.map((c) => c.label)).toEqual(["A", "B", "C", "D", "E", "F"]);
+    expect(payloadValue(artifacts[0].seed.find((s) => s.id === "B2")?.value)).toBe("pb-1");
+    expect(payloadValue(artifacts[1].seed.find((s) => s.id === "B2")?.value)).toBe("A");
+    expect((artifacts[0].seed.find((s) => s.id === "F7")?.value as CellPayload).formula).toBe("=E7*1.1");
+    expect((artifacts[0].seed.find((s) => s.id === "F7")?.value as CellPayload).evidence?.[0]?.label).toContain("PitchBook!F7");
+  });
+
+  it("keeps uploaded XLSX cells addressable to room tools as Excel coordinates", async () => {
+    const workbook = new ExcelJS.Workbook();
+    const sheet = workbook.addWorksheet("Model");
+    sheet.addRow(["Metric", "FY2025"]);
+    sheet.addRow(["Revenue", 100]);
+    sheet.getCell("F7").value = { formula: "B2*1.1", result: 110 };
+    const buffer = await workbook.xlsx.writeBuffer();
+    const [uploaded] = await parseSpreadsheetArtifacts({
+      fileName: "model.xlsx",
+      mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      size: buffer.byteLength,
+      arrayBuffer: buffer,
+    });
+
+    const engine = new RoomEngine();
+    const { room, host } = engine.createRoom({ title: "Finance model", hostName: "Jordan", autoAllow: true });
+    const hostActor: Actor = { kind: "user", id: host.id, name: host.name };
+    const artifact = engine.createArtifact({
+      roomId: room.id,
+      kind: uploaded.kind,
+      title: uploaded.title,
+      seed: uploaded.seed,
+      meta: uploaded.meta,
+      by: hostActor,
+    });
+    const agent: Actor = { kind: "agent", id: "agent", name: "NodeAgent", scope: "public" };
+    const session = engine.startSession({ roomId: room.id, agentId: agent.id, agentName: agent.name, scope: "public" });
+    const tools = new InMemoryRoomTools(engine, room.id, artifact.id, agent, session.id);
+
+    const [f7] = await tools.readRange(["F7"]);
+    expect(payloadValue(f7.value)).toBe(110);
+    expect((f7.value as CellPayload).formula).toBe("=B2*1.1");
+
+    const hits = await tools.searchSheetContext("Revenue");
+    expect(hits.some((hit) => hit.kind === "cell" && hit.elementId === "A2")).toBe(true);
   });
 
   it("detects headers below banner rows", async () => {
@@ -69,5 +114,40 @@ describe("spreadsheet parser", () => {
     expect(artifact.seed).toHaveLength(20_000);
     expect(artifact.meta?.dataframe?.rowCount).toBe(250);
     expect(artifact.meta?.dataframe?.warnings?.join(" ")).toContain("20000 cells");
+  });
+
+  it("captures the Excel style layer at upload — formats, bold, fill, widths, merges (render-only)", async () => {
+    // Persona: the finance analyst whose model shows 33.7% in Excel and must NOT see 0.3374 here.
+    const workbook = new ExcelJS.Workbook();
+    const ws = workbook.addWorksheet("Model");
+    ws.getColumn(2).width = 28;
+    ws.getCell("B2").value = "INCOME STATEMENT";
+    ws.getCell("B2").font = { bold: true };
+    ws.getCell("B2").fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1F4E79" } };
+    ws.getCell("D9").value = 0.3374;
+    ws.getCell("D9").numFmt = "0.0%";
+    ws.getCell("D15").value = 65.8;
+    ws.getCell("D15").numFmt = "#,##0.0";
+    ws.getCell("D15").border = { top: { style: "thin" } };
+    ws.mergeCells("B2:D2");
+    const buffer = await workbook.xlsx.writeBuffer();
+
+    const [artifact] = await parseSpreadsheetArtifacts({
+      fileName: "model.xlsx",
+      mimeType: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      size: buffer.byteLength,
+      arrayBuffer: buffer as ArrayBuffer,
+    });
+
+    const grid = artifact.meta?.excelGrid;
+    expect(grid?.styles?.["B2"]?.b).toBe(1);
+    expect(grid?.styles?.["B2"]?.bg).toBe("#1F4E79");
+    expect(grid?.numFmts?.[grid?.styles?.["D9"]?.f ?? -1]).toBe("0.0%");
+    expect(grid?.numFmts?.[grid?.styles?.["D15"]?.f ?? -1]).toBe("#,##0.0");
+    expect(grid?.styles?.["D15"]?.bt).toBe(1);
+    expect(grid?.colWidths?.[1]).toBeGreaterThan(28 * 7); // column B, chars -> px
+    expect(grid?.merges).toContain("B2:D2");
+    // Default cells carry NO style entry (the layer stays sparse + bounded).
+    expect(grid?.styles?.["A1"]).toBeUndefined();
   });
 });

@@ -14,6 +14,8 @@ import {
   Lock, Unlock, Ban, Pencil, Plus, Check, AlertTriangle, Eye, Circle, ChevronRight, Download, Trash2, Undo2, type LucideIcon,
 } from "lucide-react";
 import { useStore, type RoomStore, type EditFeedback } from "../../app/store";
+import { formatExcelNumber } from "../../app/numberFormat";
+import { columnLetters } from "../../app/spreadsheetIndex";
 import type { Actor, Artifact as Art, CellPayload, DataframeColumn, DocumentParseMeta, Proposal, TraceEvent, ResearchRowInput } from "../../engine/types";
 
 const WIKI_TITLE = "Agent wiki";
@@ -92,7 +94,7 @@ export function Artifact({ roomId, me, artId, onArt, collab, style }: {
       {activeTab === "wiki" && wiki && <Wiki roomId={roomId} art={wiki} onOpenArtifact={openArtifact} />}
       {activeTab === "sheet" && sheet && (sheet.title === "Q3 variance"
         ? <Sheet roomId={roomId} me={me} art={sheet} onError={(f) => setEditErr(editErrorMsg(f))} />
-        : <GenericSheet art={sheet} />)}
+        : sheet.meta?.excelGrid ? <ExcelGridSheet roomId={roomId} me={me} art={sheet} onError={(f) => setEditErr(editErrorMsg(f))} /> : <GenericSheet art={sheet} />)}
       {activeTab === "research" && research && <Research roomId={roomId} me={me} art={research} />}
       {activeTab === "note" && note && <Note roomId={roomId} me={me} art={note} />}
       {activeTab === "wall" && wall && <Wall roomId={roomId} me={me} art={wall} />}
@@ -214,6 +216,7 @@ function Wiki({ roomId, art, onOpenArtifact }: { roomId: string; art: Art; onOpe
 
 function artifactWikiMeta(art: Art): string {
   if (art.title === WIKI_TITLE) return `live TOC; v${art.version}`;
+  if (art.kind === "sheet" && art.meta?.excelGrid) return `${art.meta.excelGrid.rows} x ${art.meta.excelGrid.columns}; v${art.version}`;
   if (art.kind === "sheet") return `${rowIdsOf(art).length} rows; v${art.version}`;
   if (art.kind === "wall") return `${Object.keys(art.elements).length} notes; v${art.version}`;
   return `doc; v${art.version}`;
@@ -532,6 +535,141 @@ function GenericSheet({ art }: { art: Art }) {
         {visibleRows.length < rows.length && <button className="r-mini-btn" onClick={() => setPages((n) => n + 1)}>Show next {pageSize}</button>}
         <span className="grow" />
         <span className="mono tiny faint">{rows.length} rows · {cols.length} columns</span>
+      </div>
+    </>
+  );
+}
+
+/** Dark fills need light ink — the parser doesn't capture font color, so derive it. */
+function fillNeedsLightInk(hex: string): boolean {
+  const m = hex.match(/^#?([0-9a-f]{2})([0-9a-f]{2})([0-9a-f]{2})$/i);
+  if (!m) return false;
+  const [r, g, b] = [m[1], m[2], m[3]].map((c) => parseInt(c, 16));
+  return 0.299 * r + 0.587 * g + 0.114 * b < 120;
+}
+
+/**
+ * Excel skin, NodeRoom skeleton. The grid is a light "paper" surface rendering the uploaded file's
+ * formats/styles; every edit still travels {elementId, baseVersion} through commit() — the renderer
+ * never owns truth. Collaboration states use the Sheets presence grammar: locked cells render with
+ * the holder's outline + ONE name flag per lock; conflict feedback flows through the same onError
+ * path as every other sheet.
+ */
+function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Actor; art: Art; onError: (f: EditFeedback) => void }) {
+  const store = useStore();
+  const [pages, setPages] = useState(1);
+  const [sel, setSel] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const grid = art.meta?.excelGrid;
+  const { columns, visibleRows, pageSize } = useMemo(() => {
+    const columnCount = Math.max(1, grid?.columns ?? 1);
+    const rowCount = Math.max(1, grid?.rows ?? 1);
+    const columns = Array.from({ length: columnCount }, (_, idx) => columnLetters(idx));
+    const pageSize = Math.max(25, Math.min(250, Math.floor(GENERIC_SHEET_CELL_WINDOW / Math.max(columnCount, 1))));
+    const visibleRows = Array.from({ length: Math.min(rowCount, pageSize * pages) }, (_, idx) => idx + 1);
+    return { columns, visibleRows, pageSize };
+  }, [grid?.columns, grid?.rows, pages]);
+  if (!grid) return null;
+  const cellStyles = grid.styles ?? {};
+  const numFmts = grid.numFmts ?? [];
+  const doCommit = (id: string, s: string) => { void commit(store, roomId, me, art.id, id, s).then((f) => { if (f && !f.ok) onError(f); }); };
+  const selEl = sel ? art.elements[sel] : undefined;
+  const selPayload = selEl ? asCellPayload(selEl.value) : null;
+  const selRaw = selPayload ? selPayload.value : selEl?.value;
+  const selFormula = selPayload?.formula ?? (typeof selRaw === "string" && selRaw.startsWith("=") ? selRaw : "");
+  const selMatch = sel?.match(/^([A-Z]+)(\d+)$/);
+  const flaggedLocks = new Set<string>();
+  return (
+    <>
+      <div className="r-art-body">
+        <div className="xl-paper" data-testid="excel-paper">
+          <div className="xl-fbar">
+            <span className="xl-name" data-testid="excel-namebox">{sel ?? ""}</span>
+            <span className="xl-fx">fx</span>
+            <span className="xl-ftext" data-testid="excel-formulabar">{sel ? (selFormula || String(selRaw ?? "")) : ""}</span>
+            <span className="grow" />
+            {selEl && <span className="xl-meta">v{selEl.version}{selPayload?.evidence?.[0]?.label ? ` · ${selPayload.evidence[0].label}` : ""}</span>}
+          </div>
+          <div className="r-sheet-wrap xl-scroll">
+            <table className="xl-grid">
+              <colgroup>
+                <col style={{ width: 38 }} />
+                {columns.map((col, i) => <col key={col} style={{ width: grid.colWidths?.[i] || 92 }} />)}
+              </colgroup>
+              <thead>
+                <tr>
+                  <th className="xl-corner" aria-label="cell address" />
+                  {columns.map((col) => <th key={col} className={"xl-col" + (selMatch?.[1] === col ? " hl" : "")}>{col}</th>)}
+                </tr>
+              </thead>
+              <tbody>
+                {visibleRows.map((rowNumber) => (
+                  <tr key={rowNumber}>
+                    <td className={"xl-rowhead" + (selMatch && Number(selMatch[2]) === rowNumber ? " hl" : "")}>{rowNumber}</td>
+                    {columns.map((col) => {
+                      const elementId = `${col}${rowNumber}`;
+                      const el = art.elements[elementId];
+                      const payload = el ? asCellPayload(el.value) : null;
+                      const rawVal = payload ? payload.value : el?.value;
+                      const st = cellStyles[elementId];
+                      const numCandidate = typeof rawVal === "number" ? rawVal
+                        : typeof rawVal === "string" && rawVal !== "" && !rawVal.startsWith("=") && Number.isFinite(Number(rawVal.replace(/,/g, ""))) ? Number(rawVal.replace(/,/g, ""))
+                        : undefined;
+                      const display = numCandidate !== undefined
+                        ? formatExcelNumber(numCandidate, st?.f !== undefined ? numFmts[st.f] : undefined)
+                        : displayCellValue(el?.value);
+                      const lk = lockedByOther(store, art.id, elementId, me);
+                      let lockFlag: string | null = null;
+                      if (lk && !flaggedLocks.has(lk.id)) { flaggedLocks.add(lk.id); lockFlag = lk.holder.name; }
+                      const alignRight = numCandidate !== undefined || st?.a === "r";
+                      const cls = "xl-cell" + (alignRight ? " num" : "") + (st?.a === "c" ? " ctr" : "") + (lk ? " locked" : "") + (sel === elementId ? " sel" : "");
+                      const inline: Record<string, string | number> = {};
+                      if (st?.bg) { inline.background = st.bg; if (fillNeedsLightInk(st.bg)) inline.color = "#fff"; }
+                      if (st?.b) inline.fontWeight = 700;
+                      if (st?.i) inline.fontStyle = "italic";
+                      if (st?.ind) inline.paddingLeft = 6 + st.ind * 12;
+                      if (st?.bt) inline.borderTop = "1px solid #5f6368";
+                      if (st?.bb) inline.borderBottom = "1px solid #5f6368";
+                      const title = [elementId, payload?.formula ? `Formula: ${payload.formula}` : undefined, lk ? `locked by ${lk.holder.name}` : undefined].filter(Boolean).join(" | ");
+                      return (
+                        <td
+                          key={col}
+                          className={cls}
+                          style={inline}
+                          title={title}
+                          data-cell-key={elementId}
+                          onClick={() => setSel(elementId)}
+                          onDoubleClick={() => { if (!lk) setEditingId(elementId); }}
+                        >
+                          {editingId === elementId ? (
+                            <input
+                              className="xl-input"
+                              autoFocus
+                              defaultValue={typeof rawVal === "string" || typeof rawVal === "number" ? String(rawVal) : ""}
+                              onBlur={(e) => { setEditingId(null); const next = e.target.value; if (next !== String(rawVal ?? "")) doCommit(elementId, next); }}
+                              onKeyDown={(e) => {
+                                if (e.key === "Enter") (e.target as HTMLInputElement).blur();
+                                else if (e.key === "Escape") { (e.target as HTMLInputElement).value = String(rawVal ?? ""); setEditingId(null); }
+                              }}
+                            />
+                          ) : display ? <span>{display}</span> : <span className="nullcell">&nbsp;</span>}
+                          {lockFlag && <span className="xl-flag" data-testid="lock-flag">{lockFlag}</span>}
+                        </td>
+                      );
+                    })}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+      <div className="r-sheet-foot">
+        <span className="kicker">excelWorkbook</span>
+        <span className="r-vpill next">v{art.version}</span>
+        {visibleRows.length < grid.rows && <button className="r-mini-btn" onClick={() => setPages((n) => n + 1)}>Show next {pageSize}</button>}
+        <span className="grow" />
+        <span className="mono tiny faint">{grid.sheetName} | {grid.rows} rows | {grid.columns} columns</span>
       </div>
     </>
   );

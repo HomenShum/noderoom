@@ -109,6 +109,39 @@ export interface DataframeMeta {
   };
 }
 
+/** Compact per-cell visual style captured at upload — only NON-DEFAULT cells get an entry, the
+ *  whole layer is size-capped (BOUND), and it is render-only: the CAS write path never reads it. */
+export interface ExcelCellStyle {
+  /** index into ExcelGridMeta.numFmts */
+  f?: number;
+  b?: 1;          // bold
+  i?: 1;          // italic
+  a?: "r" | "c";  // horizontal alignment override (numbers right-align by default)
+  bg?: string;    // fill color "#RRGGBB"
+  ind?: number;   // indent level
+  bt?: 1;         // top border (totals rule)
+  bb?: 1;         // bottom border
+}
+
+export interface ExcelGridMeta {
+  sourceFile: string;
+  sheetName: string;
+  sheetNames: string[];
+  parser: "exceljs:xlsx-grid";
+  rows: number;
+  columns: number;
+  truncated?: boolean;
+  warnings?: string[];
+  /** style layer (render-only) — see ExcelCellStyle */
+  styles?: Record<string, ExcelCellStyle>;
+  /** numFmt string dictionary referenced by ExcelCellStyle.f */
+  numFmts?: string[];
+  /** pixel widths per visible column index (0 = use default) */
+  colWidths?: number[];
+  /** merged ranges as "B2:D2" strings, capped (render-only) */
+  merges?: string[];
+}
+
 export type DocumentParseOutput = "text" | "pages" | "bounding_boxes" | "screenshots" | "ocr";
 export type DocumentParseRuntime = "node" | "libreoffice" | "imagemagick" | "ocr";
 
@@ -149,6 +182,7 @@ export interface ProviderParseMeta {
 
 export interface ArtifactMeta {
   dataframe?: DataframeMeta;
+  excelGrid?: ExcelGridMeta;
   document?: DocumentParseMeta;
   providerParse?: ProviderParseMeta;
   upload?: {

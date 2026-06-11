@@ -212,6 +212,42 @@ input { font-family: inherit; }
 .r-sheet-wrap { padding: 14px; }
 .r-sheet { width: 100%; border-collapse: separate; border-spacing: 0; font-size: 12.5px; }
 .r-generic-sheet { min-width: max-content; }
+.r-excel-grid { table-layout: fixed; }
+.r-excel-grid th, .r-excel-grid td { min-width: 92px; max-width: 180px; }
+.r-excel-grid .r-excel-corner, .r-excel-grid .r-excel-rowhead { position: sticky; left: 0; z-index: 2; width: 52px; min-width: 52px; max-width: 52px; background: var(--bg-primary); }
+.r-excel-grid .r-excel-col { text-align: center; font-family: var(--font-mono); }
+.r-excel-grid .r-excel-rowhead { text-align: right; font-variant-numeric: tabular-nums; border-right: 1px solid var(--line); }
+.r-excel-grid .r-excel-cell { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-variant-numeric: tabular-nums; }
+.r-excel-grid .r-excel-cell:hover { background: var(--bg-hover); color: var(--text-primary); }
+
+/* ── Excel paper: uploaded workbooks render as a LIGHT sheet inside the dark app chrome —
+   deliberately theme-independent (Excel is paper; embedding light docs in dark apps is the
+   Notion/Linear convention). Collab states use the Sheets presence grammar: holder-colored
+   outline + one name flag per lock. The CAS write path never reads any of this. ── */
+.xl-paper { background: #fff; color: #202124; border: 1px solid var(--line-strong); border-radius: 8px; overflow: hidden; margin: 12px; font-family: Aptos, Calibri, "Segoe UI", system-ui, sans-serif; }
+.xl-fbar { display: flex; align-items: center; gap: 8px; padding: 5px 8px; background: #f8f9fa; border-bottom: 1px solid #d4d4d4; font-size: 12px; color: #202124; }
+.xl-name { min-width: 64px; text-align: center; padding: 2px 6px; border: 1px solid #d4d4d4; border-radius: 2px; background: #fff; font-family: var(--font-mono); font-size: 11.5px; min-height: 18px; }
+.xl-fx { color: #5f6368; font-style: italic; font-family: var(--font-mono); border-right: 1px solid #d4d4d4; padding-right: 8px; }
+.xl-ftext { font-family: var(--font-mono); font-size: 11.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 50%; }
+.xl-meta { color: #5f6368; font-size: 10.5px; white-space: nowrap; }
+.xl-scroll { padding: 0; max-height: 480px; overflow: auto; }
+.xl-grid { border-collapse: collapse; table-layout: fixed; font-size: 12px; background: #fff; color: #202124; width: max-content; }
+.xl-grid th { background: #f3f3f3; color: #5f6368; font-weight: 400; border: 1px solid #d4d4d4; font-size: 11px; height: 20px; padding: 0 4px; text-align: center; position: sticky; top: 0; z-index: 3; }
+.xl-grid th.hl { background: #d3e7d8; color: #0f6b3c; font-weight: 600; }
+.xl-corner { width: 38px; }
+.xl-rowhead { background: #f3f3f3; color: #5f6368; border: 1px solid #d4d4d4; font-size: 11px; text-align: center; position: sticky; left: 0; z-index: 2; font-variant-numeric: tabular-nums; }
+.xl-rowhead.hl { background: #d3e7d8; color: #0f6b3c; font-weight: 600; }
+.xl-cell { position: relative; border: 1px solid #e2e2e2; padding: 1px 5px; height: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; background: #fff; cursor: cell; }
+.xl-cell.num { text-align: right; font-variant-numeric: tabular-nums; }
+.xl-cell.ctr { text-align: center; }
+.xl-cell.sel { outline: 2px solid #107c41; outline-offset: -2px; z-index: 1; }
+.xl-cell.locked { background: #fdf6f1; box-shadow: inset 0 0 0 2px var(--accent-primary); cursor: not-allowed; }
+.xl-cell .nullcell { color: transparent; }
+.xl-flag { position: absolute; top: 0; right: 0; background: var(--accent-primary); color: #fff; font-size: 9px; line-height: 1.4; padding: 0 5px; border-radius: 0 0 0 4px; font-family: var(--font-ui); max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
+.xl-input { width: 100%; height: 100%; border: none; outline: none; padding: 0; margin: 0; font: inherit; text-align: inherit; background: #fff; color: #202124; }
+@media (prefers-reduced-motion: no-preference) {
+  .xl-cell.sel { transition: outline-color var(--motion-fast) var(--ease-smooth); }
+}
 .r-sheet th { text-align: left; font-size: 10.5px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: var(--text-tertiary); padding: 7px 10px; border-bottom: 1px solid var(--line); }
 .r-sheet th.num, .r-sheet td.num { text-align: right; font-variant-numeric: tabular-nums; }
 .r-sheet td { padding: 9px 10px; border-bottom: 1px solid var(--line); color: var(--text-secondary); }

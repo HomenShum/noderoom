@@ -1,6 +1,6 @@
 import type { CellPayload, DataframeColumn } from "../engine/types";
 import type { UploadedArtifactInput } from "./store";
-import { buildSpreadsheetSemanticIndex } from "./spreadsheetIndex";
+import { buildSpreadsheetSemanticIndex, columnLetters } from "./spreadsheetIndex";
 
 type ExcelCell = import("exceljs").Cell;
 type ExcelWorkbookCtor = typeof import("exceljs").Workbook;
@@ -12,6 +12,38 @@ const MAX_SEED_CELLS = 20_000;
 const MAX_HEADER_SCAN_ROWS = 50;
 const MAX_XLSX_ZIP_ENTRIES = 2_000;
 const MAX_XLSX_UNCOMPRESSED_BYTES = 50_000_000;
+const MAX_STYLE_ENTRIES = 4_000;
+const MAX_MERGE_RANGES = 200;
+
+/** Capture the visual style of one cell as a compact entry, or null when fully default.
+ *  numFmt strings are dictionary-encoded (workbooks reuse a handful of formats thousands of times). */
+function captureCellStyle(
+  cell: ExcelCell,
+  numFmts: string[],
+  numFmtIndex: Map<string, number>,
+): import("../engine/types").ExcelCellStyle | null {
+  const out: import("../engine/types").ExcelCellStyle = {};
+  const fmt = cell.numFmt;
+  if (typeof fmt === "string" && fmt && fmt !== "General") {
+    let idx = numFmtIndex.get(fmt);
+    if (idx === undefined && numFmts.length < 64) { idx = numFmts.length; numFmts.push(fmt); numFmtIndex.set(fmt, idx); }
+    if (idx !== undefined) out.f = idx;
+  }
+  if (cell.font?.bold) out.b = 1;
+  if (cell.font?.italic) out.i = 1;
+  const h = cell.alignment?.horizontal;
+  if (h === "right") out.a = "r";
+  else if (h === "center" || h === "centerContinuous") out.a = "c";
+  if (typeof cell.alignment?.indent === "number" && cell.alignment.indent > 0) out.ind = cell.alignment.indent;
+  const fill = cell.fill as { type?: string; pattern?: string; fgColor?: { argb?: string } } | undefined;
+  if (fill?.type === "pattern" && fill.pattern === "solid" && fill.fgColor?.argb) {
+    const argb = fill.fgColor.argb;
+    if (argb.length === 8 && argb.toUpperCase() !== "FFFFFFFF") out.bg = `#${argb.slice(2)}`;
+  }
+  if (cell.border?.top?.style) out.bt = 1;
+  if (cell.border?.bottom?.style) out.bb = 1;
+  return Object.keys(out).length ? out : null;
+}
 
 export type ParseSpreadsheetArgs =
   | { fileName: string; mimeType: string; size: number; text: string; delimiter?: "," | "\t" }
@@ -38,33 +70,112 @@ export async function parseSpreadsheetArtifacts(args: ParseSpreadsheetArgs): Pro
   const names = workbook.worksheets.map((sheet) => sheet.name);
   const artifacts: UploadedArtifactInput[] = [];
   for (const sheet of workbook.worksheets) {
-    const rows: unknown[][] = [];
-    sheet.eachRow({ includeEmpty: false }, (row) => {
-      const values: unknown[] = [];
-      for (let col = 1; col <= Math.min(sheet.actualColumnCount || MAX_PARSE_COLUMNS, MAX_PARSE_COLUMNS); col++) {
-        values.push(cellToScalar(row.getCell(col)));
-      }
-      rows.push(values);
-    });
-    artifacts.push(sheetArtifactFromRows({
+    artifacts.push(sheetArtifactFromWorkbookGrid({
       fileName: args.fileName,
       mimeType: args.mimeType,
       size: args.size,
       sheetName: sheet.name,
       sheetNames: names,
-      rows,
-      parser: "exceljs:xlsx",
+      sheet,
     }));
   }
-  return artifacts.length ? artifacts : [sheetArtifactFromRows({
+  if (artifacts.length) return artifacts;
+  const emptySheet = workbook.addWorksheet("Sheet1");
+  return [sheetArtifactFromWorkbookGrid({
     fileName: args.fileName,
     mimeType: args.mimeType,
     size: args.size,
     sheetName: "Sheet1",
     sheetNames: ["Sheet1"],
-    rows: [],
-    parser: "exceljs:xlsx",
+    sheet: emptySheet,
   })];
+}
+
+function sheetArtifactFromWorkbookGrid(args: {
+  fileName: string;
+  mimeType: string;
+  size: number;
+  sheetName: string;
+  sheetNames: string[];
+  sheet: import("exceljs").Worksheet;
+}): UploadedArtifactInput {
+  const rawRows = Math.max(args.sheet.rowCount, args.sheet.actualRowCount, 1);
+  const rawColumns = Math.max(args.sheet.columnCount, args.sheet.actualColumnCount, 1);
+  const columnLimit = Math.max(1, Math.min(rawColumns, MAX_PARSE_COLUMNS, MAX_SEED_CELLS));
+  const rowLimit = Math.max(1, Math.min(rawRows, MAX_PARSE_ROWS, Math.floor(MAX_SEED_CELLS / columnLimit)));
+  const columns = excelColumns(columnLimit);
+  const warnings: string[] = [];
+  if (rawRows > rowLimit) warnings.push(`Parsed first ${rowLimit} worksheet rows to stay within ${MAX_SEED_CELLS} cells.`);
+  if (rawColumns > columnLimit) warnings.push(`Parsed first ${columnLimit} worksheet columns.`);
+
+  const seed: Array<{ id: string; value: unknown }> = [];
+  // Style layer (render-only): non-default cells only, hard-capped (BOUND) — a pathological
+  // workbook must degrade to unstyled rendering, never to an unbounded meta blob.
+  const styles: Record<string, import("../engine/types").ExcelCellStyle> = {};
+  const numFmts: string[] = [];
+  const numFmtIndex = new Map<string, number>();
+  let styleCount = 0;
+  for (let row = 1; row <= rowLimit; row++) {
+    const excelRow = args.sheet.getRow(row);
+    for (let col = 1; col <= columnLimit; col++) {
+      const letter = columnLetters(col - 1);
+      const cell = excelRow.getCell(col);
+      seed.push({
+        id: `${letter}${row}`,
+        value: excelCellPayload(cellToScalar(cell), args, row, letter),
+      });
+      if (styleCount < MAX_STYLE_ENTRIES) {
+        const style = captureCellStyle(cell, numFmts, numFmtIndex);
+        if (style) { styles[`${letter}${row}`] = style; styleCount++; }
+      }
+    }
+  }
+  if (styleCount >= MAX_STYLE_ENTRIES) warnings.push(`Captured first ${MAX_STYLE_ENTRIES} cell styles; remaining cells render unstyled.`);
+  const colWidths = Array.from({ length: columnLimit }, (_, i) => {
+    const w = args.sheet.getColumn(i + 1)?.width;
+    return typeof w === "number" && w > 0 ? Math.round(w * 7 + 5) : 0;
+  });
+  const merges = (((args.sheet as { model?: { merges?: string[] } }).model?.merges) ?? []).slice(0, MAX_MERGE_RANGES);
+
+  const multi = args.sheetNames.length > 1;
+  const title = multi ? `${args.fileName} / ${args.sheetName}` : args.fileName;
+  return {
+    kind: "sheet",
+    title,
+    seed,
+    meta: {
+      upload: { fileName: args.fileName, mimeType: args.mimeType, size: args.size, parsedAt: Date.now() },
+      excelGrid: {
+        sourceFile: args.fileName,
+        sheetName: args.sheetName,
+        sheetNames: args.sheetNames,
+        parser: "exceljs:xlsx-grid",
+        rows: rowLimit,
+        columns: columnLimit,
+        truncated: warnings.length > 0,
+        warnings,
+        ...(styleCount > 0 ? { styles, numFmts } : {}),
+        ...(colWidths.some((w) => w > 0) ? { colWidths } : {}),
+        ...(merges.length ? { merges } : {}),
+      },
+      dataframe: {
+        columns,
+        rowCount: rowLimit,
+        sourceFile: args.fileName,
+        sheetName: args.sheetName,
+        sheetNames: args.sheetNames,
+        parser: "exceljs:xlsx-grid",
+        truncated: warnings.length > 0,
+        warnings,
+        semanticIndex: {
+          cellCount: seed.length,
+          chunkCount: 0,
+          dependencyCount: 0,
+          indexedAt: Date.now(),
+        },
+      },
+    },
+  };
 }
 
 function sheetArtifactFromRows(args: {
@@ -164,6 +275,27 @@ function cellPayload(value: unknown, args: { fileName: string; sheetName: string
   };
 }
 
+function excelCellPayload(value: unknown, args: { fileName: string; sheetName: string }, row: number, column: string): CellPayload {
+  const parsed = parsedCell(value);
+  const empty = parsed.value === null || parsed.value === undefined || String(parsed.value).trim() === "";
+  return {
+    value: parsed.value,
+    status: empty ? "empty" : "complete",
+    confidence: 1,
+    formula: parsed.formula,
+    evidence: [{
+      id: `upload:${args.sheetName}:${column}${row}`,
+      kind: "upload",
+      label: `${args.fileName} ${args.sheetName}!${column}${row}`,
+      source: args.fileName,
+      sheetName: args.sheetName,
+      row,
+      column,
+      confidence: 1,
+    }],
+  };
+}
+
 function parsedCell(value: unknown): ParsedCell {
   if (value && typeof value === "object" && "value" in value) {
     const parsed = value as ParsedCell;
@@ -241,6 +373,13 @@ function uniqueColumns(labels: string[]): DataframeColumn[] {
     const n = seen.get(base) ?? 0;
     seen.set(base, n + 1);
     return { id: n ? `${base}_${n + 1}` : base, label, order, mode: "manual", type: "text", agentWritable: true };
+  });
+}
+
+function excelColumns(count: number): DataframeColumn[] {
+  return Array.from({ length: count }, (_, order) => {
+    const label = columnLetters(order);
+    return { id: label, label, order, mode: "manual", type: "text", agentWritable: true };
   });
 }
 

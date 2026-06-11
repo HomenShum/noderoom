@@ -57,7 +57,7 @@ badges rendered directly on top of 'null' text"; frame extraction confirmed it:
 
 | Before (judge finding) | After (root fix) |
 |---|---|
-| ![null bug — literal "null" text in variance and note cells](gif-judge/evidence/null-bug-before.png) | ![fixed — em-dashes, legible proposal chips](gif-judge/evidence/null-bug-after.png) |
+| ![null bug — literal "null" text in variance and note cells](gif-judge/evidence/null-bug-before.png) | ![fixed — em-dashes, Docs-style accept/reject controls](gif-judge/evidence/null-bug-after.png) |
 
 **Lock badges drawn over cell values.** `.lockbadge` was absolutely positioned at `right:6px`
 over *right-aligned* text — guaranteed overlap on any locked cell with a value (visible in the
@@ -80,17 +80,17 @@ the judged midpoints. It now passes at 7.6:
 | Demo | Avg | Read | Pace | Narrative | Polish | Honesty | Verdict |
 |---|---|---|---|---|---|---|---|
 | l6-long-horizon | 8.8 | 9 | 7 | 9 | 9 | 10 | PASS |
+| app-ask-reconcile | 8.6 | 8 | 8 | 9 | 9 | 9 | PASS |
 | l2-edit | 8.6 | 9 | 8 | 8 | 9 | 9 | PASS |
 | l4-draft | 8.6 | 9 | 7 | 8 | 9 | 10 | PASS |
-| app-proposals-review | 8.4 | 8 | 7 | 8 | 9 | 10 | PASS |
 | app-wiki-note-grounding | 8.4 | 8 | 9 | 6 | 9 | 10 | PASS |
-| app-ask-reconcile | 8.2 | 8 | 7 | 9 | 9 | 8 | PASS |
-| app-research-enrich | 8.0 | 7 | 9 | 10 | 6 | 8 | PASS |
-| app-variance-fill | 7.8 | 7 | 7 | 9 | 8 | 8 | PASS |
 | finance-model-solve | 7.8 | 7 | 6 | 9 | 8 | 9 | PASS |
 | l1-read | 7.8 | 8 | 9 | 7 | 8 | 7 | PASS |
+| app-variance-fill | 7.6 | 8 | 7 | 9 | 8 | 6 | PASS |
 | l3-no-clobber | 7.6 | 8 | 8 | 7 | 8 | 7 | PASS |
+| app-research-enrich | 7.4 | 7 | 8 | 9 | 6 | 7 | PASS |
 | l5-large-range | 7.2 | 9 | 6 | 5 | 9 | 7 | PASS |
+| app-proposals-review | 7.0 | 7 | 6 | 7 | 8 | 7 | PASS |
 | app-manual-edit | 6.2 | 6 | 7 | 6 | 5 | 7 | FAIL — re-recording |
 
 **The one FAIL, explained:** `app-manual-edit` plateaued at 5.2–6.2 across five recordings. The

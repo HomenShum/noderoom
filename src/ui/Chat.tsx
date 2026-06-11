@@ -217,16 +217,16 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
         {!isPrivate && <span className="r-tag agent" style={{ gap: 6 }}><span className="r-avatar agent sm" style={{ background: "#d97757", width: 18, height: 18, fontSize: 9 }}>N</span>Room NodeAgent</span>}
         {longJob && <span className="r-tag" title="Latest long-running free-auto job"><Timer size={10} /> {longJob.status} {longJob.attempts}/{longJob.maxAttempts}</span>}
         {canCancelLongJob && (
-          <button className="r-iconbtn" style={{ width: 24, height: 24 }} title={jobBusy === "cancel" ? "Cancelling…" : "Cancel long-running job"} aria-label="Cancel long-running job" data-testid="job-cancel" disabled={jobBusy !== null} onClick={cancelJob}>
+          <button className="r-iconbtn r-iconbtn-sm" title={jobBusy === "cancel" ? "Cancelling…" : "Cancel long-running job"} aria-label="Cancel long-running job" data-testid="job-cancel" disabled={jobBusy !== null} onClick={cancelJob}>
             <X size={13} />
           </button>
         )}
         {canRetryLongJob && (
-          <button className="r-iconbtn" style={{ width: 24, height: 24 }} title={jobBusy === "retry" ? "Retrying…" : "Retry long-running job"} aria-label="Retry long-running job" data-testid="job-retry" disabled={jobBusy !== null} onClick={retryJob}>
+          <button className="r-iconbtn r-iconbtn-sm" title={jobBusy === "retry" ? "Retrying…" : "Retry long-running job"} aria-label="Retry long-running job" data-testid="job-retry" disabled={jobBusy !== null} onClick={retryJob}>
             <RefreshCw size={13} />
           </button>
         )}
-        {jobErr && <span className="r-tag" role="alert" data-testid="job-error" style={{ color: "var(--danger, #c0392b)" }}>{jobErr}</span>}
+        {jobErr && <span className="r-tag" role="alert" data-testid="job-error" style={{ color: "var(--danger-ink)" }}>{jobErr}</span>}
       </div>
       {isPrivate && <div className="r-private-banner"><Sparkles size={12} /> Reads room context; output stays yours until you promote it</div>}
       {!isPrivate && longJob && (
@@ -285,7 +285,7 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
           <div className="r-msg" key={"fail-" + f.cid} data-testid="chat-failed" data-state="failed">
             <span className="r-avatar sm" style={{ background: colorFor(store, roomId, me) }}>{initials(me.name)}</span>
             <div className="body">
-              <div className="meta"><span className="who">{me.name}</span><span className="r-tag" style={{ color: "var(--danger, #c0392b)", padding: "1px 5px", fontSize: 9 }}>failed to send</span></div>
+              <div className="meta"><span className="who">{me.name}</span><span className="r-tag" style={{ color: "var(--danger-ink)", padding: "1px 5px", fontSize: 9 }}>failed to send</span></div>
               <div className="text" style={{ opacity: 0.75 }}>{parseArtifactRefMessage(f.text).body || f.text}</div>
               <div className="r-msg-actions" style={{ opacity: 1 }}>
                 <button className="r-msg-act promote" data-testid="chat-retry" onClick={() => retrySend(f.cid, f.text)}><RefreshCw size={12} /> Retry</button>
@@ -412,7 +412,7 @@ function Bubble({ m, roomId, variant, me, onPromote, onOpenArtifact }: { m: Mess
           </>
         )}
 
-        {editErr && <div className="tiny" role="alert" data-testid="chat-edit-error" style={{ color: "var(--danger, #c0392b)", marginTop: 2 }}>{editErr}</div>}
+        {editErr && <div className="tiny" role="alert" data-testid="chat-edit-error" style={{ color: "var(--danger-ink)", marginTop: 2 }}>{editErr}</div>}
         {editing ? (
           <div className="r-msg-actions" style={{ opacity: 1 }}>
             <button className="r-msg-act promote" data-testid="chat-edit-save" onClick={saveEdit}>Save</button>

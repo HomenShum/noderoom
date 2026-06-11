@@ -1,26 +1,27 @@
 {
   "workflow": "app-proposals-review",
   "judgeModel": "gemini-3.5-flash",
-  "judgedAt": "2026-06-11T18:24:48.122Z",
+  "judgedAt": "2026-06-11T18:55:15.827Z",
   "frameCount": 8,
   "sampledFrames": 8,
   "scores": {
-    "readability": 8,
-    "pacing": 7,
-    "narrative_completeness": 8,
-    "visual_polish": 9,
-    "honesty_no_artifacts": 10
+    "readability": 7,
+    "pacing": 6,
+    "narrative_completeness": 7,
+    "visual_polish": 8,
+    "honesty_no_artifacts": 7
   },
-  "average": 8.4,
+  "average": 7,
   "pass": true,
   "topIssues": [
-    "Frame 7: The approval of the '+24%' proposal happens instantly without any cursor interaction, hover state, or click animation, making the transition feel abrupt.",
-    "Frame 5 & 7: The display times (900ms) are too short for first-time viewers to easily track the subtle changes, such as the calculation of dependent rows in Frame 5 and the approval state change in Frame 7.",
-    "Frame 4: The 'draft' badge and dashed green border appear suddenly on Gross Profit and Net Income, which can confuse viewers on the causal relationship before the values actually calculate in Frame 5."
+    "frame 6: This frame is completely identical to frame 5, creating 1800ms of dead air/frozen UI before the next action occurs.",
+    "frame 7: The approval of the Revenue proposal (+24%) happens instantly with no cursor, hover state, or click indicator on the checkmark button, making the action feel abrupt and hard to follow.",
+    "frame 8: This frame is identical to frame 7, meaning the final state is held for a combined 4200ms (900ms + 3300ms) with duplicate frames.",
+    "frame 3: The dark reddish-brown background container for the active proposals has very low contrast against the dark table background, making the boundaries difficult to distinguish."
   ],
   "fixSuggestions": [
-    "Add a cursor layer showing a click animation on the checkmark button of the Revenue row between Frame 6 and Frame 7 to clearly signal the host's approval action.",
-    "Increase the duration of Frame 5 and Frame 7 to at least 1500ms so the viewer has adequate time to register the calculated values and the approved state.",
-    "Slightly increase the contrast or size of the row helper labels (e.g., 'r_rev', 'r_cogs') on the far left to improve readability on smaller screens."
+    "Consolidate duplicate frames (5/6 and 7/8) to eliminate dead air and use those frames to show a cursor hovering over and clicking the checkmark button on the Revenue proposal.",
+    "Increase the contrast of the proposal container background (e.g., make it slightly lighter or add a subtle border) to clearly define the interactive proposal area.",
+    "Increase the display time of the action frame (frame 7) to at least 1500ms so the viewer can process the transition from 'proposal' to 'approved' state."
   ]
 }

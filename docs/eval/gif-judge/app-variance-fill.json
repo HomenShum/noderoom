@@ -1,27 +1,26 @@
 {
   "workflow": "app-variance-fill",
   "judgeModel": "gemini-3.5-flash",
-  "judgedAt": "2026-06-11T18:19:25.990Z",
+  "judgedAt": "2026-06-11T18:57:23.876Z",
   "frameCount": 6,
   "sampledFrames": 6,
   "scores": {
-    "readability": 7,
+    "readability": 8,
     "pacing": 7,
     "narrative_completeness": 9,
     "visual_polish": 8,
-    "honesty_no_artifacts": 8
+    "honesty_no_artifacts": 6
   },
-  "average": 7.8,
+  "average": 7.6,
   "pass": true,
   "topIssues": [
-    "Frame 5 & 6: These frames are completely identical, representing a duplicate frame artifact in the GIF export that unnecessarily splits the final static state.",
-    "Frame 5: The crucial resolution frame where the smart-merge completes is shown for only 900ms before repeating in Frame 6, causing a jarring pacing hiccup.",
-    "Frame 4: The Room Trace log at the bottom shifts abruptly, hiding the 'Your NodeAgent session started' event prematurely and creating a jump-cut effect.",
-    "Frame 1-6: Extremely low color contrast on secondary text elements like the row IDs (e.g., 'r_rev') and the helper text ('click a Variance...'), making them nearly illegible."
+    "frame 5 & 6: Frames 5 and 6 are completely identical duplicates. This is a redundant frame artifact that should be consolidated into a single frame with a combined duration of 5100ms.",
+    "frame 5: The transition to the final merged state is shown for only 900ms before the duplicate frame 6, making the sudden appearance of the merged values (+21.7% and +22.4%) and the lock releases feel jarringly fast.",
+    "frame 1: The room trace log text at the bottom (e.g., 'click a Variance or Note cell...') has very low contrast against the dark background, making it difficult to read at standard preview sizes."
   ],
   "fixSuggestions": [
-    "Merge Frame 5 and Frame 6 into a single final frame with a continuous display time of ~5000ms to eliminate the duplicate frame artifact.",
-    "Increase the contrast of the dark gray text elements (row IDs, helper text, and inactive trace events) to meet WCAG accessibility standards on dark backgrounds.",
-    "Animate or smooth out the Room Trace scroll behavior so events do not abruptly jump out of view when a new event is appended."
+    "Consolidate Frame 5 and Frame 6 into a single final frame with a 5100ms display time to eliminate the duplicate frame artifact and optimize GIF file size.",
+    "Increase the contrast of the gray text in the room trace log and the 'v1/v3/v5' version badges to meet WCAG AA standards for dark mode.",
+    "Add a brief visual highlight (like a soft green flash or fade) on the newly merged cells in the final frame to guide the viewer's eye to the resolved changes."
   ]
 }

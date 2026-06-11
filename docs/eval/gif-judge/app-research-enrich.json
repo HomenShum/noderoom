@@ -1,26 +1,26 @@
 {
   "workflow": "app-research-enrich",
   "judgeModel": "gemini-3.5-flash",
-  "judgedAt": "2026-06-11T09:33:28.265Z",
-  "frameCount": 22,
+  "judgedAt": "2026-06-11T18:55:34.423Z",
+  "frameCount": 23,
   "sampledFrames": 12,
   "scores": {
     "readability": 7,
-    "pacing": 9,
-    "narrative_completeness": 10,
+    "pacing": 8,
+    "narrative_completeness": 9,
     "visual_polish": 6,
-    "honesty_no_artifacts": 8
+    "honesty_no_artifacts": 7
   },
-  "average": 8,
+  "average": 7.4,
   "pass": true,
   "topIssues": [
-    "Frame 3: The 'COMPLETE' status badge is truncated with trailing double dots ('COMPLETE ..'), which persists across all completed rows through Frame 12.",
-    "Frame 2: In the 'Room trace' console at the bottom, the top log item is vertically clipped/cut off, leaving a messy sliver of text visible. This scroll-clipping artifact repeats in Frames 4, 5, 7, 8, and 10.",
-    "Frame 2: The trace logs display raw, unformatted database keys (e.g., 'rc_anthropic__status', 'rc_anthropic__summary') which look unpolished and highly technical for a user-facing UI."
+    "Frames 2, 4, 5, 7, 8, 10: The top line of the 'Room trace' log console is vertically clipped/cut off, showing only the bottom half of the text characters due to a scroll container padding or height calculation error.",
+    "Frames 3, 5, 6, 7, 8, 9, 10, 11, 12: The 'STATUS' column displays 'COMPLETE ..' with trailing dots, indicating a layout truncation issue where the column width is too narrow for the badge or text content.",
+    "Frames 2-12: The 'Room trace' logs contain extremely long, raw variable strings (e.g., 'rc_anthropic__status, rc_anthropic__summary...') that are highly repetitive and difficult to read at this size."
   ],
   "fixSuggestions": [
-    "Adjust the CSS width, padding, or text-overflow properties of the status badge component to ensure 'COMPLETE' renders cleanly without trailing dots.",
-    "Add proper top padding or adjust the scroll-boundary behavior of the 'Room trace' container so that preceding log lines are either fully visible or cleanly hidden instead of being half-clipped.",
-    "Parse and map technical variable names in the trace logs to human-readable labels (e.g., change 'rc_anthropic__status' to 'Anthropic Status') to improve readability and visual polish."
+    "Adjust the CSS padding/margin or scroll-margin on the 'Room trace' log container to prevent the top line of text from being clipped during active scrolling.",
+    "Increase the width of the 'STATUS' column or adjust the padding of the 'COMPLETE' badge to eliminate the ugly '..' truncation artifact.",
+    "Simplify the log output in the Room trace for the demo; instead of printing raw database keys, map them to user-friendly labels (e.g., 'Locked Anthropic research fields' instead of listing 10 raw variable names)."
   ]
 }

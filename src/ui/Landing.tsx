@@ -25,7 +25,9 @@ export function Landing({ onEnter }: { onEnter: (s: Session) => void }) {
             </button>
             <div className="r-join-inline">
               <input placeholder="CODE" value={join} onChange={(e) => setJoin(e.target.value)} aria-label="Room code" />
-              <button className="r-send" style={{ width: "auto", padding: "0 12px", borderRadius: 8 }}
+              {/* One filled primary per view (the hero CTA above) — Join is the bordered
+                  secondary so the input stays the focus of this group. */}
+              <button className="r-btn"
                 onClick={() => { const s = joinRoomByCode(join, name || "Guest"); if (s) onEnter(s); else alert("Room not found for that code."); }}>
                 Join
               </button>

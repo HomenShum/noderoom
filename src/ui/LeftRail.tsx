@@ -29,7 +29,7 @@ export function LeftRail({ roomId, me, artId, onPick, style }: { roomId: string;
   const arts = store.listArtifacts(roomId);
   const members = store.listMembers(roomId);
   const sessions = store.listSessions(roomId);
-  const sub = (a: { kind: string; title: string; version: number; elements: Record<string, unknown>; order?: string[] }) =>
+  const sub = (a: { kind: string; title: string; version: number; elements: Record<string, unknown>; order?: string[]; meta?: { excelGrid?: { rows: number; columns: number } } }) =>
     a.title === WIKI_TITLE ? `v${a.version} · live TOC` : uploadDocMeta(a) ?? (a.kind === "sheet" ? `v${a.version} · ${rowCount(a)} rows` : a.kind === "wall" ? `${Object.keys(a.elements).length} notes` : "edited recently");
   const onUpload = async (files: FileList | null) => {
     if (!files?.length) return;
@@ -79,7 +79,9 @@ export function LeftRail({ roomId, me, artId, onPick, style }: { roomId: string;
             <span style={{ minWidth: 0 }}><div className="fn">{uploading ? "Uploading..." : "Upload file"}</div><div className="fm">CSV, XLSX, text, image, PDF</div></span>
           </button>
           {uploadError && <div className="r-upload-error">{uploadError}</div>}
-          <div className="r-file" style={{ cursor: "default" }}>
+          {/* Inert reference row — r-file-static strips the clickable hover affordance it was
+              borrowing from the real artifact buttons above (looks-clickable-must-act rule). */}
+          <div className="r-file r-file-static">
             <span className="fi"><Database size={14} /></span>
             <span><div className="fn">NetSuite export</div><div className="fm">source · read-only</div></span>
           </div>
@@ -113,7 +115,8 @@ function dragArtifactRef(e: DragEvent<HTMLButtonElement>, artifact: { id: string
   e.dataTransfer.setData("text/plain", encodeArtifactRef(ref));
 }
 
-function rowCount(a: { order?: string[] }) {
+function rowCount(a: { order?: string[]; meta?: { excelGrid?: { rows: number } } }) {
+  if (a.meta?.excelGrid) return a.meta.excelGrid.rows;
   const ids: string[] = [];
   for (const id of a.order ?? []) {
     const row = id.split("__")[0];

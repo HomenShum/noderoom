@@ -11,7 +11,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import {
   Table2, FileText, StickyNote, Users, GitMerge, Play, RotateCcw, History, Search, BookOpen,
-  Lock, Unlock, Ban, Pencil, Plus, Check, AlertTriangle, Eye, Circle, ChevronRight, Download, Trash2, Undo2, type LucideIcon,
+  Lock, Unlock, Ban, Pencil, Plus, Check, AlertTriangle, Eye, Circle, ChevronRight, Download, Trash2, Undo2, X, type LucideIcon,
 } from "lucide-react";
 import { useStore, type RoomStore, type EditFeedback } from "../../app/store";
 import { formatExcelNumber } from "../../app/numberFormat";
@@ -284,8 +284,10 @@ function Research({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) 
       {pasteOpen && (
         <div className="r-research-import">
           <textarea value={pasteText} onChange={(e) => setPasteText(e.target.value)} rows={3} placeholder="Company, website, tier, intent, owner, CRM status" />
+          {/* Never disable the submit by default — a dead button can't explain itself. Empty paste
+              gets an inline explanation through the same error channel (form-layout convention). */}
+          <button className="r-btn primary" disabled={busy} onClick={() => { if (parseResearchRows(pasteText).length === 0) { setPasteError("Nothing to import yet — paste one account per line: Company, website, tier, intent, owner, CRM status."); return; } void addRows(); }}>{busy ? "Importing..." : "Import / update rows"}</button>
           {pasteError && <span className="r-wall-error" role="alert" data-testid="research-add-error">{pasteError}</span>}
-          <button className="r-btn primary" disabled={busy || parseResearchRows(pasteText).length === 0} onClick={() => void addRows()}>{busy ? "Importing..." : "Import / update rows"}</button>
         </div>
       )}
       <div className="r-research-scroll">
@@ -454,11 +456,17 @@ function draftedFor(store: RoomStore, roomId: string, artId: string, elementId: 
   return store.listDrafts(roomId).some((d) => d.status === "pending" && d.artifactId === artId && d.ops.some((o) => o.elementId === elementId));
 }
 
+/** Finance mental model: green means POSITIVE, red means negative — not "cell has content".
+ *  Unsigned values (notes, labels) render neutral so status colors keep their meaning. */
+function valueClass(value: string): string {
+  return /^[-(]/.test(value) ? "r-val-neg" : value.startsWith("+") ? "r-val-pos" : "r-val-num";
+}
+
 function EditableCell({ value, disabled, align, onCommit, addLabel }: { value: string; disabled?: boolean; align?: "right"; onCommit: (s: string) => void; addLabel?: string }) {
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(value);
   useEffect(() => setDraft(value), [value]);
-  if (disabled) return value ? <span className="r-val-pos">{value}</span> : <span className="nullcell">—</span>;
+  if (disabled) return value ? <span className={valueClass(value)}>{value}</span> : <span className="nullcell">—</span>;
   if (editing) {
     return (
       <input className="r-cell-input" autoFocus value={draft} style={align === "right" ? { textAlign: "right" } : undefined}
@@ -469,7 +477,7 @@ function EditableCell({ value, disabled, align, onCommit, addLabel }: { value: s
   }
   return (
     <button className="r-cell-edit" onClick={() => setEditing(true)}>
-      {value ? <span className="r-val-pos">{value}</span> : <span className="add-hint"><Plus size={11} /> {addLabel ?? "add"}</span>}
+      {value ? <span className={valueClass(value)}>{value}</span> : <span className="add-hint"><Plus size={11} /> {addLabel ?? "add"}</span>}
     </button>
   );
 }
@@ -813,8 +821,10 @@ function InlineProposal({ roomId, me, proposal, onResolved }: { roomId: string; 
       <span className="r-inline-proposal-text" title={`${proposal.author.name} proposed ${String(proposal.op.value ?? "")}`}>{String(proposal.op.value ?? "")}</span>
       {host ? (
         <span className="r-inline-proposal-actions">
-          <button className="r-icon-btn ok" data-testid="proposal-inline-approve" aria-label={`Approve ${proposal.op.elementId}`} disabled={busy} onClick={() => void decide(true)}><Check size={11} /></button>
-          <button className="r-icon-btn" data-testid="proposal-inline-reject" aria-label={`Reject ${proposal.op.elementId}`} disabled={busy} onClick={() => void decide(false)}><Ban size={11} /></button>
+          {/* ✓ accept / ✗ reject — never ban-circle (reads "forbidden", and Ban already means
+              lock_denied in the trace icons). Neutral at rest; semantic tints on hover. */}
+          <button className="r-icon-btn accept" data-testid="proposal-inline-approve" aria-label={`Accept suggestion for ${proposal.op.elementId}`} title="Accept suggestion" disabled={busy} onClick={() => void decide(true)}><Check size={12} /></button>
+          <button className="r-icon-btn reject" data-testid="proposal-inline-reject" aria-label={`Reject suggestion for ${proposal.op.elementId}`} title="Reject suggestion" disabled={busy} onClick={() => void decide(false)}><X size={12} /></button>
         </span>
       ) : <span className="r-inline-awaiting">host</span>}
     </div>
@@ -1047,7 +1057,7 @@ function ProposalRow({ roomId, me, proposal, onResolved }: { roomId: string; me:
         {host ? (
           <div className="r-proposal-actions">
             <button className="r-mini-btn primary" data-testid="proposal-approve" disabled={busy} onClick={() => void decide(true)}><Check size={12} /> Approve</button>
-            <button className="r-mini-btn" data-testid="proposal-reject" disabled={busy} onClick={() => void decide(false)}><Ban size={12} /> Reject</button>
+            <button className="r-mini-btn" data-testid="proposal-reject" disabled={busy} onClick={() => void decide(false)}><X size={12} /> Reject</button>
           </div>
         ) : <div className="td">awaiting host review</div>}
       </div>

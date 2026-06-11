@@ -6,7 +6,7 @@
  */
 
 import { useEffect, useRef, useState } from "react";
-import { PanelLeft, Table2, PanelRight, Moon, Sun, LogOut, Link2, ShieldCheck, X, HelpCircle } from "lucide-react";
+import { PanelLeft, Table2, PanelRight, Moon, Sun, LogOut, Link2, ShieldCheck, X, HelpCircle, Copy, Check } from "lucide-react";
 import { useStore } from "../app/store";
 import { Chat } from "./Chat";
 import { Artifact } from "./panels/Artifact";
@@ -33,6 +33,7 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
   // so every returning visitor (tour already seen, nothing to force panels open) landed in a chat-only
   // layout. Caught by the walkthrough capturer's reload path; see FRICTION_LOG 2026-06-09.
   const [show, setShow] = useState({ left: !isCompact, artifact: !isCompact, priv: !isCompact });
+  const [codeCopied, setCodeCopied] = useState(false);
   const [layout, setLayout] = useState({ left: 224, center: 1.15, artifact: 1.35, right: 320 });
   const arts = store.listArtifacts(roomId);
   const [artId, setArtId] = useState(() => arts.find((a) => a.kind === "sheet")?.id ?? arts[0]?.id ?? "");
@@ -176,7 +177,12 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
       <div className="r-top">
         <div className="r-mark">N</div>
         <div className="r-brand">NodeRoom <span>· {room.title}</span></div>
-        <div className="r-roomcode"><Link2 size={12} /> code <b>{room.code}</b></div>
+        {/* The code chip LOOKS like a button, so it must be one — sharing the code is the core
+            multiplayer flow (Meet/Figma mental model: click the code -> copy invite). */}
+        <button className="r-roomcode" type="button" title="Copy room code" aria-label={`Copy room code ${room.code}`}
+          onClick={() => { void navigator.clipboard?.writeText(room.code).then(() => { setCodeCopied(true); setTimeout(() => setCodeCopied(false), 1200); }); }}>
+          <Link2 size={12} /> code <b>{room.code}</b> {codeCopied ? <Check size={11} /> : <Copy size={11} />}
+        </button>
         {store.mode === "convex" && <span className="r-tag" style={{ background: "rgba(31,138,91,.16)", color: "#2E9E6B" }}>● live convex</span>}
         {store.mode === "memory" && <span className="r-tag r-demo-badge" title="Scripted demo — no backend or API keys needed; everything runs locally and offline.">● demo</span>}
         <span className="r-spacer" />

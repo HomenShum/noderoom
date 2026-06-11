@@ -283,7 +283,7 @@ export async function runChatIntakeCapture(options: {
     capturedBeforeClarify: userFacingQuestions === 0
       || (firstEdit > -1 && (questionIdxs[0] === undefined || firstEdit < questionIdxs[0])),
     atMostOneClarifyingQuestion: userFacingQuestions <= 1,
-    noUploadDemanded: !/\b(upload|attach|send (me|us|over)|share) (the |a |their |your |that )?(file|files|deck|pitch deck|spreadsheet|csv|xlsx)\b/i.test(userFacingText),
+    noUploadDemanded: !/\b(upload|attach|send (me|us|over)|share) (the |a |their |your |that |this )?(file|files|deck|pitch deck|spreadsheet|csv|xlsx)\b/i.test(userFacingText),
     newLeadCaptured: meridianRows.length === 1
       && meridianRows.every((rid) => newRowIds.includes(rid) && rowNeedsReview(rid)
         && /sarah/i.test(cellText(art.elements[`${rid}__contact`]?.value))

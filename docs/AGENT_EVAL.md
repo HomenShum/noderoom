@@ -17,6 +17,15 @@ Professional workflow evals are tracked separately in
 workflow shapes into redacted GTM, finance, parsing, wiki, and long-running
 cases without committing private rows. Private gold packs such as the
 three-statement modeling test run only when the local workbook path is provided.
+Not every feature starts with a file: the same suite now tracks `chat_only`,
+`upload`, `selected_artifact`, `mixed_room_state`, and `external_retrieval`
+intake modes so a user can start from a sentence in chat, a selected artifact,
+or a room full of existing context. Two caveats, tracked in
+`docs/eval/FEATURE_EVAL_BACKLOG.md`: `selected_artifact` has no declaring case
+yet (type-only), and the chat-intake harness requirements
+(`chat_intake_parser`, `entity_resolution`, `clarifying_question_gate`) are
+declared contracts graded by shape tests — not yet behaviorally graded the way
+the finance runtime grades lock/read/CAS/release.
 
 The live company-research benchmark is a separate router/cost harness:
 
@@ -36,7 +45,9 @@ npm run eval:finance-model -- --gold "C:\path\to\modeling-test.xlsx"
 
 `docs/eval/MODEL_EVAL_MATRIX.md` defines the supported OpenRouter/native routes
 and the scenario split: v3 research synthesis plus L1-L7 collaboration safety.
-Passing one lane is not promotion for the other lane.
+Passing one lane is not promotion for the other lane. New feature evals are
+ranked in `docs/eval/FEATURE_EVAL_BACKLOG.md` and must earn a route proof before
+they become product claims.
 
 Its current verified artifact is `docs/eval/results.json`
 (`company-research-v3-composite-synthesis`). It records route snapshots,
@@ -75,8 +86,9 @@ This is the single inventory; if a case isn't on this list, we don't claim cover
 - ✅ Note resolution + wall sticky through the same CAS path (use cases 6–7)
 - ✅ GTM tabular research enrichment — pending rows, sourced, status-gated (`tests/researchHarness.test.ts` + the v3 cheap/free smoke, 18/28 routes 9/9, content floor + judge)
 - ✅ Professional workflow pack — GTM account scoring vs a reusable rubric, finance reconciliation, contractor-time approval, activity summary with disclosure safety (`evals/professionalWorkflows.ts`)
+- ✅ Chat-first GTM intake contract — "just spoke with X / company Y raised $Z" becomes a structured watchlist/wiki workflow without requiring an upload; chat claims stay manual evidence until verified (`gtm-chat-lead-capture-enrich`, `gtm-chat-to-background-diligence-job`)
 - ✅ Credit analysis — MM-banking ratio cascade + **cell-mapping rejection** (misbound inputs must be refused, `evals/creditEval.ts`)
-- ✅ **3-statement modeling test · Solve mode** — NodeAgent locks, reads, CAS-writes, releases, and grades per-cell formulas/values against a gold oracle (`npm run eval:finance-model`; private workbook path stays local)
+- ✅ **3-statement modeling test · Solve mode** — private workbook full solve passed live on `deepseek/deepseek-v4-flash` (16/16 linked forecast cells, 174.8s, $0.0792, no answer-key leakage); free `nex-agi/nex-n2-pro:free` is promoted only through the income rung (`docs/eval/FINANCE_MODEL_EVAL.md`)
 - 🔜 **SEC model build flagship** — tiered: XBRL fact tie-out → derived ratios with formulas → statement linkage + cited assumptions page
 - 🔜 Benchmark v4 — N-document targeted research with the comprehensive company-profile field set (business model, moat, SWOT, funding)
 - 🔜 File-drop ingestion — 10-K PDF / XLSX dropped in the room → extracted to the sheet with per-cell citations; receipts → formatted expense report
@@ -231,7 +243,11 @@ git. `eval:finance-model` runs the actual NodeAgent tool workflow: lock the
 forecast cells, read versions, CAS-write formulas, release, then grade both the
 artifact and trace. Its default committed trace uses an owned synthetic gold
 pack for README media; passing `--gold` runs the same workflow against a private
-local workbook and writes the trace under `.tmp/`.
+local workbook. Live private runs write full traces under gitignored
+`docs/eval/finance-model-runs/` and commit only the redacted
+`docs/eval/finance-model-live.json` summary. The current full Solve promotion is
+`deepseek/deepseek-v4-flash`: 16/16 linked forecast cells, 174.8s, $0.0792, and
+no answer-key leakage.
 
 ---
 

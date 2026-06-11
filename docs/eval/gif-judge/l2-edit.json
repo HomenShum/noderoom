@@ -1,0 +1,24 @@
+{
+  "workflow": "l2-edit",
+  "judgeModel": "gemini-3.5-flash",
+  "judgedAt": "2026-06-11T08:16:14.947Z",
+  "frameCount": 5,
+  "sampledFrames": 5,
+  "scores": {
+    "readability": 9,
+    "pacing": 8,
+    "narrative_completeness": 9,
+    "visual_polish": 9,
+    "honesty_no_artifacts": 10
+  },
+  "average": 9,
+  "pass": true,
+  "topIssues": [
+    "frame 3: There is no visual change in the main table area compared to Frame 2. The 'read' action is only communicated via the bottom caption, making the UI feel static for 1400ms.",
+    "frame 4: The transition from locked to written happens instantly, losing the visual connection of comparing the version (V1) before setting the new value (V2)."
+  ],
+  "fixSuggestions": [
+    "In frame 3, add a subtle highlight or pulse effect specifically around the 'V1' badge on the right to visually represent the 'read version' action.",
+    "Slightly reduce the duration of frame 3 to 1000ms to keep the pacing snappy, as the visual layout remains largely identical to frame 2."
+  ]
+}

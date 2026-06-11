@@ -1,0 +1,24 @@
+{
+  "workflow": "l1-read",
+  "judgeModel": "gemini-3.5-flash",
+  "judgedAt": "2026-06-11T08:16:01.517Z",
+  "frameCount": 3,
+  "sampledFrames": 3,
+  "scores": {
+    "readability": 8,
+    "pacing": 9,
+    "narrative_completeness": 10,
+    "visual_polish": 8,
+    "honesty_no_artifacts": 10
+  },
+  "average": 9,
+  "pass": true,
+  "topIssues": [
+    "frame 1: Low contrast on secondary text elements such as 'Revenue / variance', 'V1', and the subtitle 'Report a value without changing anything' against the dark background, which reduces legibility.",
+    "frame 2: The orange highlight indicator on the left edge of the 'Net income / variance' row is a sharp vertical bar that sits awkwardly close to the rounded corner of the outer container, creating a minor visual misalignment."
+  ],
+  "fixSuggestions": [
+    "Increase the brightness/contrast of the muted gray text elements (labels and subtitles) to meet WCAG AA accessibility standards.",
+    "Adjust the left orange highlight bar in frames 2 and 3 to either respect the border-radius of the parent container or be inset slightly so it doesn't clash with the rounded corner."
+  ]
+}

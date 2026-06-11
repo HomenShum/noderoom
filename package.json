@@ -63,7 +63,9 @@
     "ladder:real": "tsx evals/ladder.ts --real",
     "ladder:free": "tsx evals/ladder.ts --real openrouter/free-auto --free-auto-top=5 --levels=1-4 --rung-timeout-ms=540000 --reserve-ms=30000 --json-out docs/eval/free-auto-router-ladder.json",
     "eval:diff": "tsx evals/evalDiff.ts",
-    "proofs:staleness": "tsx scripts/proof-staleness-check.ts"
+    "proofs:staleness": "tsx scripts/proof-staleness-check.ts",
+    "qa:gif": "tsx scripts/judge-demo-gif.ts",
+    "previews:render": "tsx scripts/render-workflow-preview.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.80",

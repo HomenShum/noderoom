@@ -6,116 +6,39 @@
  * output (lock/CAS/draft/merge tool calls), so the preview shows the actual user<->agent workflow,
  * not a mockup. Each frame = the sheet state after one agent step; first/last frames hold longer.
  *
+ * Frame capture lives in scripts/workflow-preview/capture.ts, SHARED with the gemini-3.5-flash
+ * GIF judge (judge-demo-gif.ts) so the judge scores the identical pixels this encoder ships.
+ *
  *   npx tsx scripts/render-workflow-preview.ts            # all workflows
  *   npx tsx scripts/render-workflow-preview.ts l3-no-clobber
  */
-import { chromium } from "@playwright/test";
 import gifenc from "gifenc";
 import pngjs from "pngjs";
 // gifenc/pngjs are CJS; named ESM exports aren't reliably detected, so default-import + destructure.
 const { GIFEncoder, quantize, applyPalette } = gifenc as unknown as typeof import("gifenc");
 const { PNG } = pngjs as unknown as typeof import("pngjs");
-import { readFileSync, writeFileSync, mkdirSync, readdirSync, existsSync } from "node:fs";
-import { join, resolve } from "node:path";
-
-type Cell = { id: string; label: string; value?: string };
-type Workflow = { id: string; title: string; badge: string; subtitle: string; tracePattern: RegExp; cells: Cell[] };
-
-const TRACES_DIR = "docs/eval/traces";
-const OUT_DIR = "docs/eval/workflow-previews";
-const REPLAYER = resolve("scripts/workflow-preview/replayer.html");
-
-const VARIANCE_ROWS: Cell[] = [
-  { id: "r_rev__variance", label: "Revenue / variance", value: "+24%" },
-  { id: "r_cogs__variance", label: "COGS / variance", value: "+27.5%" },
-  { id: "r_gp__variance", label: "Gross profit / variance", value: "+21.7%" },
-  { id: "r_ni__variance", label: "Net income / variance", value: "" },
-];
-
-const FINANCE_MODEL_CELLS: Cell[] = [
-  { id: "F7", label: "F7 / revenue", value: "" },
-  { id: "F16", label: "F16 / interest expense", value: "" },
-  { id: "F44", label: "F44 / revolver logic", value: "" },
-  { id: "F73", label: "F73 / revolver balance", value: "" },
-  { id: "F85", label: "F85 / balance check", value: "" },
-  { id: "G85", label: "G85 / balance check", value: "" },
-];
-
-const WORKFLOWS: Workflow[] = [
-  { id: "l1-read", title: "Read", badge: "L1 / context", subtitle: "Report a value without changing anything", tracePattern: /ladder_L1_read/, cells: VARIANCE_ROWS },
-  { id: "l2-edit", title: "Edit with CAS", badge: "L2 / single write", subtitle: "Claim the cell, read its version, write with compare-and-set", tracePattern: /ladder_L2_edit/, cells: VARIANCE_ROWS },
-  { id: "l3-no-clobber", title: "No clobber", badge: "L3 / concurrent", subtitle: "A human edits mid-write; CAS rejects the stale write and the agent re-reads", tracePattern: /ladder_L3_conflict/, cells: VARIANCE_ROWS },
-  { id: "l4-draft", title: "Draft when blocked", badge: "L4 / locked range", subtitle: "The range is locked, so the agent drafts the change for smart-merge", tracePattern: /ladder_L4_blocked/, cells: VARIANCE_ROWS },
-  {
-    id: "l5-large-range", title: "Large range", badge: "L5 / 600-row model", subtitle: "Load only the 5-row window around the target — never the full sheet",
-    tracePattern: /ladder_L5_large_range/,
-    cells: [
-      { id: "lr_0418__variance", label: "Line 418 / variance", value: "" },
-      { id: "lr_0419__variance", label: "Line 419 / variance", value: "" },
-      { id: "lr_0420__variance", label: "Line 420 / variance", value: "" },
-      { id: "lr_0421__variance", label: "Line 421 / variance", value: "" },
-      { id: "lr_0422__variance", label: "Line 422 / variance", value: "" },
-    ],
-  },
-  { id: "l6-long-horizon", title: "Long horizon", badge: "L6 / multi-cell + recovery", subtitle: "Fill five cells under repeated conflicts, compacting context, never locking", tracePattern: /ladder_L6_long/, cells: VARIANCE_ROWS },
-  {
-    id: "finance-model-solve",
-    title: "Finance Model Solve",
-    badge: "Professional / 3-statement",
-    subtitle: "Lock the forecast cells, read current versions, write linked formulas, release for review",
-    tracePattern: /finance_model_solve/,
-    cells: FINANCE_MODEL_CELLS,
-  },
-];
-
-function findTrace(pattern: RegExp): string | null {
-  if (!existsSync(TRACES_DIR)) return null;
-  const hits: string[] = [];
-  const walk = (dir: string) => {
-    for (const e of readdirSync(dir, { withFileTypes: true })) {
-      const p = join(dir, e.name);
-      if (e.isDirectory()) walk(p);
-      else if (e.isFile() && e.name.endsWith(".json") && pattern.test(p)) hits.push(p);
-    }
-  };
-  walk(TRACES_DIR);
-  hits.sort(); // newest dir name (timestamp prefix) sorts last
-  return hits.length ? hits[hits.length - 1] : null;
-}
+import { writeFileSync, mkdirSync } from "node:fs";
+import { join } from "node:path";
+import { OUT_DIR, WORKFLOWS, capturePreviewFrames, type Workflow } from "./workflow-preview/capture";
 
 async function render(wf: Workflow): Promise<boolean> {
-  const traceFile = findTrace(wf.tracePattern);
-  if (!traceFile) { console.log(`SKIP ${wf.id}: no trace matching ${wf.tracePattern}`); return false; }
-  const traceJson = JSON.parse(readFileSync(traceFile, "utf8"));
-  const trace = traceJson.trace ?? [];
-  const wfData = { title: wf.title, badge: wf.badge, subtitle: wf.subtitle, cells: wf.cells, trace };
-
-  const browser = await chromium.launch();
-  const page = await browser.newPage({ viewport: { width: 760, height: 420 }, deviceScaleFactor: 2 });
-  await page.addInitScript((d) => { (window as unknown as { __WF__: unknown }).__WF__ = d; }, wfData);
-  await page.goto("file://" + REPLAYER);
-  const frameCount: number = await page.evaluate(() => (window as unknown as { frameCount: () => number }).frameCount());
+  const captured = await capturePreviewFrames(wf);
+  if (!captured) { console.log(`SKIP ${wf.id}: no trace matching ${wf.tracePattern}`); return false; }
 
   const enc = GIFEncoder();
-  const stage = page.locator("#stage");
-  for (let i = 0; i < frameCount; i++) {
-    await page.evaluate((n) => (window as unknown as { showFrame: (n: number) => void }).showFrame(n), i);
-    await page.waitForTimeout(120);
-    const buf = await stage.screenshot({ type: "png" });
-    const png = PNG.sync.read(buf);
+  for (let i = 0; i < captured.frames.length; i++) {
+    const png = PNG.sync.read(captured.frames[i]);
     const data = new Uint8Array(png.data);
     const palette = quantize(data, 256);
     const index = applyPalette(data, palette);
-    const delay = i === 0 ? 1300 : i === frameCount - 1 ? 1900 : 950; // hold the goal + the result
-    enc.writeFrame(index, png.width, png.height, { palette, delay });
+    enc.writeFrame(index, png.width, png.height, { palette, delay: captured.delaysMs[i] });
   }
   enc.finish();
-  await browser.close();
 
   mkdirSync(OUT_DIR, { recursive: true });
   const out = join(OUT_DIR, `${wf.id}.gif`);
   writeFileSync(out, enc.bytes());
-  console.log(`WROTE ${out}  (${frameCount} frames, ${(enc.bytes().length / 1024).toFixed(0)} KB)  <- ${traceFile}`);
+  console.log(`WROTE ${out}  (${captured.frames.length} frames, ${(enc.bytes().length / 1024).toFixed(0)} KB)  <- ${captured.traceFile}`);
   return true;
 }
 

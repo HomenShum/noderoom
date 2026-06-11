@@ -1,0 +1,24 @@
+{
+  "workflow": "l3-no-clobber",
+  "judgeModel": "gemini-3.5-flash",
+  "judgedAt": "2026-06-11T08:16:30.453Z",
+  "frameCount": 8,
+  "sampledFrames": 8,
+  "scores": {
+    "readability": 7,
+    "pacing": 7,
+    "narrative_completeness": 7,
+    "visual_polish": 7,
+    "honesty_no_artifacts": 7
+  },
+  "average": 7,
+  "pass": true,
+  "topIssues": [
+    "Frame 4: The sudden appearance of the human's V2 edit (+19%) lacks a clear visual distinction from the AI's actions, potentially confusing who performed the edit.",
+    "Frame 5: The 'V2 KEPT' status badge is highly transient and disappears immediately in Frame 6, reducing the impact of the CAS rejection event."
+  ],
+  "fixSuggestions": [
+    "Introduce a distinct visual treatment (e.g., a 'human' avatar or different highlight color) for the concurrent edit in Frame 4.",
+    "Retain a subtle indicator of the rejected/kept state in Frame 6 to help viewers track the transition during the re-read step."
+  ]
+}

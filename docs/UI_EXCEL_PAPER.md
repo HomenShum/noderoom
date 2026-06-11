@@ -59,15 +59,17 @@ style-layer case in `tests/spreadsheetParser.test.ts`.
 ## Grid-engine contingency (Phase 4) — verdict 2026-06-11
 
 The DOM table + paging handles the current bar (L5's 600-row sheet). A grid engine is adopted
-ONLY on a measured perf failure, not aesthetics. Contingency ranking, revised after primary-source
-checks (npm registry + GitHub API, 2026-06-11):
+ONLY on a measured perf failure, not aesthetics. Contingency ranking (primary-source facts: npm
+registry + GitHub API, 2026-06-11; ranking re-set after review — a mature, low-churn component is
+a different thing from an abandoned one):
 
-1. ~~Glide Data Grid~~ → **demoted.** Effectively in maintenance mode: last stable npm release
-   6.0.3 (stable channel frozen since ~2024), alphas stopped 2025-10, last repo commit 2026-01-21
-   (an unpublished alpha bump + two small fixes), 122 open issues, no credible community fork
-   (top fork: 5 stars). The code is mature and MIT — existing users aren't broken — but adopting
-   it NEW means owning patches on a frozen dependency with no React-19-stable release. Its
-   `highlightRegions` API remains the best lock-outline design reference.
+1. **Glide Data Grid** (MIT) — best API fit for our exact need: pull-model `getCellContent`,
+   `onCellEdited` veto, and `highlightRegions` = the lock-outline feature as one prop. Maintenance
+   facts read both ways: commits through 2026-01 (small fixes — the component is feature-complete
+   for its scope, low churn is expected for a finished canvas grid), BUT the stable npm channel
+   has been 6.0.3 since ~2024 with React-19 support only in the 6.0.4-alpha line. Adoption
+   protocol: pin an exact 6.0.4-alpha (or vendor the commit), spike the React-19 peer override
+   first, budget for owning small patches. Eyes open, not eyes closed.
 2. **Univer** (Apache-2.0) — very active (13k★, daily pushes), React 19 peer, native range
    protection. Cost: MB-scale bundle + inverted ownership (you sync into ITS model). Pick only if
    we also want its formula engine.

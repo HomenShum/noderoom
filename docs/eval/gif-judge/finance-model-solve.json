@@ -1,0 +1,24 @@
+{
+  "workflow": "finance-model-solve",
+  "judgeModel": "gemini-3.5-flash",
+  "judgedAt": "2026-06-11T08:15:12.339Z",
+  "frameCount": 24,
+  "sampledFrames": 12,
+  "scores": {
+    "readability": 8,
+    "pacing": 9,
+    "narrative_completeness": 10,
+    "visual_polish": 9,
+    "honesty_no_artifacts": 9
+  },
+  "average": 9,
+  "pass": true,
+  "topIssues": [
+    "Frame 5, 6, 9: Formulas in the '+10 more model cells' summary row are truncated with ellipses (e.g., 'Historical Da...'), hiding the actual code being written.",
+    "Frame 10: F73 / revolver balance suddenly updates to '=E73+F44' and '✓ V2', but the status bar at the bottom only mentions writing 'F80'. This mismatch makes it hard to track when F73 was actually processed."
+  ],
+  "fixSuggestions": [
+    "Adjust the font size or column width in the '+10 more model cells' row to prevent formula truncation, or use a horizontal scroll/fade effect to show the full formula.",
+    "Add an explicit step/frame for writing F73, or update the status bar text in Frame 10 to reflect that multiple cells (F73 and F80) are being written simultaneously."
+  ]
+}

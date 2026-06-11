@@ -1,0 +1,26 @@
+{
+  "workflow": "l5-large-range",
+  "judgeModel": "gemini-3.5-flash",
+  "judgedAt": "2026-06-11T08:16:57.210Z",
+  "frameCount": 5,
+  "sampledFrames": 5,
+  "scores": {
+    "readability": 9,
+    "pacing": 6,
+    "narrative_completeness": 7,
+    "visual_polish": 9,
+    "honesty_no_artifacts": 8
+  },
+  "average": 7.8,
+  "pass": true,
+  "topIssues": [
+    "frame 3: The main UI is completely identical to frame 2, creating visual 'dead air' where the viewer must rely entirely on the bottom caption to know a 'read' action occurred.",
+    "frame 5: The main UI is completely identical to frame 4. The caption states 'lock released', but the visual lock indicator was already removed in frame 4, making this frame feel redundant and static.",
+    "frame 1: The narrative goal is 'Load only the 5-row window... never the full sheet', but there is no visual context of the surrounding 600-row sheet or a loading state to prove this behavior."
+  ],
+  "fixSuggestions": [
+    "In frame 3, add a subtle visual indicator for the 'read' action, such as a temporary scanning highlight or an eye icon next to the locked row.",
+    "In frame 4, keep the 'LOCKED' status and orange border active while the write is happening, then visually transition to the unlocked/normal state in frame 5 to clearly illustrate the 'lock released' step.",
+    "To reinforce the 'Large range' narrative, start frame 1 with a brief skeleton loader showing a 600-row outline, which instantly collapses/focuses down to just the 5-row active window."
+  ]
+}

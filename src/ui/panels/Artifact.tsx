@@ -526,7 +526,7 @@ function GenericSheet({ art }: { art: Art }) {
                     const value = displayCellValue(raw);
                     return (
                       <td key={col} title={payload?.evidence?.[0]?.label}>
-                        {value || <span className="nullcell">null</span>}
+                        {value || <span className="nullcell">—</span>}
                         {payload && <span className={"r-cell-meta " + (payload.status ?? "complete")}>{payload.evidence?.length ? `${payload.evidence.length} src` : payload.status}</span>}
                       </td>
                     );

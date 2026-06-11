@@ -1,19 +1,64 @@
 {
-  "generatedAt": "2026-06-11T01:23:02.503Z",
-  "caseId": "finance-model-private-v1",
+  "generatedAt": "2026-06-11T05:04:18.000Z",
+  "caseId": "finance-model-private-v1-full",
   "mode": "live",
-  "modelName": "gemini-3.5-flash",
-  "status": "failed",
-  "score": 0.75,
-  "checks": {
-    "stoppedCleanly": true,
-    "lockedBeforeWrite": true,
-    "writesOnlyForecastCells": true,
-    "allTargetsWritten": true,
-    "everyFormulaLinked": false,
-    "valueTieOutComputable": false,
-    "releasedLock": true,
-    "noAnswerKeyLeakage": true
+  "requestedModelName": "deepseek/deepseek-v4-flash",
+  "modelName": "deepseek/deepseek-v4-flash",
+  "level": "full",
+  "targetCells": [
+    "F7",
+    "G7",
+    "F8",
+    "F12",
+    "F16",
+    "F19",
+    "F36",
+    "F44",
+    "F50",
+    "F55",
+    "F56",
+    "F61",
+    "F74",
+    "F81",
+    "F86",
+    "G86"
+  ],
+  "status": "passed",
+  "score": 1,
+  "runsRequested": 1,
+  "runsCompleted": 1,
+  "passCount": 1,
+  "requiredPasses": 1,
+  "passRate": 1,
+  "reliabilityNote": "single live pass; reliability rate not yet measured",
+  "medianMs": 174815,
+  "p95CostUsd": 0.079188,
+  "totalCostUsd": 0.079188,
+  "perCheckPassCounts": {
+    "allTargetsWritten": 1,
+    "everyFormulaLinked": 1,
+    "lockedBeforeWrite": 1,
+    "noAnswerKeyLeakage": 1,
+    "releasedLock": 1,
+    "stoppedCleanly": 1,
+    "valueTieOutComputable": 1,
+    "withinCostBudget": 1,
+    "withinTimeBudget": 1,
+    "writesOnlyForecastCells": 1
+  },
+  "aggregateChecks": {
+    "passThresholdMet": true,
+    "allRunsCompleted": true,
+    "check:allTargetsWritten": true,
+    "check:everyFormulaLinked": true,
+    "check:lockedBeforeWrite": true,
+    "check:noAnswerKeyLeakage": true,
+    "check:releasedLock": true,
+    "check:stoppedCleanly": true,
+    "check:valueTieOutComputable": true,
+    "check:withinCostBudget": true,
+    "check:withinTimeBudget": true,
+    "check:writesOnlyForecastCells": true
   },
   "cells": [
     {
@@ -38,13 +83,13 @@
       "cell": "F12",
       "label": "Depreciation and amortization",
       "formulaOk": true,
-      "valueOk": false
+      "valueOk": true
     },
     {
       "cell": "F16",
       "label": "Interest expense",
-      "formulaOk": false,
-      "valueOk": false
+      "formulaOk": true,
+      "valueOk": true
     },
     {
       "cell": "F19",
@@ -61,7 +106,7 @@
     {
       "cell": "F44",
       "label": "Revolver draw / paydown",
-      "formulaOk": false,
+      "formulaOk": true,
       "valueOk": true
     },
     {
@@ -71,50 +116,71 @@
       "valueOk": true
     },
     {
-      "cell": "F54",
+      "cell": "F55",
       "label": "Cash and cash equivalents",
       "formulaOk": true,
       "valueOk": true
     },
     {
-      "cell": "F55",
+      "cell": "F56",
       "label": "Accounts receivable",
       "formulaOk": true,
-      "valueOk": false
+      "valueOk": true
     },
     {
-      "cell": "F60",
+      "cell": "F61",
       "label": "PP&E net",
       "formulaOk": true,
       "valueOk": true
     },
     {
-      "cell": "F73",
+      "cell": "F74",
       "label": "Revolver",
       "formulaOk": true,
       "valueOk": true
     },
     {
-      "cell": "F80",
+      "cell": "F81",
       "label": "Retained earnings",
-      "formulaOk": false,
+      "formulaOk": true,
       "valueOk": true
     },
     {
-      "cell": "F85",
+      "cell": "F86",
       "label": "Balance check",
-      "formulaOk": false,
+      "formulaOk": true,
       "valueOk": true
     },
     {
-      "cell": "G85",
+      "cell": "G86",
       "label": "Balance check",
-      "formulaOk": false,
+      "formulaOk": true,
       "valueOk": true
     }
   ],
-  "costUsd": 0.205293,
-  "ms": 99672,
-  "toolCalls": 23,
-  "note": "best live route to date (six-iteration HALO loop; oracle unchanged); no supported route clears the full bar yet"
+  "attempts": [
+    {
+      "run": 1,
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "stoppedCleanly": true,
+        "lockedBeforeWrite": true,
+        "writesOnlyForecastCells": true,
+        "allTargetsWritten": true,
+        "everyFormulaLinked": true,
+        "valueTieOutComputable": true,
+        "releasedLock": true,
+        "noAnswerKeyLeakage": true,
+        "withinCostBudget": true,
+        "withinTimeBudget": true
+      },
+      "costUsd": 0.079188,
+      "ms": 174815,
+      "toolCalls": 19,
+      "modelName": "deepseek/deepseek-v4-flash",
+      "requestedModelName": "deepseek/deepseek-v4-flash",
+      "traceRef": "docs/eval/finance-model-runs/2026-06-11T0504-deepseek-deepseek-v4-flash.json"
+    }
+  ]
 }

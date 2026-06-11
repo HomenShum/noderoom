@@ -1,9 +1,17 @@
+import { existsSync } from "node:fs";
 import { describe, expect, it } from "vitest";
 import {
   PROFESSIONAL_FILE_PROFILE_SUMMARY,
   PROFESSIONAL_WORKFLOW_CASES,
+  type ProfessionalHarnessRequirement,
   type ProfessionalWorkflowCategory,
+  type ProfessionalWorkflowIntake,
 } from "../evals/professionalWorkflows";
+import {
+  PROFESSIONAL_HARNESS_STATUS,
+  contractOnlyRequirements,
+  professionalCaseReadiness,
+} from "../evals/harnessStatus";
 import {
   FINANCE_MODEL_CRITICAL_FORMULAS,
   FINANCE_MODEL_MODE_CONTRACTS,
@@ -21,7 +29,41 @@ const categories: ProfessionalWorkflowCategory[] = [
   "legacy_agent_outputs",
 ];
 
-describe("professional workflow eval catalog", () => {
+const intakeModes: ProfessionalWorkflowIntake[] = [
+  "chat_only",
+  "pasted_content",
+  "upload",
+  "selected_artifact",
+  "mixed_room_state",
+  "external_retrieval",
+];
+
+const harnessRequirements: ProfessionalHarnessRequirement[] = [
+  "artifact_refs",
+  "cell_payload_evidence",
+  "schema_detection",
+  "chat_intake_parser",
+  "entity_resolution",
+  "clarifying_question_gate",
+  "spreadsheet_semantic_index",
+  "formula_dependency_locks",
+  "cross_file_context",
+  "privacy_redaction",
+  "provider_parser_adapter",
+  "liteparse_layout_fallback",
+  "long_running_free_auto",
+  "workflow_checkpoint_resume",
+  "resolved_model_audit",
+  "private_gold_pack",
+  "answer_key_formula_oracle",
+  "formula_structure_equivalence",
+  "guide_mode_no_write",
+  "section_collaboration_locks",
+  "wiki_grounded_update",
+  "human_review",
+];
+
+describe("professional workflow eval catalog — contract-shape (declares contracts; behavioral grading lives in the runtime evals)", () => {
   it("records the redacted shape of the reviewed workbook set", () => {
     expect(PROFESSIONAL_FILE_PROFILE_SUMMARY.manifestFiles).toBe(70);
     expect(PROFESSIONAL_FILE_PROFILE_SUMMARY.csvFiles).toBe(23);
@@ -62,6 +104,102 @@ describe("professional workflow eval catalog", () => {
         c.id,
       ).toBe(true);
       expect(c.assertions.some((a) => /evidence|cites|source artifact|artifact id/i.test(a)), c.id).toBe(true);
+    }
+  });
+
+  it("treats chat-only intake as a first-class workflow source, not an upload fallback", () => {
+    const chatCases = PROFESSIONAL_WORKFLOW_CASES.filter((c) => c.intakeModes?.includes("chat_only"));
+
+    expect(chatCases.length).toBeGreaterThanOrEqual(2);
+    expect(chatCases.some((c) => c.id === "gtm-chat-lead-capture-enrich")).toBe(true);
+    expect(chatCases.some((c) => c.id === "gtm-chat-to-background-diligence-job")).toBe(true);
+
+    for (const c of chatCases) {
+      expect(c.intakeModes?.some((mode) => intakeModes.includes(mode)), c.id).toBe(true);
+      expect(c.requiredHarness).toEqual(expect.arrayContaining([
+        "chat_intake_parser",
+        "entity_resolution",
+        "clarifying_question_gate",
+      ]));
+      expect(c.evalSteps.join(" "), c.id).toMatch(/no uploaded file|chat-only|no files attached/i);
+      expect(c.assertions.join(" "), c.id).toMatch(/upload|chat|manual evidence|sourceKind|duplicate/i);
+    }
+  });
+
+  it("keeps declared harness contracts separate from implemented behavioral graders", () => {
+    expect(Object.keys(PROFESSIONAL_HARNESS_STATUS).sort()).toEqual([...harnessRequirements].sort());
+    expect(PROFESSIONAL_HARNESS_STATUS.chat_intake_parser.status).toBe("contract");
+    expect(PROFESSIONAL_HARNESS_STATUS.entity_resolution.status).toBe("contract");
+    expect(PROFESSIONAL_HARNESS_STATUS.clarifying_question_gate.status).toBe("contract");
+    // Range locks on target cells are graded; locking formula CHILDREN on parent edits is not.
+    expect(PROFESSIONAL_HARNESS_STATUS.formula_dependency_locks.status).toBe("contract");
+    expect(PROFESSIONAL_HARNESS_STATUS.guide_mode_no_write.status).toBe("contract");
+    expect(PROFESSIONAL_HARNESS_STATUS.section_collaboration_locks.status).toBe("contract");
+
+    for (const [requirement, status] of Object.entries(PROFESSIONAL_HARNESS_STATUS)) {
+      if (status.status === "implemented") {
+        expect(status.entryPoint, requirement).toBeTruthy();
+        expect(status.evidence, requirement).toBeTruthy();
+      }
+    }
+  });
+
+  it("backs every implemented harness entry with an entry point that exists on disk", () => {
+    for (const [requirement, status] of Object.entries(PROFESSIONAL_HARNESS_STATUS)) {
+      if (status.status !== "implemented") continue;
+      expect(status.entryPoint && existsSync(status.entryPoint), `${requirement}: ${status.entryPoint}`).toBe(true);
+      // evidence may be a command (e.g. "npm run liteparse:smoke"); only path-shaped evidence must exist.
+      if (status.evidence && /[/\\]/.test(status.evidence) && !status.evidence.startsWith("npm ")) {
+        expect(existsSync(status.evidence), `${requirement}: ${status.evidence}`).toBe(true);
+      }
+    }
+  });
+
+  it("declares every intake mode on at least one case so the vocabulary cannot silently rot", () => {
+    for (const mode of intakeModes) {
+      expect(PROFESSIONAL_WORKFLOW_CASES.some((c) => c.intakeModes?.includes(mode)), mode).toBe(true);
+    }
+  });
+
+  it("gives every chat-started case an output contract — results land on a declared surface", () => {
+    const chatStarted = PROFESSIONAL_WORKFLOW_CASES.filter((c) =>
+      c.intakeModes?.some((mode) => mode === "chat_only" || mode === "pasted_content"),
+    );
+    expect(chatStarted.length).toBeGreaterThanOrEqual(3);
+    for (const c of chatStarted) {
+      expect(c.outputContract, c.id).toBeTruthy();
+      expect(c.outputContract!.allowedSurfaces, c.id).toContain(c.outputContract!.defaultSurface);
+      expect(`${c.outputContract!.escalationRule} ${c.assertions.join(" ")}`, c.id).toMatch(/unrequested public/i);
+      const mentionsPerson = /person|spoke with/i.test(`${c.workflow} ${c.sourcePatterns.join(" ")}`);
+      if (mentionsPerson) {
+        expect(c.assertions.join(" "), c.id).toMatch(/private[- ]by[- ]default|stay private|private visibility/i);
+      }
+    }
+  });
+
+  it("treats pasted third-party content as quoted evidence, never as the user's own words", () => {
+    const pastedCases = PROFESSIONAL_WORKFLOW_CASES.filter((c) => c.intakeModes?.includes("pasted_content"));
+    expect(pastedCases.length).toBeGreaterThanOrEqual(1);
+    for (const c of pastedCases) {
+      expect(c.requiredHarness).toEqual(expect.arrayContaining([
+        "chat_intake_parser",
+        "entity_resolution",
+        "privacy_redaction",
+      ]));
+      expect(c.assertions.join(" "), c.id).toMatch(/quoted_third_party/);
+      expect(c.assertions.join(" "), c.id).toMatch(/attribut/i);
+      expect(c.assertions.join(" "), c.id).toMatch(/redact/i);
+      expect(c.evalSteps.join(" "), c.id).toMatch(/paste/i);
+    }
+  });
+
+  it("does not call a professional case runnable while it still depends on contract-only harnesses", () => {
+    for (const c of PROFESSIONAL_WORKFLOW_CASES) {
+      if (professionalCaseReadiness(c) === "runnable") {
+        expect(contractOnlyRequirements(c), c.id).toEqual([]);
+      } else {
+        expect(contractOnlyRequirements(c).length, c.id).toBeGreaterThan(0);
+      }
     }
   });
 

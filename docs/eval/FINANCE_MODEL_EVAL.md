@@ -32,7 +32,8 @@ Only the redacted summary at `docs/eval/finance-model-live.json` is committed.
 ```bash
 npm run eval:finance-model
 npm run eval:finance-model -- --gold "C:\path\to\modeling-test.xlsx"
-npx tsx evals/financeModelLive.ts --real deepseek/deepseek-v4-flash --workbook "C:\path\to\modeling-test.xlsx" --level=full --timeout-ms=420000
+npx tsx evals/financeModelLive.ts --real deepseek/deepseek-v4-flash --workbook "C:\path\to\modeling-test.xlsx" --level=full --runs=5 --timeout-ms=420000 --record
+npx tsx evals/financeModelLive.ts --scripted --runs=2 --level=smoke --json-out docs/eval/finance-model-scripted-smoke.json
 npm test -- tests/financeModelRuntime.test.ts
 npm run workflow:trace-previews -- finance-model-solve
 ```
@@ -69,6 +70,13 @@ Fix:
 - Added deterministic formula-value scoring for the computable slice. The agent
   must author linked formulas; the harness computes values when all dependencies
   are visible instead of outsourcing arithmetic to the LLM.
+- Added reliability aggregation to `evals/financeModelLive.ts`: `--runs N`
+  records pass rate, required passes, median runtime, p95 cost, per-check pass
+  counts, and a redacted attempt ledger. `--record` appends the aggregate to the
+  JSONL eval store for cross-commit `eval:diff`.
+- Added `withinCostBudget` / `withinTimeBudget` checks and structured
+  `failureOwner` attribution so budget misses and malformed tool-call arguments
+  do not get laundered as provider outages.
 
 Rerun:
 
@@ -82,11 +90,9 @@ Rerun:
 - Live full rung: `deepseek/deepseek-v4-flash` passed all 16 targets in 174.8s
   at $0.0792. Latest redacted summary:
   `docs/eval/finance-model-live.json`. **This is a single live pass —
-  reliability rate not yet measured.** The committed summary is one run, kept
-  from a sequence of manual attempts; per the backlog promotion rule
-  (`FEATURE_EVAL_BACKLOG.md`), marketing the full-solve feature requires
-  >= 4/5 model-owned passes across room variants with the aggregate (not the
-  best run) committed.
+  reliability rate not yet measured.** The current runner can now produce the
+  required aggregate; marketing the full-solve feature requires `--runs=5`
+  across room variants with the aggregate committed, not a selected best run.
 - Live full route boundary: `nex-agi/nex-n2-pro:free` is not promoted for full
   solve yet; one run wrote all 16 linked formulas but failed a then-overstrict
   value gate, and the corrected rerun hit an OpenRouter invalid-JSON provider
@@ -108,6 +114,22 @@ Rerun:
 - `releasedLock`: the range is released after the write batch.
 - `noAnswerKeyLeakage`: candidate-visible context never contains answer-key
   formulas.
+- `withinCostBudget` / `withinTimeBudget`: per-rung budgets are checks, not
+  recordings — a run that only passes by blowing the budget fails.
+
+## Reliability verdicts (multi-run)
+
+`--runs N` aggregates attempts into a committed summary with a three-way
+verdict. Pass rate is measured over **model-owned** runs only — a provider 429
+or a bad key is not a model failure — but provider noise is never silently
+excluded: above a 40% provider-owned share (`PROVIDER_INCONCLUSIVE_SHARE`) the
+verdict is `inconclusive` ("rerun; this batch proves nothing about the
+model"), never `passed`. Failure attribution prefers structure over message
+text: a model emitting malformed JSON tool arguments is `model`-owned even
+though its error message says "Invalid JSON". Promotion requires >= 4/5
+model-owned passes; a single pass is labeled passed-but-unmeasured. Scenario
+coverage: `tests/financeModelReliability.test.ts` and
+`tests/financeModelLive.test.ts`.
 
 ## What Remains
 
@@ -117,6 +139,9 @@ Rerun:
 - Route matrix: keep `deepseek/deepseek-v4-flash` as the full-solve champion
   until another cheap/free route clears the same full rung. Free routes can be
   used for smoke/income previews, not the full feature promise.
-- Reliability proof: add `--runs N` aggregation (pass rate, p95 cost/time,
-  per-attempt failureOwner ledger) so the champion claim measures "will it",
-  not "can it ever" — see Harness Hardening in `FEATURE_EVAL_BACKLOG.md`.
+- ~~Reliability proof: add `--runs N` aggregation~~ **Landed 2026-06-11**:
+  model-owned pass rate, provider-share inconclusive verdict, budget gates,
+  per-attempt failureOwner ledger, `--record` into the eval store for
+  cross-commit `eval:diff`. What remains is the actual 5-run live promotion
+  batch for the deepseek champion (and room-variant perturbation, Harness
+  Hardening #6).

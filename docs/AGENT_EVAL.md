@@ -20,12 +20,16 @@ three-statement modeling test run only when the local workbook path is provided.
 Not every feature starts with a file: the same suite now tracks `chat_only`,
 `upload`, `selected_artifact`, `mixed_room_state`, and `external_retrieval`
 intake modes so a user can start from a sentence in chat, a selected artifact,
-or a room full of existing context. Two caveats, tracked in
-`docs/eval/FEATURE_EVAL_BACKLOG.md`: `selected_artifact` has no declaring case
-yet (type-only), and the chat-intake harness requirements
-(`chat_intake_parser`, `entity_resolution`, `clarifying_question_gate`) are
-declared contracts graded by shape tests — not yet behaviorally graded the way
-the finance runtime grades lock/read/CAS/release.
+or a room full of existing context — plus `pasted_content` for forwarded
+emails/transcripts, whose claims carry `quoted_third_party` provenance, below
+user-said. Every intake mode now has at least one declaring case (enforced by
+test), and every chat-started case declares an output contract (which surface
+the result lands on; person facts private-by-default). The implemented-vs-
+contract boundary is mechanical: `evals/harnessStatus.ts` maps each harness
+requirement to a real entry point or an honest `contract` status — the
+chat-intake requirements (`chat_intake_parser`, `entity_resolution`,
+`clarifying_question_gate`) are still contracts, not yet behaviorally graded
+the way the finance runtime grades lock/read/CAS/release.
 
 The live company-research benchmark is a separate router/cost harness:
 
@@ -247,7 +251,8 @@ local workbook. Live private runs write full traces under gitignored
 `docs/eval/finance-model-runs/` and commit only the redacted
 `docs/eval/finance-model-live.json` summary. The current full Solve promotion is
 `deepseek/deepseek-v4-flash`: 16/16 linked forecast cells, 174.8s, $0.0792, and
-no answer-key leakage.
+no answer-key leakage. That row is still a single live pass; promotion to a
+marketed reliability claim requires the new `--runs=5 --record` aggregate.
 
 ---
 

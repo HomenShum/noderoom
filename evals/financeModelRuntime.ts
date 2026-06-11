@@ -36,6 +36,8 @@ export type FinanceModelCellResult = {
   actualFormula: string;
   expectedValue: number | string;
   actualValue: unknown;
+  computedValue?: unknown;
+  valueSource?: "agent" | "formula_eval" | "none";
 };
 
 export type FinanceModelSolveReport = {

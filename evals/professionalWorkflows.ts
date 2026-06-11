@@ -5,10 +5,23 @@ export type ProfessionalWorkflowCategory =
   | "analytics_optimization"
   | "legacy_agent_outputs";
 
+export type ProfessionalWorkflowIntake =
+  | "chat_only"
+  /** Pasted third-party text (forwarded email, transcript chunk): NOT the user's own words — claims
+   *  carry quoted_third_party provenance, below user-said, and attribute to the original author. */
+  | "pasted_content"
+  | "upload"
+  | "selected_artifact"
+  | "mixed_room_state"
+  | "external_retrieval";
+
 export type ProfessionalHarnessRequirement =
   | "artifact_refs"
   | "cell_payload_evidence"
   | "schema_detection"
+  | "chat_intake_parser"
+  | "entity_resolution"
+  | "clarifying_question_gate"
   | "spreadsheet_semantic_index"
   | "formula_dependency_locks"
   | "cross_file_context"
@@ -26,6 +39,24 @@ export type ProfessionalHarnessRequirement =
   | "wiki_grounded_update"
   | "human_review";
 
+/** Where a workflow's RESULT lands. Intake modes say where a request starts; picking the wrong
+ *  landing surface is the product failure the user actually experiences (a public wiki note when
+ *  they wanted a private CRM row). See docs/eval/FEATURE_EVAL_BACKLOG.md "Output Contracts". */
+export type ProfessionalOutputSurface =
+  | "watchlist_row"
+  | "wiki_note"
+  | "background_job"
+  | "chat_reply_only"
+  | "private_note";
+
+export interface ProfessionalOutputContract {
+  allowedSurfaces: ProfessionalOutputSurface[];
+  /** What happens with NO explicit instruction. Chat capture defaults to the private side. */
+  defaultSurface: ProfessionalOutputSurface;
+  /** What user language upgrades the surface — never an unrequested public artifact. */
+  escalationRule: string;
+}
+
 export interface ProfessionalFileProfileSummary {
   manifestFiles: number;
   csvFiles: number;
@@ -42,6 +73,9 @@ export interface ProfessionalEvalCase {
   category: ProfessionalWorkflowCategory;
   persona: string;
   workflow: string;
+  intakeModes?: ProfessionalWorkflowIntake[];
+  /** Required for every chat-started case (chat_only / pasted_content) — enforced in tests. */
+  outputContract?: ProfessionalOutputContract;
   sourcePatterns: string[];
   agentGoal: string;
   fixtureStrategy: string;
@@ -313,7 +347,15 @@ export const PROFESSIONAL_WORKFLOW_CASES: ProfessionalEvalCase[] = [
     category: "gtm_company_research",
     persona: "Account executive or analyst building a company brief for outreach",
     workflow: "Turn one company name or report workbook into a multi-sheet, source-linked company overview and next-action note.",
+    intakeModes: ["chat_only", "upload", "external_retrieval"],
+    outputContract: {
+      allowedSurfaces: ["wiki_note", "chat_reply_only", "private_note"],
+      defaultSurface: "wiki_note",
+      escalationRule:
+        "The requested outreach brief lands in the room wiki the user asked to update; anything beyond that wiki note (new sheets, public posts) requires an explicit ask, and private-channel context never lands in the public wiki.",
+    },
     sourcePatterns: [
+      "chat: research <company name> and prepare an outreach brief",
       "parselyfi_*_Report_*.xlsx",
       "company_analysis_report.xlsx",
       "company_pitchbook_info_*.xlsx",
@@ -323,19 +365,24 @@ export const PROFESSIONAL_WORKFLOW_CASES: ProfessionalEvalCase[] = [
     fixtureStrategy:
       "Use a redacted two-company workbook with expected cited claims and one deliberately conflicting source value.",
     evalSteps: [
-      "Upload a multi-sheet company report.",
+      "Run both a chat-only company-name request and an uploaded multi-sheet company report variant.",
       "Ask the agent to produce a brief and update the room wiki.",
       "Click every cited artifact reference from the generated note.",
       "Run a contradiction check between sheets before the final summary.",
     ],
     assertions: [
       "The summary includes only claims grounded in room-visible artifacts.",
+      "A chat-only ambiguous company name asks a clarifying question or marks needs_review instead of guessing.",
       "Conflicting values are called out as conflicts instead of silently resolved.",
       "Every cited file reference is clickable and resolves to an artifact.",
       "No private-channel context appears in the public wiki update.",
+      "The brief lands on the declared default surface (the requested room wiki note); no unrequested public artifact is created.",
     ],
     requiredHarness: [
       "artifact_refs",
+      "chat_intake_parser",
+      "entity_resolution",
+      "clarifying_question_gate",
       "cross_file_context",
       "provider_parser_adapter",
       "wiki_grounded_update",
@@ -345,6 +392,155 @@ export const PROFESSIONAL_WORKFLOW_CASES: ProfessionalEvalCase[] = [
     productionNotes: [
       "This evaluates the interview story that the wiki is an agent-managed memory surface, not uncited chat memory.",
       "Provider file ids can be cached for extraction, but evidence must point to durable NodeRoom artifact ids.",
+    ],
+  },
+  {
+    id: "gtm-chat-lead-capture-enrich",
+    category: "gtm_company_research",
+    persona: "Founder, investor, or BD lead capturing a fresh call note before it becomes a spreadsheet row",
+    workflow: "Turn an informal chat note about a person, company, funding event, and product claim into a structured watchlist row plus a sourced wiki note.",
+    intakeModes: ["chat_only", "external_retrieval", "mixed_room_state"],
+    outputContract: {
+      allowedSurfaces: ["watchlist_row", "wiki_note", "private_note", "chat_reply_only", "background_job"],
+      defaultSurface: "watchlist_row",
+      escalationRule:
+        "Default is a private watchlist row plus a short chat acknowledgment. 'Queue it / research this' upgrades to a background job; 'share with the room / add to the wiki' upgrades to shared surfaces. Person-subject facts stay private until explicitly promoted; no unrequested public artifact.",
+    },
+    sourcePatterns: [
+      "chat: just spoke with <person>; their startup <company> does <description>",
+      "chat: <company> just raised $<amount> by doing <claim>",
+      "optional existing accounts/watchlist sheet in the room",
+    ],
+    agentGoal:
+      "Extract company, person, product description, funding amount, uncertainty, and requested next action from the user's chat message; verify public claims where possible; create or update a watchlist row and grounded wiki note without requiring an uploaded file.",
+    fixtureStrategy:
+      "Use a synthetic chat-note fixture with one exact company, one ambiguous company name, one unverified funding claim, and one existing watchlist row that should be updated instead of duplicated.",
+    evalSteps: [
+      "Start with no uploaded file and send only the chat note.",
+      "Run NodeAgent in private or public scope depending on the user's command.",
+      "If an existing watchlist artifact is present, update the matched row; otherwise create a bounded new row/note proposal.",
+      "Fetch or cite public sources for externally verifiable claims and mark unverifiable chat-only claims as needs_review.",
+    ],
+    assertions: [
+      "The agent does not ask for an upload when the chat message already contains enough entity and intent signal.",
+      "Ambiguous company names trigger a clarifying question or needs_review row instead of a guessed entity match.",
+      "Chat-only claims are preserved as user-provided evidence and are not upgraded to sourced facts without fetched evidence.",
+      "Created or updated rows use CellPayload evidence that distinguishes manual chat evidence from external source evidence.",
+      "If a matching row exists, the agent updates it with CAS rather than creating a duplicate.",
+      "Person names and meeting/relationship facts from chat stay private-by-default; company facts may go to shared surfaces; no person fact lands in a public wiki without explicit instruction.",
+      "The result lands on the declared default output surface; no unrequested public artifact is created.",
+    ],
+    requiredHarness: [
+      "chat_intake_parser",
+      "entity_resolution",
+      "clarifying_question_gate",
+      "cell_payload_evidence",
+      "wiki_grounded_update",
+      "privacy_redaction",
+      "human_review",
+    ],
+    productionNotes: [
+      "This is the counterweight to upload-first design: many valuable GTM notes begin as messy chat, not a file.",
+      "The evidence model must preserve provenance tiers: user-said, room-artifact, and fetched-source are different strengths of evidence.",
+    ],
+  },
+  {
+    id: "gtm-chat-to-background-diligence-job",
+    category: "gtm_company_research",
+    persona: "Solo founder using chat as a lightweight CRM and research queue",
+    workflow: "Convert a chat-only company mention into a checkpointed background diligence job that fills a research sheet and posts a concise completion note.",
+    intakeModes: ["chat_only", "external_retrieval", "mixed_room_state"],
+    outputContract: {
+      allowedSurfaces: ["background_job", "watchlist_row", "wiki_note", "chat_reply_only"],
+      defaultSurface: "background_job",
+      escalationRule:
+        "The user's 'add to the research queue' phrasing is the explicit background-job escalation. Results land in the research sheet plus a completion note; person-subject details stay private-by-default, and conflicts are surfaced for review rather than silently published. No unrequested public artifact.",
+    },
+    sourcePatterns: [
+      "chat: add <company> to the research queue; they raised <amount> and sell to <market>",
+      "public web/company sources fetched during the run",
+      "optional existing research sheet, wiki, or watchlist artifact",
+    ],
+    agentGoal:
+      "Create an agentJob from a chat-only company mention, resolve the entity, fetch public source snippets, fill company profile fields with evidence, and checkpoint progress so a long free/cheap route can resume without duplicating rows.",
+    fixtureStrategy:
+      "Use a synthetic company mention plus mocked source fetches for homepage, funding announcement, and one conflicting profile page; run smoke, partial-resume, and duplicate-submission variants.",
+    evalSteps: [
+      "Send a chat-only research request with no files attached.",
+      "Create or reuse the target research artifact and enqueue a durable agentJob.",
+      "Force a slice stop after partial field completion, then resume from the checkpoint.",
+      "Submit the same chat request twice and assert idempotency prevents duplicate company rows.",
+    ],
+    assertions: [
+      "The request envelope records sourceKind=chat and preserves the original user text as manual evidence.",
+      "The job can create the missing work artifact when no upload or selected sheet exists.",
+      "Resumed runs complete only missing fields and do not overwrite human edits or completed sourced fields.",
+      "Duplicate chat requests collapse by idempotency/entity key instead of creating duplicate jobs or rows.",
+      "Conflicting public sources are surfaced in the wiki or review note rather than silently resolved.",
+      "Person-subject details captured from chat stay private-by-default in job outputs; only company-level facts land on shared research surfaces without explicit instruction.",
+      "Job outputs land on the declared surfaces (research sheet plus completion note); no unrequested public artifact is created.",
+    ],
+    requiredHarness: [
+      "chat_intake_parser",
+      "entity_resolution",
+      "clarifying_question_gate",
+      "cell_payload_evidence",
+      "long_running_free_auto",
+      "workflow_checkpoint_resume",
+      "resolved_model_audit",
+      "wiki_grounded_update",
+      "human_review",
+    ],
+    productionNotes: [
+      "This is the natural app entrypoint for users who live in chat and only later need a sheet/wiki artifact.",
+      "It should share the same route promotion ladder as GTM research, but with extra idempotency and artifact-creation checks.",
+    ],
+  },
+  {
+    id: "gtm-pasted-intro-email-capture",
+    category: "gtm_company_research",
+    persona: "Founder pasting a forwarded intro email into chat between meetings",
+    workflow: "Turn pasted third-party content (a forwarded intro email or call-transcript chunk) into an attributed watchlist row and follow-up note without inflating its provenance.",
+    intakeModes: ["pasted_content", "mixed_room_state"],
+    outputContract: {
+      allowedSurfaces: ["watchlist_row", "private_note", "chat_reply_only"],
+      defaultSurface: "watchlist_row",
+      escalationRule:
+        "Default is a private watchlist row attributed to the email's author plus a chat acknowledgment; sharing to the room wiki requires an explicit ask. Sender contact details never propagate to shared surfaces. No unrequested public artifact.",
+    },
+    sourcePatterns: [
+      "chat paste: forwarded intro email with headers, signature, and founder claims",
+      "chat paste: call-transcript chunk with speaker labels",
+      "optional existing watchlist sheet in the room",
+    ],
+    agentGoal:
+      "Detect that the pasted text is third-party authored, attribute each claim to its original author, record provenance as quoted_third_party below user-said, redact sender contact details by default, and create or update the watchlist row without demanding an upload.",
+    fixtureStrategy:
+      "Use a synthetic forwarded-email fixture with one founder growth claim, one sender signature block to redact, one ambiguous company name, plus a transcript variant with speaker labels.",
+    evalSteps: [
+      "Paste the forwarded email into chat with no files attached.",
+      "Detect third-party authorship from headers, signature, and speaker labels.",
+      "Create or update the watchlist row with claims attributed to the email's author at quoted_third_party provenance.",
+      "Ask at most one non-blocking clarifying question about the ambiguous company while the provisional row already exists.",
+    ],
+    assertions: [
+      "Pasted third-party claims are recorded at quoted_third_party provenance — below user-said, above unverified — and are never merged into the user's own manual evidence tier.",
+      "The founder's growth claim is attributed to the email's author, not to the user.",
+      "Sender contact details (email, phone, signature block) are redacted by default and never copied into shared artifacts.",
+      "The provisional row is written immediately with needs_review status; the single clarifying question does not block the initial write.",
+      "Person-subject facts from the paste stay private-by-default; no unrequested public artifact is created.",
+    ],
+    requiredHarness: [
+      "chat_intake_parser",
+      "entity_resolution",
+      "clarifying_question_gate",
+      "cell_payload_evidence",
+      "privacy_redaction",
+      "human_review",
+    ],
+    productionNotes: [
+      "Pasting a forwarded email is the most common real GTM capture behavior — more common than typing a summary, far more common than uploading a file.",
+      "Treating a paste as chat_only would inflate a third party's claims to the user-said provenance tier, defeating the manual-vs-fetched evidence gate at its strongest level.",
     ],
   },
   {
@@ -390,6 +586,7 @@ export const PROFESSIONAL_WORKFLOW_CASES: ProfessionalEvalCase[] = [
     category: "finance_ops",
     persona: "Finance analyst reconciling model/vendor spend",
     workflow: "Reconcile exported AI costs against a parsed/output workbook and write variance notes only where needed.",
+    intakeModes: ["upload", "selected_artifact"],
     sourcePatterns: [
       "openai_cost-*.csv",
       "openai_cost-*_parsely_output.xlsx",
@@ -402,6 +599,7 @@ export const PROFESSIONAL_WORKFLOW_CASES: ProfessionalEvalCase[] = [
     evalSteps: [
       "Upload source and expected/reconciled files.",
       "Run reconcile_cell or agent-mediated reconciliation.",
+      "Rerun the same goal with the reconciled sheet SELECTED in the room (selected_artifact intake, no re-upload).",
       "Inspect formula-dependent locks and skipped/corrected cells.",
       "Export a review note summarizing unresolved exceptions.",
     ],
@@ -410,6 +608,7 @@ export const PROFESSIONAL_WORKFLOW_CASES: ProfessionalEvalCase[] = [
       "Incorrect cells are corrected only after a current read and CAS-protected write.",
       "Formula children are locked or flagged when parent input cells are edited.",
       "Each variance note cites the source artifact, row, and model/vendor column.",
+      "Selected-artifact runs write only to the selected sheet via its artifact ref and fresh versions; unrelated room artifacts are untouched.",
     ],
     requiredHarness: [
       "cell_payload_evidence",

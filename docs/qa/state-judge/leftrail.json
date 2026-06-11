@@ -1,0 +1,23 @@
+{
+  "surface": "leftrail",
+  "judgeModel": "gemini-3.5-flash",
+  "judgedAt": "2026-06-11T21:16:23.531Z",
+  "stateCount": 3,
+  "scores": {
+    "state_legibility": 6,
+    "affordance_honesty": 5,
+    "consistency": 6,
+    "contrast": 7,
+    "polish": 6
+  },
+  "average": 6,
+  "pass": false,
+  "topIssues": [
+    "image 3 (static-hover): 'Agent wiki' is stated to be the selected open artifact, yet 'Q3 variance' retains the terracotta selection styling, creating a dual-selection conflict.",
+    "image 3 (static-hover): No visual distinction exists between image 2 and image 3 to demonstrate that the NetSuite row is being hovered inertly."
+  ],
+  "fixSuggestions": [
+    "Ensure the terracotta selection accent strictly follows the active open artifact ('Agent wiki' in image 3) and clears from previous selections.",
+    "Introduce a subtle cursor state or tooltip in mockups to clearly differentiate inert hover states from default static states."
+  ]
+}

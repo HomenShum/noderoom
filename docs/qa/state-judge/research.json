@@ -1,0 +1,23 @@
+{
+  "surface": "research",
+  "judgeModel": "gemini-3.5-flash",
+  "judgedAt": "2026-06-11T21:16:50.424Z",
+  "stateCount": 3,
+  "scores": {
+    "state_legibility": 7,
+    "affordance_honesty": 7,
+    "consistency": 6,
+    "contrast": 5,
+    "polish": 6
+  },
+  "average": 6.2,
+  "pass": false,
+  "topIssues": [
+    "Image 2 (import-open): The 'Import / update rows' button floats at the bottom-right of the textarea, leaving an awkward, empty layout gap directly above it.",
+    "Image 1 (default): Low contrast on the sub-header metadata ('4 accounts · 4 pending...') and table headers makes them difficult to read against the dark background."
+  ],
+  "fixSuggestions": [
+    "Reposition the import button directly below the textarea or center it vertically to eliminate the empty space gap.",
+    "Increase the brightness of the muted gray text elements to improve readability and meet contrast standards."
+  ]
+}

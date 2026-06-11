@@ -1,0 +1,23 @@
+{
+  "surface": "chat",
+  "judgeModel": "gemini-3.5-flash",
+  "judgedAt": "2026-06-11T21:16:31.850Z",
+  "stateCount": 4,
+  "scores": {
+    "state_legibility": 6,
+    "affordance_honesty": 5,
+    "consistency": 7,
+    "contrast": 6,
+    "polish": 6
+  },
+  "average": 6,
+  "pass": false,
+  "topIssues": [
+    "image 4 (message-hover): Missing the required 'promote' action control; only 'Copy' and 'Edit' are displayed.",
+    "image 3 (composer-focus): The focus ring color is identical to the typed state in image 2, reducing visual distinction between empty-focused and active-typing states."
+  ],
+  "fixSuggestions": [
+    "Add a 'Promote' button alongside 'Copy' and 'Edit' in the message hover action bar.",
+    "Use a slightly desaturated or lower-opacity terracotta border for the empty focus state to differentiate it from the active typing state."
+  ]
+}

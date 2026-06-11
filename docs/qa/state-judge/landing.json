@@ -1,0 +1,23 @@
+{
+  "surface": "landing",
+  "judgeModel": "gemini-3.5-flash",
+  "judgedAt": "2026-06-11T21:16:03.895Z",
+  "stateCount": 3,
+  "scores": {
+    "state_legibility": 6,
+    "affordance_honesty": 7,
+    "consistency": 6,
+    "contrast": 5,
+    "polish": 7
+  },
+  "average": 6.2,
+  "pass": false,
+  "topIssues": [
+    "image 3 (default - light): The join input container retains a colored terracotta border in its default state, which conflicts with the focus-ring grammar established in the dark focus state.",
+    "image 1 (default - dark): Low contrast on the 'DISPLAY NAME' label and 'e.g. Priya' placeholder text makes form fields hard to read against the dark background."
+  ],
+  "fixSuggestions": [
+    "Use a neutral gray border for the join input in the light theme default state, reserving the terracotta border exclusively for active focus.",
+    "Increase the contrast of all label, placeholder, and secondary body text across both dark and light themes to meet WCAG AA standards."
+  ]
+}

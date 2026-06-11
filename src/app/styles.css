@@ -26,7 +26,7 @@
   --danger: #B3261E; --danger-ink: #B3261E; --danger-tint: rgba(179,38,30,.10); --danger-border: rgba(179,38,30,.28);
   --warning-ink: #8a4a20; --warning-tint: rgba(180,83,9,.10); --warning-border: rgba(180,83,9,.28);
   --motion-fast: .12s; --motion-base: .18s; --motion-slow: .34s;
-  --focus-ring: 0 0 0 3px var(--accent-tint);
+  --focus-ring: 0 0 0 3px rgba(217,119,87,.42); /* was accent-tint (.16) — too faint to see on dark; this is the visible keyboard-focus halo */
 }
 [data-theme="dark"] {
   --bg-app: #09090b; --bg-primary: #111418; --bg-secondary: #171b20; --bg-tertiary: #1b2027; --bg-hover: #20262d;
@@ -67,8 +67,10 @@ input { font-family: inherit; }
 .r-brand span { color: var(--text-muted); font-weight: 500; }
 /* The room code wears a button-like chip, so it must BE a button: sharing the code is the core
    multiplayer flow (Meet/Figma mental model: click the code -> copy invite). */
-.r-roomcode { display: inline-flex; align-items: center; gap: 7px; padding: 4px 9px; border-radius: 8px; background: var(--bg-secondary); border: 1px solid var(--line); font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: .04em; color: var(--text-secondary); white-space: nowrap; flex-shrink: 0; cursor: pointer; }
-.r-roomcode:hover { background: var(--bg-hover); border-color: var(--border-strong); }
+.r-roomcode { display: inline-flex; align-items: center; gap: 7px; padding: 4px 9px; border-radius: 8px; background: var(--bg-secondary); border: 1px solid var(--line); font-family: var(--font-mono); font-size: 12px; font-weight: 600; letter-spacing: .04em; color: var(--text-secondary); white-space: nowrap; flex-shrink: 0; cursor: pointer; transition: background var(--motion-fast), border-color var(--motion-fast), color var(--motion-fast); }
+/* Hover must be PERCEPTIBLE — the old one-shade bg shift (rgb 23->32) was invisible to eye AND
+   vision judge. Accent-tinted border + brighter ink is the two-cue, on-palette signal. */
+.r-roomcode:hover { background: var(--bg-hover); border-color: var(--accent-border); color: var(--text-primary); }
 .r-roomcode b { color: var(--accent-ink); }
 .r-spacer { flex: 1; }
 .r-avatars { display: flex; align-items: center; }
@@ -569,3 +571,113 @@ input { font-family: inherit; }
 /* ── Persistent-text-streaming cursor (private NodeAgent reply while generating) ── */
 .r-stream-cursor { display: inline-block; margin-left: 1px; color: var(--accent, #d97757); animation: r-stream-blink 1s steps(2) infinite; }
 @keyframes r-stream-blink { 50% { opacity: 0; } }
+
+/* ──────────────────────────────────────────────────────────────────────────────
+   Phase-6 state-coverage fixes (design-qa-execution audit, 2026-06-11).
+   Later rules win at equal specificity, so these refine without touching the
+   originals. Each cites the convention it satisfies. See docs/qa/DESIGN_QA_*.
+   ────────────────────────────────────────────────────────────────────────────── */
+
+/* P0 — the CODE input had outline:none with NO replacement focus ring (WCAG 2.4.7).
+   The composer's r-input-wrap:focus-within is the in-repo precedent; match it. */
+.r-join-inline:focus-within { border-color: var(--accent-border); box-shadow: var(--focus-ring); }
+/* P0 — inline join error replaces a blocking alert() (empty-states error convention). */
+.r-join-error { color: var(--danger-ink); font-size: 12px; font-weight: 600; margin-top: 8px; }
+
+/* P1 — r-text-input was a DEAD class (no rule existed): the name field had no border,
+   focus ring, or placeholder color. Give it the standard input treatment. */
+.r-text-input { background: var(--bg-secondary); border: 1px solid var(--line-strong); border-radius: 9px; padding: 9px 12px; color: var(--text-primary); font: inherit; font-size: 13px; outline: none; transition: border-color var(--motion-fast), box-shadow var(--motion-fast); }
+.r-text-input:focus-visible { border-color: var(--accent-border); box-shadow: var(--focus-ring); }
+.r-text-input::placeholder { color: var(--text-tertiary); }
+.r-field { display: flex; flex-direction: column; gap: 5px; margin-top: 18px; }
+.r-field-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: .06em; color: var(--text-muted); }
+
+/* P1 — inactive lane toggle had NO hover (only the active state was styled). */
+.r-lane-btn:not([data-on="true"]):hover { background: var(--bg-hover); color: var(--text-secondary); }
+
+/* P1 — the send button's focus ring was the SAME hue as its accent fill (invisible).
+   Give keyboard focus a light ring that reads against the fill (two-cue). */
+.r-send:focus-visible { outline: none; box-shadow: 0 0 0 2px var(--bg-primary), 0 0 0 4px var(--accent-ink); }
+/* P0-companion — send reflects an empty composer: muted + not-allowed, not a live accent button. */
+.r-send:disabled { background: var(--bg-hover); color: var(--text-tertiary); cursor: default; filter: none; }
+
+/* P1 — xl-cell advertised cursor:cell + click-to-select but had ZERO hover feedback. */
+.xl-cell:hover { background: #f1f5f9; }
+.xl-cell.sel:hover { background: #fff; }
+
+/* P1 — the keyboard-focusable research row (tabIndex=0) had no focus-visible style. */
+.r-research-row:focus-visible { outline: 2px solid var(--accent-primary); outline-offset: -2px; }
+
+/* P1 — person rows are INERT <div>s; they must not borrow the clickable hover fill
+   (looks-clickable-must-act, inverse). Override the earlier .r-person:hover. */
+.r-person:hover { background: transparent; }
+
+/* P1 — leftrail metadata (source · read-only, v1 · N rows) was text-tertiary (too faint). */
+.r-file .fm { color: var(--text-muted); }
+
+/* P1 — research textarea placeholder was the browser default / faint; make it legible. */
+.r-research-import textarea::placeholder { color: var(--text-tertiary); }
+
+/* Judge — the inline proposal value+controls were cramped; give them room to breathe. */
+.r-inline-proposal { padding: 3px 5px 3px 8px; gap: 7px; }
+
+/* P0 + sweep — a danger tag variant so failed/blocked statuses stop reading as neutral
+   grey (HONEST_STATUS / semantic-color-by-state). Used by the long-job status chip. */
+.r-tag.danger { background: var(--danger-tint); border: 1px solid var(--danger-border); color: var(--danger-ink); }
+
+/* P0 — upload error gains a recovery path (Retry), per the empty-states error convention. */
+.r-upload-error { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.r-upload-retry { font-size: 10.5px; font-weight: 700; color: var(--accent-ink); background: transparent; border: 1px solid var(--accent-border); border-radius: 6px; padding: 1px 7px; cursor: pointer; transition: background var(--motion-fast); }
+.r-upload-retry:hover { background: var(--accent-tint); }
+
+/* P0-companion — the upload busy spinner spins (honest in-flight feedback). */
+@media (prefers-reduced-motion: no-preference) {
+  .r-spin { animation: r-spin 0.8s linear infinite; }
+}
+@keyframes r-spin { to { transform: rotate(360deg); } }
+
+/* ── Phase-6 round 2 (state-judge findings on the re-capture) ── */
+
+/* "Accent is the scarcest resource": three OPEN panel toggles painted full accent made the top
+   bar a row of orange. Active = a raised NEUTRAL surface (selection via surface+weight, Linear),
+   so the accent stays reserved for the CTA + agent brand. */
+.r-iconbtn[data-on="true"] { background: var(--bg-tertiary); color: var(--text-primary); border-color: var(--border-strong); }
+
+/* The composer focus ring used the faint accent-tint directly; use the visible --focus-ring halo. */
+.r-input-wrap:focus-within { border-color: var(--accent-border); box-shadow: var(--focus-ring); }
+
+/* The agent-held lock badge was a SOLID accent block competing with the inline-proposal accent
+   pill next to it. Lighten to a tint + keep the accent ink — reads "agent-held" without the slab.
+   (Full holder-presence-color plumbing remains the deeper fix — docs/qa open item.) */
+.r-cell.locked .lockbadge { background: var(--accent-tint); color: var(--accent-ink); border: 1px solid var(--accent-border); font-weight: 600; }
+
+/* Person-role metadata ('Public agent · idle', member roles) was text-tertiary (too faint). */
+.r-person .pr { color: var(--text-muted); }
+
+/* Research textarea placeholder = format INSTRUCTIONS, so it must be legible (muted, not tertiary). */
+.r-research-import textarea::placeholder { color: var(--text-muted); }
+/* The inline import error sat flush against the table header below — give it breathing room. */
+.r-research-import .r-wall-error { margin-bottom: 4px; }
+
+/* ── Phase-6 round 3 (re-judge: contrast tuning + overcorrections) ── */
+
+/* The inert NetSuite row's opacity:.75 COMPOUNDED with muted metadata text -> illegible. Drop the
+   opacity; the inert signal is the absent hover (above), and the title stays readable-but-quiet. */
+.r-file-static { opacity: 1; }
+.r-file-static .fn { color: var(--text-secondary); }
+
+/* Disabled send was text-tertiary on bg-hover — nearly invisible. Muted is visible-but-off. */
+.r-send:disabled { background: var(--bg-hover); color: var(--text-muted); cursor: default; filter: none; }
+
+/* Lock badge: round-2 over-corrected (too faint). Balanced — readable accent ink + thin border,
+   not a solid slab and not invisible. */
+.r-cell.locked .lockbadge { background: rgba(217,119,87,.18); color: var(--accent-ink); border: 1px solid var(--accent-border); font-weight: 700; }
+
+/* Message timestamps were text-tertiary (failed contrast on every bubble). */
+.r-msg .time { color: var(--text-muted); }
+
+/* Selected file row used an accent BORDER around the whole row — the data-grid selection grammar
+   is a background TINT + a left accent bar + weight, never a full colored border (Linear/shadcn:
+   "selected = bg tint, hierarchy via weight not a hue ring"). */
+.r-file[data-active="true"] { background: var(--accent-tint); border-color: transparent; box-shadow: inset 2px 0 0 var(--accent-primary); }
+.r-file[data-active="true"] .fn { font-weight: 700; }

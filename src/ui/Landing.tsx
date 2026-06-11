@@ -8,6 +8,8 @@ export function Landing({ onEnter }: { onEnter: (s: Session) => void }) {
   const code = engine.getRoom(demo.roomId)?.code ?? "";
   const [join, setJoin] = useState(code);
   const [name, setName] = useState("");
+  const [joinErr, setJoinErr] = useState<string | null>(null);
+  const tryJoin = () => { const s = joinRoomByCode(join, name || "Guest"); if (s) onEnter(s); else setJoinErr(`No room found for "${join.toUpperCase()}".`); };
 
   return (
     <div className="r-app">
@@ -19,23 +21,26 @@ export function Landing({ onEnter }: { onEnter: (s: Session) => void }) {
             Public chat, a private NodeAgent, and a shared spreadsheet / note / post-it wall — with a
             <b> lock → draft → smart-merge</b> model so a human and an agent never clobber each other.
           </p>
+          {/* Name field ABOVE the CTAs that consume it (form-layout: inputs precede their submit),
+              with a real label + example-data placeholder (placeholder-is-not-a-label). */}
+          <label className="r-field" style={{ maxWidth: 320 }}>
+            <span className="r-field-label">Display name</span>
+            <input className="r-text-input" placeholder="e.g. Priya" value={name} onChange={(e) => setName(e.target.value)} />
+          </label>
           <div className="r-cta-row">
             <button className="r-btn primary" onClick={() => onEnter({ roomId: demo.roomId, me: demo.me })}>
               Enter the Q3 diligence room →
             </button>
             <div className="r-join-inline">
-              <input placeholder="CODE" value={join} onChange={(e) => setJoin(e.target.value)} aria-label="Room code" />
+              <input placeholder="CODE" value={join} onChange={(e) => { setJoin(e.target.value); setJoinErr(null); }}
+                onKeyDown={(e) => { if (e.key === "Enter") tryJoin(); }} aria-label="Room code" />
               {/* One filled primary per view (the hero CTA above) — Join is the bordered
                   secondary so the input stays the focus of this group. */}
-              <button className="r-btn"
-                onClick={() => { const s = joinRoomByCode(join, name || "Guest"); if (s) onEnter(s); else alert("Room not found for that code."); }}>
-                Join
-              </button>
+              <button className="r-btn" onClick={tryJoin}>Join</button>
             </div>
             <button className="r-btn ghost" onClick={() => onEnter(createFreshRoom("My room", name || "Host"))}>Create a room</button>
           </div>
-          <input className="r-text-input" placeholder="Your display name (for join / create)" value={name} onChange={(e) => setName(e.target.value)}
-            style={{ marginTop: 18, maxWidth: 320, padding: "9px 12px", borderRadius: 10, border: "1px solid var(--line-strong)", background: "var(--bg-secondary)", color: "var(--text-primary)" }} />
+          {joinErr && <div className="r-join-error" role="alert">{joinErr}</div>}
 
           <div className="r-feature-grid">
             <div className="r-feature"><div className="fi"><Table2 size={16} /></div><h3>Shared artifacts</h3><p>A spreadsheet, note, and post-it wall every member and agent edits live.</p></div>

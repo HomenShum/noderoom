@@ -1,0 +1,205 @@
+{
+  "generatedNote": "regenerate with `npm run qa:states`",
+  "captures": [
+    {
+      "surface": "landing",
+      "state": "default",
+      "theme": "dark",
+      "width": 1860,
+      "file": "landing/default--dark--1860.png",
+      "mustBeTrue": "Single filled primary CTA (Enter the room); Join is a bordered secondary, not a second filled button. Name field present."
+    },
+    {
+      "surface": "landing",
+      "state": "join-focus",
+      "theme": "dark",
+      "width": 1860,
+      "file": "landing/join-focus--dark--1860.png",
+      "mustBeTrue": "The code input shows a visible focus ring; the Join button stays the quieter secondary."
+    },
+    {
+      "surface": "landing",
+      "state": "default",
+      "theme": "light",
+      "width": 1860,
+      "file": "landing/default--light--1860.png",
+      "mustBeTrue": "Same hierarchy holds in light theme; the primary CTA is the only filled button."
+    },
+    {
+      "surface": "topbar",
+      "state": "default",
+      "theme": "dark",
+      "width": 1860,
+      "file": "topbar/default--dark--1860.png",
+      "mustBeTrue": "Room-code chip, auto-allow switch, avatars, panel toggles, theme, help, leave — all consistent height; one accent at most."
+    },
+    {
+      "surface": "topbar",
+      "state": "roomcode-rest",
+      "theme": "dark",
+      "width": 1860,
+      "file": "topbar/roomcode-rest--dark--1860.png",
+      "mustBeTrue": "The room-code chip at rest: a real button (bordered chip) with a copy glyph."
+    },
+    {
+      "surface": "topbar",
+      "state": "roomcode-hover",
+      "theme": "dark",
+      "width": 1860,
+      "file": "topbar/roomcode-hover--dark--1860.png",
+      "mustBeTrue": "On hover the chip background lightens and the border strengthens (two-cue hover) — it looks clickable because it IS a button."
+    },
+    {
+      "surface": "topbar",
+      "state": "roomcode-copied",
+      "theme": "dark",
+      "width": 1860,
+      "file": "topbar/roomcode-copied--dark--1860.png",
+      "mustBeTrue": "After click a check-mark replaces the copy glyph — copy feedback confirming the code was copied."
+    },
+    {
+      "surface": "topbar",
+      "state": "autoallow-on",
+      "theme": "dark",
+      "width": 1860,
+      "file": "topbar/autoallow-on--dark--1860.png",
+      "mustBeTrue": "Auto-allow ON: accent track, knob to the RIGHT."
+    },
+    {
+      "surface": "topbar",
+      "state": "autoallow-off",
+      "theme": "dark",
+      "width": 1860,
+      "file": "topbar/autoallow-off--dark--1860.png",
+      "mustBeTrue": "Auto-allow OFF: neutral track, knob to the LEFT — clearly distinct from ON."
+    },
+    {
+      "surface": "topbar",
+      "state": "default",
+      "theme": "light",
+      "width": 1860,
+      "file": "topbar/default--light--1860.png",
+      "mustBeTrue": "Top bar holds contrast in light theme; the theme-toggle icon reflects the light state; no invisible icons."
+    },
+    {
+      "surface": "leftrail",
+      "state": "default",
+      "theme": "dark",
+      "width": 1860,
+      "file": "leftrail/default--dark--1860.png",
+      "mustBeTrue": "File rows (the OPEN artifact carries a persistent selected background — selection, not hover); the upload button; the inert 'NetSuite export' source row is muted and must NOT look like the clickable artifact rows."
+    },
+    {
+      "surface": "leftrail",
+      "state": "file-hover",
+      "theme": "dark",
+      "width": 1860,
+      "file": "leftrail/file-hover--dark--1860.png",
+      "mustBeTrue": "A non-selected file row (Agent wiki) shows a hover-fill — distinct from both the default rows and the accent-tinted SELECTED row (Q3 variance)."
+    },
+    {
+      "surface": "leftrail",
+      "state": "static-hover",
+      "theme": "dark",
+      "width": 1860,
+      "file": "leftrail/static-hover--dark--1860.png",
+      "mustBeTrue": "The inert NetSuite row does NOT highlight on hover — it stays muted. (The 'Agent wiki' row carries a persistent SELECTED background because it is the open artifact — that is selection, not hover.)"
+    },
+    {
+      "surface": "chat",
+      "state": "composer-empty",
+      "theme": "dark",
+      "width": 1860,
+      "file": "chat/composer-empty--dark--1860.png",
+      "mustBeTrue": "Empty composer with placeholder + send affordance; the send control state reflects empty input."
+    },
+    {
+      "surface": "chat",
+      "state": "composer-typed",
+      "theme": "dark",
+      "width": 1860,
+      "file": "chat/composer-typed--dark--1860.png",
+      "mustBeTrue": "A typed slash-command; the send button now looks actionable."
+    },
+    {
+      "surface": "chat",
+      "state": "composer-focus",
+      "theme": "dark",
+      "width": 1860,
+      "file": "chat/composer-focus--dark--1860.png",
+      "mustBeTrue": "Focused EMPTY composer shows a visible focus ring (distinct from the typed state) AND a muted/disabled send button reflecting the empty input."
+    },
+    {
+      "surface": "chat",
+      "state": "message-hover",
+      "theme": "dark",
+      "width": 1860,
+      "file": "chat/message-hover--dark--1860.png",
+      "mustBeTrue": "Hovering YOUR OWN message reveals its action controls (copy/edit/promote) at a legible size."
+    },
+    {
+      "surface": "sheet",
+      "state": "empty-cells",
+      "theme": "dark",
+      "width": 1860,
+      "file": "sheet/empty-cells--dark--1860.png",
+      "mustBeTrue": "Empty variance cells show a '+ add' affordance (not 'null'); existing values use neutral/sign-aware color, not all-green."
+    },
+    {
+      "surface": "sheet",
+      "state": "cell-editing",
+      "theme": "dark",
+      "width": 1860,
+      "file": "sheet/cell-editing--dark--1860.png",
+      "mustBeTrue": "An editing cell shows a clearly-bordered input; a negative value previews in the danger color (sign-aware)."
+    },
+    {
+      "surface": "sheet",
+      "state": "proposal-pending",
+      "theme": "dark",
+      "width": 1860,
+      "file": "sheet/proposal-pending--dark--1860.png",
+      "mustBeTrue": "Agent edits arrive as inline proposals: the suggested VALUE carries the accent; the ✓ accept / ✗ reject controls are neutral ghosts of equal weight (no ban-circle, no solid-accent button)."
+    },
+    {
+      "surface": "sheet",
+      "state": "proposal-accept-hover",
+      "theme": "dark",
+      "width": 1860,
+      "file": "sheet/proposal-accept-hover--dark--1860.png",
+      "mustBeTrue": "Hovering ✓ accept tints green (semantic confirm), not the brand accent."
+    },
+    {
+      "surface": "sheet",
+      "state": "proposal-reject-hover",
+      "theme": "dark",
+      "width": 1860,
+      "file": "sheet/proposal-reject-hover--dark--1860.png",
+      "mustBeTrue": "Hovering ✗ reject tints soft-red (semantic decline); the glyph is an X, never a ban-circle."
+    },
+    {
+      "surface": "research",
+      "state": "default",
+      "theme": "dark",
+      "width": 1860,
+      "file": "research/default--dark--1860.png",
+      "mustBeTrue": "Research grid with pending rows; the 'Enrich N pending' and 'Import accounts' buttons are normally-sized, not slabs."
+    },
+    {
+      "surface": "research",
+      "state": "import-open",
+      "theme": "dark",
+      "width": 1860,
+      "file": "research/import-open--dark--1860.png",
+      "mustBeTrue": "The import form: the 'Import / update rows' button sits bottom-right beside the textarea at NORMAL height — it does NOT stretch to a giant orange block matching the 3-row textarea."
+    },
+    {
+      "surface": "research",
+      "state": "import-empty-error",
+      "theme": "dark",
+      "width": 1860,
+      "file": "research/import-empty-error--dark--1860.png",
+      "mustBeTrue": "Submitting an empty paste shows an inline explanation full-width below the field (no silent dead button, no layout shift of the submit)."
+    }
+  ]
+}

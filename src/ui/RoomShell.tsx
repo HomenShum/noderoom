@@ -179,8 +179,13 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
         <div className="r-brand">NodeRoom <span>· {room.title}</span></div>
         {/* The code chip LOOKS like a button, so it must be one — sharing the code is the core
             multiplayer flow (Meet/Figma mental model: click the code -> copy invite). */}
-        <button className="r-roomcode" type="button" title="Copy room code" aria-label={`Copy room code ${room.code}`}
-          onClick={() => { void navigator.clipboard?.writeText(room.code).then(() => { setCodeCopied(true); setTimeout(() => setCodeCopied(false), 1200); }); }}>
+        <button className="r-roomcode" type="button" title="Copy room code" aria-label={codeCopied ? "Room code copied" : `Copy room code ${room.code}`} aria-live="polite"
+          onClick={() => {
+            // Robust copy feedback: confirm regardless of whether the async clipboard write
+            // resolves (it is unavailable in some contexts) so the user always sees acknowledgement.
+            try { void navigator.clipboard?.writeText(room.code); } catch { /* clipboard unavailable */ }
+            setCodeCopied(true); setTimeout(() => setCodeCopied(false), 1200);
+          }}>
           <Link2 size={12} /> code <b>{room.code}</b> {codeCopied ? <Check size={11} /> : <Copy size={11} />}
         </button>
         {store.mode === "convex" && <span className="r-tag" style={{ background: "rgba(31,138,91,.16)", color: "#2E9E6B" }}>● live convex</span>}
@@ -193,7 +198,9 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
         </div>
         <div className="r-pill-auto">
           Auto-allow
-          <button className="r-switch" data-on={String(room.autoAllow)} disabled={!isHost} title={isHost ? "Auto-approve agent edits" : "Only the host can change auto-allow"} onClick={toggleAutoAccept} />
+          {/* The highest-blast-radius control (gates whether agent edits apply without review):
+              a real ARIA switch, not a bare button, so assistive tech reads its on/off state. */}
+          <button className="r-switch" role="switch" aria-checked={room.autoAllow} aria-label="Auto-allow agent edits without host review" data-on={String(room.autoAllow)} disabled={!isHost} title={isHost ? "Auto-approve agent edits" : "Only the host can change auto-allow"} onClick={toggleAutoAccept} />
         </div>
         <div className="r-avatars">
           {members.slice(0, 4).map((m) => (<span key={m.id} className="r-av" style={{ background: m.color }}>{initials(m.name)}<span className="pulse" /></span>))}
@@ -254,7 +261,7 @@ function clamp(n: number, min: number, max: number) {
 function ThemeToggle() {
   const [dark, setDark] = useState(() => (document.documentElement.dataset.theme ?? "dark") === "dark");
   return (
-    <button className="r-iconbtn" title="Toggle light / dark" onClick={() => { const n = dark ? "light" : "dark"; document.documentElement.dataset.theme = n; setDark(!dark); }}>
+    <button className="r-iconbtn" title="Toggle light / dark" aria-label={dark ? "Switch to light theme" : "Switch to dark theme"} aria-pressed={dark} onClick={() => { const n = dark ? "light" : "dark"; document.documentElement.dataset.theme = n; setDark(!dark); }}>
       {dark ? <Moon size={16} /> : <Sun size={16} />}
     </button>
   );

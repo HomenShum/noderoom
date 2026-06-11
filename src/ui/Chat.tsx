@@ -238,7 +238,9 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
         <span className={"r-tag " + (isPrivate ? "private" : "public")}>{isPrivate ? <><Lock size={10} /> Private</> : <><Globe size={10} /> Everyone</>}</span>
         <span className="grow" />
         {!isPrivate && <span className="r-tag agent" style={{ gap: 6 }}><span className="r-avatar agent sm" style={{ background: "#d97757", width: 18, height: 18, fontSize: 9 }}>N</span>Room NodeAgent</span>}
-        {longJob && <span className="r-tag" title="Latest long-running free-auto job"><Timer size={10} /> {longJob.status} {longJob.attempts}/{longJob.maxAttempts}</span>}
+        {longJob && (() => { const bad = ["failed", "blocked"].includes(longJob.status); return (
+          <span className={"r-tag" + (bad ? " danger" : "")} role={bad ? "status" : undefined} title="Latest long-running free-auto job"><Timer size={10} /> {longJob.status} {longJob.attempts}/{longJob.maxAttempts}</span>
+        ); })()}
         {canCancelLongJob && (
           <button className="r-iconbtn r-iconbtn-sm" title={jobBusy === "cancel" ? "Cancelling…" : "Cancel long-running job"} aria-label="Cancel long-running job" data-testid="job-cancel" disabled={jobBusy !== null} onClick={cancelJob}>
             <X size={13} />
@@ -365,7 +367,9 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
             placeholder={isPrivate ? (roomLane ? "Tell your agent to act in the room…" : "Ask privately…") : "Message the room... type / for commands"}
             data-testid="chat-composer"
             aria-label={isPrivate ? "Ask privately" : "Message the room"} />
-          <button className="r-send" onClick={() => send()} data-testid="chat-send" aria-label="Send message"><Send size={15} /></button>
+          {/* The send button reflects the composer state — muted + disabled on empty input,
+              not a live accent button that does nothing (state-honesty). */}
+          <button className="r-send" onClick={() => send()} disabled={!text.trim()} data-testid="chat-send" aria-label="Send message"><Send size={15} /></button>
         </div>
         {!isPrivate && !slashOpen && (
           <div className="r-composer-hint">

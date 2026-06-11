@@ -98,7 +98,12 @@ export function GuidedTour({ steps, open, onClose, storageKey }: { steps: TourSt
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => {
+      // Don't hijack Enter/Arrows while the user is typing in a field (composer, join code, cell
+      // edit) — only Escape stays global. Otherwise the tour eats every keystroke.
+      const t = e.target as HTMLElement | null;
+      const typing = t && (t.tagName === "INPUT" || t.tagName === "TEXTAREA" || t.isContentEditable);
       if (e.key === "Escape") { e.preventDefault(); finish(); }
+      else if (typing) return;
       else if (e.key === "ArrowRight" || e.key === "Enter") { e.preventDefault(); next(); }
       else if (e.key === "ArrowLeft") { e.preventDefault(); prev(); }
     };

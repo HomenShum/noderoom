@@ -58,7 +58,7 @@
     "eval:professional:catalog-proofs": "tsx evals/professionalCatalogProofs.ts --require-full",
     "eval:professional:live-catalog": "tsx evals/professionalLiveCatalog.ts --record",
     "eval:professional:proofs": "tsx evals/professionalProofLedger.ts",
-    "eval:chat-intake:live": "tsx evals/chatIntakeRuntime.ts --real deepseek/deepseek-v4-flash --record",
+    "eval:chat-intake:live": "tsx evals/chatIntakeRuntime.ts --real deepseek/deepseek-v4-flash --managed-locks --record",
     "eval:managed-lock": "tsx evals/managedLockPerf.ts --strict",
     "eval:multiuser-coordination": "tsx evals/multiUserCoordinationProof.ts --strict",
     "eval:finance-model": "tsx scripts/finance-model-eval.ts",
@@ -71,7 +71,9 @@
     "proofs:staleness": "tsx scripts/proof-staleness-check.ts",
     "eval:chat-intake": "tsx evals/chatIntakeRuntime.ts",
     "qa:gif": "tsx scripts/judge-demo-gif.ts",
-    "previews:render": "tsx scripts/render-workflow-preview.ts"
+    "previews:render": "tsx scripts/render-workflow-preview.ts",
+    "qa:states": "playwright test e2e/state-captures.spec.ts",
+    "qa:judge-states": "tsx scripts/judge-state-captures.ts"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^2.0.80",

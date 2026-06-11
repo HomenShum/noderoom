@@ -1,6 +1,6 @@
 /** Left rail (`.r-panel.left`): Room header · Files (subtitles) · People (roles + live dots). lucide icons. */
 import { useRef, useState, type CSSProperties, type DragEvent } from "react";
-import { FolderOpen, Table2, FileText, StickyNote, Database, BookOpen, Upload, type LucideIcon } from "lucide-react";
+import { FolderOpen, Table2, FileText, StickyNote, Database, BookOpen, Upload, Loader2, type LucideIcon } from "lucide-react";
 import { useStore, type UploadedArtifactInput } from "../app/store";
 import type { Actor } from "../engine/types";
 import { ARTIFACT_REF_MIME, encodeArtifactRef } from "./artifactRefs";
@@ -74,11 +74,18 @@ export function LeftRail({ roomId, me, artId, onPick, style }: { roomId: string;
             );
           })}
           <input ref={inputRef} className="r-file-input" type="file" multiple onChange={(e) => void onUpload(e.currentTarget.files)} />
-          <button className="r-file r-upload" disabled={uploading} onClick={() => inputRef.current?.click()}>
-            <span className="fi"><Upload size={14} /></span>
+          {/* Busy = an inline spinner + aria-busy (not text-only) per the skeleton-vs-spinner rule. */}
+          <button className="r-file r-upload" disabled={uploading} aria-busy={uploading} onClick={() => inputRef.current?.click()}>
+            <span className="fi">{uploading ? <Loader2 size={14} className="r-spin" /> : <Upload size={14} />}</span>
             <span style={{ minWidth: 0 }}><div className="fn">{uploading ? "Uploading..." : "Upload file"}</div><div className="fm">CSV, XLSX, text, image, PDF</div></span>
           </button>
-          {uploadError && <div className="r-upload-error">{uploadError}</div>}
+          {/* Error gains a recovery path (Retry) — the empty-states error convention. */}
+          {uploadError && (
+            <div className="r-upload-error" role="alert">
+              <span className="r-upload-error-msg">{uploadError}</span>
+              <button className="r-upload-retry" onClick={() => { setUploadError(null); inputRef.current?.click(); }}>Retry</button>
+            </div>
+          )}
           {/* Inert reference row — r-file-static strips the clickable hover affordance it was
               borrowing from the real artifact buttons above (looks-clickable-must-act rule). */}
           <div className="r-file r-file-static">
@@ -100,6 +107,8 @@ export function LeftRail({ roomId, me, artId, onPick, style }: { roomId: string;
             <div key={s.id} className="r-person">
               <span className="r-avatar agent sm" style={{ background: "#d97757" }}>◆</span>
               <span className="grow"><div className="pn">{s.agentName}</div><div className="pr">Public agent · {s.status}</div></span>
+              {/* The agent is a live participant too — same presence dot as human members. */}
+              <span className="r-dot-live" />
             </div>
           ))}
         </div>

@@ -52,6 +52,7 @@ const agentStepsRecordRef = makeFunctionReference<"mutation">("agentSteps:record
 const roomSpendSinceRef = makeFunctionReference<"query">("agentRuns:roomSpendSince") as any;
 const globalSpendSinceRef = makeFunctionReference<"query">("agentRuns:globalSpendSince") as any;
 const postPrivateReplyRef = makeFunctionReference<"mutation">("messages:postPrivateAgentReply") as any;
+const messagesSendAgentRef = makeFunctionReference<"mutation">("messages:sendAgent") as any;
 const ensurePersonalPublicSessionRef = makeFunctionReference<"mutation">("collab:ensurePersonalPublicSession") as any;
 
 function envNumber(name: string, fallback: number, min: number, max: number): number {
@@ -354,6 +355,22 @@ export const runRoomAgent = action({
       jobId, runId, roomId: a.roomId, agentId: actor.id,
       steps: result.trace.map(traceStep),
     });
+    // Persistent-visibility guarantee: a run that never say()'d would otherwise end with ZERO
+    // visible text in the room — finalText only lands on the agentJobs row, which the chat feed
+    // does not render. Post it as a normal agent message, idempotent on runId so a client retry
+    // cannot double-post. (Memory mode already does this client-side; this is live-mode parity.)
+    const saidSomething = result.trace.some((t) =>
+      t.tool === "say" && !(t.result && typeof t.result === "object" && "error" in (t.result as Record<string, unknown>)));
+    if (!saidSomething && result.finalText.trim()) {
+      await ctx.runMutation(messagesSendAgentRef, {
+        roomId: a.roomId,
+        channel: actor.scope === "private" && actor.ownerId ? actor.ownerId : "public",
+        author: actor,
+        text: result.finalText.slice(0, 4_000),
+        clientMsgId: `final-${String(runId)}`,
+        kind: "agent",
+      });
+    }
     return {
       finalText: result.finalText,
       jobId,
@@ -367,7 +384,13 @@ export const runRoomAgent = action({
 });
 
 /** Summarize the room (artifacts + sheet state) as bounded, read-only context for a private consult. */
-function summarizeRoomForPrivate(roomState: {
+/** Shared between runPrivateAgent (blocking fallback) and the streaming httpAction
+ *  (convex/http.ts) so the two private-reply paths can never drift apart in tone or rules. */
+export function privateAgentSystemPrompt(requesterName: string): string {
+  return `You are ${requesterName}'s PRIVATE NodeAgent inside a live collaborative room (a shared spreadsheet, notes, and chat). You may READ the room as context, but your reply is PRIVATE to ${requesterName} until they choose to promote it to the public chat. Be concise (2-4 sentences), concrete, and grounded in the room context. You only advise — never claim to have edited shared data.`;
+}
+
+export function summarizeRoomForPrivate(roomState: {
   room: { title: string };
   members: unknown[];
   artifacts: Array<{ kind: string; title: string; version: number; order: string[]; elements: Record<string, { value?: unknown }> }>;
@@ -404,7 +427,7 @@ export const runPrivateAgent = action({
     const requester = roomState.members.find((m: { id: unknown }) => String(m.id) === a.requester.actor.id) as { id: unknown; name: string } | undefined;
     if (!requester) throw new Error("member_required");
     const model = agentModel(process.env.AGENT_MODEL ?? "gemini-3.5-flash");
-    const system = `You are ${requester.name}'s PRIVATE NodeAgent inside a live collaborative room (a shared spreadsheet, notes, and chat). You may READ the room as context, but your reply is PRIVATE to ${requester.name} until they choose to promote it to the public chat. Be concise (2-4 sentences), concrete, and grounded in the room context. You only advise — never claim to have edited shared data.`;
+    const system = privateAgentSystemPrompt(requester.name);
     const userMsg = `ROOM CONTEXT\n${summarizeRoomForPrivate(roomState)}\n\n${requester.name} asks: ${a.goal}`;
     let answer = "";
     try {

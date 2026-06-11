@@ -168,9 +168,27 @@ export default defineSchema({
     clientMsgId: v.string(),
     kind: v.union(v.literal("chat"), v.literal("agent"), v.literal("system")),
     createdAt: v.number(),
+    /** persistent-text-streaming stream id: while set and text is empty, the body lives in the
+     *  streaming component (token-level for the driving tab, sentence-flushed for viewers); on
+     *  completion text is patched in so history/refs/export never depend on the component. */
+    streamId: v.optional(v.string()),
   })
     .index("by_room_channel", ["roomId", "channel", "createdAt"])
     .index("by_clientMsgId", ["roomId", "clientMsgId"]),
+
+  /** Server-side metadata for a private NodeAgent reply stream. The prompt + room context are
+   *  captured AT CREATE TIME inside the authenticated mutation, so the public streaming
+   *  httpAction needs nothing but the unguessable streamId. Never returned to clients. */
+  privateReplyStreams: defineTable({
+    roomId: v.id("rooms"),
+    ownerId: v.string(),
+    requesterName: v.string(),
+    goal: v.string(),
+    roomContext: v.string(),
+    clientMsgId: v.string(),
+    streamId: v.string(),
+    createdAt: v.number(),
+  }).index("by_stream", ["streamId"]),
 
   traces: defineTable({
     roomId: v.id("rooms"),

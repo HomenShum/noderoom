@@ -148,6 +148,23 @@ export const HAS_CONVEX =
   !!import.meta.env.VITE_CONVEX_URL &&
   !(typeof window !== "undefined" && new URLSearchParams(window.location.search).get("mode") === "memory");
 
+/** convex.site deployment URL (NOT .convex.cloud) — the persistent-text-streaming httpAction host. */
+export const CONVEX_SITE_URL = (import.meta.env.VITE_CONVEX_SITE_URL as string | undefined) ?? "";
+/** Kick off generation for a private-reply stream. The APP owns this one-shot POST (fire-and-
+ *  forget, no AbortController tied to any component lifecycle) and every client — including this
+ *  tab — renders the DB-synced sentence chunks via streaming.getStreamBody. Verified the hard
+ *  way: letting the React hook drive ties the fetch to effect cleanup, and one effect cycle
+ *  aborts the request while the hook's remount guard refuses to re-drive — a stream nobody
+ *  drives sits "pending" until the component times it out. The component 205s any duplicate
+ *  drive attempt, so this POST is safe to fire exactly once per created stream. */
+function drivePrivateReplyStream(streamId: string): void {
+  void fetch(`${CONVEX_SITE_URL}/stream-private-reply`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ streamId }),
+  }).catch(() => { /* viewer path still renders from the DB; the cleanup janitor times out orphans */ });
+}
+
 function researchRowIds(art: Artifact): string[] {
   const ids: string[] = [];
   for (const eid of art.order) { const rid = eid.split("__")[0]; if (!ids.includes(rid)) ids.push(rid); }
@@ -595,6 +612,7 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
   });
   const runAgent = useAction(api.agent.runRoomAgent);
   const runPrivateAgent = useAction(api.agent.runPrivateAgent);
+  const createPrivateReplyStream = useMutation(api.streaming.createPrivateReplyStream);
   const startFreeAutoJob = useMutation(api.agentJobs.startFreeAuto);
   // Job-strip controls flip instantly. Mirrors the server's transition + ITS guards (cancel: no-op
   // on terminal; retry: no-op on completed/running) so an ok:false result reconciles honestly via
@@ -624,7 +642,7 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
     const sessions = (data?.sessions ?? []) as unknown as AgentSession[];
     const drafts = (data?.drafts ?? []) as unknown as Draft[];
     const isHost = members.some((m) => m.id === me.id && m.role === "host");
-    const reshapeMsgs = (rows: typeof pub): Message[] => rows.map((m: { _id: string; roomId: string; channel: string; author: Actor; text: string; clientMsgId: string; kind: Message["kind"]; createdAt: number }) => ({ id: m._id as string, roomId: m.roomId as string, channel: m.channel === "public" ? "public" : { private: m.channel }, author: m.author as Actor, text: m.text, clientMsgId: m.clientMsgId, kind: m.kind, createdAt: m.createdAt }));
+    const reshapeMsgs = (rows: typeof pub): Message[] => rows.map((m: { _id: string; roomId: string; channel: string; author: Actor; text: string; clientMsgId: string; kind: Message["kind"]; createdAt: number; streamId?: string }) => ({ id: m._id as string, roomId: m.roomId as string, channel: m.channel === "public" ? "public" : { private: m.channel }, author: m.author as Actor, text: m.text, clientMsgId: m.clientMsgId, kind: m.kind, createdAt: m.createdAt, streamId: m.streamId }));
     const allTraces = (traces as { _id: string; roomId: string; ts: number; actor: Actor; type: string; summary: string; detail?: string }[]).map((t) => ({ id: t._id, roomId: t.roomId, ts: t.ts, actor: t.actor, type: t.type as TraceEvent["type"], summary: t.summary, detail: t.detail }));
 
     return {
@@ -718,6 +736,15 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
             await runAgent({ roomId: rid, artifactId: target.id as never, requester: proof, mode: target.title === "Company research" ? "research" : undefined, goal, asOwner: { id: me.id, name: me.name } });
             return;
           }
+        }
+        if (CONVEX_SITE_URL) {
+          // Persistent-text-streaming path: the placeholder message arrives via the reactive
+          // subscription; Chat's StreamedBody (driven=true only in this tab) POSTs the
+          // httpAction and renders tokens as they generate, while the component persists
+          // sentence-flushed chunks for every other tab/refresh.
+          const { streamId } = await createPrivateReplyStream({ roomId: rid, requester: proof, goal });
+          drivePrivateReplyStream(streamId);
+          return;
         }
         await runPrivateAgent({ roomId: rid, requester: proof, goal });
       },

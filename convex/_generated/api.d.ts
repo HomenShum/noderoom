@@ -23,6 +23,7 @@ import type * as crons from "../crons.js";
 import type * as drafts from "../drafts.js";
 import type * as embeddingRunner from "../embeddingRunner.js";
 import type * as embeddings from "../embeddings.js";
+import type * as http from "../http.js";
 import type * as lib from "../lib.js";
 import type * as locks from "../locks.js";
 import type * as messages from "../messages.js";
@@ -31,6 +32,8 @@ import type * as retention from "../retention.js";
 import type * as rooms from "../rooms.js";
 import type * as seed from "../seed.js";
 import type * as spreadsheetIndexLib from "../spreadsheetIndexLib.js";
+import type * as streaming from "../streaming.js";
+import type * as streamingModel from "../streamingModel.js";
 
 import type {
   ApiFromModules,
@@ -54,6 +57,7 @@ declare const fullApi: ApiFromModules<{
   drafts: typeof drafts;
   embeddingRunner: typeof embeddingRunner;
   embeddings: typeof embeddings;
+  http: typeof http;
   lib: typeof lib;
   locks: typeof locks;
   messages: typeof messages;
@@ -62,6 +66,8 @@ declare const fullApi: ApiFromModules<{
   rooms: typeof rooms;
   seed: typeof seed;
   spreadsheetIndexLib: typeof spreadsheetIndexLib;
+  streaming: typeof streaming;
+  streamingModel: typeof streamingModel;
 }>;
 
 /**
@@ -93,4 +99,5 @@ export declare const internal: FilterApi<
 export declare const components: {
   workflow: import("@convex-dev/workflow/_generated/component.js").ComponentApi<"workflow">;
   agentWorkpool: import("@convex-dev/workpool/_generated/component.js").ComponentApi<"agentWorkpool">;
+  persistentTextStreaming: import("@convex-dev/persistent-text-streaming/_generated/component.js").ComponentApi<"persistentTextStreaming">;
 };

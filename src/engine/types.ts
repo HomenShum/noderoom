@@ -377,6 +377,9 @@ export interface Message {
   kind: "chat" | "agent" | "system";
   toolParts?: ToolPart[];
   createdAt: number;
+  /** persistent-text-streaming id (live mode): body streams from the component while text is
+   *  empty; text is patched in at completion so history never depends on the component. */
+  streamId?: string;
 }
 
 /* ───────────────────────── proposals (auto-allow off) ───────────────────────── */

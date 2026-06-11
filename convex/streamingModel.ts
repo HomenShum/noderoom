@@ -1,0 +1,123 @@
+/**
+ * Provider token streaming for the private NodeAgent reply — the generation half of the
+ * persistent-text-streaming integration (convex/streaming.ts owns persistence, convex/http.ts
+ * owns the route). True SSE for Gemini and every OpenAI-compatible endpoint (OpenRouter hosts
+ * the rest of the supported catalog); the same PII firewall as convexModel runs before the
+ * prompt leaves. No tools here on purpose: the private agent is a read-only consult, so this is
+ * a single streamed completion — the exact shape the component is built for.
+ */
+import { redactPII } from "../src/agent/gateway";
+
+export type StreamAppend = (text: string) => Promise<void>;
+
+const MAX_OUTPUT_TOKENS = 1024;
+
+function requireEnv(name: string): string {
+  const value = process.env[name];
+  if (!value) throw new Error(`missing env ${name}`);
+  return value;
+}
+
+/** Stream the reply token-by-token into `append`; resolves with the full accumulated text. */
+export async function streamPrivateReplyText(
+  modelId: string,
+  system: string,
+  userMsg: string,
+  append: StreamAppend,
+): Promise<string> {
+  const safeSystem = redactPII(system).text;
+  const safeUser = redactPII(userMsg).text;
+  if (modelId.startsWith("gemini")) return geminiStream(modelId, safeSystem, safeUser, append);
+  if (/^(gpt|o\d)/.test(modelId)) {
+    return openAiCompatibleStream(
+      "https://api.openai.com/v1/chat/completions",
+      requireEnv("OPENAI_API_KEY"), {}, modelId, safeSystem, safeUser, append,
+    );
+  }
+  // vendor/model ids (deepseek/…, anthropic/…, z-ai/…) ride OpenRouter's OpenAI-compatible SSE.
+  return openAiCompatibleStream(
+    "https://openrouter.ai/api/v1/chat/completions",
+    requireEnv("OPENROUTER_API_KEY"),
+    { "HTTP-Referer": "https://noderoom.live", "X-Title": "NodeRoom" },
+    modelId, safeSystem, safeUser, append,
+  );
+}
+
+/** Minimal SSE line reader: handles cross-chunk line splits; awaits the handler so chunk order
+ *  (and therefore the component's persisted order) is preserved. */
+async function readSse(res: Response, onData: (data: string) => Promise<void>): Promise<void> {
+  if (!res.ok || !res.body) {
+    const detail = await res.text().catch(() => "");
+    throw new Error(`stream HTTP ${res.status}: ${detail.slice(0, 200)}`);
+  }
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let buf = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    buf += decoder.decode(value, { stream: true });
+    let nl: number;
+    while ((nl = buf.indexOf("\n")) !== -1) {
+      const line = buf.slice(0, nl).trim();
+      buf = buf.slice(nl + 1);
+      if (!line.startsWith("data:")) continue;
+      const data = line.slice(5).trim();
+      if (!data || data === "[DONE]") continue;
+      await onData(data);
+    }
+  }
+}
+
+async function geminiStream(modelId: string, system: string, userMsg: string, append: StreamAppend): Promise<string> {
+  const key = requireEnv("GOOGLE_GENERATIVE_AI_API_KEY");
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(modelId)}:streamGenerateContent?alt=sse&key=${encodeURIComponent(key)}`;
+  const res = await fetch(url, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      systemInstruction: { parts: [{ text: system }] },
+      contents: [{ role: "user", parts: [{ text: userMsg }] }],
+      generationConfig: { maxOutputTokens: MAX_OUTPUT_TOKENS },
+    }),
+  });
+  let full = "";
+  await readSse(res, async (data) => {
+    try {
+      const parsed = JSON.parse(data) as { candidates?: Array<{ content?: { parts?: Array<{ text?: string }> } }> };
+      const delta = (parsed.candidates?.[0]?.content?.parts ?? []).map((p) => p.text ?? "").join("");
+      if (delta) { full += delta; await append(delta); }
+    } catch { /* non-JSON keepalive line — skip */ }
+  });
+  return full;
+}
+
+async function openAiCompatibleStream(
+  endpoint: string,
+  apiKey: string,
+  extraHeaders: Record<string, string>,
+  modelId: string,
+  system: string,
+  userMsg: string,
+  append: StreamAppend,
+): Promise<string> {
+  const res = await fetch(endpoint, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Authorization: `Bearer ${apiKey}`, ...extraHeaders },
+    body: JSON.stringify({
+      model: modelId,
+      stream: true,
+      max_tokens: MAX_OUTPUT_TOKENS,
+      messages: [{ role: "system", content: system }, { role: "user", content: userMsg }],
+    }),
+  });
+  let full = "";
+  await readSse(res, async (data) => {
+    try {
+      const parsed = JSON.parse(data) as { choices?: Array<{ delta?: { content?: string } }> };
+      const delta = parsed.choices?.[0]?.delta?.content ?? "";
+      if (delta) { full += delta; await append(delta); }
+    } catch { /* keepalive/comment line — skip */ }
+  });
+  return full;
+}

@@ -1,7 +1,10 @@
 /** Public room chat (`.r-panel.center`) and private agent (`.r-panel.right`). Reads via useStore(). */
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ChangeEvent, type DragEvent, type KeyboardEvent } from "react";
 import { Lock, MessageCircle, Globe, Send, Sparkles, Copy, Check, ArrowUpRight, Pencil, Paperclip, X, Timer, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
-import { useStore, type RoomStore } from "../app/store";
+import { useStore, CONVEX_SITE_URL, type RoomStore } from "../app/store";
+import { useStream } from "@convex-dev/persistent-text-streaming/react";
+import type { StreamId } from "@convex-dev/persistent-text-streaming";
+import { api } from "../../convex/_generated/api";
 import type { Actor, Channel, Message } from "../engine/types";
 import {
   encodeArtifactRefLine,
@@ -24,6 +27,26 @@ function initials(name: string): string {
   return name.replace(/[^A-Za-z ]/g, "").split(/[ ]/).filter(Boolean).map((s) => s[0]).slice(0, 2).join("").toUpperCase() || "?";
 }
 const clock = (ts: number) => { const d = new Date(ts); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
+
+/** Live body of a persistent-text-streaming message. The STORE drives generation with its own
+ *  one-shot POST (see drivePrivateReplyStream — a hook-driven fetch dies to effect-cleanup
+ *  aborts); every tab, including the asking one, renders the DB-synced sentence chunks here
+ *  (driven=false → pure persistence viewer, refresh- and multi-tab-safe by construction). Once
+ *  the run completes the row's text is patched in server-side and Bubble stops rendering this
+ *  component entirely. */
+function StreamedBody({ streamId }: { streamId: string }) {
+  const streamUrl = useMemo(() => new URL(`${CONVEX_SITE_URL || "http://localhost"}/stream-private-reply`), []);
+  const { text, status } = useStream(api.streaming.getStreamBody, streamUrl, false, streamId as StreamId);
+  const live = status === "pending" || status === "streaming";
+  return (
+    <div className="text" data-testid="stream-body" data-stream-status={status}>
+      {text}
+      {live && <span className="r-stream-cursor" aria-hidden>▍</span>}
+      {status === "error" && <span className="tiny" style={{ color: "var(--danger-ink)" }}> — stream error (partial reply kept)</span>}
+      {status === "timeout" && <span className="tiny" style={{ color: "var(--danger-ink)" }}> — stream timed out</span>}
+    </div>
+  );
+}
 const shortMs = (ms: number) => ms >= 60_000 ? `${Math.round(ms / 1000) / 60}m` : `${Math.round(ms / 100) / 10}s`;
 
 const SLASH_CMDS = [
@@ -408,7 +431,11 @@ function Bubble({ m, roomId, variant, me, onPromote, onOpenArtifact }: { m: Mess
                 ))}
               </div>
             )}
-            {parsed.body && (ask ? <span className="r-bubble-ask">{parsed.body}</span> : <div className="text">{parsed.body}</div>)}
+            {m.streamId && !m.text ? (
+              <StreamedBody streamId={m.streamId} />
+            ) : (
+              parsed.body && (ask ? <span className="r-bubble-ask">{parsed.body}</span> : <div className="text">{parsed.body}</div>)
+            )}
           </>
         )}
 

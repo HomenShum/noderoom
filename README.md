@@ -100,15 +100,19 @@ cursor, captions, and progress bar. Packaged as a reusable skill:
 
 ### Watch the narrated episodes (click a poster — plays in your browser, with sound)
 
-Three rendered explainers are linked below, assembled from the live captures above + real code
+Two rendered explainers are linked below, assembled from the live captures above + real code
 panels, an animated mental-model diagram, and ElevenLabs narration. Current batch media QA is
 tracked in `docs/eval/MEDIA_JUDGE.md`; it is publishing evidence for the assets, not a replacement
 for production gates.
 
-| The builder story (58s) | The investment-room story (42s) | The two-stacks story (50s) |
-|---|---|---|
-| [![I tried to make a demo GIF — it turned into a multiplayer AI workspace](episodes/noderoom-live-collab-v1/poster.jpg)](https://noderoom.live/episodes/noderoom-live-collab-v1.mp4) | [![Before Monday's IC meeting — who changed what, and can you trust it?](episodes/private-investment-room-v1/poster.jpg)](https://noderoom.live/episodes/private-investment-room-v1.mp4) | [![I built it on Streamlit first — then the demo needed a second user](episodes/stack-before-after-v1/poster.jpg)](https://noderoom.live/episodes/stack-before-after-v1.mp4) |
-| Naive agent clobbers a human → the code that fixes it → review mode live | A private investment team's room: provenance, proposals, versioned history — fictional data only | The REAL Streamlit baseline (ParselyFi) → where typical stacks structurally stop → the same workflow in a live room |
+| The builder story (58s) | The two-stacks story (50s) |
+|---|---|
+| [![I tried to make a demo GIF — it turned into a multiplayer AI workspace](episodes/noderoom-live-collab-v1/poster.jpg)](https://noderoom.live/episodes/noderoom-live-collab-v1.mp4) | [![I built it on Streamlit first — then the demo needed a second user](episodes/stack-before-after-v1/poster.jpg)](https://noderoom.live/episodes/stack-before-after-v1.mp4) |
+| Naive agent clobbers a human → the code that fixes it → review mode live | The REAL Streamlit baseline (ParselyFi) → where typical stacks structurally stop → the same workflow in a live room |
+
+The investment-room episode is retired from the README showcase until it is
+re-rendered in landscape; Gemini 3.5 Flash marked the portrait render
+`fix-then-publish` because desktop spreadsheet text was too cramped.
 
 **Media QA.** The tracked README GIFs, workflow previews, and episode renders are
 now batch-judgeable with Gemini video understanding: `npm run
@@ -131,12 +135,27 @@ explicit: `render-workflow-preview.ts` produces trace replays, and
 evidence, not a production gate. Full evidence and research links:
 [`docs/WORKFLOW_PREVIEWS.md`](docs/WORKFLOW_PREVIEWS.md).
 
-Every shipped GIF below is gated by the gemini-3.5-flash GIF judge
-(`npm run qa:gif` — verdicts in `docs/eval/gif-judge/`). The earlier
-screenshot-slideshow previews were retired after the judge found structural
-honesty defects (frames from different sessions, reversed narratives); the
-replacements are recorded from the REAL app UI driven by the real agent
-runtime in memory mode (`e2e/capture-previews.spec.ts`).
+### How these demos are judged
+
+Every shipped GIF is gated by a **gemini-3.5-flash vision judge** (`npm run qa:gif`) that
+decodes the shipped `.gif` itself — exact frames + real per-frame delays — and scores five
+dimensions 0–10: **readability** (every label legible?), **pacing** (can a first-time viewer
+follow each change?), **narrative completeness** (goal → actions → verified result?),
+**visual polish** (nothing overlapping or misaligned?), and **honesty** (no glitches or UI
+claiming work that isn't shown). Pass bar: **average ≥ 7, no dimension < 5**. The judge is
+prompted adversarially, so read 7–8 as ship-quality, 9+ as exceptional, 5–6 as specific named
+defects, < 5 as structural.
+
+The full methodology — including **frame-level evidence** of what failing scores look like
+(the literal-`null` cell bug the judge caught in the real app, before/after; the L3 conflict
+story it forced us to rebuild) and the current per-dimension scoreboard — is in
+[`docs/eval/GIF_JUDGE.md`](docs/eval/GIF_JUDGE.md). Verdicts with the judge's exact
+frame-cited issues live in `docs/eval/gif-judge/`.
+
+The earlier screenshot-slideshow previews were retired after this judge found structural
+honesty defects (frames from different sessions, reversed narratives); the replacements are
+recorded from the REAL app UI driven by the real agent runtime in memory mode
+(`e2e/capture-previews.spec.ts`).
 
 ### Public `/ask` Spreadsheet Reconciliation
 
@@ -662,6 +681,15 @@ NodeAgent to work**. The full per-case inventory (with file refs and recorded re
 Cross-cutting and always on: the eval store + `eval:diff` regression gate, the supported-route
 model matrix (research and collaboration promote **separately**), the HALO improvement loop, and
 the Gemini media judge on every published clip.
+
+Professional catalog proof state: `npm run eval:professional:catalog-proofs`
+currently proves **21/21** professional catalog cases at the deterministic
+catalog layer, and `npm run eval:professional:proofs` records **0 unproofed**
+cases in `docs/eval/professional-proof-ledger.json`. The ledger still keeps
+live-provider proof separate: current coverage is **1 partial live-provider**
+case, **2 deterministic runtime** cases, and **18 deterministic catalog** cases.
+That is intentional; catalog proof prevents vague feature claims, while live
+provider promotion still requires a real route to produce the trace/output.
 - **Context compaction** (`src/agent/compaction.ts`) — elides stale `read_range` results (Claude
   "context editing" pattern), preserves the turn structure (Hermes), keeps the latest state + recent turns.
 - **Library stack** (TipTap, dnd-kit, lucide, assistant-ui, the `@convex-dev/*` components) → [`docs/STACK.md`](docs/STACK.md).
@@ -746,12 +774,14 @@ human's between-slice revision left standing, fresh read provenance for every sl
 lock shortcut. This is the rung that separates "can edit a sheet" from "can be trusted with a
 checkpointed background job."
 
-### Evidence levels
+### Evidence Levels
 
-The README uses four evidence labels deliberately:
+The README uses evidence labels deliberately:
 
 | Label | Meaning |
 |---|---|
+| Deterministic catalog proof | A typed professional case passed checks for intake surface, output contract, provenance, trajectory, privacy/long-running/private-gold contracts, and requirement-proof evidence. This is not live model proof. |
+| Deterministic runtime | A local harness executed real NodeRoom logic and checked final artifact state plus trace behavior without provider nondeterminism. |
 | DOM preview | Playwright captured the real NodeRoom UI, usually in memory mode, to verify the visible workflow. |
 | Deterministic replay | A scripted or fixture trace replayed through the real harness without provider nondeterminism. |
 | Live provider | A real model/provider produced the agent trace or media judge result. |
@@ -759,6 +789,21 @@ The README uses four evidence labels deliberately:
 
 Promotion claims require the level named in the QA matrix; a nice GIF is not a
 production gate by itself.
+
+### Judging Methodology
+
+NodeRoom uses a tiered judge stack, not one blended score. Deterministic checks
+grade artifact state, trace shape, locks/CAS, provenance, privacy, and budgets
+first. LLM or vision judges are used only where the output is inherently
+semantic or visual, and their verdicts are recorded with the trace instead of
+silently replacing deterministic gates. Regression evidence is append-only and
+case-keyed (`commitSha`, `caseId`, `ts`) so `npm run eval:diff` can say which
+case degraded, by how much, and which check broke. This follows the current
+production-eval pattern from
+[Braintrust trace/score tracking](https://www.braintrust.dev/articles/llm-evaluation-guide),
+[LangSmith curated regression datasets](https://docs.langchain.com/langsmith/evaluation),
+and [OpenAI-style custom evals](https://github.com/openai/evals) for the
+workflows that actually matter to the product.
 
 ### L1 · Read — answer without touching
 

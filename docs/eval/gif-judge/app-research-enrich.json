@@ -1,26 +1,26 @@
 {
   "workflow": "app-research-enrich",
   "judgeModel": "gemini-3.5-flash",
-  "judgedAt": "2026-06-11T09:26:26.443Z",
+  "judgedAt": "2026-06-11T09:33:28.265Z",
   "frameCount": 22,
   "sampledFrames": 12,
   "scores": {
-    "readability": 6,
-    "pacing": 8,
-    "narrative_completeness": 9,
+    "readability": 7,
+    "pacing": 9,
+    "narrative_completeness": 10,
     "visual_polish": 6,
-    "honesty_no_artifacts": 7
+    "honesty_no_artifacts": 8
   },
-  "average": 7.2,
+  "average": 8,
   "pass": true,
   "topIssues": [
-    "Frame 3: The 'COMPLETE' status badge displays trailing double dots ('COMPLETE ..'), indicating a layout truncation or rendering bug that persists across all completed rows.",
-    "Frame 2: The 'Researching...' button has extremely low color contrast (dark blue text on a dark grey/blue background), making it difficult to read.",
-    "Frame 3: The 'Room trace' log displays raw, unformatted JSON strings (e.g., `{\"value\":\"complete\",\"status\":\"complete\"}`) and raw database keys with double underscores, which is highly technical and hard to parse quickly."
+    "Frame 3: The 'COMPLETE' status badge is truncated with trailing double dots ('COMPLETE ..'), which persists across all completed rows through Frame 12.",
+    "Frame 2: In the 'Room trace' console at the bottom, the top log item is vertically clipped/cut off, leaving a messy sliver of text visible. This scroll-clipping artifact repeats in Frames 4, 5, 7, 8, and 10.",
+    "Frame 2: The trace logs display raw, unformatted database keys (e.g., 'rc_anthropic__status', 'rc_anthropic__summary') which look unpolished and highly technical for a user-facing UI."
   ],
   "fixSuggestions": [
-    "Adjust the width of the 'STATUS' column or the badge padding to eliminate the 'COMPLETE ..' truncation artifact.",
-    "Increase the contrast of the 'Researching...' button state by using a lighter text color (e.g., white or light blue) to match the style of other active elements.",
-    "Format the 'Room trace' logs to parse and hide raw JSON syntax and database keys, replacing them with clean, human-readable status updates."
+    "Adjust the CSS width, padding, or text-overflow properties of the status badge component to ensure 'COMPLETE' renders cleanly without trailing dots.",
+    "Add proper top padding or adjust the scroll-boundary behavior of the 'Room trace' container so that preceding log lines are either fully visible or cleanly hidden instead of being half-clipped.",
+    "Parse and map technical variable names in the trace logs to human-readable labels (e.g., change 'rc_anthropic__status' to 'Anthropic Status') to improve readability and visual polish."
   ]
 }

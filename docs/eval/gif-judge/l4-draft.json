@@ -1,7 +1,7 @@
 {
   "workflow": "l4-draft",
   "judgeModel": "gemini-3.5-flash",
-  "judgedAt": "2026-06-11T09:24:38.200Z",
+  "judgedAt": "2026-06-11T09:35:01.185Z",
   "frameCount": 6,
   "sampledFrames": 6,
   "scores": {
@@ -14,11 +14,11 @@
   "average": 8.6,
   "pass": true,
   "topIssues": [
-    "frame 3: The main UI is completely identical to frame 2 and frame 4, creating 4.2 seconds of visual 'dead air' where only the bottom status text changes.",
-    "frame 3: The status text says 'sees version v1', but the 'V1' badge on the right of the Net Income row has been replaced by 'LOCKED', meaning the user cannot actually see 'v1' in the active row."
+    "frame 3: The main UI is completely identical to frame 2 and frame 4, creating 4.2 seconds of visual stagnation where only the bottom status text changes.",
+    "frame 3: The status text claims the agent 'sees version v1', but the 'V1' badge from frame 1 has been replaced by 'LOCKED', meaning there is no visual representation of 'v1' on the screen to match the narrative."
   ],
   "fixSuggestions": [
-    "Consolidate frames 2, 3, and 4 or significantly reduce their display times (e.g., to 800ms) to keep the pacing snappy while the main UI remains static.",
-    "Add a subtle visual cue in frame 3 (like a hover state, tooltip, or split badge showing both 'LOCKED' and 'V1') to visually support the claim that the AI is reading 'version v1'."
+    "Consolidate frames 2, 3, and 4 or significantly reduce their display times (e.g., to 800ms) to prevent the viewer from experiencing 'dead air' while waiting for the action to occur in frame 5.",
+    "Add a subtle visual cue in frame 3, such as a hover state or a secondary badge, to show the 'V1' metadata being read by the agent while the row remains locked."
   ]
 }

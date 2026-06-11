@@ -1,7 +1,7 @@
 {
   "workflow": "l5-large-range",
   "judgeModel": "gemini-3.5-flash",
-  "judgedAt": "2026-06-11T09:24:53.622Z",
+  "judgedAt": "2026-06-11T09:35:14.901Z",
   "frameCount": 5,
   "sampledFrames": 5,
   "scores": {

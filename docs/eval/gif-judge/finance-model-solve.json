@@ -1,24 +1,26 @@
 {
   "workflow": "finance-model-solve",
   "judgeModel": "gemini-3.5-flash",
-  "judgedAt": "2026-06-11T09:23:49.143Z",
+  "judgedAt": "2026-06-11T09:34:12.405Z",
   "frameCount": 24,
   "sampledFrames": 12,
   "scores": {
-    "readability": 8,
-    "pacing": 9,
+    "readability": 7,
+    "pacing": 6,
     "narrative_completeness": 9,
-    "visual_polish": 9,
-    "honesty_no_artifacts": 8
+    "visual_polish": 8,
+    "honesty_no_artifacts": 9
   },
-  "average": 8.6,
+  "average": 7.8,
   "pass": true,
   "topIssues": [
-    "frame 5: The formula in the '+10 more model cells' row is truncated with an ellipsis ('F8 =-F7*'Historical Data'...'), hiding the full context of the write action.",
-    "frame 10: F73 / revolver balance is suddenly updated to '=E73+F44' in the main table, but the bottom status bar focuses entirely on writing F80 ('writes F80 -> =E80+F20+F45'), causing a narrative mismatch where a major table change occurs without explicit explanation."
+    "Frames 5, 6, 7, 8, 9, 10: High cognitive load due to dual simultaneous updates. In each of these frames, both a primary row formula is written/updated and the '+10 more model cells' row changes to a new background cell (e.g., F8, F12, F36). A viewer cannot track both changes in 1400ms.",
+    "Frames 5, 6, 9: Severe text truncation with ellipses (e.g., 'F8 =-F7*'Historical Data'...' and 'F60 =E60-F39-(E60*'Histori...') in the background cells row, rendering the formulas unreadable.",
+    "Frame 7: The bottom status bar text is extremely long and crowded, cramming a massive formula ('=MAX(0,E73+...') into the footer which threatens to overlap with the step counter on the right."
   ],
   "fixSuggestions": [
-    "In frame 10, split the write actions into two distinct frames or update the status text to reflect both changes (e.g., 'writes F73 and F80') so the viewer can track why F73 suddenly unlocked and updated.",
-    "Provide a hover state or expand the width of the formula column slightly to prevent aggressive truncation of the background formulas in the '+10 more model cells' row."
+    "Increase the display duration of the writing frames (Frames 4-11) from 1400ms to 1800ms-2000ms to allow viewers to digest the simultaneous table and background cell updates.",
+    "Shorten or simplify the mock formulas (e.g., using shorter sheet names instead of 'Historical Data') to prevent truncation and eliminate the ugly ellipses in the '+10 more model cells' row.",
+    "Truncate or omit the full formula string in the bottom status bar (since it is already clearly visible in the main table row) to keep the footer clean, readable, and consistently sized."
   ]
 }

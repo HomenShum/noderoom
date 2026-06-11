@@ -1,24 +1,24 @@
 {
   "workflow": "l3-no-clobber",
   "judgeModel": "gemini-3.5-flash",
-  "judgedAt": "2026-06-11T09:24:25.783Z",
+  "judgedAt": "2026-06-11T18:19:04.503Z",
   "frameCount": 8,
   "sampledFrames": 8,
   "scores": {
-    "readability": 7,
-    "pacing": 7,
+    "readability": 8,
+    "pacing": 8,
     "narrative_completeness": 7,
-    "visual_polish": 6,
-    "honesty_no_artifacts": 6
+    "visual_polish": 8,
+    "honesty_no_artifacts": 7
   },
-  "average": 6.6,
-  "pass": false,
+  "average": 7.6,
+  "pass": true,
   "topIssues": [
-    "Frame 3: The UI displays '-' while the status text claims an active write attempt of '+22.4%', creating a temporary visual disconnect.",
-    "Frame 5: The orange highlight on the row containing the human's '+19% V2' value during a rejection phase falsely implies the agent wrote that value."
+    "frame 5: The UI displays '+19% CAS REJECTED', which visually attaches the rejection badge to the human's successful value rather than the agent's rejected '+22.4%' attempt.",
+    "frame 7: The transition from re-reading V2 to writing V3 occurs instantly without showing the agent's second write attempt step, breaking the established action pattern."
   ],
   "fixSuggestions": [
-    "Add a 'pending' or italicized style to the target value in Frame 3 to represent the in-flight write attempt.",
-    "Use a dual-color highlight or a warning badge in Frame 5 to distinguish the rejected agent write from the preserved human edit."
+    "In frame 5, display the rejected value (+22.4%) inline or clarify in the badge that the incoming write of +22.4% was blocked.",
+    "Insert an intermediate frame between 6 and 7 showing the agent attempting the write based on V2 to maintain narrative consistency."
   ]
 }

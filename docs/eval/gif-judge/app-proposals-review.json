@@ -1,7 +1,7 @@
 {
   "workflow": "app-proposals-review",
   "judgeModel": "gemini-3.5-flash",
-  "judgedAt": "2026-06-11T09:26:11.058Z",
+  "judgedAt": "2026-06-11T18:24:48.122Z",
   "frameCount": 8,
   "sampledFrames": 8,
   "scores": {

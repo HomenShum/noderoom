@@ -71,9 +71,66 @@ test("uploaded workbook renders as Excel paper with file formats, formula bar, a
   await target.dblclick();
   await target.locator("input.xl-input").fill("123");
   await target.locator("input.xl-input").press("Enter");
-  await expect(target).toHaveText("123");
+  await expect(paper.locator('[data-cell-key="C5"]')).toHaveText("123");
   await target.click();
   await expect(page.locator(".xl-meta")).toContainText("v2"); // seeded v1 -> CAS write -> v2
 
   await page.screenshot({ path: "test-results/excel-paper.png", fullPage: false });
+});
+
+test("spreadsheet keyboard model — arrows, type-to-replace, Enter/Tab moves, Escape, Delete", async ({ page }) => {
+  await enterDemoRoom(page);
+  const path = await styledWorkbookFile();
+  await page.locator(".r-file-input").setInputFiles(path);
+  await page.getByRole("button", { name: /model\.xlsx/ }).click();
+  const paper = page.getByTestId("excel-paper");
+  const namebox = page.getByTestId("excel-namebox");
+
+  // Arrows move the selection (and the Name box follows).
+  await paper.locator('[data-cell-key="B2"]').click();
+  await expect(namebox).toHaveText("B2");
+  await page.keyboard.press("ArrowDown");
+  await expect(namebox).toHaveText("B3");
+  await page.keyboard.press("ArrowRight");
+  await expect(namebox).toHaveText("C3");
+  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("ArrowLeft");
+  await expect(namebox).toHaveText("B2");
+  // Edge clamp: A1 stays A1.
+  await paper.locator('[data-cell-key="A1"]').click();
+  await page.keyboard.press("ArrowUp");
+  await page.keyboard.press("ArrowLeft");
+  await expect(namebox).toHaveText("A1");
+
+  // Type-to-replace: typing on a selected cell REPLACES content; Enter commits + moves DOWN.
+  await paper.locator('[data-cell-key="C4"]').click();
+  await page.keyboard.type("42");
+  await expect(paper.locator('[data-cell-key="C4"] input.xl-input')).toHaveValue("42");
+  await page.keyboard.press("Enter");
+  await expect(paper.locator('[data-cell-key="C4"]')).toHaveText("42");
+  await expect(namebox).toHaveText("C5"); // Enter moved the selection down
+
+  // Tab while editing commits + moves RIGHT.
+  await page.keyboard.type("7");
+  await page.keyboard.press("Tab");
+  await expect(paper.locator('[data-cell-key="C5"]')).toHaveText("7");
+  await expect(namebox).toHaveText("D5");
+
+  // Escape cancels: the draft never lands.
+  await page.keyboard.type("999");
+  await page.keyboard.press("Escape");
+  await expect(paper.locator('[data-cell-key="D5"]')).not.toContainText("999");
+  await expect(namebox).toHaveText("D5"); // selection retained
+
+  // Delete clears a committed value without entering edit mode.
+  await paper.locator('[data-cell-key="C4"]').click();
+  await page.keyboard.press("Delete");
+  await expect(paper.locator('[data-cell-key="C4"]')).not.toContainText("42");
+  await expect(paper.locator('[data-cell-key="C4"] input.xl-input')).toHaveCount(0);
+
+  // Enter on a selected cell opens the editor (Sheets model) with existing content.
+  await paper.locator('[data-cell-key="B4"]').click();
+  await page.keyboard.press("Enter");
+  await expect(paper.locator('[data-cell-key="B4"] input.xl-input')).toHaveValue("Gross margin %");
+  await page.keyboard.press("Escape");
 });

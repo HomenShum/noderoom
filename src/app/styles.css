@@ -263,6 +263,16 @@ input { font-family: inherit; }
 .xl-cell.num { text-align: right; font-variant-numeric: tabular-nums; }
 .xl-cell.ctr { text-align: center; }
 .xl-cell.sel { outline: 2px solid #107c41; outline-offset: -2px; z-index: 1; }
+/* Fill-handle nub — 6x6 accent square with a white border at the selection's bottom-right
+   (fortune-sheet ships exactly this; its absence reads as "not a spreadsheet"). Visual-only
+   until drag-to-fill ships. */
+.xl-cell.sel::after { content: ""; position: absolute; right: -3px; bottom: -3px; width: 6px; height: 6px; background: #107c41; border: 1px solid #fff; z-index: 2; cursor: crosshair; }
+/* Editing overlay: white opaque, accent ring, shadow, above neighbors (never clipped). */
+.xl-cell.editing { overflow: visible; z-index: 6; outline: 2px solid #107c41; outline-offset: -2px; background: #fff; box-shadow: 0 2px 5px rgba(0,0,0,.4); }
+.xl-cell.editing::after { content: none; }
+/* The grid wrapper is the keyboard surface — focus is shown by the SELECTED CELL ring, so the
+   wrapper itself stays quiet (a second ring around the whole sheet would be noise). */
+.xl-scroll:focus-visible { outline: none; }
 .xl-cell.locked { background: #fdf6f1; box-shadow: inset 0 0 0 2px var(--accent-primary); cursor: not-allowed; }
 .xl-cell .nullcell { color: transparent; }
 .xl-flag { position: absolute; top: 0; right: 0; background: var(--accent-primary); color: #fff; font-size: 9px; line-height: 1.4; padding: 0 5px; border-radius: 0 0 0 4px; font-family: var(--font-ui); max-width: 100%; overflow: hidden; text-overflow: ellipsis; }

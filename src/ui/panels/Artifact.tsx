@@ -4,7 +4,7 @@
  * component renders the in-memory engine OR live Convex (optimistic edits).
  */
 
-import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, type CSSProperties, type KeyboardEvent as ReactKeyboardEvent, type ReactNode } from "react";
 import { DndContext, useDraggable, type DragEndEvent } from "@dnd-kit/core";
 import { restrictToParentElement } from "@dnd-kit/modifiers";
 import { useEditor, EditorContent } from "@tiptap/react";
@@ -595,7 +595,11 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
   const store = useStore();
   const [pages, setPages] = useState(1);
   const [sel, setSel] = useState<string | null>(null);
-  const [editingId, setEditingId] = useState<string | null>(null);
+  // editing.seed: null = edit existing content (dblclick/Enter/F2); a string = type-to-replace
+  // (the typed character becomes the whole draft — the Excel/Sheets keyboard model).
+  const [editing, setEditing] = useState<{ id: string; seed: string | null } | null>(null);
+  const gridRef = useRef<HTMLDivElement>(null);
+  const pendingMove = useRef<{ dCol: number; dRow: number } | null>(null);
   const grid = art.meta?.excelGrid;
   const { columns, visibleRows, pageSize } = useMemo(() => {
     const columnCount = Math.max(1, grid?.columns ?? 1);
@@ -606,6 +610,11 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
     return { columns, visibleRows, pageSize };
   }, [grid?.columns, grid?.rows, pages]);
   const { mergeAnchor, mergeCovered } = useMemo(() => expandMerges(grid?.merges), [grid?.merges]);
+  // Keep the moved-to cell visible (Excel scrolls the viewport with the selection).
+  useEffect(() => {
+    if (!sel) return;
+    gridRef.current?.querySelector(`[data-cell-key="${sel}"]`)?.scrollIntoView({ block: "nearest", inline: "nearest" });
+  }, [sel]);
   if (!grid) return null;
   const cellStyles = grid.styles ?? {};
   const numFmts = grid.numFmts ?? [];
@@ -616,6 +625,46 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
   const selFormula = selPayload?.formula ?? (typeof selRaw === "string" && selRaw.startsWith("=") ? selRaw : "");
   const selMatch = sel?.match(/^([A-Z]+)(\d+)$/);
   const flaggedLocks = new Set<string>();
+
+  /** Move the selection by a row/col delta, clamped to the rendered grid. */
+  const move = (dCol: number, dRow: number) => {
+    if (!selMatch) return;
+    const colIdx = Math.min(Math.max(lettersToColIndex(selMatch[1]) - 1 + dCol, 0), columns.length - 1);
+    const rowNum = Math.min(Math.max(Number(selMatch[2]) + dRow, 1), visibleRows.length);
+    setSel(`${columns[colIdx]}${rowNum}`);
+  };
+  const cellLocked = (id: string) => !!lockedByOther(store, art.id, id, me);
+  const startEdit = (id: string, seed: string | null) => {
+    if (cellLocked(id)) { onError({ ok: false, reason: "locked" }); return; }
+    setEditing({ id, seed });
+  };
+  /** Grid-level keyboard model (when NOT editing): arrows move, Enter/F2 edit, typing replaces,
+   *  Tab moves right, Delete clears — the spreadsheet muscle memory. */
+  const onGridKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
+    if (editing || !sel) return;
+    if (e.key === "ArrowUp") { e.preventDefault(); move(0, -1); }
+    else if (e.key === "ArrowDown") { e.preventDefault(); move(0, 1); }
+    else if (e.key === "ArrowLeft") { e.preventDefault(); move(-1, 0); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); move(1, 0); }
+    else if (e.key === "Tab") { e.preventDefault(); move(e.shiftKey ? -1 : 1, 0); }
+    else if (e.key === "Enter" || e.key === "F2") { e.preventDefault(); startEdit(sel, null); }
+    else if (e.key === "Delete" || e.key === "Backspace") {
+      e.preventDefault();
+      if (cellLocked(sel)) { onError({ ok: false, reason: "locked" }); return; }
+      doCommit(sel, "");
+    }
+    else if (e.key.length === 1 && !e.ctrlKey && !e.metaKey && !e.altKey) { e.preventDefault(); startEdit(sel, e.key); }
+  };
+  /** Enter/Tab/arrow commits route through ONE path (the input's blur) to guarantee exactly one
+   *  CAS write: the key handler records the move + blurs; onBlur commits, then applies the move. */
+  const finishEdit = (elementId: string, draft: string, current: string) => {
+    setEditing(null);
+    if (draft !== current) doCommit(elementId, draft);
+    const mv = pendingMove.current;
+    pendingMove.current = null;
+    if (mv) move(mv.dCol, mv.dRow);
+    gridRef.current?.focus();
+  };
   return (
     <>
       <div className="r-art-body">
@@ -627,7 +676,7 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
             <span className="grow" />
             {selEl && <span className="xl-meta">v{selEl.version}{selPayload?.evidence?.[0]?.label ? ` · ${selPayload.evidence[0].label}` : ""}</span>}
           </div>
-          <div className="r-sheet-wrap xl-scroll">
+          <div className="r-sheet-wrap xl-scroll" ref={gridRef} tabIndex={0} role="grid" aria-label={`${grid.sheetName} spreadsheet grid`} onKeyDown={onGridKeyDown}>
             <table className="xl-grid">
               <colgroup>
                 <col style={{ width: 38 }} />
@@ -663,7 +712,8 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
                       let lockFlag: string | null = null;
                       if (lk && !flaggedLocks.has(lk.id)) { flaggedLocks.add(lk.id); lockFlag = lk.holder.name; }
                       const alignRight = numCandidate !== undefined || st?.a === "r";
-                      const cls = "xl-cell" + (alignRight ? " num" : "") + (st?.a === "c" ? " ctr" : "") + (lk ? " locked" : "") + (sel === elementId ? " sel" : "");
+                      const isEditing = editing?.id === elementId;
+                      const cls = "xl-cell" + (alignRight ? " num" : "") + (st?.a === "c" ? " ctr" : "") + (lk ? " locked" : "") + (sel === elementId ? " sel" : "") + (isEditing ? " editing" : "");
                       const inline: Record<string, string | number> = {};
                       if (st?.bg) { inline.background = st.bg; if (!st?.fc && fillNeedsLightInk(st.bg)) inline.color = "#fff"; }
                       if (st?.fc) inline.color = st.fc; // the FILE's font color wins over the heuristic
@@ -683,18 +733,29 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
                           data-cell-key={elementId}
                           colSpan={colSpan}
                           rowSpan={rowSpan}
-                          onClick={() => setSel(elementId)}
-                          onDoubleClick={() => { if (!lk) setEditingId(elementId); }}
+                          aria-selected={sel === elementId || undefined}
+                          onClick={() => { setSel(elementId); gridRef.current?.focus(); }}
+                          onDoubleClick={() => startEdit(elementId, null)}
                         >
-                          {editingId === elementId ? (
+                          {isEditing ? (
                             <input
                               className="xl-input"
                               autoFocus
-                              defaultValue={typeof rawVal === "string" || typeof rawVal === "number" ? String(rawVal) : ""}
-                              onBlur={(e) => { setEditingId(null); const next = e.target.value; if (next !== String(rawVal ?? "")) doCommit(elementId, next); }}
+                              defaultValue={editing.seed ?? (typeof rawVal === "string" || typeof rawVal === "number" ? String(rawVal) : "")}
+                              onBlur={(e) => finishEdit(elementId, e.target.value, String(rawVal ?? ""))}
                               onKeyDown={(e) => {
-                                if (e.key === "Enter") (e.target as HTMLInputElement).blur();
-                                else if (e.key === "Escape") { (e.target as HTMLInputElement).value = String(rawVal ?? ""); setEditingId(null); }
+                                const input = e.target as HTMLInputElement;
+                                // Enter mode (opened by typing): arrows COMMIT + move — the most-missed
+                                // spreadsheet parity detail. Edit mode (F2/dblclick): arrows move the caret.
+                                const enterMode = editing.seed !== null;
+                                if (e.key === "Enter") { e.preventDefault(); pendingMove.current = { dCol: 0, dRow: e.shiftKey ? -1 : 1 }; input.blur(); }
+                                else if (e.key === "Tab") { e.preventDefault(); pendingMove.current = { dCol: e.shiftKey ? -1 : 1, dRow: 0 }; input.blur(); }
+                                else if (e.key === "Escape") { e.preventDefault(); input.value = String(rawVal ?? ""); setEditing(null); gridRef.current?.focus(); }
+                                else if (enterMode && (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "ArrowLeft" || e.key === "ArrowRight")) {
+                                  e.preventDefault();
+                                  pendingMove.current = e.key === "ArrowUp" ? { dCol: 0, dRow: -1 } : e.key === "ArrowDown" ? { dCol: 0, dRow: 1 } : e.key === "ArrowLeft" ? { dCol: -1, dRow: 0 } : { dCol: 1, dRow: 0 };
+                                  input.blur();
+                                }
                               }}
                             />
                           ) : display ? <span>{display}</span> : <span className="nullcell">&nbsp;</span>}

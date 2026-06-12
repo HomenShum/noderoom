@@ -11,15 +11,15 @@
  * component.
  *
  * Auth model: the prompt + room context are captured HERE, inside the proof-checked mutation;
- * the public httpAction needs nothing but the unguessable streamId (a capability token — same
- * model as the component's reference app), and the component 205s any second drive attempt.
+ * stream reads and the HTTP driver must present the same actor proof that can read the owner's
+ * private channel. The component still 205s any second drive attempt.
  */
 import { v } from "convex/values";
 import { makeFunctionReference } from "convex/server";
 import { PersistentTextStreaming, StreamIdValidator, type StreamId } from "@convex-dev/persistent-text-streaming";
 import { components } from "./_generated/api";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
-import { actorProofV, requireActorProof } from "./lib";
+import { actorProofV, requireActorCanUseChannel, requireActorProof } from "./lib";
 import { summarizeRoomForPrivate } from "./agent";
 
 const roomsFullRef = makeFunctionReference<"query">("rooms:full");
@@ -65,18 +65,26 @@ export const createPrivateReplyStream = mutation({
   },
 });
 
-/** Body + status for a stream — consumed by useStream on every non-driving client/tab. The
- *  streamId is an unguessable capability (it only ever travels on the owner's private channel). */
+/** Body + status for a stream. Private reply chunks are guarded like messages.list: the requester
+ * must be allowed to read the owning private channel, so streamId is not treated as auth. */
 export const getStreamBody = query({
-  args: { streamId: StreamIdValidator },
-  handler: async (ctx, a) => streamingComponent.getStreamBody(ctx, a.streamId as StreamId),
+  args: { streamId: StreamIdValidator, requester: actorProofV },
+  handler: async (ctx, a) => {
+    const row = await ctx.db.query("privateReplyStreams").withIndex("by_stream", (q) => q.eq("streamId", a.streamId)).unique();
+    if (!row) throw new Error("stream_not_found");
+    const actor = await requireActorProof(ctx, row.roomId, a.requester);
+    await requireActorCanUseChannel(ctx, row.roomId, actor, row.ownerId);
+    return streamingComponent.getStreamBody(ctx, a.streamId as StreamId);
+  },
 });
 
 export const streamMeta = internalQuery({
-  args: { streamId: v.string() },
+  args: { streamId: v.string(), requester: actorProofV },
   handler: async (ctx, a) => {
     const row = await ctx.db.query("privateReplyStreams").withIndex("by_stream", (q) => q.eq("streamId", a.streamId)).unique();
     if (!row) return null;
+    const actor = await requireActorProof(ctx, row.roomId, a.requester);
+    await requireActorCanUseChannel(ctx, row.roomId, actor, row.ownerId);
     return { roomId: row.roomId, ownerId: row.ownerId, requesterName: row.requesterName, goal: row.goal, roomContext: row.roomContext, clientMsgId: row.clientMsgId };
   },
 });

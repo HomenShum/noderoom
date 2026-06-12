@@ -1,8 +1,8 @@
 /** Public room chat (`.r-panel.center`) and private agent (`.r-panel.right`). Reads via useStore(). */
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ChangeEvent, type DragEvent, type KeyboardEvent } from "react";
 import { Lock, MessageCircle, Globe, Send, Sparkles, Copy, Check, ArrowUpRight, Pencil, Paperclip, X, Timer, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
-import { useStore, CONVEX_SITE_URL, type RoomStore } from "../app/store";
-import { useStream } from "@convex-dev/persistent-text-streaming/react";
+import { useQuery } from "convex/react";
+import { useStore, CONVEX_SITE_URL, type PrivateStreamAccess, type RoomStore } from "../app/store";
 import type { StreamId } from "@convex-dev/persistent-text-streaming";
 import { api } from "../../convex/_generated/api";
 import type { Actor, Channel, Message } from "../engine/types";
@@ -28,15 +28,99 @@ function initials(name: string): string {
 }
 const clock = (ts: number) => { const d = new Date(ts); return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`; };
 
-/** Live body of a persistent-text-streaming message. The STORE drives generation with its own
- *  one-shot POST (see drivePrivateReplyStream — a hook-driven fetch dies to effect-cleanup
- *  aborts); every tab, including the asking one, renders the DB-synced sentence chunks here
- *  (driven=false → pure persistence viewer, refresh- and multi-tab-safe by construction). Once
- *  the run completes the row's text is patched in server-side and Bubble stops rendering this
- *  component entirely. */
+type StreamStatus = "pending" | "streaming" | "done" | "error" | "timeout";
+type StreamBody = { text: string; status: StreamStatus };
+type PrivateStreamDriver = StreamBody & { started: boolean; listeners: Set<() => void> };
+
+const privateStreamDrivers = new Map<string, PrivateStreamDriver>();
+
+function driverFor(streamId: string): PrivateStreamDriver {
+  let driver = privateStreamDrivers.get(streamId);
+  if (!driver) {
+    driver = { text: "", status: "pending", started: false, listeners: new Set() };
+    privateStreamDrivers.set(streamId, driver);
+  }
+  return driver;
+}
+
+function notifyDriver(driver: PrivateStreamDriver, patch: Partial<StreamBody>) {
+  Object.assign(driver, patch);
+  for (const listener of driver.listeners) listener();
+}
+
+function startPrivateStreamDriver(streamUrl: URL | null, streamId: string, access: PrivateStreamAccess) {
+  const driver = driverFor(streamId);
+  if (driver.started) return;
+  driver.started = true;
+  if (!streamUrl) {
+    notifyDriver(driver, { status: "error" });
+    return;
+  }
+  void (async () => {
+    try {
+      const response = await fetch(streamUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ streamId, requester: access.requester }),
+      });
+      if (response.status === 205) {
+        notifyDriver(driver, { status: "error" });
+        return;
+      }
+      if (!response.ok || !response.body) {
+        notifyDriver(driver, { status: "error" });
+        return;
+      }
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      for (;;) {
+        const { done, value } = await reader.read();
+        const text = decoder.decode(value, { stream: !done });
+        if (text) notifyDriver(driver, { text: driver.text + text, status: "streaming" });
+        if (done) {
+          notifyDriver(driver, { status: "done" });
+          return;
+        }
+      }
+    } catch {
+      notifyDriver(driver, { status: "error" });
+    }
+  })();
+}
+
+function usePrivateReplyStream(streamId: string, access: PrivateStreamAccess | null): StreamBody {
+  const streamUrl = useMemo(() => CONVEX_SITE_URL ? new URL(`${CONVEX_SITE_URL}/stream-private-reply`) : null, []);
+  const [localBody, setLocalBody] = useState<StreamBody>({ text: "", status: "pending" });
+  const driven = access?.driven ?? false;
+  const requester = access?.requester;
+
+  useEffect(() => {
+    if (!driven || !requester) return;
+    const driver = driverFor(streamId);
+    const sync = () => setLocalBody({ text: driver.text, status: driver.status });
+    driver.listeners.add(sync);
+    sync();
+    startPrivateStreamDriver(streamUrl, streamId, { requester, driven });
+    return () => { driver.listeners.delete(sync); };
+  }, [driven, requester?.actor.id, requester?.token, streamId, streamUrl]);
+
+  const persistentBody = useQuery(
+    api.streaming.getStreamBody,
+    access && (!access.driven || localBody.status === "error")
+      ? { streamId: streamId as StreamId, requester: access.requester }
+      : "skip",
+  );
+
+  if (!access) return { text: "", status: "error" };
+  if (localBody.status === "error" && persistentBody?.status === "pending") return localBody;
+  return persistentBody ?? localBody;
+}
+
+/** Live body of a persistent-text-streaming message. The creating tab follows the component's
+ * HTTP streaming path and drains the response; other tabs use the persisted chunk query. */
 function StreamedBody({ streamId }: { streamId: string }) {
-  const streamUrl = useMemo(() => new URL(`${CONVEX_SITE_URL || "http://localhost"}/stream-private-reply`), []);
-  const { text, status } = useStream(api.streaming.getStreamBody, streamUrl, false, streamId as StreamId);
+  const store = useStore();
+  const { text, status } = usePrivateReplyStream(streamId, store.privateStreamAccess(streamId));
   const live = status === "pending" || status === "streaming";
   return (
     <div className="text" data-testid="stream-body" data-stream-status={status}>

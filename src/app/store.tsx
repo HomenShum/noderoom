@@ -90,7 +90,8 @@ export type UploadedArtifactInput = {
   meta?: ArtifactMeta;
 };
 export type AgentAskInput = { goal: string; references?: ArtifactRef[] };
-type ActorProof = { actor: Actor; token: string };
+export type ActorProof = { actor: Actor; token: string };
+export type PrivateStreamAccess = { requester: ActorProof; driven: boolean };
 
 export interface RoomStore {
   mode: "memory" | "convex";
@@ -99,6 +100,7 @@ export interface RoomStore {
   listArtifacts(roomId: string): Artifact[];
   getArtifact(id: string): Artifact | undefined;
   listMessages(roomId: string, channel: Channel): Message[];
+  privateStreamAccess(streamId: string): PrivateStreamAccess | null;
   listTraces(roomId: string): TraceEvent[];
   listSessions(roomId: string): AgentSession[];
   listDrafts(roomId: string): Draft[];
@@ -150,20 +152,7 @@ export const HAS_CONVEX =
 
 /** convex.site deployment URL (NOT .convex.cloud) — the persistent-text-streaming httpAction host. */
 export const CONVEX_SITE_URL = (import.meta.env.VITE_CONVEX_SITE_URL as string | undefined) ?? "";
-/** Kick off generation for a private-reply stream. The APP owns this one-shot POST (fire-and-
- *  forget, no AbortController tied to any component lifecycle) and every client — including this
- *  tab — renders the DB-synced sentence chunks via streaming.getStreamBody. Verified the hard
- *  way: letting the React hook drive ties the fetch to effect cleanup, and one effect cycle
- *  aborts the request while the hook's remount guard refuses to re-drive — a stream nobody
- *  drives sits "pending" until the component times it out. The component 205s any duplicate
- *  drive attempt, so this POST is safe to fire exactly once per created stream. */
-function drivePrivateReplyStream(streamId: string): void {
-  void fetch(`${CONVEX_SITE_URL}/stream-private-reply`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ streamId }),
-  }).catch(() => { /* viewer path still renders from the DB; the cleanup janitor times out orphans */ });
-}
+const locallyCreatedPrivateStreams = new Set<string>();
 
 function researchRowIds(art: Artifact): string[] {
   const ids: string[] = [];
@@ -267,6 +256,7 @@ export function EngineStoreProvider({ roomId, children }: { roomId: string; me: 
     listArtifacts: (id) => engine.listArtifacts(id),
     getArtifact: (id) => engine.getArtifact(id),
     listMessages: (id, ch) => engine.listMessages(id, ch),
+    privateStreamAccess: () => null,
     listTraces: (id) => engine.listTraces(id),
     listSessions: (id) => engine.listSessions(id),
     listDrafts: (id) => engine.listDrafts(id),
@@ -652,6 +642,7 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
       listArtifacts: () => artifacts,
       getArtifact: (id) => artifacts.find((a) => a.id === id),
       listMessages: (_id, ch) => (ch === "public" ? reshapeMsgs(pub) : reshapeMsgs(priv)),
+      privateStreamAccess: (streamId) => ({ requester: proof, driven: locallyCreatedPrivateStreams.has(streamId) }),
       listTraces: () => allTraces,
       listSessions: () => sessions,
       listDrafts: () => drafts,
@@ -739,11 +730,11 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
         }
         if (CONVEX_SITE_URL) {
           // Persistent-text-streaming path: the placeholder message arrives via the reactive
-          // subscription; Chat's StreamedBody (driven=true only in this tab) POSTs the
-          // httpAction and renders tokens as they generate, while the component persists
-          // sentence-flushed chunks for every other tab/refresh.
+          // subscription; Chat's StreamedBody drives the component stream in this tab and
+          // renders the HTTP token stream while the component persists sentence-flushed chunks
+          // for every other tab/refresh.
           const { streamId } = await createPrivateReplyStream({ roomId: rid, requester: proof, goal });
-          drivePrivateReplyStream(streamId);
+          locallyCreatedPrivateStreams.add(streamId);
           return;
         }
         await runPrivateAgent({ roomId: rid, requester: proof, goal });
@@ -861,7 +852,7 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
         catch (e) { return { ok: false, reason: e instanceof Error ? e.message : "retry_failed" }; }
       },
     };
-  }, [data, pub, priv, traces, runs, jobs, jobAttempts, jobDetail, proposals, applyCellEdit, sendMsg, toggle, editMsg, resolveProposalMutation, addResearchRowsMutation, createArtifactMutation, runAgent, startFreeAutoJob, cancelFreeAutoJob, retryFreeAutoJob, rid, roomId, proof, me.id]);
+  }, [data, pub, priv, traces, runs, jobs, jobAttempts, jobDetail, proposals, applyCellEdit, sendMsg, toggle, editMsg, resolveProposalMutation, addResearchRowsMutation, createArtifactMutation, runAgent, runPrivateAgent, createPrivateReplyStream, startFreeAutoJob, cancelFreeAutoJob, retryFreeAutoJob, rid, roomId, proof, me.id, me.name]);
 
   return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
 }

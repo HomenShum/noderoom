@@ -1,0 +1,65 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-app-variance-fill",
+    "class": "workflow_preview",
+    "title": "App Variance Fill",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\app-variance-fill.gif",
+    "relPath": "docs/eval/workflow-previews/app-variance-fill.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260612T083137Z/docs-eval-workflow-previews-app-variance-fill.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/app-variance-fill.gif",
+  "bytes": 105355,
+  "judge": {
+    "verdict": "publish",
+    "summary": "A high-fidelity workflow preview demonstrating multi-agent collaboration to calculate and merge financial variance data within a spreadsheet, supported by real-time trace logs.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.5,
+        "evidence": "Clearly demonstrates automated variance calculations and note drafting using collaborative agents."
+      },
+      "workflowCompleteness": {
+        "score": 1.6,
+        "evidence": "Captures the entire sequence from initiating collaboration to cell locking, agent execution, and final merge."
+      },
+      "visualDesign": {
+        "score": 1.5,
+        "evidence": "Polished dark-mode interface with clean alignment, distinct status indicators, and smooth state updates."
+      },
+      "consistency": {
+        "score": 1.6,
+        "evidence": "Perfectly aligns with the NodeRoom paradigm of spreadsheets, private/public agents, and execution traces."
+      },
+      "evidenceQuality": {
+        "score": 1.5,
+        "evidence": "Authentic UI capture showing realistic financial data and detailed, step-by-step trace logs."
+      },
+      "legibility": {
+        "score": 1.4,
+        "evidence": "Main table elements are highly legible, though trace log text at the bottom is slightly small."
+      },
+      "professionalRelevance": {
+        "score": 1.5,
+        "evidence": "Highly relevant for demonstrating automated financial reconciliation and auditability to enterprise users."
+      },
+      "productionHonesty": {
+        "score": 1.5,
+        "evidence": "Accurately depicts the latency and sequential steps of the agent execution pipeline."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet interface with Q2 and Q3 financial data",
+      "Run collaboration button trigger",
+      "Real-time trace log updates showing agent actions",
+      "Automatic variance calculation and cell updates"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Watch NodeRoom agents collaborate in real-time to lock cells, calculate quarterly variances, and merge drafts directly into the shared spreadsheet with full auditability."
+  },
+  "score": 12.1,
+  "maxScore": 16
+}

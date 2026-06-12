@@ -390,7 +390,7 @@ raw Convex file id != provider file id
 
 Current implementation:
 
-- Browser MVP parses CSV/TSV/XLSX/XLSM through `src/app/spreadsheetParser.ts`.
+- Browser MVP parses CSV/TSV/XLSX/XLSM through `src/app/spreadsheetParser.ts`; CSV/TSV becomes dataframe artifacts, while XLSX/XLSM preserves Excel coordinates for grid rendering and agent tool calls.
 - Cells become `{ value, status, evidence[], confidence }`.
 - Provider parser adapter normalizes Gemini/OpenAI/Claude/OpenRouter extraction into evidence-bearing artifacts.
 - Provider extraction tries native structured output first, then falls back to text JSON extraction and records a `Structured output fallback used` warning.

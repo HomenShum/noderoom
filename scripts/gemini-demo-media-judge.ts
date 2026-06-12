@@ -31,6 +31,9 @@ const runDir = join(outRoot, runId);
 const tempDir = join(ROOT, ".tmp-qa", "gemini-media-judge", runId);
 const writeStableDocs = !dryRun && outRoot === defaultOutRoot;
 const tracked = trackedRelPaths();
+const RETIRED_MEDIA = new Set([
+  "episodes/private-investment-room-v1/renders/short.mp4",
+]);
 
 if (!dryRun && !process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
   throw new Error("GOOGLE_GENERATIVE_AI_API_KEY is required for Gemini media judging");
@@ -177,7 +180,7 @@ function discoverAssets(): Asset[] {
 }
 
 function selectAssets(input: Asset[]): Asset[] {
-  let selected = includeIgnored ? input : input.filter((asset) => isTracked(asset.path));
+  let selected = includeIgnored ? input : input.filter((asset) => isTracked(asset.path) && !RETIRED_MEDIA.has(asset.relPath));
   if (only) selected = selected.filter((asset) => `${asset.relPath} ${asset.title} ${asset.class}`.toLowerCase().includes(only));
   if (primaryOnly) selected = preferPrimaryWalkthroughs(selected);
   if (limit !== undefined) selected = selected.slice(0, limit);
@@ -472,7 +475,12 @@ function timestampId(date: Date): string {
 
 function optionValue(name: string): string | undefined {
   const prefix = `${name}=`;
-  return args.find((arg) => arg.startsWith(prefix))?.slice(prefix.length);
+  const inline = args.find((arg) => arg.startsWith(prefix))?.slice(prefix.length);
+  if (inline !== undefined) return inline;
+  const index = args.indexOf(name);
+  if (index === -1) return undefined;
+  const value = args[index + 1];
+  return value && !value.startsWith("--") ? value : undefined;
 }
 
 function numberOption(name: string): number | undefined {

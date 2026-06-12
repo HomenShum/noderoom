@@ -76,6 +76,6 @@ describe("supported model eval matrix", () => {
     const plan = JSON.parse(readFileSync(planPath, "utf8")) as { routes: string[]; scenarios: Array<{ id: string }>; commands: Array<{ id: string }> };
     expect(plan.routes).toContain("deepseek/deepseek-v4-flash");
     expect(plan.scenarios.map((scenario) => scenario.id)).toContain("company_research_v3");
-    expect(plan.commands.map((command) => command.id)).toEqual(["research_v3", "collaboration_l1_l4"]);
+    expect(plan.commands.map((command) => command.id)).toEqual(["research_v3", "collaboration_l1_l7"]);
   });
 });

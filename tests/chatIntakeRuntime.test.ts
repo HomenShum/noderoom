@@ -8,6 +8,7 @@
 import { describe, expect, it } from "vitest";
 import {
   chatIntakeCapturePlan,
+  chatIntakeManagedCapturePlan,
   junkCapturePlan,
   naiveChatIntakePlan,
   runChatIntakeCapture,
@@ -43,6 +44,22 @@ describe("CHAT-INTAKE RUNG — capture-first contract through the real room runt
     expect(report.checks.duplicatePrevented).toBe(true);
     expect(report.checks.ambiguousNotGuessed).toBe(true);
     expect(report.checks.privateChannelOnly).toBe(true);
+  });
+
+  it("PASSES through production-managed lock tools without model-visible lock calls", async () => {
+    const report = await runChatIntakeCapture({
+      agent: scriptedModel(chatIntakeManagedCapturePlan(), "scripted-chat-intake-managed"),
+      modelName: "scripted",
+      lockMode: "runtime_managed_lock",
+    });
+    expect(report.status, JSON.stringify(report.checks)).toBe("passed");
+    expect(report.lockMode).toBe("runtime_managed_lock");
+    expect(report.checks.lockHeldDuringWrite).toBe(true);
+    expect(report.checks.releaseOrTtlFallback).toBe(true);
+    expect(report.checks.noSilentClobber).toBe(true);
+    expect(report.checks.noModelVisibleLockTools).toBe(true);
+    expect(report.trace.some((event) => event.tool === "write_locked_cell_results")).toBe(true);
+    expect(report.trace.some((event) => event.tool === "propose_lock" || event.tool === "release_lock" || event.tool === "edit_cell")).toBe(false);
   });
 
   it("FAILS the naive interrogator — every wrong behavior trips its own named check", async () => {

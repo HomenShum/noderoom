@@ -1,0 +1,64 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l6-long-horizon",
+    "class": "workflow_preview",
+    "title": "L6 Long Horizon",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l6-long-horizon.gif",
+    "relPath": "docs/eval/workflow-previews/l6-long-horizon.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260611T_final_publishable_media/docs-eval-workflow-previews-l6-long-horizon.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l6-long-horizon.gif",
+  "bytes": 427305,
+  "judge": {
+    "verdict": "publish",
+    "summary": "An excellent, highly detailed step-by-step visualization of multi-cell updates with human-in-the-loop concurrency conflicts, CAS rejection, and context compaction.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.5,
+        "evidence": "Clearly demonstrates Compare-And-Swap (CAS) conflict resolution and context compaction during multi-cell updates."
+      },
+      "workflowCompleteness": {
+        "score": 1.5,
+        "evidence": "Shows the complete lifecycle: read, human commit, CAS rejection, re-read, compaction, and final write."
+      },
+      "visualDesign": {
+        "score": 1.6,
+        "evidence": "Clean dark-themed UI with clear color-coded states (blue for human, red for conflict, green for success)."
+      },
+      "consistency": {
+        "score": 1.4,
+        "evidence": "Aligns perfectly with the multi-cell spreadsheet and versioned agent execution model."
+      },
+      "evidenceQuality": {
+        "score": 1.5,
+        "evidence": "High-fidelity trace replay that feels authentic and technically detailed."
+      },
+      "legibility": {
+        "score": 1.6,
+        "evidence": "Excellent contrast and text size; easily readable at standard browser resolutions."
+      },
+      "professionalRelevance": {
+        "score": 1.5,
+        "evidence": "Highly valuable for technical audiences evaluating LLM transaction safety and concurrency."
+      },
+      "productionHonesty": {
+        "score": 1.5,
+        "evidence": "Transparently displays write failures, stale states, and the recovery/retry loop."
+      }
+    },
+    "observedEvidence": [
+      "Step-by-step execution trace with 37 steps",
+      "Color-coded state transitions for human commits and CAS rejections",
+      "Compaction events clearly marked in the progress bar"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Watch NodeRoom's agent handle concurrent human edits using Compare-And-Swap (CAS) and context compaction to prevent data overwrites across a long-horizon multi-cell workflow."
+  },
+  "score": 12.1,
+  "maxScore": 16
+}

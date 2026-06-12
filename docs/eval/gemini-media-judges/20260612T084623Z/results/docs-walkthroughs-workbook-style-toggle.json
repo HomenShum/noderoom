@@ -1,0 +1,71 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-workbook-style-toggle",
+    "class": "readme_walkthrough",
+    "title": "Workbook Style Toggle",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\workbook-style-toggle.mp4",
+    "relPath": "docs/walkthroughs/workbook-style-toggle.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:workbook-style-toggle"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/workbook-style-toggle.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 6366070,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough clearly demonstrates toggling between different workbook style views (Excel File, Sheets Collab, and Evidence Review) within the NodeRoom interface, providing solid evidence of the feature's functionality.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "The video clearly shows the user clicking through the 'Excel File', 'Sheets Collab', and 'Evidence' tabs to toggle the workbook style."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Demonstrates the complete flow from opening the workbook to switching between all three available views."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "The dark mode UI is clean, well-aligned, and the active tab states are clearly highlighted."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Matches the NodeRoom ecosystem, featuring the chat, room trace, and spreadsheet components working together."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Captured directly from the running application, showing real-time UI state changes and cell selections."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Text in the spreadsheet cells and the tab labels is legible, though some sidebar text is small."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for financial and collaborative workflows where data provenance and presentation styles must be toggled."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately depicts local UI changes without overclaiming backend synchronization behavior."
+      }
+    },
+    "observedEvidence": [
+      "Excel File mode displaying merged cells and formula bar",
+      "Sheets Collab mode showing active cell selection",
+      "Evidence Review mode highlighting cell provenance"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:05",
+        "severity": "P2",
+        "observed": "The transition between the workbook views is rapid, making it slightly difficult to digest the visual differences immediately.",
+        "fix": "Add a brief 1-2 second pause on each view state during recording."
+      }
+    ],
+    "suggestedReadmeCaption": "Toggle your workbook view between raw Excel File format, collaborative Sheets mode, and verified Evidence Review mode to inspect data provenance without altering the underlying canonical sheet."
+  },
+  "score": 8,
+  "maxScore": 16
+}

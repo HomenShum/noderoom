@@ -1,0 +1,72 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-ic-room",
+    "class": "readme_walkthrough",
+    "title": "Ic Room",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\ic-room.mp4",
+    "relPath": "docs/walkthroughs/ic-room.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:ic-room"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/ic-room.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 3716708,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough clearly demonstrates importing a new account target into the research workspace, showing the immediate update in both the table and the room trace for provenance.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.5,
+        "evidence": "The video clearly shows the transition from clicking '+ Import accounts' to pasting a row and seeing it populate the table."
+      },
+      "workflowCompleteness": {
+        "score": 1.5,
+        "evidence": "Demonstrates the entire flow: initiating import, pasting data, submitting, and verifying the updated table and trace log."
+      },
+      "visualDesign": {
+        "score": 1.4,
+        "evidence": "Clean dark-mode interface with well-aligned columns, clear buttons, and structured layout."
+      },
+      "consistency": {
+        "score": 1.5,
+        "evidence": "Perfectly aligns with NodeRoom's core concept of collaborative research, tracking changes in the room trace."
+      },
+      "evidenceQuality": {
+        "score": 1.5,
+        "evidence": "Captured directly from a live working web application with realistic investment research data."
+      },
+      "legibility": {
+        "score": 1.3,
+        "evidence": "Most text is highly legible, though the room trace text at the bottom is slightly small."
+      },
+      "professionalRelevance": {
+        "score": 1.4,
+        "evidence": "Directly addresses the workflow of investment analysts and deal teams managing pipeline targets."
+      },
+      "productionHonesty": {
+        "score": 1.4,
+        "evidence": "Shows the actual step-by-step UI interaction without simulated animations or hidden steps."
+      }
+    },
+    "observedEvidence": [
+      "Import accounts modal interaction",
+      "Pasted CRM row data",
+      "Table update with 'Atlas Maritime Partners'",
+      "Room trace logging the import event"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:05",
+        "severity": "P2",
+        "observed": "The text pasting action is instantaneous and might feel slightly abrupt to viewers.",
+        "fix": "Add a brief hover or typing delay to make the data entry feel more natural."
+      }
+    ],
+    "suggestedReadmeCaption": "Importing and tracking new investment opportunities with full provenance in NodeRoom."
+  },
+  "score": 11.5,
+  "maxScore": 16
+}

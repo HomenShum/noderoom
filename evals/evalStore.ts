@@ -37,6 +37,7 @@ export type EvalRunRecord = {
   score?: number;
   /** Per-check booleans → lets the diff name the failure MODE (which check went true→false), not just "score dropped". */
   checks?: Record<string, boolean>;
+  failureOwner?: "model" | "harness" | "tool_contract" | "grader" | "environment" | "provider";
   failureSummary?: string;
   /** Path to the retained raw trace (run log / agentSteps export) — so a failure can be replayed later. */
   traceRef?: string;

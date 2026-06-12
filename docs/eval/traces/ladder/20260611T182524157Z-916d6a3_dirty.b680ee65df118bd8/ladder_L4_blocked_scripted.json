@@ -1,0 +1,111 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-11T18:25:24.157Z",
+  "commitSha": "916d6a3",
+  "worktreeHash": "b680ee65df118bd8",
+  "gitDirty": true,
+  "suite": "ladder",
+  "caseId": "ladder:L4_blocked:scripted",
+  "score": 1,
+  "checks": {
+    "draftWhenLocked": true,
+    "noDirectWriteWhileLocked": true,
+    "notExhausted": true
+  },
+  "checkDetails": {},
+  "result": {
+    "pass": true,
+    "checkDetails": {},
+    "requestedModel": "scripted",
+    "resolvedModel": "scripted",
+    "resolvedModels": [
+      "scripted"
+    ],
+    "rung": "L4_blocked",
+    "level": 4,
+    "ms": 2,
+    "tools": 4,
+    "cost": 0,
+    "stopReason": "done",
+    "reason": "",
+    "checks": {
+      "draftWhenLocked": true,
+      "noDirectWriteWhileLocked": true,
+      "notExhausted": true
+    }
+  },
+  "trace": [
+    {
+      "step": 0,
+      "tool": "propose_lock",
+      "args": {
+        "elementIds": [
+          "r_ni__variance"
+        ],
+        "reason": "recompute variance"
+      },
+      "result": {
+        "ok": false,
+        "reason": "range already locked by Your NodeAgent",
+        "lockId": "lock_21"
+      },
+      "ms": 0
+    },
+    {
+      "step": 1,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "r_ni__variance"
+        ]
+      },
+      "result": [
+        {
+          "id": "r_ni__variance",
+          "value": "",
+          "version": 1,
+          "locked": {
+            "by": "Your NodeAgent",
+            "reason": "private agent editing"
+          }
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": 2,
+      "tool": "propose_lock",
+      "args": {
+        "elementIds": [
+          "r_ni__variance"
+        ],
+        "reason": "recompute variance"
+      },
+      "result": {
+        "ok": false,
+        "reason": "range already locked by Your NodeAgent",
+        "lockId": "lock_21"
+      },
+      "ms": 0
+    },
+    {
+      "step": 3,
+      "tool": "create_draft",
+      "args": {
+        "ops": [
+          {
+            "elementId": "r_ni__variance",
+            "value": "+22.4%",
+            "baseVersion": 1
+          }
+        ],
+        "blockedByLockId": "lock_21",
+        "note": "Committed r_ni +22.4%."
+      },
+      "result": {
+        "draftId": "draft_25"
+      },
+      "ms": 1
+    }
+  ]
+}

@@ -92,11 +92,10 @@ or background jobs, and keep interactive collaboration on a route with recorded 
 passes.
 
 Do not confuse this ladder result with the company-research benchmark. The
-current v3 benchmark (`company-research-v3-composite-synthesis`) has
-`deepseek/deepseek-v4-flash` clearing 9/9 for 3 companies, while
-`openrouter/free-auto -> nvidia/nemotron-3-super-120b-a12b:free` reaches 7/9
-and fails the content floor. The older v2 single-call free-auto 9/9 trace is
-invalidated as model evidence because the deterministic harness authored the
-row fields. None of that overrides this ladder's collaboration-safety verdict:
-editing a shared room under locks, denied locks, drafts, and conflicts is a
-harder contract.
+current v3 benchmark (`company-research-v3-composite-synthesis`) is the
+2026-06-11 cheap/free OpenRouter smoke in `docs/eval/results.json`: 28 routes
+were attempted, 18 cleared 9/9, and `nex-agi/nex-n2-pro:free` was the fastest
+$0 gate-clearer. The older v2 single-call free-auto 9/9 trace is invalidated as
+model evidence because the deterministic harness authored the row fields. None
+of that overrides this ladder's collaboration-safety verdict: editing a shared
+room under locks, denied locks, drafts, and conflicts is a harder contract.

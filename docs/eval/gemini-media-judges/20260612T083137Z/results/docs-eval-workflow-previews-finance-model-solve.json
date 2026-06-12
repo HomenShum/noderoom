@@ -1,0 +1,65 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-finance-model-solve",
+    "class": "workflow_preview",
+    "title": "Finance Model Solve",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\finance-model-solve.gif",
+    "relPath": "docs/eval/workflow-previews/finance-model-solve.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260612T083137Z/docs-eval-workflow-previews-finance-model-solve.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/finance-model-solve.gif",
+  "bytes": 354826,
+  "judge": {
+    "verdict": "publish",
+    "summary": "A clear, highly legible stylized trace replay showing an AI agent locking cells, writing formulas, and releasing locks in a financial model.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Demonstrates cell locking, formula writing, and versioning steps clearly."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Shows full sequence from initial lock to step-by-step edits and final release."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean, high-contrast dark theme with clear color-coded status indicators."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns well with the spreadsheet cell and agent trace concepts."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Stylized but highly informative representation of backend agent execution."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Text and formulas are perfectly readable at standard browser sizes."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Directly relevant to financial modeling and automated spreadsheet auditing."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Explicitly labels itself as a 'Stylized trace replay' to avoid misleading."
+      }
+    },
+    "observedEvidence": [
+      "Stylized trace replay header",
+      "Cell lock/unlock transitions",
+      "Step-by-step formula writing",
+      "Version updates (V1 to V2)"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Stylized trace replay showing an AI agent locking cells, reading context, writing formulas, and releasing locks in a financial model."
+  },
+  "score": 8,
+  "maxScore": 16
+}

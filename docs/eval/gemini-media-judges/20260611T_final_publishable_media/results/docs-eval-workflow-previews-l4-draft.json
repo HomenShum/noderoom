@@ -1,0 +1,64 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l4-draft",
+    "class": "workflow_preview",
+    "title": "L4 Draft",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l4-draft.gif",
+    "relPath": "docs/eval/workflow-previews/l4-draft.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260611T_final_publishable_media/docs-eval-workflow-previews-l4-draft.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l4-draft.gif",
+  "bytes": 82775,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The workflow preview clearly and elegantly demonstrates how an AI agent handles a locked range conflict by creating a draft version instead of failing. The step-by-step trace at the bottom provides excellent context on the agent's decision-making process.",
+    "scores": {
+      "featureClarity": {
+        "score": 2,
+        "evidence": "The visual states clearly transition from 'LOCKED' to 'DRAFT' with explicit step-by-step explanations of the agent's logic."
+      },
+      "workflowCompleteness": {
+        "score": 2,
+        "evidence": "Shows the initial locked state, the agent's detection of the lock, the decision to draft, and the final drafted state with the new value."
+      },
+      "visualDesign": {
+        "score": 2,
+        "evidence": "Clean dark-themed UI with high-contrast highlights and a polished step progress indicator at the bottom."
+      },
+      "consistency": {
+        "score": 2,
+        "evidence": "Perfectly aligns with the spreadsheet/agent collaboration story, showing versioning and lock handling."
+      },
+      "evidenceQuality": {
+        "score": 2,
+        "evidence": "High-fidelity UI capture that accurately represents the product's collaborative state-handling capabilities."
+      },
+      "legibility": {
+        "score": 2,
+        "evidence": "All text, including the step-by-step agent logs and table values, is highly legible."
+      },
+      "professionalRelevance": {
+        "score": 2,
+        "evidence": "Directly addresses a common enterprise/financial modeling challenge: multi-user/agent lock contention on shared sheets."
+      },
+      "productionHonesty": {
+        "score": 2,
+        "evidence": "Accurately depicts the step-by-step resolution of a lock conflict without overclaiming instant resolution."
+      }
+    },
+    "observedEvidence": [
+      "Step-by-step agent trace (0/5 to 5/5 steps)",
+      "Locked range indicator ('LOCKED')",
+      "Draft state transition ('DRAFT' with +22.4% value)"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "When a spreadsheet range is locked by another user, the NodeRoom agent automatically drafts the proposed changes for a smart-merge instead of failing or overwriting."
+  },
+  "score": 16,
+  "maxScore": 16
+}

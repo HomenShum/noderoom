@@ -1,0 +1,71 @@
+{
+  "asset": {
+    "id": "episodes-noderoom-live-collab-v1-renders-short",
+    "class": "episode",
+    "title": "Noderoom Live Collab V1",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\episodes\\noderoom-live-collab-v1\\renders\\short.mp4",
+    "relPath": "episodes/noderoom-live-collab-v1/renders/short.mp4",
+    "purpose": "Narrated explainer episode. Judge story clarity, visual design, proof quality, and whether it fits the README claim."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "episodes/noderoom-live-collab-v1/renders/short.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 13114256,
+  "judge": {
+    "verdict": "publish",
+    "summary": "An exceptionally clear and well-produced narrated explainer demonstrating multiplayer AI collaboration on a shared spreadsheet substrate, highlighting conflict resolution and state synchronization.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.5,
+        "evidence": "The video clearly demonstrates how human and AI agents interact on a shared spreadsheet, showing real-time updates and conflict resolution."
+      },
+      "workflowCompleteness": {
+        "score": 1.4,
+        "evidence": "Shows the complete sequence from initial prompt, agent execution, human intervention, conflict, and final resolution."
+      },
+      "visualDesign": {
+        "score": 1.3,
+        "evidence": "Clean dark-themed UI with clear visual separation between the chat, spreadsheet, and trace logs."
+      },
+      "consistency": {
+        "score": 1.5,
+        "evidence": "Perfectly aligns with the NodeRoom narrative of collaborative agents, shared artifacts, and execution traces."
+      },
+      "evidenceQuality": {
+        "score": 1.4,
+        "evidence": "Features actual UI interactions, real-time state changes, and code-level explanations of the locking mechanism."
+      },
+      "legibility": {
+        "score": 1.2,
+        "evidence": "Most text is readable, though some spreadsheet cells and code comments are slightly small at standard browser scale."
+      },
+      "professionalRelevance": {
+        "score": 1.5,
+        "evidence": "Highly relevant for developers and product managers designing multi-agent collaborative systems."
+      },
+      "productionHonesty": {
+        "score": 1.6,
+        "evidence": "Honest about the complexities of concurrent edits and explicitly shows the underlying code handling the state."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet interface with live cell updates",
+      "Chat panel showing human and agent messages",
+      "Code snippet showing state locking logic",
+      "Architecture diagram explaining the collaboration substrate"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:05",
+        "severity": "P2",
+        "observed": "Spreadsheet cell values and small labels in the chat panel are somewhat difficult to read at standard resolution.",
+        "fix": "Slightly increase the default zoom level of the UI during recording."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch how Noderoom handles concurrent edits between humans and AI agents using a robust collaboration substrate instead of simple chat loops."
+  },
+  "score": 11.4,
+  "maxScore": 16
+}

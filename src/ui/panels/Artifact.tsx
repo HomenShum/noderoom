@@ -29,6 +29,13 @@ const TABS: { id: TabId; label: string; Icon: LucideIcon }[] = [
   { id: "note", label: "Note", Icon: FileText },
   { id: "wall", label: "Wall", Icon: StickyNote },
 ];
+type WorkbookViewStyle = "excel" | "sheets" | "evidence";
+const WORKBOOK_VIEW_STYLES: { id: WorkbookViewStyle; label: string; hint: string }[] = [
+  { id: "excel", label: "Excel", hint: "file" },
+  { id: "sheets", label: "Sheets", hint: "collab" },
+  { id: "evidence", label: "Evidence", hint: "review" },
+];
+const WORKBOOK_VIEW_STORAGE_KEY = "noderoom:workbook-view-style";
 
 export function Artifact({ roomId, me, artId, onArt, collab, style }: {
   roomId: string; me: Actor; artId: string; onArt: (id: string) => void;
@@ -595,6 +602,11 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
   const store = useStore();
   const [pages, setPages] = useState(1);
   const [sel, setSel] = useState<string | null>(null);
+  const [viewStyle, setViewStyle] = useState<WorkbookViewStyle>(() => {
+    if (typeof window === "undefined") return "excel";
+    const stored = window.localStorage.getItem(WORKBOOK_VIEW_STORAGE_KEY);
+    return WORKBOOK_VIEW_STYLES.some((s) => s.id === stored) ? stored as WorkbookViewStyle : "excel";
+  });
   // editing.seed: null = edit existing content (dblclick/Enter/F2); a string = type-to-replace
   // (the typed character becomes the whole draft — the Excel/Sheets keyboard model).
   const [editing, setEditing] = useState<{ id: string; seed: string | null } | null>(null);
@@ -623,6 +635,8 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
   const selPayload = selEl ? asCellPayload(selEl.value) : null;
   const selRaw = selPayload ? selPayload.value : selEl?.value;
   const selFormula = selPayload?.formula ?? (typeof selRaw === "string" && selRaw.startsWith("=") ? selRaw : "");
+  const selectedEvidence = selPayload?.evidence ?? [];
+  const selectedSignal = selectedEvidence[0]?.label ?? (selFormula ? "formula" : sel ? "value" : "");
   const selMatch = sel?.match(/^([A-Z]+)(\d+)$/);
   const flaggedLocks = new Set<string>();
 
@@ -637,6 +651,10 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
   const startEdit = (id: string, seed: string | null) => {
     if (cellLocked(id)) { onError({ ok: false, reason: "locked" }); return; }
     setEditing({ id, seed });
+  };
+  const chooseViewStyle = (next: WorkbookViewStyle) => {
+    setViewStyle(next);
+    try { window.localStorage.setItem(WORKBOOK_VIEW_STORAGE_KEY, next); } catch { /* ignore storage failures */ }
   };
   /** Grid-level keyboard model (when NOT editing): arrows move, Enter/F2 edit, typing replaces,
    *  Tab moves right, Delete clears — the spreadsheet muscle memory. */
@@ -668,7 +686,30 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
   return (
     <>
       <div className="r-art-body">
-        <div className="xl-paper" data-testid="excel-paper">
+        <div className={`xl-paper xl-paper--${viewStyle}`} data-testid="excel-paper" data-workbook-style={viewStyle}>
+          <div className="xl-modebar">
+            <div className="xl-mode-copy">
+              <span className="xl-mode-title">{grid.sheetName}</span>
+              <span className="xl-mode-sub">{grid.rows} rows · {grid.columns} columns</span>
+            </div>
+            <div className="xl-mode-tabs" role="radiogroup" aria-label="Workbook visual style">
+              {WORKBOOK_VIEW_STYLES.map((s) => (
+                <button
+                  key={s.id}
+                  type="button"
+                  className="xl-mode-tab"
+                  data-active={viewStyle === s.id}
+                  data-testid={`workbook-style-${s.id}`}
+                  role="radio"
+                  aria-checked={viewStyle === s.id}
+                  onClick={() => chooseViewStyle(s.id)}
+                >
+                  <span>{s.label}</span>
+                  <small>{s.hint}</small>
+                </button>
+              ))}
+            </div>
+          </div>
           <div className="xl-fbar">
             <span className="xl-name" data-testid="excel-namebox">{sel ?? ""}</span>
             <span className="xl-fx">fx</span>
@@ -676,6 +717,14 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
             <span className="grow" />
             {selEl && <span className="xl-meta">v{selEl.version}{selPayload?.evidence?.[0]?.label ? ` · ${selPayload.evidence[0].label}` : ""}</span>}
           </div>
+          {viewStyle === "evidence" && (
+            <div className="xl-evidence-strip" data-testid="workbook-evidence-strip">
+              <span className="xl-evidence-chip">{sel ?? "No cell"}</span>
+              <span>{selEl ? `v${selEl.version}` : "unselected"}</span>
+              <span>{selectedEvidence.length ? `${selectedEvidence.length} source${selectedEvidence.length === 1 ? "" : "s"}` : "no source"}</span>
+              {selectedSignal && <span>{selectedSignal}</span>}
+            </div>
+          )}
           <div className="r-sheet-wrap xl-scroll" ref={gridRef} tabIndex={0} role="grid" aria-label={`${grid.sheetName} spreadsheet grid`} onKeyDown={onGridKeyDown}>
             <table className="xl-grid">
               <colgroup>
@@ -713,7 +762,7 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
                       if (lk && !flaggedLocks.has(lk.id)) { flaggedLocks.add(lk.id); lockFlag = lk.holder.name; }
                       const alignRight = numCandidate !== undefined || st?.a === "r";
                       const isEditing = editing?.id === elementId;
-                      const cls = "xl-cell" + (alignRight ? " num" : "") + (st?.a === "c" ? " ctr" : "") + (lk ? " locked" : "") + (sel === elementId ? " sel" : "") + (isEditing ? " editing" : "");
+                      const cls = "xl-cell" + (alignRight ? " num" : "") + (st?.a === "c" ? " ctr" : "") + (lk ? " locked" : "") + (payload?.evidence?.length ? " evidence" : "") + (payload?.formula ? " formula" : "") + (sel === elementId ? " sel" : "") + (isEditing ? " editing" : "");
                       const inline: Record<string, string | number> = {};
                       if (st?.bg) { inline.background = st.bg; if (!st?.fc && fillNeedsLightInk(st.bg)) inline.color = "#fff"; }
                       if (st?.fc) inline.color = st.fc; // the FILE's font color wins over the heuristic
@@ -731,6 +780,8 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
                           style={inline}
                           title={title}
                           data-cell-key={elementId}
+                          data-has-evidence={payload?.evidence?.length ? "true" : undefined}
+                          data-has-formula={payload?.formula ? "true" : undefined}
                           colSpan={colSpan}
                           rowSpan={rowSpan}
                           aria-selected={sel === elementId || undefined}

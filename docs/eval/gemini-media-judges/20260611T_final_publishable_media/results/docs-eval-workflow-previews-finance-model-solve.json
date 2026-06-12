@@ -1,0 +1,69 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-finance-model-solve",
+    "class": "workflow_preview",
+    "title": "Finance Model Solve",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\finance-model-solve.gif",
+    "relPath": "docs/eval/workflow-previews/finance-model-solve.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260611T_final_publishable_media/docs-eval-workflow-previews-finance-model-solve.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/finance-model-solve.gif",
+  "bytes": 354826,
+  "judge": {
+    "verdict": "publish",
+    "summary": "A highly polished, legible, and honest stylized trace replay demonstrating an AI agent solving a financial model step-by-step.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.4,
+        "evidence": "Clearly shows the AI agent locking cells, reading context, and writing formulas step-by-step."
+      },
+      "workflowCompleteness": {
+        "score": 1.5,
+        "evidence": "Demonstrates the entire sequence from initial state, step-by-step execution, to final lock release."
+      },
+      "visualDesign": {
+        "score": 1.4,
+        "evidence": "Clean dark-mode aesthetic with clear color-coded status indicators and smooth transitions."
+      },
+      "consistency": {
+        "score": 1.3,
+        "evidence": "Aligns well with the NodeRoom concept of agent-driven spreadsheet cell updates and versioning."
+      },
+      "evidenceQuality": {
+        "score": 1.2,
+        "evidence": "Stylized trace replay format is clean, though it is a simulated visualization rather than raw UI."
+      },
+      "legibility": {
+        "score": 1.4,
+        "evidence": "High-contrast text and formulas are easily readable at standard browser sizes."
+      },
+      "professionalRelevance": {
+        "score": 1.4,
+        "evidence": "Directly addresses financial modeling use cases, highly relevant to finance and engineering audiences."
+      },
+      "productionHonesty": {
+        "score": 1.5,
+        "evidence": "Explicitly labels itself as a 'Stylized trace replay', avoiding any false representation of raw UI."
+      }
+    },
+    "observedEvidence": [
+      "Stylized trace replay showing cell locks, reads, and formula writes across 23 steps."
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:01",
+        "severity": "P2",
+        "observed": "The stylized view abstracts away the actual spreadsheet grid, which may limit immediate visual understanding of the layout.",
+        "fix": "Provide a secondary link or small inset showing the corresponding spreadsheet UI."
+      }
+    ],
+    "suggestedReadmeCaption": "Stylized trace replay showing the AI agent locking cells, reading historical context, and writing versioned formulas to solve a financial model."
+  },
+  "score": 11.1,
+  "maxScore": 16
+}

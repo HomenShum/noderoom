@@ -1,0 +1,64 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-workbook-style-toggle",
+    "class": "readme_walkthrough",
+    "title": "Workbook Style Toggle",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\workbook-style-toggle.mp4",
+    "relPath": "docs/walkthroughs/workbook-style-toggle.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:workbook-style-toggle"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/workbook-style-toggle.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 6169453,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough clearly demonstrates toggling between Excel, Sheets, and Evidence views for a workbook, maintaining state and context across modes.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Dropdown menu allows switching between Excel, Sheets, and Evidence views with immediate visual updates."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Demonstrates selecting the file, opening it, and cycling through all three view modes."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean spreadsheet interface with consistent layout and clear active cell highlighting."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Integrates seamlessly with the NodeRoom workspace, chat, and versioned spreadsheet panel."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Captured directly from the live application interface showing real-time UI state changes."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Text in the spreadsheet cells and dropdown options is readable at standard browser sizes."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for financial analysts who require different presentation styles for audit and review."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately depicts local UI style changes without overclaiming backend modifications."
+      }
+    },
+    "observedEvidence": [
+      "Excel view mode with gridlines and formula bar",
+      "Sheets view mode with simplified styling",
+      "Evidence view mode emphasizing provenance"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Toggle between Excel, Sheets, and Evidence views to match your review and presentation preferences."
+  },
+  "score": 8,
+  "maxScore": 16
+}

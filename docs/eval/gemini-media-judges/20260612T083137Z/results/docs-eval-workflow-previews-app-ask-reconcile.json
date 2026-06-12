@@ -1,0 +1,72 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-app-ask-reconcile",
+    "class": "workflow_preview",
+    "title": "App Ask Reconcile",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\app-ask-reconcile.gif",
+    "relPath": "docs/eval/workflow-previews/app-ask-reconcile.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260612T083137Z/docs-eval-workflow-previews-app-ask-reconcile.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/app-ask-reconcile.gif",
+  "bytes": 150320,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The workflow preview clearly demonstrates an agent-driven reconciliation task within a spreadsheet. It shows the command input, real-time cell updates, and trace logs, though text legibility is slightly low due to small font sizes.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "The user executes an '/ask reconcile' command which triggers an agent to update variance values in a spreadsheet."
+      },
+      "workflowCompleteness": {
+        "score": 2,
+        "evidence": "Shows the initial state, the command execution, real-time cell updates, and the final agent summary."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "The dark mode layout is clean, but the contrast in the trace log and some chat elements is low."
+      },
+      "consistency": {
+        "score": 2,
+        "evidence": "Perfectly aligns with the NodeRoom paradigm of spreadsheets, chat, agents, and trace logs."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Authentic UI capture showing step-by-step execution rather than a polished mockup."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Small font sizes in the spreadsheet cells and trace log make it hard to read at standard preview sizes."
+      },
+      "professionalRelevance": {
+        "score": 2,
+        "evidence": "Directly demonstrates automated financial reconciliation, highly relevant to finance and operations users."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Shows the actual latency and step-by-step cell updates of the agent's execution."
+      }
+    },
+    "observedEvidence": [
+      "Chat interface with '/ask reconcile' command input",
+      "Spreadsheet with Q2, Q3, and Variance columns",
+      "Real-time cell updates with percentage variances",
+      "Room Trace log showing agent actions and lock releases"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:02",
+        "severity": "P2",
+        "observed": "The text in the chat input and spreadsheet cells is quite small, reducing legibility on smaller screens.",
+        "fix": "Slightly zoom the browser window or crop the capture closer to the active areas to improve readability."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch NodeAgent automatically reconcile Q3 revenue against NetSuite exports, updating the variance sheet and logging every step in the room trace."
+  },
+  "score": 11,
+  "maxScore": 16
+}

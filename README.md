@@ -329,6 +329,7 @@ transaction log and the same reactive stream, so neither ever waits on (or clobb
 The same loop powers the adjacent categories — self-healing QA sandboxes where a human corrects a
 stuck agent mid-run, and multi-agent operational simulations watched by many operators — without
 an enterprise-sized DevOps budget. Full stack rationale: [docs/STACK.md](docs/STACK.md).
+Workbook MVP rationale: [docs/architecture/MVP_WORKBOOK_STACK.md](docs/architecture/MVP_WORKBOOK_STACK.md).
 
 ## Lessons From Building NodeRoom
 
@@ -741,10 +742,10 @@ Professional proof state:
 - `npm run eval:professional:catalog-proofs` proves **21/21** professional catalog cases at the deterministic catalog layer.
 - `npm run eval:professional:live-catalog -- --real deepseek/deepseek-v4-flash --require-full` proves **21/21** catalog contracts with a live OpenRouter route.
 - Route cross-checks: `ibm-granite/granite-4.1-8b` completed the full catalog at **19/21** (`finance-cost-reconciliation` missed `validCaseId`; `eval-ui-action-execution-map` missed `reviewIfNeeded`), `z-ai/glm-4.7-flash` passed a 3-case smoke but full-catalog timing is too slow for the current runner, and `nex-agi/nex-n2-pro:free` passed a 1-case smoke after the full sweep timed out.
-- `npm run eval:chat-intake:live` proves the chat-first GTM workflow through the real room runtime with `deepseek/deepseek-v4-flash`: lock, evidenced writes, CAS duplicate prevention, unresolved Caldera, one private clarifying question, release, and no public PII leak.
-- `npm run eval:professional:proofs` now records **1 full live-runtime**, **1 partial live-runtime**, **17 live-provider catalog**, **2 deterministic runtime**, and **0 contract-shape** cases in `docs/eval/professional-proof-ledger.json`.
+- `npm run eval:chat-intake:live -- --managed-locks` proves the chat-first GTM workflow through the real room runtime with `deepseek/deepseek-v4-flash`: production-managed `write_locked_cell_results` / `write_locked_cells`, evidenced writes, CAS duplicate prevention, unresolved Caldera, one private clarifying question, release evidence, and no public PII leak.
+- `npm run eval:professional:live-runtime -- --strict` proves **21/21** professional catalog cases execute through the real room runtime with `deepseek/deepseek-v4-flash`, `PRODUCTION_ROOM_TOOLS`, evidence payload writes, and runtime-managed lock coordination.
 
-That distinction is intentional: catalog proof prevents vague feature claims, while full product promotion still requires a real route to produce the runtime trace/output for that workflow.
+- `npm run eval:professional:proofs` now records **5 live-provider**, **16 partial live-provider**, **0 live-provider catalog**, **0 deterministic runtime**, and **0 contract-shape** cases; its live runtime smoke is **21/21**, and lock-mode counts are **21 runtime-managed**, **0 explicit-agent-lock**, and **0 catalog-only**.
 - **Context compaction** (`src/agent/compaction.ts`) — elides stale `read_range` results (Claude
   "context editing" pattern), preserves the turn structure (Hermes), keeps the latest state + recent turns.
 - **Library stack** (TipTap, dnd-kit, lucide, assistant-ui, the `@convex-dev/*` components) → [`docs/STACK.md`](docs/STACK.md).

@@ -57,6 +57,7 @@
     "eval:professional": "vitest run tests/professionalWorkflows.test.ts",
     "eval:professional:catalog-proofs": "tsx evals/professionalCatalogProofs.ts --require-full",
     "eval:professional:live-catalog": "tsx evals/professionalLiveCatalog.ts --record",
+    "eval:professional:live-runtime": "tsx evals/professionalRuntimeLive.ts --real deepseek/deepseek-v4-flash --record",
     "eval:professional:proofs": "tsx evals/professionalProofLedger.ts",
     "eval:chat-intake:live": "tsx evals/chatIntakeRuntime.ts --real deepseek/deepseek-v4-flash --managed-locks --record",
     "eval:managed-lock": "tsx evals/managedLockPerf.ts --strict",

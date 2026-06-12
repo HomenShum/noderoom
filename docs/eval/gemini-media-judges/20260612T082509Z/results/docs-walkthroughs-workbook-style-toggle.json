@@ -1,0 +1,71 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-workbook-style-toggle",
+    "class": "readme_walkthrough",
+    "title": "Workbook Style Toggle",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\workbook-style-toggle.mp4",
+    "relPath": "docs/walkthroughs/workbook-style-toggle.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:workbook-style-toggle"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/workbook-style-toggle.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 6166866,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough clearly demonstrates the workbook style toggle feature, transitioning smoothly between Excel, Sheets, and Evidence views while maintaining state consistency.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.5,
+        "evidence": "The dropdown menu clearly switches between Excel, Sheets, and Evidence modes, updating the spreadsheet presentation instantly."
+      },
+      "workflowCompleteness": {
+        "score": 1.5,
+        "evidence": "Shows the entire flow from uploading an Excel file to toggling through different view styles."
+      },
+      "visualDesign": {
+        "score": 1.4,
+        "evidence": "Clean dark-mode interface with well-aligned panels, though the formula bar text is slightly compact."
+      },
+      "consistency": {
+        "score": 1.5,
+        "evidence": "Aligns perfectly with NodeRoom's multi-modal workspace concept, integrating chat, files, and versioned sheets."
+      },
+      "evidenceQuality": {
+        "score": 1.5,
+        "evidence": "Captured directly from a live-running application with realistic financial modeling data."
+      },
+      "legibility": {
+        "score": 1.3,
+        "evidence": "Most UI text is highly legible, though some smaller cell values require close attention."
+      },
+      "professionalRelevance": {
+        "score": 1.5,
+        "evidence": "Directly addresses financial and audit use cases where spreadsheet presentation and provenance are critical."
+      },
+      "productionHonesty": {
+        "score": 1.5,
+        "evidence": "Accurately represents the feature as a local UI style change while keeping backend traces canonical."
+      }
+    },
+    "observedEvidence": [
+      "File upload of style-toggle.xlsx",
+      "Dropdown toggle switching between Excel, Sheets, and Evidence views",
+      "Cell selection and formula preservation across views"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:03",
+        "severity": "P2",
+        "observed": "The formula bar text is quite small and slightly difficult to read at standard preview sizes.",
+        "fix": "Slightly increase the font size of the formula bar or zoom the spreadsheet panel during recording."
+      }
+    ],
+    "suggestedReadmeCaption": "Toggle seamlessly between Excel, Sheets, and Evidence views to review financial models with full provenance tracking."
+  },
+  "score": 11.7,
+  "maxScore": 16
+}

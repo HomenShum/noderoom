@@ -1,0 +1,72 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-baseline-streamlit",
+    "class": "readme_walkthrough",
+    "title": "Baseline Streamlit",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\baseline-streamlit.mp4",
+    "relPath": "docs/walkthroughs/baseline-streamlit.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:baseline-streamlit"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/baseline-streamlit.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 170241,
+  "judge": {
+    "verdict": "fix-then-publish",
+    "summary": "The walkthrough demonstrates a Streamlit-based company scoring pipeline. While the workflow is complete from input to output, there is a mismatch between the input companies and the final results table.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.3,
+        "evidence": "Clearly shows a multi-stage pipeline for matching, enriching, and scoring companies."
+      },
+      "workflowCompleteness": {
+        "score": 1.4,
+        "evidence": "Captures the entire process from input configuration to execution and final tabular results."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Standard Streamlit layout; clean but lacks custom branding or polished visual hierarchy."
+      },
+      "consistency": {
+        "score": 0.7,
+        "evidence": "The output data does not align with the user inputs provided in the text area."
+      },
+      "evidenceQuality": {
+        "score": 1.1,
+        "evidence": "Shows live execution and timing, but the input-output mismatch reduces credibility."
+      },
+      "legibility": {
+        "score": 1.2,
+        "evidence": "All text, status indicators, and table cells are readable at standard browser resolution."
+      },
+      "professionalRelevance": {
+        "score": 1.3,
+        "evidence": "Highly relevant for investment and sales workflows requiring automated company screening."
+      },
+      "productionHonesty": {
+        "score": 0.8,
+        "evidence": "The mismatch between input companies and output results suggests a pre-baked execution."
+      }
+    },
+    "observedEvidence": [
+      "Streamlit application interface",
+      "Company list input area",
+      "Pipeline execution progress indicator",
+      "Final scored companies results table"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:10",
+        "severity": "P1",
+        "observed": "The output table displays 'Stripe, Inc.' and 'Ramp', whereas the input text area specified 'Anthropic', 'OpenAI', 'Mistral', and 'Cohere'.",
+        "fix": "Re-record the walkthrough ensuring the output results correspond directly to the input companies entered."
+      }
+    ],
+    "suggestedReadmeCaption": "Automate company screening and scoring using the List Intelligence pipeline in Streamlit."
+  },
+  "score": 8.8,
+  "maxScore": 16
+}

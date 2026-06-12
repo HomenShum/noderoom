@@ -1,0 +1,64 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-workbook-style-toggle",
+    "class": "readme_walkthrough",
+    "title": "Workbook Style Toggle",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\workbook-style-toggle.mp4",
+    "relPath": "docs/walkthroughs/workbook-style-toggle.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:workbook-style-toggle"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/workbook-style-toggle.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 6609607,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough clearly demonstrates the workbook style toggle feature, showing seamless transitions between Excel File, Sheets Collab, and Evidence Review modes while maintaining cell selection and versioned state.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.6,
+        "evidence": "Clearly shows the user toggling between Excel File, Sheets Collab, and Evidence Review modes with corresponding UI changes."
+      },
+      "workflowCompleteness": {
+        "score": 1.7,
+        "evidence": "Demonstrates the complete flow from opening the file to switching through all three available workbook views."
+      },
+      "visualDesign": {
+        "score": 1.5,
+        "evidence": "Clean dark-mode interface with well-aligned panels, though the dense spreadsheet data is slightly compact."
+      },
+      "consistency": {
+        "score": 1.6,
+        "evidence": "Perfectly aligns with NodeRoom's multi-agent and versioned spreadsheet workspace concept."
+      },
+      "evidenceQuality": {
+        "score": 1.7,
+        "evidence": "Captured directly from the running application with real-time UI responses and trace updates."
+      },
+      "legibility": {
+        "score": 1.4,
+        "evidence": "Main UI elements are highly legible, though some small cell values and trace logs require close attention."
+      },
+      "professionalRelevance": {
+        "score": 1.6,
+        "evidence": "Directly addresses financial and audit workflows where Excel compatibility and provenance are critical."
+      },
+      "productionHonesty": {
+        "score": 1.5,
+        "evidence": "Accurately represents local UI style changes without overclaiming backend synchronization speed."
+      }
+    },
+    "observedEvidence": [
+      "Excel File view with merged cells and formula bar",
+      "Sheets Collab view maintaining active cell selection",
+      "Evidence Review view showing provenance and versioning"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Toggle between Excel File, Sheets Collab, and Evidence Review modes to seamlessly transition from raw spreadsheet analysis to collaborative editing and audit-ready provenance."
+  },
+  "score": 12.6,
+  "maxScore": 16
+}

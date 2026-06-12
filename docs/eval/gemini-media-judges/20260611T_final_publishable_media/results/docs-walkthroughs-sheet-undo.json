@@ -1,0 +1,65 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-sheet-undo",
+    "class": "readme_walkthrough",
+    "title": "Sheet Undo",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\sheet-undo.gif",
+    "relPath": "docs/walkthroughs/sheet-undo.gif",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:sheet-undo"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260611T_final_publishable_media/docs-walkthroughs-sheet-undo.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/walkthroughs/sheet-undo.gif",
+  "bytes": 925918,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough clearly demonstrates the spreadsheet undo feature within NodeRoom's collaborative environment, showing the state before, during, and after the revert action.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.4,
+        "evidence": "The video clearly shows a user entering a variance value into a spreadsheet cell and then reverting it using the undo button."
+      },
+      "workflowCompleteness": {
+        "score": 1.4,
+        "evidence": "Captures the entire sequence: empty cell, value entry, commit, and subsequent undo action."
+      },
+      "visualDesign": {
+        "score": 1.3,
+        "evidence": "Clean dark-themed interface with well-aligned panels and clear visual focus on the active cell."
+      },
+      "consistency": {
+        "score": 1.4,
+        "evidence": "Aligns with NodeRoom's core components, including the spreadsheet, versioned sync panel, and room trace."
+      },
+      "evidenceQuality": {
+        "score": 1.4,
+        "evidence": "Authentic screen recording of the UI responding directly to user inputs in real-time."
+      },
+      "legibility": {
+        "score": 1.3,
+        "evidence": "The spreadsheet values, room trace logs, and bottom captions are highly legible at standard viewing sizes."
+      },
+      "professionalRelevance": {
+        "score": 1.3,
+        "evidence": "Demonstrates multi-user state synchronization and safe rollback capabilities, which are critical for financial workflows."
+      },
+      "productionHonesty": {
+        "score": 1.4,
+        "evidence": "Accurately represents the versioned edit path and does not hide the multi-step commit process."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet cell selection and value entry (+20.5%)",
+      "Versioned spreadsheet sync panel showing the undo button",
+      "Room trace updating with the edit events"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Easily revert spreadsheet changes with CAS-versioned undo, ensuring safe collaboration in multiplayer rooms."
+  },
+  "score": 10.9,
+  "maxScore": 16
+}

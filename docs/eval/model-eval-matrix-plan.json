@@ -1,19 +1,27 @@
 {
-  "generatedAt": "2026-06-10T23:20:59.965Z",
+  "generatedAt": "2026-06-11T01:23:28.298Z",
   "suite": "all",
   "routeSet": "supported",
   "routes": [
+    "nex-agi/nex-n2-pro:free",
     "deepseek/deepseek-v4-flash",
+    "ibm-granite/granite-4.1-8b",
+    "z-ai/glm-4.7-flash",
+    "inclusionai/ring-2.6-1t",
     "xiaomi/mimo-v2.5",
+    "stepfun/step-3.7-flash",
+    "minimax/minimax-m3",
+    "deepseek/deepseek-v4-pro",
+    "google/gemini-3.1-flash-lite",
     "qwen/qwen3.7-plus",
     "nvidia/nemotron-3-ultra-550b-a55b",
-    "moonshotai/kimi-k2.6",
-    "minimax/minimax-m2.7",
-    "z-ai/glm-4.7-flash",
-    "deepseek/deepseek-v3.2-speciale",
-    "google/gemma-4-26b-a4b-it",
-    "openrouter/free-auto",
+    "nvidia/nemotron-3-ultra-550b-a55b:free",
     "nvidia/nemotron-3-super-120b-a12b:free",
+    "google/gemma-4-31b-it:free",
+    "openai/gpt-oss-120b:free",
+    "poolside/laguna-xs.2:free",
+    "poolside/laguna-m.1:free",
+    "openrouter/free-auto",
     "gemini-3.5-flash"
   ],
   "scenarios": [
@@ -82,7 +90,7 @@
       "command": "tsx",
       "args": [
         "scripts/benchmark/run.ts",
-        "deepseek/deepseek-v4-flash,xiaomi/mimo-v2.5,qwen/qwen3.7-plus,nvidia/nemotron-3-ultra-550b-a55b,moonshotai/kimi-k2.6,minimax/minimax-m2.7,z-ai/glm-4.7-flash,deepseek/deepseek-v3.2-speciale,google/gemma-4-26b-a4b-it,openrouter/free-auto,nvidia/nemotron-3-super-120b-a12b:free",
+        "nex-agi/nex-n2-pro:free,deepseek/deepseek-v4-flash,ibm-granite/granite-4.1-8b,z-ai/glm-4.7-flash,inclusionai/ring-2.6-1t,xiaomi/mimo-v2.5,stepfun/step-3.7-flash,minimax/minimax-m3,deepseek/deepseek-v4-pro,google/gemini-3.1-flash-lite,qwen/qwen3.7-plus,nvidia/nemotron-3-ultra-550b-a55b,nvidia/nemotron-3-ultra-550b-a55b:free,nvidia/nemotron-3-super-120b-a12b:free,google/gemma-4-31b-it:free,openai/gpt-oss-120b:free,poolside/laguna-xs.2:free,poolside/laguna-m.1:free,openrouter/free-auto",
         "--no-merge",
         "--companies=3",
         "--model-timeout-ms=240000",
@@ -94,17 +102,25 @@
         "docs/eval/traces/benchmark/"
       ],
       "routes": [
+        "nex-agi/nex-n2-pro:free",
         "deepseek/deepseek-v4-flash",
+        "ibm-granite/granite-4.1-8b",
+        "z-ai/glm-4.7-flash",
+        "inclusionai/ring-2.6-1t",
         "xiaomi/mimo-v2.5",
+        "stepfun/step-3.7-flash",
+        "minimax/minimax-m3",
+        "deepseek/deepseek-v4-pro",
+        "google/gemini-3.1-flash-lite",
         "qwen/qwen3.7-plus",
         "nvidia/nemotron-3-ultra-550b-a55b",
-        "moonshotai/kimi-k2.6",
-        "minimax/minimax-m2.7",
-        "z-ai/glm-4.7-flash",
-        "deepseek/deepseek-v3.2-speciale",
-        "google/gemma-4-26b-a4b-it",
-        "openrouter/free-auto",
-        "nvidia/nemotron-3-super-120b-a12b:free"
+        "nvidia/nemotron-3-ultra-550b-a55b:free",
+        "nvidia/nemotron-3-super-120b-a12b:free",
+        "google/gemma-4-31b-it:free",
+        "openai/gpt-oss-120b:free",
+        "poolside/laguna-xs.2:free",
+        "poolside/laguna-m.1:free",
+        "openrouter/free-auto"
       ]
     },
     {
@@ -115,7 +131,7 @@
       "args": [
         "evals/ladder.ts",
         "--real",
-        "deepseek/deepseek-v4-flash,xiaomi/mimo-v2.5,qwen/qwen3.7-plus,nvidia/nemotron-3-ultra-550b-a55b,moonshotai/kimi-k2.6,minimax/minimax-m2.7,z-ai/glm-4.7-flash,deepseek/deepseek-v3.2-speciale,openrouter/free-auto,nvidia/nemotron-3-super-120b-a12b:free,gemini-3.5-flash",
+        "nex-agi/nex-n2-pro:free,deepseek/deepseek-v4-flash,ibm-granite/granite-4.1-8b,z-ai/glm-4.7-flash,inclusionai/ring-2.6-1t,xiaomi/mimo-v2.5,stepfun/step-3.7-flash,minimax/minimax-m3,deepseek/deepseek-v4-pro,qwen/qwen3.7-plus,nvidia/nemotron-3-ultra-550b-a55b,nvidia/nemotron-3-ultra-550b-a55b:free,nvidia/nemotron-3-super-120b-a12b:free,openrouter/free-auto,gemini-3.5-flash",
         "--levels=1-7",
         "--rung-timeout-ms=540000",
         "--reserve-ms=30000",
@@ -126,16 +142,20 @@
         "docs/eval/model-ladder-supported.json"
       ],
       "routes": [
+        "nex-agi/nex-n2-pro:free",
         "deepseek/deepseek-v4-flash",
+        "ibm-granite/granite-4.1-8b",
+        "z-ai/glm-4.7-flash",
+        "inclusionai/ring-2.6-1t",
         "xiaomi/mimo-v2.5",
+        "stepfun/step-3.7-flash",
+        "minimax/minimax-m3",
+        "deepseek/deepseek-v4-pro",
         "qwen/qwen3.7-plus",
         "nvidia/nemotron-3-ultra-550b-a55b",
-        "moonshotai/kimi-k2.6",
-        "minimax/minimax-m2.7",
-        "z-ai/glm-4.7-flash",
-        "deepseek/deepseek-v3.2-speciale",
-        "openrouter/free-auto",
+        "nvidia/nemotron-3-ultra-550b-a55b:free",
         "nvidia/nemotron-3-super-120b-a12b:free",
+        "openrouter/free-auto",
         "gemini-3.5-flash"
       ]
     }

@@ -58,13 +58,13 @@ Each entry: **the choice → the why → the trade-off → what it fixes vs a pa
 - **vs ParselyFi (Streamlit).** Streamlit re-runs the whole script on every interaction; state lives
   in `st.session_state`; it is single-user and not durable. Great for a batch dataframe tool, wrong
   for a shared room where two people and an agent edit the same cell at the same time.
-- **vs MewAgent (Next.js + SSE GraphStore).** That engine kept the graph **on the client** and
+- **vs a Next.js + SSE client GraphStore.** That engine kept the graph **on the client** and
   streamed agent steps over SSE. SSE is a one-way transcript; reconnection, multi-user reconciliation,
   and durability were all manual. Convex makes the *server row* the source of truth and the network
   layer disappears.
 
 ### Why server-side mutations, never `client_action`
-- **Why.** In the MewAgent engine the agent emitted `client_action` events and the **browser applied
+- **Why.** In the client-side GraphStore engine the agent emitted `client_action` events and the **browser applied
   them to the local graph.** That makes the client the command executor — which breaks the moment you
   have (a) two clients, (b) a refresh mid-run, or (c) an audit requirement. In NodeRoom the browser
   only *submits intent and subscribes to durable state*; the executor is Convex.
@@ -172,7 +172,7 @@ Each entry: **the choice → the why → the trade-off → what it fixes vs a pa
 
 ## 3. Live collaboration: NodeRoom (Convex) vs the past projects
 
-| Dimension | ParselyFi (Streamlit) | MewAgent (Next.js + SSE GraphStore) | **NodeRoom (Convex)** |
+| Dimension | ParselyFi (Streamlit) | Client-side GraphStore (Next.js + SSE) | **NodeRoom (Convex)** |
 |---|---|---|---|
 | Users | single-user | mostly single-user (client-local graph) | **multi-user rooms, public + private** |
 | State owner | `st.session_state` (ephemeral) | the **browser** (local graph) | **server (Convex tables) = source of truth** |
@@ -181,12 +181,13 @@ Each entry: **the choice → the why → the trade-off → what it fixes vs a pa
 | Concurrency | none (one user) | last-write-wins, client-side | **per-cell CAS + conflict-as-data + coordinate leases** |
 | Durability | none | SSE transcript only | **durable job + slices + checkpoints (10-min-proof)** |
 | Long-running | a blocking batch | a single streamed loop | **`agentJobs` ping-pong via `@convex-dev/workflow`** |
-| Audit | none | local graph nodes (`__MewAgentMemory__`) | **operation ledger + receipts + hash-chained steps** |
+| Audit | none | local graph memory nodes | **operation ledger + receipts + hash-chained steps** |
 | Self-improvement | manual | manual | **HALO loop → Codex/Claude Code, eval-gated** |
 
 The throughline: **ParselyFi proved the *workflows* (dataframe enrichment, entity resolution,
-reconciliation). MewAgent proved the *graph vocabulary* (nodes, relations, relation types).
-NodeRoom keeps both but moves execution to a server-authoritative, durable, auditable, *self-improving*
+reconciliation). The client-side graph prototype proved the *graph vocabulary*
+(nodes, relations, relation types). NodeRoom keeps both but moves execution to a
+server-authoritative, durable, auditable, *self-improving*
 Convex engine** — because that's the only shape that survives multiple users, the 10-minute cap, and a
 team of one.
 

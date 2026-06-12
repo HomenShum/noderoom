@@ -1,0 +1,178 @@
+{
+  "generatedAt": "2026-06-11T19:33:30.813Z",
+  "harnessVersion": "professional-live-catalog-v1",
+  "model": "z-ai/glm-4.7-flash",
+  "total": 3,
+  "passed": 3,
+  "failed": 0,
+  "passRate": 1,
+  "allPassed": true,
+  "rows": [
+    {
+      "caseId": "gtm-chat-lead-capture-enrich",
+      "model": "z-ai/glm-4.7-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 45871,
+      "answer": {
+        "caseId": "gtm-chat-lead-capture-enrich",
+        "intakeModes": [
+          "chat_only",
+          "external_retrieval",
+          "mixed_room_state"
+        ],
+        "primarySurface": "watchlist_row",
+        "evidencePlan": [
+          "Parse chat message to extract intent (company name, product, funding amount, next action)",
+          "Perform external retrievals to verify company description and funding claims",
+          "Construct CellPayload evidence distinguishing user-provided chat text from fetched external sources",
+          "Identify gaps where external verification failed to flag as 'needs_review'"
+        ],
+        "riskControls": [
+          "Impose human review gate on unverifiable claims to prevent misinformation",
+          "Enforce privacy redaction masking for person names and relationship details",
+          "Use CAS logic to update existing rows rather than creating duplicates",
+          "Restrict person facts from auto-promotion to public wiki surfaces"
+        ],
+        "mutationMode": "mutate_with_cas",
+        "approvalRequired": true,
+        "privacyBoundary": "Strict redaction and masking of personal identifiers and meeting history; maintain private boundary for person-centric data; explicitly separate private chat evidence from shared company artifacts to prevent leakage of sensitive meeting details",
+        "traceMustShow": [
+          "Read: incoming_chat_message",
+          "Read: public_api_sources (Crunchbase, LinkedIn, etc.)",
+          "Write: watchlist_row_payload",
+          "Write: private_cell_payload (chat evidence)",
+          "Write: wiki_note_surface"
+        ],
+        "blockersToResolve": [
+          "Ambiguous entity matching for 'Generic AI Labs'",
+          "Missing explicit funding amount in chat string"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"gtm-chat-lead-capture-enrich\",\n  \"intakeModes\": [\n    \"chat_only\",\n    \"external_retrieval\",\n    \"mixed_room_state\"\n  ],\n  \"primarySurface\": \"watchlist_row\",\n  \"evidencePlan\": [\n    \"Parse chat message to extract intent (company name, product, funding amount, next action)\",\n    \"Perform external retrievals to verify company description and funding claims\",\n    \"Construct CellPayload evidence distinguishing user-provided chat text from fetched external sources\",\n    \"Identify gaps where external verification failed to flag as 'needs_review'\"\n  ],\n  \"riskControls\": [\n    \"Impose human review gate on unverifiable claims to prevent misinformation\",\n    \"Enforce privacy redaction masking for person names and relationship details\",\n    \"Use CAS logic to update existing rows rather than creating duplicates\",\n    \"Restrict person facts from auto-promotion to public wiki surfaces\"\n  ],\n  \"mutationMode\": \"mutate_with_cas\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"Strict redaction and masking of personal identifiers and meeting history; maintain private boundary for person-centric data; explicitly separate private chat evidence from shared company artifacts to prevent leakage of sensitive meeting details\",\n  \"traceMustShow\": [\n    \"Read: incoming_chat_message\",\n    \"Read: public_api_sources (Crunchbase, LinkedIn, etc.)\",\n    \"Write: watchlist_row_payload\",\n    \"Write: private_cell_payload (chat evidence)\",\n    \"Write: wiki_note_surface\"\n  ],\n  \"blockersToResolve\": [\n    \"Ambiguous entity matching for 'Generic AI Labs'\",\n    \"Missing explicit funding amount in chat string\"\n  ]\n}"
+    },
+    {
+      "caseId": "finance-three-statement-modeling-private-gold",
+      "model": "z-ai/glm-4.7-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 55836,
+      "answer": {
+        "caseId": "finance-three-statement-modeling-private-gold",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "Financial_Model_Workbook",
+        "evidencePlan": [
+          "Compute SHA-256 hash of the local workbook to validate integrity.",
+          "Verify existence of required sheets: Test Prompt, Historical Data, Your Model, and Answer Key.",
+          "Read historical data ranges to establish baseline assumptions.",
+          "Inspect Your Model structure to identify empty forecast cells."
+        ],
+        "riskControls": [
+          "Enforce redaction mask on Answer Key before any logging to public output.",
+          "Implement CAS (Change Approval System) to validate formula structure before writing forecasts.",
+          "Lock shared sections (Income Statement, Balance Sheet, Cash Flow) to designated collaborator IDs.",
+          "Prevent leakage of confidential PII or historical data in public room summaries."
+        ],
+        "mutationMode": "mutate_with_cas",
+        "approvalRequired": true,
+        "privacyBoundary": "Strict boundary enforcement: isolate Historical Data and Answer Key within private runtime memory; apply masking to sensitive figures and PII to prevent any leakage into workspace artifacts.",
+        "traceMustShow": [
+          "Read: Cell B50 'Revenue' from Historical Data sheet.",
+          "Read: Cell G1 'Growth Rate' assumption from Your Model sheet.",
+          "Write: Formula =B50*(1+G1) into Cell C50 '2025E Revenue'.",
+          "Receipt: CAS validation success for formula dependency check."
+        ],
+        "blockersToResolve": [
+          "File hash mismatch preventing local validation.",
+          "Section ownership conflict during collaborative edit.",
+          "Formula dependency lock violation on linkage rows."
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"finance-three-statement-modeling-private-gold\",\n  \"intakeModes\": [\n    \"selected_artifact\"\n  ],\n  \"primarySurface\": \"Financial_Model_Workbook\",\n  \"evidencePlan\": [\n    \"Compute SHA-256 hash of the local workbook to validate integrity.\",\n    \"Verify existence of required sheets: Test Prompt, Historical Data, Your Model, and Answer Key.\",\n    \"Read historical data ranges to establish baseline assumptions.\",\n    \"Inspect Your Model structure to identify empty forecast cells.\"\n  ],\n  \"riskControls\": [\n    \"Enforce redaction mask on Answer Key before any logging to public output.\",\n    \"Implement CAS (Change Approval System) to validate formula structure before writing forecasts.\",\n    \"Lock shared sections (Income Statement, Balance Sheet, Cash Flow) to designated collaborator IDs.\",\n    \"Prevent leakage of confidential PII or historical data in public room summaries.\"\n  ],\n  \"mutationMode\": \"mutate_with_cas\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"Strict boundary enforcement: isolate Historical Data and Answer Key within private runtime memory; apply masking to sensitive figures and PII to prevent any leakage into workspace artifacts.\",\n  \"traceMustShow\": [\n    \"Read: Cell B50 'Revenue' from Historical Data sheet.\",\n    \"Read: Cell G1 'Growth Rate' assumption from Your Model sheet.\",\n    \"Write: Formula =B50*(1+G1) into Cell C50 '2025E Revenue'.\",\n    \"Receipt: CAS validation success for formula dependency check.\"\n  ],\n  \"blockersToResolve\": [\n    \"File hash mismatch preventing local validation.\",\n    \"Section ownership conflict during collaborative edit.\",\n    \"Formula dependency lock violation on linkage rows.\"\n  ]\n}"
+    },
+    {
+      "caseId": "eval-ui-action-execution-map",
+      "model": "z-ai/glm-4.7-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 52463,
+      "answer": {
+        "caseId": "eval-ui-action-execution-map",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "Browser UI and Data Flow",
+        "evidencePlan": [
+          "Parse 'ui_ux_mapping.csv' to extract UI selectors, action types, and expected data payloads.",
+          "Generate 'Browser Visible Steps' using synthetic fixtures to ensure reproducibility for upload, drag reference, and collaboration actions.",
+          "Map actions to corresponding 'Backend Assertions' to verify data-layer interactions (API receipts, class invocations).",
+          "Implement verification logic for 'Artifact References' to ensure clickability and canonical ID mapping.",
+          "Run deterministic checks for local-only actions; route live-provider actions to an optional 'eval lanes'.",
+          "Validate 'Long Running' actions using defined checkpoints and status-chip updates."
+        ],
+        "riskControls": [
+          "For 'human_review' harness: Implement a 'Draft-First' workflow where generated plans are stored in a draft state, requiring explicit QA sign-off before final execution or high-risk state mutations (like job cancellation).",
+          "For 'long_running_free_auto': Configure the executor to treat complex asynchronous jobs as background operations with explicit checkpoint intervals to handle interruptions.",
+          "For 'privacy_redaction': Apply automated redaction rules during evidence generation to scrub PII and confidential identifiers from logs and artifact states."
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": false,
+        "privacyBoundary": "Strictly isolate the data flow between the public UI surface and the private artifact repository; enforce server-side masking on any PII or sensitive data fields before serialization into trace logs or assertions to prevent data leakage.",
+        "traceMustShow": [
+          "UI Selector Visibility/Disabled States",
+          "Backend API Receipts (HTTP Status & Payload)",
+          "Artifact Canonical ID References",
+          "Job Status Change Receipts (Started/Cancelled)",
+          "Data Stream Reads (for Upload Actions)"
+        ],
+        "blockersToResolve": [
+          "Availability of mock endpoints to simulate 'long_running_free_auto' providers without external dependencies.",
+          "Synchronization of synthetic fixture mapping with actual DOM selector fragility in the target environment.",
+          "Validation of privacy redaction logic across all generated test steps to ensure no raw private data is logged."
+        ]
+      },
+      "raw": "```json\n{\n  \"caseId\": \"eval-ui-action-execution-map\",\n  \"intakeModes\": [\n    \"selected_artifact\"\n  ],\n  \"primarySurface\": \"Browser UI and Data Flow\",\n  \"evidencePlan\": [\n    \"Parse 'ui_ux_mapping.csv' to extract UI selectors, action types, and expected data payloads.\",\n    \"Generate 'Browser Visible Steps' using synthetic fixtures to ensure reproducibility for upload, drag reference, and collaboration actions.\",\n    \"Map actions to corresponding 'Backend Assertions' to verify data-layer interactions (API receipts, class invocations).\",\n    \"Implement verification logic for 'Artifact References' to ensure clickability and canonical ID mapping.\",\n    \"Run deterministic checks for local-only actions; route live-provider actions to an optional 'eval lanes'.\",\n    \"Validate 'Long Running' actions using defined checkpoints and status-chip updates.\"\n  ],\n  \"riskControls\": [\n    \"For 'human_review' harness: Implement a 'Draft-First' workflow where generated plans are stored in a draft state, requiring explicit QA sign-off before final execution or high-risk state mutations (like job cancellation).\",\n    \"For 'long_running_free_auto': Configure the executor to treat complex asynchronous jobs as background operations with explicit checkpoint intervals to handle interruptions.\",\n    \"For 'privacy_redaction': Apply automated redaction rules during evidence generation to scrub PII and confidential identifiers from logs and artifact states.\"\n  ],\n  \"mutationMode\": \"draft_first\",\n  \"approvalRequired\": false,\n  \"privacyBoundary\": \"Strictly isolate the data flow between the public UI surface and the private artifact repository; enforce server-side masking on any PII or sensitive data fields before serialization into trace logs or assertions to prevent data leakage.\",\n  \"traceMustShow\": [\n    \"UI Selector Visibility/Disabled States\",\n    \"Backend API Receipts (HTTP Status & Payload)\",\n    \"Artifact Canonical ID References\",\n    \"Job Status Change Receipts (Started/Cancelled)\",\n    \"Data Stream Reads (for Upload Actions)\"\n  ],\n  \"blockersToResolve\": [\n    \"Availability of mock endpoints to simulate 'long_running_free_auto' providers without external dependencies.\",\n    \"Synchronization of synthetic fixture mapping with actual DOM selector fragility in the target environment.\",\n    \"Validation of privacy redaction logic across all generated test steps to ensure no raw private data is logged.\"\n  ]\n}\n```"
+    }
+  ]
+}

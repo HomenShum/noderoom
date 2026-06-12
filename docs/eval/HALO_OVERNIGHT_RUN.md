@@ -1,6 +1,6 @@
 # HALO Overnight Run
 
-Last updated: 2026-06-10T21:35Z.
+Last updated: 2026-06-11T01:20Z.
 
 Target deadline: 2026-06-10 10:00 AM PT.
 
@@ -152,16 +152,17 @@ Current verified benchmark evidence is the v3 composite-synthesis contract in
 `docs/eval/results.json`:
 
 - workflow: `fetch_row_sources` then model-authored synthesis then `write_row`;
-- scope: 3 companies;
-- cheapest full gate-clearer: `deepseek/deepseek-v4-flash`, 9/9 checks,
-  $0.0034, about 91s;
-- free route result: `openrouter/free-auto -> nvidia/nemotron-3-super-120b-a12b:free`,
-  7/9 checks, $0.0000, about 216s, failing `STRUCTURED_FIELDS` and
-  `NO_FABRICATION`;
-- gate-clear trace:
-  `docs/eval/traces/benchmark/20260610T2148086-deepseek-deepseek-v4-flash-deepseek-deepseek-v4-flash.json`;
-- free route trace:
-  `docs/eval/traces/benchmark/20260610T2146296-openrouter-free-auto-nvidia-nemotron-3-super-120b-a12b-free.json`.
+- latest scope: 2026-06-11 cheap/free OpenRouter smoke, 1 company, route
+  snapshot `fabbcd520e971ec7`;
+- result shape: 28 attempted routes, 21 scored work products, 7 quarantined
+  provider/harness integration rows, and 18 routes clearing 9/9;
+- fastest $0 full gate-clearer: `nex-agi/nex-n2-pro:free`, 9/9 checks,
+  $0.0000, about 6.2s;
+- cheapest paid full gate-clearer: `ibm-granite/granite-4.1-8b`, 9/9 checks,
+  $0.0009, about 6.3s;
+- larger-run holdover: `deepseek/deepseek-v4-flash` previously cleared the
+  3-company run at $0.0034 and also cleared the latest 1-company smoke at
+  $0.0020.
 
 The older v2 single-call free-auto 9/9 trace is retained only as harness
 history; review found that the deterministic tool template authored the row

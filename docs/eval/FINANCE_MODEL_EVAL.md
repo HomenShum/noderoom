@@ -91,7 +91,7 @@ Rerun:
   `deepseek/deepseek-v4-flash` passed **5/5 model-owned runs** with room
   variants rotating (base x2, distractors x2, concurrent_edit x1 — every
   variant cleared), 16/16 linked targets each run, zero provider-owned
-  failures, median 102.3s, p95 $0.0996/run, $0.41 total. Verdict `passed`,
+  failures, median 105.0s, p95 $0.1068/run, $0.4424 total. Verdict `passed`,
   promotion bar (>= 4/5) exceeded. Redacted aggregate with the per-attempt
   ledger: `docs/eval/finance-model-live.json`; recorded to the eval store for
   `eval:diff` champion-regression tracking. The earlier single-pass result

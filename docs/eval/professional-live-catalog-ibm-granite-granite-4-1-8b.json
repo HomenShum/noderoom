@@ -1,0 +1,1096 @@
+{
+  "generatedAt": "2026-06-11T19:24:26.295Z",
+  "harnessVersion": "professional-live-catalog-v1",
+  "model": "ibm-granite/granite-4.1-8b",
+  "total": 21,
+  "passed": 19,
+  "failed": 2,
+  "passRate": 0.9047619047619048,
+  "allPassed": false,
+  "rows": [
+    {
+      "caseId": "gtm-pitchbook-company-match-enrich",
+      "model": "ibm-granite/granite-4.1-8b",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 2773,
+      "answer": {
+        "caseId": "gtm-pitchbook-company-match-enrich",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "spreadsheet",
+        "evidencePlan": [
+          "firm_name_evidence",
+          "website_evidence",
+          "hq_location_evidence",
+          "ticker_evidence"
+        ],
+        "riskControls": [
+          "preserve_original_crm_fields",
+          "mark_duplicate_names_as_needs_review",
+          "ensure_trace_contains_cross_file_reads"
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": true,
+        "privacyBoundary": "redaction_of_private_company_information",
+        "traceMustShow": [
+          "read_firm_name_from_template",
+          "read_website_from_template",
+          "read_hq_location_from_template",
+          "read_ticker_from_template",
+          "read_matching_row_from_result_sheet",
+          "calculate_match_confidence",
+          "write_match_status_cell",
+          "write_confidence_cell",
+          "write_evidence_link"
+        ],
+        "blockersToResolve": [
+          "unresolved_duplicate_names",
+          "missing_domain_matches"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"gtm-pitchbook-company-match-enrich\",\n  \"intakeModes\": [\n    \"selected_artifact\"\n  ],\n  \"primarySurface\": \"spreadsheet\",\n  \"evidencePlan\": [\n    \"firm_name_evidence\",\n    \"website_evidence\",\n    \"hq_location_evidence\",\n    \"ticker_evidence\"\n  ],\n  \"riskControls\": [\n    \"preserve_original_crm_fields\",\n    \"mark_duplicate_names_as_needs_review\",\n    \"ensure_trace_contains_cross_file_reads\"\n  ],\n  \"mutationMode\": \"draft_first\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"redaction_of_private_company_information\",\n  \"traceMustShow\": [\n    \"read_firm_name_from_template\",\n    \"read_website_from_template\",\n    \"read_hq_location_from_template\",\n    \"read_ticker_from_template\",\n    \"read_matching_row_from_result_sheet\",\n    \"calculate_match_confidence\",\n    \"write_match_status_cell\",\n    \"write_confidence_cell\",\n    \"write_evidence_link\"\n  ],\n  \"blockersToResolve\": [\n    \"unresolved_duplicate_names\",\n    \"missing_domain_matches\"\n  ]\n}"
+    },
+    {
+      "caseId": "gtm-healthtech-sector-classification",
+      "model": "ibm-granite/granite-4.1-8b",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 1313,
+      "answer": {
+        "caseId": "gtm-healthtech-sector-classification",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "spreadsheet",
+        "evidencePlan": [
+          "company_description",
+          "industry_codes",
+          "website_analysis",
+          "prior_classification_outputs"
+        ],
+        "riskControls": [
+          "validate_row_evidence",
+          "mark_needs_review_for_insufficient_data",
+          "audit_resolved_model"
+        ],
+        "mutationMode": "background_job",
+        "approvalRequired": false,
+        "privacyBoundary": "public_boundary",
+        "traceMustShow": [
+          "read_company_description",
+          "read_industry_codes",
+          "read_website_metadata",
+          "read_prior_classification",
+          "write_classification_tag",
+          "write_confidence_score",
+          "write_reasoning"
+        ],
+        "blockersToResolve": []
+      },
+      "raw": "{\n  \"caseId\": \"gtm-healthtech-sector-classification\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"spreadsheet\",\n  \"evidencePlan\": [\"company_description\", \"industry_codes\", \"website_analysis\", \"prior_classification_outputs\"],\n  \"riskControls\": [\"validate_row_evidence\", \"mark_needs_review_for_insufficient_data\", \"audit_resolved_model\"],\n  \"mutationMode\": \"background_job\",\n  \"approvalRequired\": false,\n  \"privacyBoundary\": \"public_boundary\",\n  \"traceMustShow\": [\"read_company_description\", \"read_industry_codes\", \"read_website_metadata\", \"read_prior_classification\", \"write_classification_tag\", \"write_confidence_score\", \"write_reasoning\"],\n  \"blockersToResolve\": []\n}"
+    },
+    {
+      "caseId": "gtm-intent-classifier-golden",
+      "model": "ibm-granite/granite-4.1-8b",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 1446,
+      "answer": {
+        "caseId": "gtm-intent-classifier-golden",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "ClassificationDataset",
+        "evidencePlan": [
+          "cell_payload_evidence"
+        ],
+        "riskControls": [
+          "human_review"
+        ],
+        "mutationMode": "read_only",
+        "approvalRequired": true,
+        "privacyBoundary": "privacy_redaction",
+        "traceMustShow": [
+          "source query or description fields evidence",
+          "label prediction",
+          "confidence score",
+          "macro-F1 computation",
+          "needs_review flagging"
+        ],
+        "blockersToResolve": [
+          "taxonomy review of ambiguous rows"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"gtm-intent-classifier-golden\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"ClassificationDataset\",\n  \"evidencePlan\": [\"cell_payload_evidence\"],\n  \"riskControls\": [\"human_review\"],\n  \"mutationMode\": \"read_only\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"privacy_redaction\",\n  \"traceMustShow\": [\"source query or description fields evidence\", \"label prediction\", \"confidence score\", \"macro-F1 computation\", \"needs_review flagging\"],\n  \"blockersToResolve\": [\"taxonomy review of ambiguous rows\"]\n}"
+    },
+    {
+      "caseId": "gtm-amo-signal-scorer",
+      "model": "ibm-granite/granite-4.1-8b",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 1625,
+      "answer": {
+        "caseId": "gtm-amo-signal-scorer",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "spreadsheet",
+        "evidencePlan": [
+          "cell_payload_evidence"
+        ],
+        "riskControls": [
+          "workflow_checkpoint_resume",
+          "resolved_model_audit",
+          "human_review"
+        ],
+        "mutationMode": "background_job",
+        "approvalRequired": true,
+        "privacyBoundary": "redact private account/contact fields while preserving row-level scoring provenance",
+        "traceMustShow": [
+          "reads of scoring framework",
+          "writes of tier/evidence CellPayloads",
+          "aggregation of score fields",
+          "conflict resolution steps",
+          "redaction actions"
+        ],
+        "blockersToResolve": [
+          "missing-domain rows",
+          "conflicting evidence rows",
+          "missing-description rows"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"gtm-amo-signal-scorer\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"spreadsheet\",\n  \"evidencePlan\": [\"cell_payload_evidence\"],\n  \"riskControls\": [\"workflow_checkpoint_resume\", \"resolved_model_audit\", \"human_review\"],\n  \"mutationMode\": \"background_job\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"redact private account/contact fields while preserving row-level scoring provenance\",\n  \"traceMustShow\": [\"reads of scoring framework\", \"writes of tier/evidence CellPayloads\", \"aggregation of score fields\", \"conflict resolution steps\", \"redaction actions\"],\n  \"blockersToResolve\": [\"missing-domain rows\", \"conflicting evidence rows\", \"missing-description rows\"]\n}"
+    },
+    {
+      "caseId": "gtm-jpm-market-map-joins",
+      "model": "ibm-granite/granite-4.1-8b",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 1309,
+      "answer": {
+        "caseId": "gtm-jpm-market-map-joins",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "spreadsheet",
+        "evidencePlan": [
+          "cell_payload_evidence",
+          "artifact_refs"
+        ],
+        "riskControls": [
+          "human_review"
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": true,
+        "privacyBoundary": "redaction of personal identifiers and confidential partnership details",
+        "traceMustShow": [
+          "source artifact",
+          "sheet reference",
+          "row number",
+          "URL field evidence"
+        ],
+        "blockersToResolve": [
+          "duplicate company names requiring disambiguation",
+          "missing product/service entries",
+          "conflicting partnership information"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"gtm-jpm-market-map-joins\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"spreadsheet\",\n  \"evidencePlan\": [\"cell_payload_evidence\", \"artifact_refs\"],\n  \"riskControls\": [\"human_review\"],\n  \"mutationMode\": \"draft_first\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"redaction of personal identifiers and confidential partnership details\",\n  \"traceMustShow\": [\"source artifact\", \"sheet reference\", \"row number\", \"URL field evidence\"],\n  \"blockersToResolve\": [\"duplicate company names requiring disambiguation\", \"missing product/service entries\", \"conflicting partnership information\"]\n}"
+    },
+    {
+      "caseId": "gtm-sbb-one-column-extraction",
+      "model": "ibm-granite/granite-4.1-8b",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 1953,
+      "answer": {
+        "caseId": "gtm-sbb-one-column-extraction",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "spreadsheet",
+        "evidencePlan": [
+          "cell_payload_evidence",
+          "artifact_refs"
+        ],
+        "riskControls": [
+          "human_review"
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": true,
+        "privacyBoundary": "public_data",
+        "traceMustShow": [
+          "source_row",
+          "line_span",
+          "field_value",
+          "evidence_link"
+        ],
+        "blockersToResolve": []
+      },
+      "raw": "{\n  \"caseId\": \"gtm-sbb-one-column-extraction\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"spreadsheet\",\n  \"evidencePlan\": [\n    \"cell_payload_evidence\",\n    \"artifact_refs\"\n  ],\n  \"riskControls\": [\n    \"human_review\"\n  ],\n  \"mutationMode\": \"draft_first\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"public_data\",\n  \"traceMustShow\": [\n    \"source_row\",\n    \"line_span\",\n    \"field_value\",\n    \"evidence_link\"\n  ],\n  \"blockersToResolve\": []\n}"
+    },
+    {
+      "caseId": "gtm-company-deep-report",
+      "model": "ibm-granite/granite-4.1-8b",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 1769,
+      "answer": {
+        "caseId": "gtm-company-deep-report",
+        "intakeModes": [
+          "chat_only",
+          "upload",
+          "external_retrieval"
+        ],
+        "primarySurface": "wiki_note",
+        "evidencePlan": [
+          "research <company name>",
+          "parselyfi_*_Report_*.xlsx",
+          "company_analysis_report.xlsx",
+          "company_pitchbook_info_*.xlsx"
+        ],
+        "riskControls": [
+          "clarifying_question_gate",
+          "cross_file_context",
+          "privacy_redaction",
+          "human_review"
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": true,
+        "privacyBoundary": "redaction of private/PII data, ensuring only cited claims are visible in public wiki note",
+        "traceMustShow": [
+          "artifact references",
+          "clickable source links",
+          "source citations",
+          "checked for conflicts"
+        ],
+        "blockersToResolve": [
+          "conflicting source values",
+          "ambiguous company name clarification",
+          "privacy redaction compliance"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"gtm-company-deep-report\",\n  \"intakeModes\": [\n    \"chat_only\",\n    \"upload\",\n    \"external_retrieval\"\n  ],\n  \"primarySurface\": \"wiki_note\",\n  \"evidencePlan\": [\n    \"research <company name>\",\n    \"parselyfi_*_Report_*.xlsx\",\n    \"company_analysis_report.xlsx\",\n    \"company_pitchbook_info_*.xlsx\"\n  ],\n  \"riskControls\": [\n    \"clarifying_question_gate\",\n    \"cross_file_context\",\n    \"privacy_redaction\",\n    \"human_review\"\n  ],\n  \"mutationMode\": \"draft_first\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"redaction of private/PII data, ensuring only cited claims are visible in public wiki note\",\n  \"traceMustShow\": [\n    \"artifact references\",\n    \"clickable source links\",\n    \"source citations\",\n    \"checked for conflicts\"\n  ],\n  \"blockersToResolve\": [\n    \"conflicting source values\",\n    \"ambiguous company name clarification\",\n    \"privacy redaction compliance\"\n  ]\n}"
+    },
+    {
+      "caseId": "gtm-chat-lead-capture-enrich",
+      "model": "ibm-granite/granite-4.1-8b",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 1918,
+      "answer": {
+        "caseId": "gtm-chat-lead-capture-enrich",
+        "intakeModes": [
+          "chat_only",
+          "external_retrieval",
+          "mixed_room_state"
+        ],
+        "primarySurface": "watchlist_row",
+        "evidencePlan": [
+          "CellPayload evidence for chat-derived entities (manual)",
+          "External source evidence for funding claim where fetchable"
+        ],
+        "riskControls": [
+          "needs_review flag for unverifiable funding claim",
+          "privacy_boundary: private_by_default for person names",
+          "update_existing: CAS-based match to avoid duplication"
+        ],
+        "mutationMode": "mutate_with_cas",
+        "approvalRequired": false,
+        "privacyBoundary": "private_by_default",
+        "traceMustShow": [
+          "read_chat_note",
+          "entity_resolution: person, company, funding_amount",
+          "source_verification_attempt_for_claim",
+          "watchlist_row_update_or_creation_with_CAS",
+          "wiki_note_grounding_or_skip_if_private"
+        ],
+        "blockersToResolve": [
+          "ambiguity_in_company_name",
+          "lack_of_verified_funding_source"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"gtm-chat-lead-capture-enrich\",\n  \"intakeModes\": [\n    \"chat_only\",\n    \"external_retrieval\",\n    \"mixed_room_state\"\n  ],\n  \"primarySurface\": \"watchlist_row\",\n  \"evidencePlan\": [\n    \"CellPayload evidence for chat-derived entities (manual)\",\n    \"External source evidence for funding claim where fetchable\"\n  ],\n  \"riskControls\": [\n    \"needs_review flag for unverifiable funding claim\",\n    \"privacy_boundary: private_by_default for person names\",\n    \"update_existing: CAS-based match to avoid duplication\"\n  ],\n  \"mutationMode\": \"mutate_with_cas\",\n  \"approvalRequired\": false,\n  \"privacyBoundary\": \"private_by_default\",\n  \"traceMustShow\": [\n    \"read_chat_note\",\n    \"entity_resolution: person, company, funding_amount\",\n    \"source_verification_attempt_for_claim\",\n    \"watchlist_row_update_or_creation_with_CAS\",\n    \"wiki_note_grounding_or_skip_if_private\"\n  ],\n  \"blockersToResolve\": [\n    \"ambiguity_in_company_name\",\n    \"lack_of_verified_funding_source\"\n  ]\n}"
+    },
+    {
+      "caseId": "gtm-chat-to-background-diligence-job",
+      "model": "ibm-granite/granite-4.1-8b",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 2297,
+      "answer": {
+        "caseId": "gtm-chat-to-background-diligence-job",
+        "intakeModes": [
+          "chat_only",
+          "external_retrieval",
+          "mixed_room_state"
+        ],
+        "primarySurface": "research_sheet",
+        "evidencePlan": [
+          "fetch_public_sources",
+          "populate_company_profile_fields",
+          "create_or_reuse_research_artifact",
+          "checkpoint_progress",
+          "resume_checkpoints",
+          "prevent_duplicate_submissions",
+          "surface_conflicting_sources_for_review",
+          "preserve_private_details_by_default"
+        ],
+        "riskControls": [
+          "idempotency_by_entity_key",
+          "human_review_of_conflicts",
+          "draft_or_approval_if_required",
+          "checkpoint_resume_with_resume_state"
+        ],
+        "mutationMode": "background_job",
+        "approvalRequired": false,
+        "privacyBoundary": "private_by_default; only company_facts to shared_surface unless instructed otherwise",
+        "traceMustShow": [
+          "chat_source_preservation",
+          "entity_resolution_trace",
+          "evidence_payload_trace",
+          "checkpoint_resume_trace",
+          "duplicate_collision_handling_trace",
+          "conflict_surfacing_trace",
+          "privacy_default_application_trace"
+        ],
+        "blockersToResolve": [
+          "None",
+          "or",
+          "Resolve entity_resolved_conflict_by_human_review_if_conflicting_sources_exist"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"gtm-chat-to-background-diligence-job\",\n  \"intakeModes\": [\n    \"chat_only\",\n    \"external_retrieval\",\n    \"mixed_room_state\"\n  ],\n  \"primarySurface\": \"research_sheet\",\n  \"evidencePlan\": [\n    \"fetch_public_sources\",\n    \"populate_company_profile_fields\",\n    \"create_or_reuse_research_artifact\",\n    \"checkpoint_progress\",\n    \"resume_checkpoints\",\n    \"prevent_duplicate_submissions\",\n    \"surface_conflicting_sources_for_review\",\n    \"preserve_private_details_by_default\"\n  ],\n  \"riskControls\": [\n    \"idempotency_by_entity_key\",\n    \"human_review_of_conflicts\",\n    \"draft_or_approval_if_required\",\n    \"checkpoint_resume_with_resume_state\"\n  ],\n  \"mutationMode\": \"background_job\",\n  \"approvalRequired\": false,\n  \"privacyBoundary\": \"private_by_default; only company_facts to shared_surface unless instructed otherwise\",\n  \"traceMustShow\": [\n    \"chat_source_preservation\",\n    \"entity_resolution_trace\",\n    \"evidence_payload_trace\",\n    \"checkpoint_resume_trace\",\n    \"duplicate_collision_handling_trace\",\n    \"conflict_surfacing_trace\",\n    \"privacy_default_application_trace\"\n  ],\n  \"blockersToResolve\": [\n    \"None\",\n    \"or\",\n    \"Resolve entity_resolved_conflict_by_human_review_if_conflicting_sources_exist\"\n  ]\n}"
+    },
+    {
+      "caseId": "gtm-pasted-intro-email-capture",
+      "model": "ibm-granite/granite-4.1-8b",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 1561,
+      "answer": {
+        "caseId": "gtm-pasted-intro-email-capture",
+        "intakeModes": [
+          "pasted_content",
+          "mixed_room_state"
+        ],
+        "primarySurface": "chat_reply_only",
+        "evidencePlan": [
+          "entity_resolution",
+          "privacy_redaction"
+        ],
+        "riskControls": [
+          "clarifying_question_gate",
+          "human_review"
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": true,
+        "privacyBoundary": "private",
+        "traceMustShow": [
+          "reads_pasted_third_party_content",
+          "detects_third_party_authorship",
+          "records_claims_at_quoted_third_party_provenance",
+          "redacts_sender_contact_details",
+          "creates_or_updates_watchlist_row",
+          "asks_clarifying_question_about_ambiguous_company"
+        ],
+        "blockersToResolve": []
+      },
+      "raw": "{\n  \"caseId\": \"gtm-pasted-intro-email-capture\",\n  \"intakeModes\": [\n    \"pasted_content\",\n    \"mixed_room_state\"\n  ],\n  \"primarySurface\": \"chat_reply_only\",\n  \"evidencePlan\": [\n    \"entity_resolution\",\n    \"privacy_redaction\"\n  ],\n  \"riskControls\": [\n    \"clarifying_question_gate\",\n    \"human_review\"\n  ],\n  \"mutationMode\": \"draft_first\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"private\",\n  \"traceMustShow\": [\n    \"reads_pasted_third_party_content\",\n    \"detects_third_party_authorship\",\n    \"records_claims_at_quoted_third_party_provenance\",\n    \"redacts_sender_contact_details\",\n    \"creates_or_updates_watchlist_row\",\n    \"asks_clarifying_question_about_ambiguous_company\"\n  ],\n  \"blockersToResolve\": []\n}"
+    },
+    {
+      "caseId": "gtm-pii-masking-and-public-private-boundary",
+      "model": "ibm-granite/granite-4.1-8b",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 2836,
+      "answer": {
+        "caseId": "gtm-pii-masking-and-public-private-boundary",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "wiki",
+        "evidencePlan": [
+          "Upload a contact-raw workbook.",
+          "Ask the public agent for a summary.",
+          "Ask the private agent for the same artifact and compare allowed detail.",
+          "Verify public artifact references remain clickable without exposing raw private values inline."
+        ],
+        "riskControls": [
+          "The public response masks or omits email, phone, address, contact names, account identifiers, and raw messages.",
+          "The private response can reference sensitive columns only when the actor has room access.",
+          "The audit trace records the artifact id and redaction decision.",
+          "The agent never copies sensitive cell values into the wiki by default."
+        ],
+        "mutationMode": "mutate_with_cas",
+        "approvalRequired": true,
+        "privacyBoundary": "Redaction boundary: mask all PII fields (email, phone, address, contact names, account identifiers) unless explicitly requested in private space; maintain public references as clickable links without exposing raw values.",
+        "traceMustShow": [
+          "artifact_id",
+          "redaction_decision",
+          "read_private_columns",
+          "public_summary_generation",
+          "clickable_reference_verification"
+        ],
+        "blockersToResolve": [
+          "Ensuring no raw PII values are inline in public summary.",
+          "Validating private space access controls for column referencing."
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"gtm-pii-masking-and-public-private-boundary\",\n  \"intakeModes\": [\n    \"selected_artifact\"\n  ],\n  \"primarySurface\": \"wiki\",\n  \"evidencePlan\": [\n    \"Upload a contact-raw workbook.\",\n    \"Ask the public agent for a summary.\",\n    \"Ask the private agent for the same artifact and compare allowed detail.\",\n    \"Verify public artifact references remain clickable without exposing raw private values inline.\"\n  ],\n  \"riskControls\": [\n    \"The public response masks or omits email, phone, address, contact names, account identifiers, and raw messages.\",\n    \"The private response can reference sensitive columns only when the actor has room access.\",\n    \"The audit trace records the artifact id and redaction decision.\",\n    \"The agent never copies sensitive cell values into the wiki by default.\"\n  ],\n  \"mutationMode\": \"mutate_with_cas\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"Redaction boundary: mask all PII fields (email, phone, address, contact names, account identifiers) unless explicitly requested in private space; maintain public references as clickable links without exposing raw values.\",\n  \"traceMustShow\": [\n    \"artifact_id\",\n    \"redaction_decision\",\n    \"read_private_columns\",\n    \"public_summary_generation\",\n    \"clickable_reference_verification\"\n  ],\n  \"blockersToResolve\": [\n    \"Ensuring no raw PII values are inline in public summary.\",\n    \"Validating private space access controls for column referencing.\"\n  ]\n}"
+    },
+    {
+      "caseId": "finance-cost-reconciliation",
+      "model": "ibm-granite/granite-4.1-8b",
+      "status": "failed",
+      "score": 0.9090909090909091,
+      "checks": {
+        "validCaseId": false,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 1688,
+      "answer": {
+        "caseId": "finance- cost-reconciliation",
+        "intakeModes": [
+          "upload",
+          "selected_artifact"
+        ],
+        "primarySurface": "spreadsheet",
+        "evidencePlan": [],
+        "riskControls": [
+          "CAS-protected write for variance correction",
+          "Lock formula children when parent cells are edited",
+          "Human review of unresolved exceptions"
+        ],
+        "mutationMode": "mutate_with_cas",
+        "approvalRequired": true,
+        "privacyBoundary": "private data: financial spend amounts, model/vendor identifiers",
+        "traceMustShow": [
+          "read source CSV and XLSX artifacts",
+          "compute aggregated spend by date and model/vendor",
+          "compare computed totals against expected workbook values",
+          "write variance notes citing source artifact, row, and model/vendor column",
+          "lock/flag formula dependencies on corrected cells",
+          "export review note of unresolved exceptions"
+        ],
+        "blockersToResolve": []
+      },
+      "raw": "{\n  \"caseId\": \"finance- cost-reconciliation\",\n  \"intakeModes\": [\n    \"upload\",\n    \"selected_artifact\"\n  ],\n  \"primarySurface\": \"spreadsheet\",\n  \"evidencePlan\": [],\n  \"riskControls\": [\n    \"CAS-protected write for variance correction\",\n    \"Lock formula children when parent cells are edited\",\n    \"Human review of unresolved exceptions\"\n  ],\n  \"mutationMode\": \"mutate_with_cas\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"private data: financial spend amounts, model/vendor identifiers\",\n  \"traceMustShow\": [\n    \"read source CSV and XLSX artifacts\",\n    \"compute aggregated spend by date and model/vendor\",\n    \"compare computed totals against expected workbook values\",\n    \"write variance notes citing source artifact, row, and model/vendor column\",\n    \"lock/flag formula dependencies on corrected cells\",\n    \"export review note of unresolved exceptions\"\n  ],\n  \"blockersToResolve\": []\n}"
+    },
+    {
+      "caseId": "finance-three-statement-modeling-private-gold",
+      "model": "ibm-granite/granite-4.1-8b",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 3978,
+      "answer": {
+        "caseId": "finance-three-statement-modeling-private-gold",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "spreadsheet",
+        "evidencePlan": [
+          "Validate the private workbook has Test Prompt, Historical Data, Your Model, and Answer Key sheets.",
+          "Solve mode: run NodeAgent against a fresh copy of the user model and compare forecast formulas and values against the Answer Key tolerance.",
+          "Guide mode: inject a scripted student mistake, require a targeted hint, and assert no forecast answer cells are written.",
+          "Collaborate mode: assign income statement, cash flow, and balance sheet ranges to teammates and NodeAgent; require section locks, drafts when blocked, CAS on linkage rows, and final balance checks."
+        ],
+        "riskControls": [
+          "Forecast cells are formulas and mention the correct driver/assumption references; pasted answer-key values fail.",
+          "Historical Data, Test Prompt, assumptions, and non-target sections remain unchanged.",
+          "Cash flow ending cash ties to balance sheet cash, retained earnings rolls forward, debt/revolver links hold, and balance checks equal zero.",
+          "Guide mode writes no answer cells and produces the next useful hint instead of dumping the answer key.",
+          "Collaborate mode touches only the leased section, drafts when blocked, and preserves human edits to shared linkage rows.",
+          "Private workbook contents and answer-key values are never copied into public repo artifacts or public room summaries."
+        ],
+        "mutationMode": "read_only",
+        "approvalRequired": false,
+        "privacyBoundary": "private gold pack with Test Prompt, Historical Data, Your Model, and Answer Key must remain confidential and not be shared publicly. All operations must redact any private data, ensuring no leakage of financial assumptions, forecasts, or copyrighted workbook structures.",
+        "traceMustShow": [
+          "reads of Test Prompt, Historical Data, Your Model, and Answer Key sheets",
+          "writes of forecast formulas in FY2025E/FY2026E cells (solve mode)",
+          "generation of hints in guide mode (no answer cells written)",
+          "edition of leased statement sections locked to collaborators (collaborate mode)",
+          "maintenance of cash flow/balance sheet linkage integrity checks"
+        ],
+        "blockersToResolve": [
+          "Section lock contention during collaborate mode edits",
+          "Formula dependency ordering conflicts in multi-sheet linked models",
+          "CAS failure on shared linkage rows when teammate edits are pending"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"finance-three-statement-modeling-private-gold\",\n  \"intakeModes\": [\n    \"selected_artifact\"\n  ],\n  \"primarySurface\": \"spreadsheet\",\n  \"evidencePlan\": [\n    \"Validate the private workbook has Test Prompt, Historical Data, Your Model, and Answer Key sheets.\",\n    \"Solve mode: run NodeAgent against a fresh copy of the user model and compare forecast formulas and values against the Answer Key tolerance.\",\n    \"Guide mode: inject a scripted student mistake, require a targeted hint, and assert no forecast answer cells are written.\",\n    \"Collaborate mode: assign income statement, cash flow, and balance sheet ranges to teammates and NodeAgent; require section locks, drafts when blocked, CAS on linkage rows, and final balance checks.\"\n  ],\n  \"riskControls\": [\n    \"Forecast cells are formulas and mention the correct driver/assumption references; pasted answer-key values fail.\",\n    \"Historical Data, Test Prompt, assumptions, and non-target sections remain unchanged.\",\n    \"Cash flow ending cash ties to balance sheet cash, retained earnings rolls forward, debt/revolver links hold, and balance checks equal zero.\",\n    \"Guide mode writes no answer cells and produces the next useful hint instead of dumping the answer key.\",\n    \"Collaborate mode touches only the leased section, drafts when blocked, and preserves human edits to shared linkage rows.\",\n    \"Private workbook contents and answer-key values are never copied into public repo artifacts or public room summaries.\"\n  ],\n  \"mutationMode\": \"read_only\",\n  \"approvalRequired\": false,\n  \"privacyBoundary\": \"private gold pack with Test Prompt, Historical Data, Your Model, and Answer Key must remain confidential and not be shared publicly. All operations must redact any private data, ensuring no leakage of financial assumptions, forecasts, or copyrighted workbook structures.\",\n  \"traceMustShow\": [\n    \"reads of Test Prompt, Historical Data, Your Model, and Answer Key sheets\",\n    \"writes of forecast formulas in FY2025E/FY2026E cells (solve mode)\",\n    \"generation of hints in guide mode (no answer cells written)\",\n    \"edition of leased statement sections locked to collaborators (collaborate mode)\",\n    \"maintenance of cash flow/balance sheet linkage integrity checks\"\n  ],\n  \"blockersToResolve\": [\n    \"Section lock contention during collaborate mode edits\",\n    \"Formula dependency ordering conflicts in multi-sheet linked models\",\n    \"CAS failure on shared linkage rows when teammate edits are pending\"\n  ]\n}"
+    },
+    {
+      "caseId": "finance-accountant-template-population",
+      "model": "ibm-granite/granite-4.1-8b",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 2520,
+      "answer": {
+        "caseId": "finance-accountant-template-population",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "spreadsheet",
+        "evidencePlan": [
+          "Parse the fixed template and source transaction file.",
+          "Detect the template data-entry cells without shifting merged or label cells.",
+          "Populate totals through CellPayload writes with source row evidence.",
+          "Generate a correction note for unmapped or changed categories."
+        ],
+        "riskControls": [
+          "Template dimensions and labels remain stable; the agent does not rewrite the form structure.",
+          "Every populated amount cites source rows and category-mapping evidence.",
+          "Unmapped categories are marked needs_review instead of invented.",
+          "Public notes mask raw transaction-level amounts unless the user requests a private detail view."
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": true,
+        "privacyBoundary": "Redaction of raw transaction amounts in public notes; PII masked unless private detail view requested.",
+        "traceMustShow": [
+          "reads of source transaction categories",
+          "writes to template cells with evidence references",
+          "calculations of totals from source rows",
+          "generation of needs_review markers for unmapped categories"
+        ],
+        "blockersToResolve": [
+          "Unmapped category detection",
+          "Mapping correction handling",
+          "Evidence linking to template cells"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"finance-accountant-template-population\",\n  \"intakeModes\": [\n    \"selected_artifact\"\n  ],\n  \"primarySurface\": \"spreadsheet\",\n  \"evidencePlan\": [\n    \"Parse the fixed template and source transaction file.\",\n    \"Detect the template data-entry cells without shifting merged or label cells.\",\n    \"Populate totals through CellPayload writes with source row evidence.\",\n    \"Generate a correction note for unmapped or changed categories.\"\n  ],\n  \"riskControls\": [\n    \"Template dimensions and labels remain stable; the agent does not rewrite the form structure.\",\n    \"Every populated amount cites source rows and category-mapping evidence.\",\n    \"Unmapped categories are marked needs_review instead of invented.\",\n    \"Public notes mask raw transaction-level amounts unless the user requests a private detail view.\"\n  ],\n  \"mutationMode\": \"draft_first\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"Redaction of raw transaction amounts in public notes; PII masked unless private detail view requested.\",\n  \"traceMustShow\": [\n    \"reads of source transaction categories\",\n    \"writes to template cells with evidence references\",\n    \"calculations of totals from source rows\",\n    \"generation of needs_review markers for unmapped categories\"\n  ],\n  \"blockersToResolve\": [\n    \"Unmapped category detection\",\n    \"Mapping correction handling\",\n    \"Evidence linking to template cells\"\n  ]\n}"
+    },
+    {
+      "caseId": "finance-timesheet-invoice-review",
+      "model": "ibm-granite/granite-4.1-8b",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 1342,
+      "answer": {
+        "caseId": "finance-timesheet-invoice-review",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "file",
+        "evidencePlan": [
+          "row-identifier",
+          "formula-source",
+          "duplicate-detection",
+          "gap-detection"
+        ],
+        "riskControls": [
+          "formula-unchanged-lock",
+          "identity-redaction",
+          "concurrent-edit-protection"
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": true,
+        "privacyBoundary": "redact-sensitive-identifiers",
+        "traceMustShow": [
+          "header-merge-identification",
+          "formula-cell-reading",
+          "exception-creation",
+          "notes-edit-trace"
+        ],
+        "blockersToResolve": [
+          "dual-concurrent-notes-edit",
+          "missing-clok-out-row"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"finance-timesheet-invoice-review\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"file\",\n  \"evidencePlan\": [\"row-identifier\", \"formula-source\", \"duplicate-detection\", \"gap-detection\"],\n  \"riskControls\": [\"formula-unchanged-lock\", \"identity-redaction\", \"concurrent-edit-protection\"],\n  \"mutationMode\": \"draft_first\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"redact-sensitive-identifiers\",\n  \"traceMustShow\": [\"header-merge-identification\", \"formula-cell-reading\", \"exception-creation\", \"notes-edit-trace\"],\n  \"blockersToResolve\": [\"dual-concurrent-notes-edit\", \"missing-clok-out-row\"]\n}"
+    },
+    {
+      "caseId": "finance-transaction-activity-summary",
+      "model": "ibm-granite/granite-4.1-8b",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 1221,
+      "answer": {
+        "caseId": "finance-transaction-activity-summary",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "CSV",
+        "evidencePlan": [
+          "row-range evidence",
+          "masked raw details"
+        ],
+        "riskControls": [
+          "privacy masking",
+          "review of ambiguous rows"
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": true,
+        "privacyBoundary": "redaction of PII and sensitive transaction details",
+        "traceMustShow": [
+          "parsed transaction rows",
+          "aggregated action counts",
+          "masked row references",
+          "review decision logs"
+        ],
+        "blockersToResolve": [
+          "handling blank symbol/price/quantity/fee cells",
+          "ensuring sign preservation"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"finance-transaction-activity-summary\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"CSV\",\n  \"evidencePlan\": [\"row-range evidence\", \"masked raw details\"],\n  \"riskControls\": [\"privacy masking\", \"review of ambiguous rows\"],\n  \"mutationMode\": \"draft_first\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"redaction of PII and sensitive transaction details\",\n  \"traceMustShow\": [\"parsed transaction rows\", \"aggregated action counts\", \"masked row references\", \"review decision logs\"],\n  \"blockersToResolve\": [\"handling blank symbol/price/quantity/fee cells\", \"ensuring sign preservation\"]\n}"
+    },
+    {
+      "caseId": "eval-template-to-harness-run",
+      "model": "ibm-granite/granite-4.1-8b",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 1475,
+      "answer": {
+        "caseId": "eval-template-to-harness-run",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "NodeRoom",
+        "evidencePlan": [],
+        "riskControls": [
+          "checkpoint assertions for free-auto cases",
+          "privacy redaction of source rows",
+          "human review approval for eval definitions"
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": true,
+        "privacyBoundary": "redaction of private source rows before storage",
+        "traceMustShow": [
+          "observable reads of starting state",
+          "writes to expected state",
+          "receipt of task execution",
+          "source masking for PII"
+        ],
+        "blockersToResolve": [
+          "resolved_model_audit",
+          "privacy_redaction"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"eval-template-to-harness-run\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"NodeRoom\",\n  \"evidencePlan\": [],\n  \"riskControls\": [\n    \"checkpoint assertions for free-auto cases\",\n    \"privacy redaction of source rows\",\n    \"human review approval for eval definitions\"\n  ],\n  \"mutationMode\": \"draft_first\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"redaction of private source rows before storage\",\n  \"traceMustShow\": [\n    \"observable reads of starting state\",\n    \"writes to expected state\",\n    \"receipt of task execution\",\n    \"source masking for PII\"\n  ],\n  \"blockersToResolve\": [\n    \"resolved_model_audit\",\n    \"privacy_redaction\"\n  ]\n}"
+    },
+    {
+      "caseId": "eval-ui-action-execution-map",
+      "model": "ibm-granite/granite-4.1-8b",
+      "status": "failed",
+      "score": 0.9090909090909091,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": false,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 2196,
+      "answer": {
+        "caseId": "eval-ui-action-execution-map",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "browser",
+        "evidencePlan": [
+          "Parse the mapping CSV into action definitions.",
+          "Generate a browser-visible step and backend assertion for each action.",
+          "Run deterministic local checks for actions that do not need external providers.",
+          "Store live-provider and long-running cases as optional eval lanes."
+        ],
+        "riskControls": [
+          "Every generated action has a UI selector or user action, expected tool/data layer, expected artifact state, and failure signal.",
+          "Long-running UI actions include checkpoint, status-hip, resolvedModel, cancel, and retry assertions.",
+          "Artifact-reference actions verify clickability and canonical artifact ids.",
+          "No eval result includes raw private source rows."
+        ],
+        "mutationMode": "read_only",
+        "approvalRequired": false,
+        "privacyBoundary": "Redact any private/PII data from UI mapping rows before processing; ensure artifacts referenced are public or whitelisted.",
+        "traceMustShow": [
+          "UI selector identification",
+          "Browser action execution trace",
+          "Backend assertion evaluation",
+          "Artifact state before/after",
+          "Checkpoint status updates for long-running actions"
+        ],
+        "blockersToResolve": []
+      },
+      "raw": "{\n  \"caseId\": \"eval-ui-action-execution-map\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"browser\",\n  \"evidencePlan\": [\n    \"Parse the mapping CSV into action definitions.\",\n    \"Generate a browser-visible step and backend assertion for each action.\",\n    \"Run deterministic local checks for actions that do not need external providers.\",\n    \"Store live-provider and long-running cases as optional eval lanes.\"\n  ],\n  \"riskControls\": [\n    \"Every generated action has a UI selector or user action, expected tool/data layer, expected artifact state, and failure signal.\",\n    \"Long-running UI actions include checkpoint, status-hip, resolvedModel, cancel, and retry assertions.\",\n    \"Artifact-reference actions verify clickability and canonical artifact ids.\",\n    \"No eval result includes raw private source rows.\"\n  ],\n  \"mutationMode\": \"read_only\",\n  \"approvalRequired\": false,\n  \"privacyBoundary\": \"Redact any private/PII data from UI mapping rows before processing; ensure artifacts referenced are public or whitelisted.\",\n  \"traceMustShow\": [\n    \"UI selector identification\",\n    \"Browser action execution trace\",\n    \"Backend assertion evaluation\",\n    \"Artifact state before/after\",\n    \"Checkpoint status updates for long-running actions\"\n  ],\n  \"blockersToResolve\": []\n}"
+    },
+    {
+      "caseId": "analytics-weighted-ranking",
+      "model": "ibm-granite/granite-4.1-8b",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 1305,
+      "answer": {
+        "caseId": "analytics-weighted-ranking",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "spreadsheet",
+        "evidencePlan": [
+          "cell_payload_evidence",
+          "artifact_refs"
+        ],
+        "riskControls": [
+          "formula_dependency_locks"
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": false,
+        "privacyBoundary": "public data (no PII, confidential, or sensitive information)",
+        "traceMustShow": [
+          "source column reads",
+          "weight application",
+          "score calculation",
+          "rank update",
+          "sensitivity report"
+        ],
+        "blockersToResolve": []
+      },
+      "raw": "{\n  \"caseId\": \"analytics-weighted-ranking\",\n  \"intakeModes\": [\n    \"selected_artifact\"\n  ],\n  \"primarySurface\": \"spreadsheet\",\n  \"evidencePlan\": [\n    \"cell_payload_evidence\",\n    \"artifact_refs\"\n  ],\n  \"riskControls\": [\n    \"formula_dependency_locks\"\n  ],\n  \"mutationMode\": \"draft_first\",\n  \"approvalRequired\": false,\n  \"privacyBoundary\": \"public data (no PII, confidential, or sensitive information)\",\n  \"traceMustShow\": [\n    \"source column reads\",\n    \"weight application\",\n    \"score calculation\",\n    \"rank update\",\n    \"sensitivity report\"\n  ],\n  \"blockersToResolve\": []\n}"
+    },
+    {
+      "caseId": "analytics-workout-progress-dashboard",
+      "model": "ibm-granite/granite-4.1-8b",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 2924,
+      "answer": {
+        "caseId": "analytics-workout-progress-dashboard",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "dashboard",
+        "evidencePlan": [
+          "Join exercises by title/name where possible.",
+          "Compute separate strength volume and cardio duration/distance summaries.",
+          "Produce a public-safe dashboard note and a private detailed artifact."
+        ],
+        "riskControls": [
+          "Blank RPE, notes, and descriptions remain empty or unknown rather than invented.",
+          "Superset identifiers are preserved in the grouped output.",
+          "Public summaries mask raw timestamps and do not dump complete workout rows."
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": true,
+        "privacyBoundary": "Public summaries must mask raw timestamps and omit complete workout rows; private detailed artifact retains sensitive data under redaction.",
+        "traceMustShow": [
+          "Observable reads of workout_data.csv and Gym Exercises Dataset.xlsx.",
+          "Writes to the privacy-safe progress dashboard and the private detailed artifact.",
+          "Receipts of schema detection and cross-file context establishment.",
+          "Evidence payloads from joined workout log rows and exercise metadata rows."
+        ],
+        "blockersToResolve": [
+          "Handling missing or blank RPE values without invention.",
+          "Preserving superset identifiers while grouping by session and exercise.",
+          "Ensuring unit semantics (strength volume vs. cardio duration/distance) are not mixed."
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"analytics-workout-progress-dashboard\",\n  \"intakeModes\": [\n    \"selected_artifact\"\n  ],\n  \"primarySurface\": \"dashboard\",\n  \"evidencePlan\": [\n    \"Join exercises by title/name where possible.\",\n    \"Compute separate strength volume and cardio duration/distance summaries.\",\n    \"Produce a public-safe dashboard note and a private detailed artifact.\"\n  ],\n  \"riskControls\": [\n    \"Blank RPE, notes, and descriptions remain empty or unknown rather than invented.\",\n    \"Superset identifiers are preserved in the grouped output.\",\n    \"Public summaries mask raw timestamps and do not dump complete workout rows.\"\n  ],\n  \"mutationMode\": \"draft_first\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"Public summaries must mask raw timestamps and omit complete workout rows; private detailed artifact retains sensitive data under redaction.\",\n  \"traceMustShow\": [\n    \"Observable reads of workout_data.csv and Gym Exercises Dataset.xlsx.\",\n    \"Writes to the privacy-safe progress dashboard and the private detailed artifact.\",\n    \"Receipts of schema detection and cross-file context establishment.\",\n    \"Evidence payloads from joined workout log rows and exercise metadata rows.\"\n  ],\n  \"blockersToResolve\": [\n    \"Handling missing or blank RPE values without invention.\",\n    \"Preserving superset identifiers while grouping by session and exercise.\",\n    \"Ensuring unit semantics (strength volume vs. cardio duration/distance) are not mixed.\"\n  ]\n}"
+    },
+    {
+      "caseId": "legacy-output-migration",
+      "model": "ibm-granite/granite-4.1-8b",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 2326,
+      "answer": {
+        "caseId": "legacy-output-migration",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "wiki",
+        "evidencePlan": [
+          "Upload legacy files",
+          "Build migration summary and wiki update",
+          "Click source references from the wiki",
+          "Review trace for source reads, wiki update receipts, and duplicate decisions",
+          "Re-run migration and assert idempotency"
+        ],
+        "riskControls": [
+          "Mask PII-likes in public summaries",
+          "Detect and skip duplicates",
+          "Ensure stable table of contents after second run"
+        ],
+        "mutationMode": "background_job",
+        "approvalRequired": true,
+        "privacyBoundary": "redact sensitive/personally identifiable data (PII) in public summaries",
+        "traceMustShow": [
+          "file read operations",
+          "wiki update receipts",
+          "source reference clicks",
+          "duplicate detection decisions"
+        ],
+        "blockersToResolve": [
+          "existing duplicate contact rows",
+          "dependent summarized chat that references outdated source files"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"legacy-output-migration\",\n  \"intakeModes\": [\n    \"selected_artifact\"\n  ],\n  \"primarySurface\": \"wiki\",\n  \"evidencePlan\": [\n    \"Upload legacy files\",\n    \"Build migration summary and wiki update\",\n    \"Click source references from the wiki\",\n    \"Review trace for source reads, wiki update receipts, and duplicate decisions\",\n    \"Re-run migration and assert idempotency\"\n  ],\n  \"riskControls\": [\n    \"Mask PII-likes in public summaries\",\n    \"Detect and skip duplicates\",\n    \"Ensure stable table of contents after second run\"\n  ],\n  \"mutationMode\": \"background_job\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"redact sensitive/personally identifiable data (PII) in public summaries\",\n  \"traceMustShow\": [\n    \"file read operations\",\n    \"wiki update receipts\",\n    \"source reference clicks\",\n    \"duplicate detection decisions\"\n  ],\n  \"blockersToResolve\": [\n    \"existing duplicate contact rows\",\n    \"dependent summarized chat that references outdated source files\"\n  ]\n}"
+    }
+  ]
+}

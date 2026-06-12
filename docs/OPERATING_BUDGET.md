@@ -31,29 +31,33 @@ The global cap's breach error self-diagnoses:
 
 ## Workflow → feature → unit cost → route
 
-Unit costs from live OpenRouter pricing (snapshot 2026-06-10) against the v3 composite task shape.
+Unit costs from live OpenRouter pricing (snapshot 2026-06-11) against the v3 composite task shape.
 The **v3 two-call composite** (`fetch_row_sources` → model synthesis → `write_row`) is what makes
-these costs real: the live v3 benchmark measured `deepseek/deepseek-v4-flash` at **$0.0034 per 3-company
-research task (9/9 gate)** — see `docs/eval/results.json`.
+these costs real: the latest live v3 smoke attempted 28 cheap/free or very low-cost OpenRouter
+routes for a 1-company sourced research row. `nex-agi/nex-n2-pro:free` cleared 9/9 at $0,
+`ibm-granite/granite-4.1-8b` cleared 9/9 at $0.0009, and
+`deepseek/deepseek-v4-flash` cleared 9/9 at $0.0020. The older 3-company evidence still matters:
+`deepseek/deepseek-v4-flash` cleared that larger run at $0.0034. See `docs/eval/results.json`.
 
 | Persona workflow | NodeRoom feature | Type | Route | ~$/task |
 |---|---|---|---|---|
-| Founder: account/company research | research table + agent | deep | `deepseek/deepseek-v4-flash` | 0.003–0.026 |
-| Founder: investor update from room state | notes + summarize | light | `google/gemma-4-26b-a4b-it` | 0.001 |
-| GTM: pre-call account brief | research + /ask | deep | `deepseek/deepseek-v4-flash` | 0.003–0.026 |
-| GTM: CRM-hygiene extraction | sheet extract | light | `google/gemma-4-26b-a4b-it` | 0.001 |
-| Finance: comps enrichment + verify | sheet + checks | deep, escalate on check-fail | `flash` → `deepseek-v4-pro` | 0.003 → 0.114 |
-| Family office: pre-meeting decision memo | wiki + research | deep, escalated by default | `deepseek-v4-pro` | 0.114 |
+| Founder: account/company research | research table + agent | deep | `nex` / `granite` / `deepseek-v4-flash` | 0–0.003 |
+| Founder: investor update from room state | notes + summarize | light | `nex` / `granite` | 0–0.001 |
+| GTM: pre-call account brief | research + /ask | deep | `granite` / `deepseek-v4-flash` | 0.001–0.003 |
+| GTM: CRM-hygiene extraction | sheet extract | light | `nex` / `granite` | 0–0.001 |
+| Finance: comps enrichment + verify | sheet + checks | deep, escalate on check-fail | `granite` → `deepseek-v4-pro` | 0.001 → 0.005 |
+| Family office: pre-meeting decision memo | wiki + research | deep, escalated by default | `deepseek-v4-pro` / premium fallback | 0.005+ |
 | Hackathon: brainstorm wall, build doc | post-its + notes | demo agents only | free routes | 0 |
-| Conference: capture + debrief summary | notes + summarize | light | `gemma` / free | ~0.001 |
-| Public `/free` demo rooms | demo room | deep-lite | `nemotron-3-ultra:free` etc. | 0 (rate-limited) |
+| Conference: capture + debrief summary | notes + summarize | light | free / `granite` | 0–0.001 |
+| Public `/free` demo rooms | demo room | deep-lite | `nex`, `nemotron`, `gpt-oss`, `poolside` free routes | 0 (rate-limited) |
 | Safety pre-check on public inputs | guardrail | per message | `nemotron-3.5-content-safety:free` | 0 |
 
-Routing logic: **`deepseek/deepseek-v4-flash` is the champion** (cheapest tools-reliable 1M-context route;
-first to clear the v3 9/9 gate, $0.0034/run measured). `google/gemma-4-26b-a4b-it` takes light tasks;
-`v4-pro` remains a planning placeholder until it has its own recorded route row; free routes absorb
-the bursty event personas entirely. Routes are promoted by the benchmark/ladder, never by price alone —
-and route prices reprice (every benchmark row records `routeSnapshotId` + `pricingAtRun` for auditability).
+Routing logic: **cheap/free routes are candidates, not automatic defaults**. `nex-agi/nex-n2-pro:free`
+is the fastest $0 v3 smoke clearer; `ibm-granite/granite-4.1-8b` is the cheapest paid clearer;
+`deepseek/deepseek-v4-flash` remains the larger-run fallback. Free routes absorb bursty event personas
+and `/free` demos, while collaboration still requires the lock/CAS/draft ladder before promotion. Routes
+are promoted by the benchmark/ladder, never by price alone — and route prices reprice (every benchmark
+row records `routeSnapshotId` + `pricingAtRun` for auditability).
 
 ## What $75 buys
 

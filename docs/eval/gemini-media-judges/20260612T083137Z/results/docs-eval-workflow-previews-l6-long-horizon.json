@@ -1,0 +1,64 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l6-long-horizon",
+    "class": "workflow_preview",
+    "title": "L6 Long Horizon",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l6-long-horizon.gif",
+    "relPath": "docs/eval/workflow-previews/l6-long-horizon.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260612T083137Z/docs-eval-workflow-previews-l6-long-horizon.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l6-long-horizon.gif",
+  "bytes": 427305,
+  "judge": {
+    "verdict": "publish",
+    "summary": "An excellent, highly detailed step-by-step visualization of multi-cell conflict resolution (CAS) and recovery. It clearly demonstrates the interaction between human commits and agent retries over a long horizon.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.6,
+        "evidence": "The step-by-step trace clearly highlights the CAS (Compare-And-Swap) mechanism and how the agent handles stale writes."
+      },
+      "workflowCompleteness": {
+        "score": 1.7,
+        "evidence": "Shows the entire 37-step sequence from initial state through multiple human-agent conflicts to final successful resolution."
+      },
+      "visualDesign": {
+        "score": 1.5,
+        "evidence": "Clean, dark-themed UI with clear row highlighting and a progress indicator at the bottom."
+      },
+      "consistency": {
+        "score": 1.6,
+        "evidence": "Perfectly aligns with the financial spreadsheet and multi-agent execution theme of NodeRoom."
+      },
+      "evidenceQuality": {
+        "score": 1.6,
+        "evidence": "Feels like a high-fidelity execution trace showing real-time state changes and conflict handling."
+      },
+      "legibility": {
+        "score": 1.7,
+        "evidence": "All text, version chips, and step descriptions are highly legible and well-spaced."
+      },
+      "professionalRelevance": {
+        "score": 1.5,
+        "evidence": "Highly relevant for developers building robust agentic workflows that handle concurrency."
+      },
+      "productionHonesty": {
+        "score": 1.7,
+        "evidence": "Transparently demonstrates failures, stale writes, and the recovery process rather than just a happy path."
+      }
+    },
+    "observedEvidence": [
+      "Step-by-step execution trace (1 to 37 steps)",
+      "CAS (Compare-And-Swap) conflict rejection and recovery",
+      "Financial spreadsheet UI with versioning (v1, v2, v3)"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Watch NodeRoom's agent handle multi-cell updates and recover from concurrent human edits using Compare-And-Swap (CAS) over a long-horizon workflow."
+  },
+  "score": 12.9,
+  "maxScore": 16
+}

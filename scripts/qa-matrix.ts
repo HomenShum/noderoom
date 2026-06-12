@@ -182,7 +182,7 @@ function renderReadmeSection(): string {
   const bestBenchmark = benchmarkIsCurrent
     ? [...benchmark.models]
       .filter((m) => m.passed === m.total && m.total === benchmark.checks.length)
-      .sort((a, b) => a.costUsd - b.costUsd)[0]
+      .sort((a, b) => a.costUsd - b.costUsd || a.ms - b.ms)[0]
     : undefined;
 
   const lines: string[] = [];
@@ -212,7 +212,8 @@ function renderReadmeSection(): string {
     const label = bestBenchmark.resolvedModel && bestBenchmark.resolvedModel !== bestBenchmark.model
       ? `${bestBenchmark.model} -> ${bestBenchmark.resolvedModel}`
       : bestBenchmark.model;
-    lines.push(`Research benchmark route: \`${label}\` is the cheapest current v3 composite-synthesis model clearing ${bestBenchmark.total}/${bestBenchmark.total} checks at $${bestBenchmark.costUsd.toFixed(4)} per run. Collaboration routing still uses the ladder gate above, not benchmark cost alone.`);
+    const routeRank = bestBenchmark.costUsd === 0 ? "fastest $0" : "lowest-cost";
+    lines.push(`Research benchmark route: \`${label}\` is the ${routeRank} current v3 composite-synthesis model clearing ${bestBenchmark.total}/${bestBenchmark.total} checks at $${bestBenchmark.costUsd.toFixed(4)} per run. Collaboration routing still uses the ladder gate above, not benchmark cost alone.`);
   } else if (benchmarkIsCurrent) {
     const bestRecorded = [...benchmark.models].sort((a, b) => b.passed - a.passed || a.ms - b.ms)[0];
     const budget = "timeouts" in benchmark && benchmark.timeouts && typeof benchmark.timeouts === "object"

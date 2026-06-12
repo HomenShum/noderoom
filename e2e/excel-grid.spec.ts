@@ -45,6 +45,14 @@ test("uploaded workbook renders as Excel paper with file formats, formula bar, a
   const paper = page.getByTestId("excel-paper");
   await expect(paper).toBeVisible();
   await expect(paper.locator("th.xl-col").first()).toHaveText("A");
+  await expect(page.getByTestId("workbook-style-excel")).toHaveAttribute("aria-checked", "true");
+  await page.getByTestId("workbook-style-sheets").click();
+  await expect(paper).toHaveAttribute("data-workbook-style", "sheets");
+  await page.getByTestId("workbook-style-evidence").click();
+  await expect(paper).toHaveAttribute("data-workbook-style", "evidence");
+  await expect(page.getByTestId("workbook-evidence-strip")).toContainText("no source");
+  await page.getByTestId("workbook-style-excel").click();
+  await expect(paper).toHaveAttribute("data-workbook-style", "excel");
 
   // 2. The FILE's number formats render — the strongest "it's the real file" signal.
   await expect(paper.locator('[data-cell-key="D4"]')).toHaveText("33.7%");

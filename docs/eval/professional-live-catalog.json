@@ -1,0 +1,1205 @@
+{
+  "generatedAt": "2026-06-11T20:05:50.360Z",
+  "harnessVersion": "professional-live-catalog-v1",
+  "model": "deepseek/deepseek-v4-flash",
+  "total": 21,
+  "passed": 21,
+  "failed": 0,
+  "passRate": 1,
+  "allPassed": true,
+  "rows": [
+    {
+      "caseId": "gtm-pitchbook-company-match-enrich",
+      "model": "deepseek/deepseek-v4-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 14389,
+      "answer": {
+        "caseId": "gtm-pitchbook-company-match-enrich",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "spreadsheet",
+        "evidencePlan": [
+          "Upload PitchBook Upload Template CSV and PitchBook Upload List Results CSV as separate artifacts",
+          "Drag both artifacts into chat as references",
+          "Run agent to match each uploaded company row against the result sheet using firm name, website, HQ location, and ticker",
+          "Write match status (match, no_match, needs_review) and confidence score into new cells, preserving original CRM columns",
+          "Attach CellPayload evidence with references to source artifact and row for each match",
+          "Generate a review note summarizing matches, ambiguities, and privacy redaction applied"
+        ],
+        "riskControls": [
+          "All matched cells must carry evidence from source artifact and row to ensure auditability",
+          "Privacy redaction: mask or remove sensitive company data (PII, confidential financials) from output; apply redaction fixture",
+          "Human review required: ambiguous duplicate-name rows flagged as needs_review; changes are made as draft pending approval",
+          "Cross-file reads must complete before any write; stale base version writes are rejected"
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": true,
+        "privacyBoundary": "Redact all sensitive or confidential data (PII, private financial details) using a redacted 12-row fixture; maintain clear boundary between source CRM fields (unchanged) and matched output; no leakage of PitchBook proprietary data beyond match status and evidence",
+        "traceMustShow": [
+          "Read uploaded PitchBook_Upload_Template.csv",
+          "Read uploaded PitchBook_Upload_List_Results.csv or companies*.csv",
+          "Cross-file comparison of firm name, website, HQ location, ticker",
+          "Write match status cell with evidence referencing source artifact and row IDs",
+          "Write confidence score cell",
+          "Base version check before each write to prevent stale overwrites",
+          "Review note generated with summary of matches, ambiguities, and redactions"
+        ],
+        "blockersToResolve": [
+          "Duplicate company names requiring needs_review instead of automatic match",
+          "Missing domain for fuzzy match (e.g., missing website)",
+          "Wrong location matches causing low confidence",
+          "Potential conflict between source CRM fields and PitchBook data columns"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"gtm-pitchbook-company-match-enrich\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"spreadsheet\",\n  \"evidencePlan\": [\n    \"Upload PitchBook Upload Template CSV and PitchBook Upload List Results CSV as separate artifacts\",\n    \"Drag both artifacts into chat as references\",\n    \"Run agent to match each uploaded company row against the result sheet using firm name, website, HQ location, and ticker\",\n    \"Write match status (match, no_match, needs_review) and confidence score into new cells, preserving original CRM columns\",\n    \"Attach CellPayload evidence with references to source artifact and row for each match\",\n    \"Generate a review note summarizing matches, ambiguities, and privacy redaction applied\"\n  ],\n  \"riskControls\": [\n    \"All matched cells must carry evidence from source artifact and row to ensure auditability\",\n    \"Privacy redaction: mask or remove sensitive company data (PII, confidential financials) from output; apply redaction fixture\",\n    \"Human review required: ambiguous duplicate-name rows flagged as needs_review; changes are made as draft pending approval\",\n    \"Cross-file reads must complete before any write; stale base version writes are rejected\"\n  ],\n  \"mutationMode\": \"draft_first\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"Redact all sensitive or confidential data (PII, private financial details) using a redacted 12-row fixture; maintain clear boundary between source CRM fields (unchanged) and matched output; no leakage of PitchBook proprietary data beyond match status and evidence\",\n  \"traceMustShow\": [\n    \"Read uploaded PitchBook_Upload_Template.csv\",\n    \"Read uploaded PitchBook_Upload_List_Results.csv or companies*.csv\",\n    \"Cross-file comparison of firm name, website, HQ location, ticker\",\n    \"Write match status cell with evidence referencing source artifact and row IDs\",\n    \"Write confidence score cell\",\n    \"Base version check before each write to prevent stale overwrites\",\n    \"Review note generated with summary of matches, ambiguities, and redactions\"\n  ],\n  \"blockersToResolve\": [\n    \"Duplicate company names requiring needs_review instead of automatic match\",\n    \"Missing domain for fuzzy match (e.g., missing website)\",\n    \"Wrong location matches causing low confidence\",\n    \"Potential conflict between source CRM fields and PitchBook data columns\"\n  ]\n}"
+    },
+    {
+      "caseId": "gtm-healthtech-sector-classification",
+      "model": "deepseek/deepseek-v4-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 27655,
+      "answer": {
+        "caseId": "gtm-healthtech-sector-classification",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "spreadsheet",
+        "evidencePlan": [
+          "Parse source artifact and expected-output sheet",
+          "Run bounded subset classification to validate fixture alignment",
+          "Execute long-running bulk classification with checkpoints between slices",
+          "Compare final labels and reasons against expected fixture",
+          "Verify wiki stable table of contents includes classification summary",
+          "Write each classification as CellPayload with source artifact, row, and column evidence"
+        ],
+        "riskControls": [
+          "Rows with insufficient description are marked needs_review and receive no fabricated detail",
+          "Bulk mode checkpoints between slices and avoids duplicate final writes",
+          "resolvedModel recorded per attempt for audit trail",
+          "Human review and approval required before final classification output is committed"
+        ],
+        "mutationMode": "background_job",
+        "approvalRequired": true,
+        "privacyBoundary": "public/private boundary respected: redact any PII or confidential data from input descriptions and prior outputs; masking applied before writing to wiki or spreadsheet",
+        "traceMustShow": [
+          "read source artifact (Eva List*.xlsx, Eva list*.csv, FDAC_Cleaned*.xlsx, Jason_Sector_Tag*.xlsx, *parsely_classification_output.xlsx, JPM 2025 Health Conference.xlsx)",
+          "write classification CellPayload per row (artifact, row, column evidence)",
+          "read expected-output fixture for accuracy comparison",
+          "write checkpoint state between bulk slices",
+          "read resolvedModel per attempt",
+          "write wiki update with stable table of contents"
+        ],
+        "blockersToResolve": [
+          "Source artifact must be parsed and schema detected before classification",
+          "Fixture must be created from existing ParselyFi output files (30-row redacted even-split)",
+          "Human reviewer must approve final classifications before wiki write"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"gtm-healthtech-sector-classification\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"spreadsheet\",\n  \"evidencePlan\": [\n    \"Parse source artifact and expected-output sheet\",\n    \"Run bounded subset classification to validate fixture alignment\",\n    \"Execute long-running bulk classification with checkpoints between slices\",\n    \"Compare final labels and reasons against expected fixture\",\n    \"Verify wiki stable table of contents includes classification summary\",\n    \"Write each classification as CellPayload with source artifact, row, and column evidence\"\n  ],\n  \"riskControls\": [\n    \"Rows with insufficient description are marked needs_review and receive no fabricated detail\",\n    \"Bulk mode checkpoints between slices and avoids duplicate final writes\",\n    \"resolvedModel recorded per attempt for audit trail\",\n    \"Human review and approval required before final classification output is committed\"\n  ],\n  \"mutationMode\": \"background_job\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"public/private boundary respected: redact any PII or confidential data from input descriptions and prior outputs; masking applied before writing to wiki or spreadsheet\",\n  \"traceMustShow\": [\n    \"read source artifact (Eva List*.xlsx, Eva list*.csv, FDAC_Cleaned*.xlsx, Jason_Sector_Tag*.xlsx, *parsely_classification_output.xlsx, JPM 2025 Health Conference.xlsx)\",\n    \"write classification CellPayload per row (artifact, row, column evidence)\",\n    \"read expected-output fixture for accuracy comparison\",\n    \"write checkpoint state between bulk slices\",\n    \"read resolvedModel per attempt\",\n    \"write wiki update with stable table of contents\"\n  ],\n  \"blockersToResolve\": [\n    \"Source artifact must be parsed and schema detected before classification\",\n    \"Fixture must be created from existing ParselyFi output files (30-row redacted even-split)\",\n    \"Human reviewer must approve final classifications before wiki write\"\n  ]\n}"
+    },
+    {
+      "caseId": "gtm-intent-classifier-golden",
+      "model": "deepseek/deepseek-v4-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 12517,
+      "answer": {
+        "caseId": "gtm-intent-classifier-golden",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "csv_classification",
+        "evidencePlan": [
+          "extract evidence from source query and description columns",
+          "include row identifier and source file",
+          "ensure evidence is not name-only"
+        ],
+        "riskControls": [
+          "disagreements stored as needs_review for human review",
+          "privacy redaction applied to evidence before storage or display"
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": true,
+        "privacyBoundary": "private data redacted from evidence fields; only aggregated performance metrics shared publicly",
+        "traceMustShow": [
+          "read ClassificationDataset rows from fixtures",
+          "write predicted labels, confidence, reason, and evidence to results table",
+          "receive human approval on needs_review rows",
+          "source evidence from query and description columns"
+        ],
+        "blockersToResolve": [
+          "fixture file path incorrect or missing",
+          "allowed taxonomy not loaded",
+          "privacy redaction configuration missing"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"gtm-intent-classifier-golden\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"csv_classification\",\n  \"evidencePlan\": [\n    \"extract evidence from source query and description columns\",\n    \"include row identifier and source file\",\n    \"ensure evidence is not name-only\"\n  ],\n  \"riskControls\": [\n    \"disagreements stored as needs_review for human review\",\n    \"privacy redaction applied to evidence before storage or display\"\n  ],\n  \"mutationMode\": \"draft_first\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"private data redacted from evidence fields; only aggregated performance metrics shared publicly\",\n  \"traceMustShow\": [\n    \"read ClassificationDataset rows from fixtures\",\n    \"write predicted labels, confidence, reason, and evidence to results table\",\n    \"receive human approval on needs_review rows\",\n    \"source evidence from query and description columns\"\n  ],\n  \"blockersToResolve\": [\n    \"fixture file path incorrect or missing\",\n    \"allowed taxonomy not loaded\",\n    \"privacy redaction configuration missing\"\n  ]\n}"
+    },
+    {
+      "caseId": "gtm-amo-signal-scorer",
+      "model": "deepseek/deepseek-v4-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 11340,
+      "answer": {
+        "caseId": "gtm-amo-signal-scorer",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "spreadsheet",
+        "evidencePlan": [
+          "Load scoring framework and target company sheet",
+          "Search relevant rows for each signal",
+          "Write tier/evidence CellPayloads and aggregate score fields",
+          "Review missing or conflicting evidence before finalizing"
+        ],
+        "riskControls": [
+          "checkpoint/resume for long-running execution",
+          "human review of missing/conflicting evidence",
+          "redact private account/contact fields in exports"
+        ],
+        "mutationMode": "background_job",
+        "approvalRequired": true,
+        "privacyBoundary": "private account/contact fields redacted; public scoring provenance preserved",
+        "traceMustShow": [
+          "load scoring framework CSV",
+          "load company sheet rows",
+          "write tier/evidence CellPayloads",
+          "compute TotalScore, Coverage, Confidence",
+          "checkpoint after each row batch",
+          "read resolvedModel audit"
+        ],
+        "blockersToResolve": [
+          "conflicting evidence rows",
+          "missing-domain rows",
+          "potential duplicate final writes",
+          "over-scoring weak-evidence rows"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"gtm-amo-signal-scorer\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"spreadsheet\",\n  \"evidencePlan\": [\n    \"Load scoring framework and target company sheet\",\n    \"Search relevant rows for each signal\",\n    \"Write tier/evidence CellPayloads and aggregate score fields\",\n    \"Review missing or conflicting evidence before finalizing\"\n  ],\n  \"riskControls\": [\n    \"checkpoint/resume for long-running execution\",\n    \"human review of missing/conflicting evidence\",\n    \"redact private account/contact fields in exports\"\n  ],\n  \"mutationMode\": \"background_job\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"private account/contact fields redacted; public scoring provenance preserved\",\n  \"traceMustShow\": [\n    \"load scoring framework CSV\",\n    \"load company sheet rows\",\n    \"write tier/evidence CellPayloads\",\n    \"compute TotalScore, Coverage, Confidence\",\n    \"checkpoint after each row batch\",\n    \"read resolvedModel audit\"\n  ],\n  \"blockersToResolve\": [\n    \"conflicting evidence rows\",\n    \"missing-domain rows\",\n    \"potential duplicate final writes\",\n    \"over-scoring weak-evidence rows\"\n  ]\n}"
+    },
+    {
+      "caseId": "gtm-jpm-market-map-joins",
+      "model": "deepseek/deepseek-v4-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 8837,
+      "answer": {
+        "caseId": "gtm-jpm-market-map-joins",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "watchlist",
+        "evidencePlan": [
+          "Parse workbook sheets (Company, Product/Service, Partnership, Segment) and identify join keys (e.g., company name, product ID)",
+          "Search company/product/partnership chunks for each watchlist candidate",
+          "Write cited market-map row with source artifact, sheet, row, and URL field where available",
+          "Flag missing or conflicting joins for review"
+        ],
+        "riskControls": [
+          "Draft mode enabled: all watchlist writes are provisional until human review",
+          "Human review required for flagged missing or conflicting joins",
+          "Approval step before finalizing any disambiguated duplicate-name entries"
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": true,
+        "privacyBoundary": "Apply redaction to any sensitive or confidential data (PII, private health info); maintain public-only boundary; mask any cell payload containing personal or confidential fields",
+        "traceMustShow": [
+          "Read cell payload from Company sheet row 5 (company name, URL)",
+          "Write watchlist row for company A with cited source artifact ref",
+          "Flag missing product row for company X (no product sheet match)",
+          "Disambiguate duplicate company name (e.g., 'HealthCo' segment context used)",
+          "Receipt: market-map row completion logged with source sheet and row identifiers"
+        ],
+        "blockersToResolve": [
+          "Duplicate company names requiring disambiguation via segment or partnership context",
+          "Missing product rows for some companies",
+          "Conflicting partnership fields across sheets (e.g., Partner in Sheet1 vs Sheet2)"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"gtm-jpm-market-map-joins\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"watchlist\",\n  \"evidencePlan\": [\n    \"Parse workbook sheets (Company, Product/Service, Partnership, Segment) and identify join keys (e.g., company name, product ID)\",\n    \"Search company/product/partnership chunks for each watchlist candidate\",\n    \"Write cited market-map row with source artifact, sheet, row, and URL field where available\",\n    \"Flag missing or conflicting joins for review\"\n  ],\n  \"riskControls\": [\n    \"Draft mode enabled: all watchlist writes are provisional until human review\",\n    \"Human review required for flagged missing or conflicting joins\",\n    \"Approval step before finalizing any disambiguated duplicate-name entries\"\n  ],\n  \"mutationMode\": \"draft_first\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"Apply redaction to any sensitive or confidential data (PII, private health info); maintain public-only boundary; mask any cell payload containing personal or confidential fields\",\n  \"traceMustShow\": [\n    \"Read cell payload from Company sheet row 5 (company name, URL)\",\n    \"Write watchlist row for company A with cited source artifact ref\",\n    \"Flag missing product row for company X (no product sheet match)\",\n    \"Disambiguate duplicate company name (e.g., 'HealthCo' segment context used)\",\n    \"Receipt: market-map row completion logged with source sheet and row identifiers\"\n  ],\n  \"blockersToResolve\": [\n    \"Duplicate company names requiring disambiguation via segment or partnership context\",\n    \"Missing product rows for some companies\",\n    \"Conflicting partnership fields across sheets (e.g., Partner in Sheet1 vs Sheet2)\"\n  ]\n}"
+    },
+    {
+      "caseId": "gtm-sbb-one-column-extraction",
+      "model": "deepseek/deepseek-v4-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 14549,
+      "answer": {
+        "caseId": "gtm-sbb-one-column-extraction",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "spreadsheet",
+        "evidencePlan": [
+          "read source artifact rows",
+          "detect entity boundary from separators and repeated company names",
+          "extract candidate fields with line or row span citations",
+          "write normalized entity rows to structured surface",
+          "flag malformed blocks as needs_review with exception notes"
+        ],
+        "riskControls": [
+          "human review required for malformed or incomplete blocks",
+          "no invented fields when evidence is missing",
+          "all extracted fields must cite source row or line-span evidence",
+          "treat missing field cells as empty, not guessed"
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": true,
+        "privacyBoundary": "private boundary: do not leak raw PII from source rows into output unless field is explicitly designated; mask or redact confidential identifiers; all output fields must be derived from and cite source line spans, not original sensitive values",
+        "traceMustShow": [
+          "read rows from source artifact",
+          "write normalized entity rows to structured surface",
+          "cite source line spans per field",
+          "exception note for malformed blocks",
+          "field left blank when evidence missing"
+        ],
+        "blockersToResolve": [
+          "detect entity boundaries consistently despite repeated company names and missing fields",
+          "handle malformed block without dropping, assign needs_review",
+          "ensure no invented fields for blocks lacking evidence"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"gtm-sbb-one-column-extraction\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"spreadsheet\",\n  \"evidencePlan\": [\n    \"read source artifact rows\",\n    \"detect entity boundary from separators and repeated company names\",\n    \"extract candidate fields with line or row span citations\",\n    \"write normalized entity rows to structured surface\",\n    \"flag malformed blocks as needs_review with exception notes\"\n  ],\n  \"riskControls\": [\n    \"human review required for malformed or incomplete blocks\",\n    \"no invented fields when evidence is missing\",\n    \"all extracted fields must cite source row or line-span evidence\",\n    \"treat missing field cells as empty, not guessed\"\n  ],\n  \"mutationMode\": \"draft_first\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"private boundary: do not leak raw PII from source rows into output unless field is explicitly designated; mask or redact confidential identifiers; all output fields must be derived from and cite source line spans, not original sensitive values\",\n  \"traceMustShow\": [\n    \"read rows from source artifact\",\n    \"write normalized entity rows to structured surface\",\n    \"cite source line spans per field\",\n    \"exception note for malformed blocks\",\n    \"field left blank when evidence missing\"\n  ],\n  \"blockersToResolve\": [\n    \"detect entity boundaries consistently despite repeated company names and missing fields\",\n    \"handle malformed block without dropping, assign needs_review\",\n    \"ensure no invented fields for blocks lacking evidence\"\n  ]\n}"
+    },
+    {
+      "caseId": "gtm-company-deep-report",
+      "model": "deepseek/deepseek-v4-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 25344,
+      "answer": {
+        "caseId": "gtm-company-deep-report",
+        "intakeModes": [
+          "chat_only",
+          "upload",
+          "external_retrieval"
+        ],
+        "primarySurface": "wiki_note",
+        "evidencePlan": [
+          "Extract company name from chat query or uploaded report filename",
+          "Parse each sheet of uploaded report for claims (funding, traction, customers, risks)",
+          "Cross-reference claims across sheets to detect contradictions",
+          "Identify sources (sheet names, cell references) for each claim",
+          "Generate a summary note with clickable references to source artifacts"
+        ],
+        "riskControls": [
+          "Redact any private or PII data from chat or report before writing to public wiki",
+          "Require human approval before final note is published (human_review harness)",
+          "Flag ambiguous company names for clarification instead of guessing"
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": true,
+        "privacyBoundary": "Private data from chat or internal sheets must be redacted; no private-channel context may appear in the public wiki note. All PII and confidential information masked or excluded.",
+        "traceMustShow": [
+          "Read company name from chat input or uploaded filename",
+          "Read funding data from 'Funding' sheet in uploaded workbook",
+          "Read traction data from 'Traction' sheet in uploaded workbook",
+          "Read customer list from 'Customers' sheet",
+          "Write draft note to wiki with citations",
+          "Receive approval from human reviewer before finalizing",
+          "Update wiki note only after approval"
+        ],
+        "blockersToResolve": [
+          "Ambiguous company name in chat-only mode (clarify or mark needs_review)",
+          "Contradictory values across different sheets (e.g., different funding amounts)",
+          "Missing or unparseable report sheets",
+          "Private data leakage risk to public wiki"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"gtm-company-deep-report\",\n  \"intakeModes\": [\"chat_only\", \"upload\", \"external_retrieval\"],\n  \"primarySurface\": \"wiki_note\",\n  \"evidencePlan\": [\n    \"Extract company name from chat query or uploaded report filename\",\n    \"Parse each sheet of uploaded report for claims (funding, traction, customers, risks)\",\n    \"Cross-reference claims across sheets to detect contradictions\",\n    \"Identify sources (sheet names, cell references) for each claim\",\n    \"Generate a summary note with clickable references to source artifacts\"\n  ],\n  \"riskControls\": [\n    \"Redact any private or PII data from chat or report before writing to public wiki\",\n    \"Require human approval before final note is published (human_review harness)\",\n    \"Flag ambiguous company names for clarification instead of guessing\"\n  ],\n  \"mutationMode\": \"draft_first\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"Private data from chat or internal sheets must be redacted; no private-channel context may appear in the public wiki note. All PII and confidential information masked or excluded.\",\n  \"traceMustShow\": [\n    \"Read company name from chat input or uploaded filename\",\n    \"Read funding data from 'Funding' sheet in uploaded workbook\",\n    \"Read traction data from 'Traction' sheet in uploaded workbook\",\n    \"Read customer list from 'Customers' sheet\",\n    \"Write draft note to wiki with citations\",\n    \"Receive approval from human reviewer before finalizing\",\n    \"Update wiki note only after approval\"\n  ],\n  \"blockersToResolve\": [\n    \"Ambiguous company name in chat-only mode (clarify or mark needs_review)\",\n    \"Contradictory values across different sheets (e.g., different funding amounts)\",\n    \"Missing or unparseable report sheets\",\n    \"Private data leakage risk to public wiki\"\n  ]\n}"
+    },
+    {
+      "caseId": "gtm-chat-lead-capture-enrich",
+      "model": "deepseek/deepseek-v4-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 33111,
+      "answer": {
+        "caseId": "gtm-chat-lead-capture-enrich",
+        "intakeModes": [
+          "chat_only",
+          "external_retrieval",
+          "mixed_room_state"
+        ],
+        "primarySurface": "watchlist_row",
+        "evidencePlan": [
+          "extract entity from chat with person, company, funding, product description, uncertainty, next action",
+          "verify public claims via external retrieval where possible",
+          "mark chat-only unverifiable claims as needs_review evidence",
+          "preserve chat evidence as user-provided; only upgrade to sourced fact with fetched evidence",
+          "distinguish manual chat evidence from external source evidence using CellPayload"
+        ],
+        "riskControls": [
+          "ambiguous company names trigger clarifying question before entity resolution",
+          "no person fact lands on public wiki without explicit user instruction",
+          "person names and meeting/relationship facts stay private-by-default",
+          "company facts may go to shared surfaces only when user explicitly requests",
+          "existing watchlist row is updated via CAS; no duplicate creation"
+        ],
+        "mutationMode": "background_job",
+        "approvalRequired": true,
+        "privacyBoundary": "private-by-default for person facts; strict redaction of PII from public wiki; sensitive relationship/meeting data masked from shared surfaces; explicit user promotion required to move person facts to shared boundaries",
+        "traceMustShow": [
+          "exact chat intake read",
+          "entity extraction write to private scratch",
+          "external retrieval read for public claims",
+          "watchlist row read to check for existing match",
+          "watchlist row update write with CellPayload evidence",
+          "wiki note write (if promoted) with sourced/manual evidence tags",
+          "clarifying question write (if ambiguous)",
+          "background job receipt acknowledgment"
+        ],
+        "blockersToResolve": [
+          "ambiguity in company name entity resolution",
+          "unverifiable funding claim vs externally sourced claim distinction",
+          "privacy boundary enforcement for person facts",
+          "human review approval on public surface promotions"
+        ]
+      },
+      "raw": "```json\n{\n  \"caseId\": \"gtm-chat-lead-capture-enrich\",\n  \"intakeModes\": [\n    \"chat_only\",\n    \"external_retrieval\",\n    \"mixed_room_state\"\n  ],\n  \"primarySurface\": \"watchlist_row\",\n  \"evidencePlan\": [\n    \"extract entity from chat with person, company, funding, product description, uncertainty, next action\",\n    \"verify public claims via external retrieval where possible\",\n    \"mark chat-only unverifiable claims as needs_review evidence\",\n    \"preserve chat evidence as user-provided; only upgrade to sourced fact with fetched evidence\",\n    \"distinguish manual chat evidence from external source evidence using CellPayload\"\n  ],\n  \"riskControls\": [\n    \"ambiguous company names trigger clarifying question before entity resolution\",\n    \"no person fact lands on public wiki without explicit user instruction\",\n    \"person names and meeting/relationship facts stay private-by-default\",\n    \"company facts may go to shared surfaces only when user explicitly requests\",\n    \"existing watchlist row is updated via CAS; no duplicate creation\"\n  ],\n  \"mutationMode\": \"background_job\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"private-by-default for person facts; strict redaction of PII from public wiki; sensitive relationship/meeting data masked from shared surfaces; explicit user promotion required to move person facts to shared boundaries\",\n  \"traceMustShow\": [\n    \"exact chat intake read\",\n    \"entity extraction write to private scratch\",\n    \"external retrieval read for public claims\",\n    \"watchlist row read to check for existing match\",\n    \"watchlist row update write with CellPayload evidence\",\n    \"wiki note write (if promoted) with sourced/manual evidence tags\",\n    \"clarifying question write (if ambiguous)\",\n    \"background job receipt acknowledgment\"\n  ],\n  \"blockersToResolve\": [\n    \"ambiguity in company name entity resolution\",\n    \"unverifiable funding claim vs externally sourced claim distinction\",\n    \"privacy boundary enforcement for person facts\",\n    \"human review approval on public surface promotions\"\n  ]\n}\n```"
+    },
+    {
+      "caseId": "gtm-chat-to-background-diligence-job",
+      "model": "deepseek/deepseek-v4-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 38835,
+      "answer": {
+        "caseId": "gtm-chat-to-background-diligence-job",
+        "intakeModes": [
+          "chat_only",
+          "external_retrieval",
+          "mixed_room_state"
+        ],
+        "primarySurface": "background_job",
+        "evidencePlan": [
+          "extract company mention from chat input with sourceKind=chat",
+          "resolve entity key via entity_resolution",
+          "fetch public source snippets (homepage, funding announcement, conflicting profile)",
+          "fill company profile fields with cell_payload_evidence referencing fetched sources",
+          "write completion note to research sheet"
+        ],
+        "riskControls": [
+          "checkpoint progress after each field for workflow_checkpoint_resume",
+          "surface conflicting public sources in wiki or review note for human_review",
+          "keep person-subject details private-by-default, only company facts on shared surfaces",
+          "prevent duplicate rows via idempotency/entity key on duplicate chat requests",
+          "do not overwrite human edits or completed sourced fields upon resume"
+        ],
+        "mutationMode": "background_job",
+        "approvalRequired": true,
+        "privacyBoundary": "private-by-default: person-subject details captured from chat remain confidential; only company-level facts are published to shared research surfaces without explicit instruction; apply redaction/masking for any leaked PII",
+        "traceMustShow": [
+          "read chat input with sourceKind=chat",
+          "write company row to research artifact (or create artifact if missing)",
+          "read entity resolution result",
+          "write fetched source snippets as evidence",
+          "write checkpoint state after each completed field",
+          "read checkpoint state on resume",
+          "write completion note to research sheet",
+          "read duplicate entity key to prevent duplicate submissions"
+        ],
+        "blockersToResolve": [
+          "no existing research artifact for the company → create one",
+          "conflicting public sources → surface in wiki/review note for human resolution",
+          "duplicate chat submission → collapse by entity key instead of creating duplicate jobs"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"gtm-chat-to-background-diligence-job\",\n  \"intakeModes\": [\"chat_only\", \"external_retrieval\", \"mixed_room_state\"],\n  \"primarySurface\": \"background_job\",\n  \"evidencePlan\": [\n    \"extract company mention from chat input with sourceKind=chat\",\n    \"resolve entity key via entity_resolution\",\n    \"fetch public source snippets (homepage, funding announcement, conflicting profile)\",\n    \"fill company profile fields with cell_payload_evidence referencing fetched sources\",\n    \"write completion note to research sheet\"\n  ],\n  \"riskControls\": [\n    \"checkpoint progress after each field for workflow_checkpoint_resume\",\n    \"surface conflicting public sources in wiki or review note for human_review\",\n    \"keep person-subject details private-by-default, only company facts on shared surfaces\",\n    \"prevent duplicate rows via idempotency/entity key on duplicate chat requests\",\n    \"do not overwrite human edits or completed sourced fields upon resume\"\n  ],\n  \"mutationMode\": \"background_job\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"private-by-default: person-subject details captured from chat remain confidential; only company-level facts are published to shared research surfaces without explicit instruction; apply redaction/masking for any leaked PII\",\n  \"traceMustShow\": [\n    \"read chat input with sourceKind=chat\",\n    \"write company row to research artifact (or create artifact if missing)\",\n    \"read entity resolution result\",\n    \"write fetched source snippets as evidence\",\n    \"write checkpoint state after each completed field\",\n    \"read checkpoint state on resume\",\n    \"write completion note to research sheet\",\n    \"read duplicate entity key to prevent duplicate submissions\"\n  ],\n  \"blockersToResolve\": [\n    \"no existing research artifact for the company → create one\",\n    \"conflicting public sources → surface in wiki/review note for human resolution\",\n    \"duplicate chat submission → collapse by entity key instead of creating duplicate jobs\"\n  ]\n}"
+    },
+    {
+      "caseId": "gtm-pasted-intro-email-capture",
+      "model": "deepseek/deepseek-v4-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 37036,
+      "answer": {
+        "caseId": "gtm-pasted-intro-email-capture",
+        "intakeModes": [
+          "pasted_content",
+          "mixed_room_state"
+        ],
+        "primarySurface": "watchlist_row",
+        "evidencePlan": [
+          "Detect third-party authorship from headers, signature, or speaker labels",
+          "Attribute each claim to original author at quoted_third_party provenance",
+          "Redact sender contact details (email, phone, signature block) by default",
+          "Create provisional watchlist row with needs_review status",
+          "Ask at most one non-blocking clarifying question about ambiguous company name",
+          "Write chat acknowledgment that row has been created"
+        ],
+        "riskControls": [
+          "Default redaction of sender PII (email, phone, signature) to prevent leakage",
+          "Provisional row created with needs_review status, requiring human approval before full sharing",
+          "No unrequested public artifact; sharing to room wiki requires explicit user ask",
+          "Clarifying question is non-blocking; row already exists pending review"
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": false,
+        "privacyBoundary": "Default redaction of sender contact details (PII) at ingestion; all person-subject facts from paste remain private-by-default; no propagation to shared surfaces without explicit consent; private boundary maintained between quoted_third_party provenance and public artifacts",
+        "traceMustShow": [
+          "Read pasted content from chat",
+          "Detect third-party authorship from headers/signature/speaker labels",
+          "Redact sender contact details and store redacted version",
+          "Attribute claims to original author at quoted_third_party provenance",
+          "Write provisional watchlist row with needs_review status",
+          "Write private note with attributed claims",
+          "Ask non-blocking clarifying question about ambiguous company"
+        ],
+        "blockersToResolve": []
+      },
+      "raw": "{\n  \"caseId\": \"gtm-pasted-intro-email-capture\",\n  \"intakeModes\": [\"pasted_content\", \"mixed_room_state\"],\n  \"primarySurface\": \"watchlist_row\",\n  \"evidencePlan\": [\n    \"Detect third-party authorship from headers, signature, or speaker labels\",\n    \"Attribute each claim to original author at quoted_third_party provenance\",\n    \"Redact sender contact details (email, phone, signature block) by default\",\n    \"Create provisional watchlist row with needs_review status\",\n    \"Ask at most one non-blocking clarifying question about ambiguous company name\",\n    \"Write chat acknowledgment that row has been created\"\n  ],\n  \"riskControls\": [\n    \"Default redaction of sender PII (email, phone, signature) to prevent leakage\",\n    \"Provisional row created with needs_review status, requiring human approval before full sharing\",\n    \"No unrequested public artifact; sharing to room wiki requires explicit user ask\",\n    \"Clarifying question is non-blocking; row already exists pending review\"\n  ],\n  \"mutationMode\": \"draft_first\",\n  \"approvalRequired\": false,\n  \"privacyBoundary\": \"Default redaction of sender contact details (PII) at ingestion; all person-subject facts from paste remain private-by-default; no propagation to shared surfaces without explicit consent; private boundary maintained between quoted_third_party provenance and public artifacts\",\n  \"traceMustShow\": [\n    \"Read pasted content from chat\",\n    \"Detect third-party authorship from headers/signature/speaker labels\",\n    \"Redact sender contact details and store redacted version\",\n    \"Attribute claims to original author at quoted_third_party provenance\",\n    \"Write provisional watchlist row with needs_review status\",\n    \"Write private note with attributed claims\",\n    \"Ask non-blocking clarifying question about ambiguous company\"\n  ],\n  \"blockersToResolve\": []\n}"
+    },
+    {
+      "caseId": "gtm-pii-masking-and-public-private-boundary",
+      "model": "deepseek/deepseek-v4-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 27514,
+      "answer": {
+        "caseId": "gtm-pii-masking-and-public-private-boundary",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "wiki",
+        "evidencePlan": [
+          "upload contact-rich workbook",
+          "request public summary from public agent",
+          "request private summary from private agent for comparison",
+          "verify public artifact references remain clickable without exposing raw private values"
+        ],
+        "riskControls": [
+          "PII masking enforced on public summary",
+          "human approval required before publishing public summary",
+          "private access restricted to room members"
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": true,
+        "privacyBoundary": "Public summary masks PII; private boundary requires room membership; redaction of email, phone, address, contact names, account identifiers, raw messages; no leakage of sensitive data to wiki without explicit permission.",
+        "traceMustShow": [
+          "read artifact file '2024.01 - Healthtech Talent Mixer*.xlsx'",
+          "write public summary draft to wiki",
+          "redaction decision logged with artifact ID",
+          "private agent reads full artifact with PII",
+          "audit trace records artifact ID and masking status"
+        ],
+        "blockersToResolve": [
+          "identify all PII columns in input files",
+          "configure human review approval workflow",
+          "set up private/public boundary roles",
+          "ensure artifact references are clickable but not inline revealing PII"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"gtm-pii-masking-and-public-private-boundary\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"wiki\",\n  \"evidencePlan\": [\n    \"upload contact-rich workbook\",\n    \"request public summary from public agent\",\n    \"request private summary from private agent for comparison\",\n    \"verify public artifact references remain clickable without exposing raw private values\"\n  ],\n  \"riskControls\": [\n    \"PII masking enforced on public summary\",\n    \"human approval required before publishing public summary\",\n    \"private access restricted to room members\"\n  ],\n  \"mutationMode\": \"draft_first\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"Public summary masks PII; private boundary requires room membership; redaction of email, phone, address, contact names, account identifiers, raw messages; no leakage of sensitive data to wiki without explicit permission.\",\n  \"traceMustShow\": [\n    \"read artifact file '2024.01 - Healthtech Talent Mixer*.xlsx'\",\n    \"write public summary draft to wiki\",\n    \"redaction decision logged with artifact ID\",\n    \"private agent reads full artifact with PII\",\n    \"audit trace records artifact ID and masking status\"\n  ],\n  \"blockersToResolve\": [\n    \"identify all PII columns in input files\",\n    \"configure human review approval workflow\",\n    \"set up private/public boundary roles\",\n    \"ensure artifact references are clickable but not inline revealing PII\"\n  ]\n}"
+    },
+    {
+      "caseId": "finance-cost-reconciliation",
+      "model": "deepseek/deepseek-v4-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 39716,
+      "answer": {
+        "caseId": "finance-cost-reconciliation",
+        "intakeModes": [
+          "upload",
+          "selected_artifact"
+        ],
+        "primarySurface": "spreadsheet",
+        "evidencePlan": [
+          "cell_payload_evidence",
+          "source_artifact_citations",
+          "variance_note_cells"
+        ],
+        "riskControls": [
+          "formula_dependency_locks",
+          "human_review_approval",
+          "cross_file_context_checks"
+        ],
+        "mutationMode": "mutate_with_cas",
+        "approvalRequired": true,
+        "privacyBoundary": "redacted spend data, no PII or confidential information",
+        "traceMustShow": [
+          "source_artifact_read",
+          "expected_totals_read",
+          "variance_note_write",
+          "skip_correct_cell_write",
+          "artifact_version_bump",
+          "formula_lock_verification"
+        ],
+        "blockersToResolve": [
+          "human_review_pending",
+          "unresolved_variance_notes"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"finance-cost-reconciliation\",\n  \"intakeModes\": [\"upload\", \"selected_artifact\"],\n  \"primarySurface\": \"spreadsheet\",\n  \"evidencePlan\": [\"cell_payload_evidence\", \"source_artifact_citations\", \"variance_note_cells\"],\n  \"riskControls\": [\"formula_dependency_locks\", \"human_review_approval\", \"cross_file_context_checks\"],\n  \"mutationMode\": \"mutate_with_cas\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"redacted spend data, no PII or confidential information\",\n  \"traceMustShow\": [\"source_artifact_read\", \"expected_totals_read\", \"variance_note_write\", \"skip_correct_cell_write\", \"artifact_version_bump\", \"formula_lock_verification\"],\n  \"blockersToResolve\": [\"human_review_pending\", \"unresolved_variance_notes\"]\n}"
+    },
+    {
+      "caseId": "finance-three-statement-modeling-private-gold",
+      "model": "deepseek/deepseek-v4-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 20966,
+      "answer": {
+        "caseId": "finance-three-statement-modeling-private-gold",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "node_agent_workflow",
+        "evidencePlan": [
+          "Validate workbook has Test Prompt, Historical Data, Your Model, Answer Key sheets",
+          "Compare forecast formulas and values against Answer Key within tolerance",
+          "In guide mode, inject scripted mistake and verify targeted hint without writing answer cells",
+          "In collaborate mode, verify section locks, drafts when blocked, CAS on linkage rows, and final balance checks"
+        ],
+        "riskControls": [
+          "Guide mode: no write to answer cells, only hints",
+          "Collaborate mode: draft when blocked, preserve human edits to shared linkage rows",
+          "Human review required for final balance checks and approval of hint execution",
+          "Private workbook contents and answer key values never copied into public repo or summaries"
+        ],
+        "mutationMode": "background_job",
+        "approvalRequired": true,
+        "privacyBoundary": "Private gold pack with answer key: redaction of sensitive values, confidential workbook not exposed to public repo, masking of answer key in outputs, strict boundary between public artifacts and private content",
+        "traceMustShow": [
+          "Read workbook sheets (Test Prompt, Historical Data, Your Model, Answer Key)",
+          "Write forecast formulas to user model in solve mode",
+          "Read answer key for formula comparison and tolerance check",
+          "Write hints in guide mode (no answer cells)",
+          "Write section edits in collaborate mode with CAS linkage rows",
+          "Receipt of user input for mode selection and student mistake injection",
+          "CAS linkage writes for balance checks"
+        ],
+        "blockersToResolve": [
+          "Private workbook file not found or content hash mismatch",
+          "User model missing required sheets (Test Prompt, Historical Data, Your Model)",
+          "Answer key sheet missing or corrupted",
+          "Student mistake injection script failure in guide mode",
+          "Section lock conflicts in collaborate mode due to concurrent edits",
+          "Inability to check balance due to missing data"
+        ]
+      },
+      "raw": "{\"caseId\":\"finance-three-statement-modeling-private-gold\",\"intakeModes\":[\"selected_artifact\"],\"primarySurface\":\"node_agent_workflow\",\"evidencePlan\":[\"Validate workbook has Test Prompt, Historical Data, Your Model, Answer Key sheets\",\"Compare forecast formulas and values against Answer Key within tolerance\",\"In guide mode, inject scripted mistake and verify targeted hint without writing answer cells\",\"In collaborate mode, verify section locks, drafts when blocked, CAS on linkage rows, and final balance checks\"],\"riskControls\":[\"Guide mode: no write to answer cells, only hints\",\"Collaborate mode: draft when blocked, preserve human edits to shared linkage rows\",\"Human review required for final balance checks and approval of hint execution\",\"Private workbook contents and answer key values never copied into public repo or summaries\"],\"mutationMode\":\"background_job\",\"approvalRequired\":true,\"privacyBoundary\":\"Private gold pack with answer key: redaction of sensitive values, confidential workbook not exposed to public repo, masking of answer key in outputs, strict boundary between public artifacts and private content\",\"traceMustShow\":[\"Read workbook sheets (Test Prompt, Historical Data, Your Model, Answer Key)\",\"Write forecast formulas to user model in solve mode\",\"Read answer key for formula comparison and tolerance check\",\"Write hints in guide mode (no answer cells)\",\"Write section edits in collaborate mode with CAS linkage rows\",\"Receipt of user input for mode selection and student mistake injection\",\"CAS linkage writes for balance checks\"],\"blockersToResolve\":[\"Private workbook file not found or content hash mismatch\",\"User model missing required sheets (Test Prompt, Historical Data, Your Model)\",\"Answer key sheet missing or corrupted\",\"Student mistake injection script failure in guide mode\",\"Section lock conflicts in collaborate mode due to concurrent edits\",\"Inability to check balance due to missing data\"]}"
+    },
+    {
+      "caseId": "finance-accountant-template-population",
+      "model": "deepseek/deepseek-v4-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 10697,
+      "answer": {
+        "caseId": "finance-accountant-template-population",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "accountant-template",
+        "evidencePlan": [
+          "Parse fixed template and source transaction file",
+          "Detect template data-entry cells without shifting merged or label cells",
+          "Populate totals through CellPayload writes with source row evidence",
+          "Generate correction note for unmapped or changed categories"
+        ],
+        "riskControls": [
+          "Provide review/approval mechanism for human reviewer to verify category mappings and corrections",
+          "Explain draft behavior: all changes are applied as drafts pending review"
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": true,
+        "privacyBoundary": "Public notes mask raw transaction-level amounts; private detail view exposes PII/sensitive data only on user request. Redaction boundary maintained between public and private views.",
+        "traceMustShow": [
+          "Read fixed template structure and source transaction file",
+          "Write CellPayload amounts with source row evidence",
+          "Read category-mapping rules for evidence citation",
+          "Write correction note for unmapped categories"
+        ],
+        "blockersToResolve": [
+          "Unmapped category requires human review to decide mapping or mark needs_review",
+          "Correction note for changed category must be verified by human"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"finance-accountant-template-population\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"accountant-template\",\n  \"evidencePlan\": [\n    \"Parse fixed template and source transaction file\",\n    \"Detect template data-entry cells without shifting merged or label cells\",\n    \"Populate totals through CellPayload writes with source row evidence\",\n    \"Generate correction note for unmapped or changed categories\"\n  ],\n  \"riskControls\": [\n    \"Provide review/approval mechanism for human reviewer to verify category mappings and corrections\",\n    \"Explain draft behavior: all changes are applied as drafts pending review\"\n  ],\n  \"mutationMode\": \"draft_first\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"Public notes mask raw transaction-level amounts; private detail view exposes PII/sensitive data only on user request. Redaction boundary maintained between public and private views.\",\n  \"traceMustShow\": [\n    \"Read fixed template structure and source transaction file\",\n    \"Write CellPayload amounts with source row evidence\",\n    \"Read category-mapping rules for evidence citation\",\n    \"Write correction note for unmapped categories\"\n  ],\n  \"blockersToResolve\": [\n    \"Unmapped category requires human review to decide mapping or mark needs_review\",\n    \"Correction note for changed category must be verified by human\"\n  ]\n}"
+    },
+    {
+      "caseId": "finance-timesheet-invoice-review",
+      "model": "deepseek/deepseek-v4-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 15124,
+      "answer": {
+        "caseId": "finance-timesheet-invoice-review",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "Approval Note",
+        "evidencePlan": [
+          "Extract row-level clock-in/out data from CSV and XLSX",
+          "Compute regular and overtime totals per worker",
+          "Detect duplicate shifts using time overlap check",
+          "Detect missing clock-out entries",
+          "Detect overtime threshold violations (e.g., >8h/day)",
+          "Compare computed totals with formula totals in spreadsheet",
+          "Capture formula cell references and value types"
+        ],
+        "riskControls": [
+          "Redact worker identity and payroll-like values from public review notes",
+          "Require human approval before finalizing approval note",
+          "Use CAS (Compare-And-Swap) for concurrent edits on notes cells"
+        ],
+        "mutationMode": "mutate_with_cas",
+        "approvalRequired": true,
+        "privacyBoundary": "Public review notes must not expose raw worker identity, clock times, or payroll-like values; apply redaction or masking for any sensitive data unless explicitly authorized",
+        "traceMustShow": [
+          "Read CSV timecard file (*Timecard.csv)",
+          "Read XLSX timesheet file (Ideaflow Timesheet*.xlsx)",
+          "Detect merged-header layout and identify data region",
+          "Read formula cells (e.g., SUM, OVERTIME) and preserve as formulas",
+          "Write exception notes with row-level evidence (needs_review status)",
+          "Write computed totals for comparison",
+          "Detect duplicate shift entry",
+          "Detect missing clock-out",
+          "Detect overtime threshold exceedance",
+          "Attempt concurrent edit on notes cell and apply CAS or draft protection"
+        ],
+        "blockersToResolve": [
+          "Parse merged-header layout in XLSX to locate actual data region",
+          "Detect duplicate shift from time overlaps",
+          "Detect missing clock-out entries",
+          "Detect overtime threshold violations",
+          "Ensure formula cells remain formulas and not overwritten by scalar text",
+          "Resolve concurrent edit conflict on notes cell using CAS or draft isolation"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"finance-timesheet-invoice-review\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"Approval Note\",\n  \"evidencePlan\": [\n    \"Extract row-level clock-in/out data from CSV and XLSX\",\n    \"Compute regular and overtime totals per worker\",\n    \"Detect duplicate shifts using time overlap check\",\n    \"Detect missing clock-out entries\",\n    \"Detect overtime threshold violations (e.g., >8h/day)\",\n    \"Compare computed totals with formula totals in spreadsheet\",\n    \"Capture formula cell references and value types\"\n  ],\n  \"riskControls\": [\n    \"Redact worker identity and payroll-like values from public review notes\",\n    \"Require human approval before finalizing approval note\",\n    \"Use CAS (Compare-And-Swap) for concurrent edits on notes cells\"\n  ],\n  \"mutationMode\": \"mutate_with_cas\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"Public review notes must not expose raw worker identity, clock times, or payroll-like values; apply redaction or masking for any sensitive data unless explicitly authorized\",\n  \"traceMustShow\": [\n    \"Read CSV timecard file (*Timecard.csv)\",\n    \"Read XLSX timesheet file (Ideaflow Timesheet*.xlsx)\",\n    \"Detect merged-header layout and identify data region\",\n    \"Read formula cells (e.g., SUM, OVERTIME) and preserve as formulas\",\n    \"Write exception notes with row-level evidence (needs_review status)\",\n    \"Write computed totals for comparison\",\n    \"Detect duplicate shift entry\",\n    \"Detect missing clock-out\",\n    \"Detect overtime threshold exceedance\",\n    \"Attempt concurrent edit on notes cell and apply CAS or draft protection\"\n  ],\n  \"blockersToResolve\": [\n    \"Parse merged-header layout in XLSX to locate actual data region\",\n    \"Detect duplicate shift from time overlaps\",\n    \"Detect missing clock-out entries\",\n    \"Detect overtime threshold violations\",\n    \"Ensure formula cells remain formulas and not overwritten by scalar text\",\n    \"Resolve concurrent edit conflict on notes cell using CAS or draft isolation\"\n  ]\n}"
+    },
+    {
+      "caseId": "finance-transaction-activity-summary",
+      "model": "deepseek/deepseek-v4-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 21147,
+      "answer": {
+        "caseId": "finance-transaction-activity-summary",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "aggregate_activity_summary",
+        "evidencePlan": [
+          "read source CSV rows with schema: action, date, symbol, amount, quantity, fee",
+          "aggregate counts and sums by action type and symbol availability",
+          "write summary note with privacy-masked ranges",
+          "produce exception table for ambiguous rows (blank symbol, price, etc.)"
+        ],
+        "riskControls": [
+          "review aggregate summary before release",
+          "approve draft if human reviewer confirms no raw line-item disclosure"
+        ],
+        "mutationMode": "read_only",
+        "approvalRequired": true,
+        "privacyBoundary": "mask all raw account identifiers and individual transaction line items; private raw data vs public aggregated summary with row ranges only",
+        "traceMustShow": [
+          "read CSV rows with action/date/symbol/amount/quantity/fee",
+          "aggregate counts per action type",
+          "masked row-range evidence (e.g., rows 10-45: buys, rows 46-60: sells)",
+          "write exception table for rows with blank symbol or price"
+        ],
+        "blockersToResolve": [
+          "validate blank symbol/price/quantity/fee handling without false defaults",
+          "preserve sign from source values without inferring from action label"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"finance-transaction-activity-summary\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"aggregate_activity_summary\",\n  \"evidencePlan\": [\n    \"read source CSV rows with schema: action, date, symbol, amount, quantity, fee\",\n    \"aggregate counts and sums by action type and symbol availability\",\n    \"write summary note with privacy-masked ranges\",\n    \"produce exception table for ambiguous rows (blank symbol, price, etc.)\"\n  ],\n  \"riskControls\": [\n    \"review aggregate summary before release\",\n    \"approve draft if human reviewer confirms no raw line-item disclosure\"\n  ],\n  \"mutationMode\": \"read_only\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"mask all raw account identifiers and individual transaction line items; private raw data vs public aggregated summary with row ranges only\",\n  \"traceMustShow\": [\n    \"read CSV rows with action/date/symbol/amount/quantity/fee\",\n    \"aggregate counts per action type\",\n    \"masked row-range evidence (e.g., rows 10-45: buys, rows 46-60: sells)\",\n    \"write exception table for rows with blank symbol or price\"\n  ],\n  \"blockersToResolve\": [\n    \"validate blank symbol/price/quantity/fee handling without false defaults\",\n    \"preserve sign from source values without inferring from action label\"\n  ]\n}"
+    },
+    {
+      "caseId": "eval-template-to-harness-run",
+      "model": "deepseek/deepseek-v4-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 14704,
+      "answer": {
+        "caseId": "eval-template-to-harness-run",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "eval_harness",
+        "evidencePlan": [
+          "parsed_eval_definitions",
+          "assertion_validation_results",
+          "deterministic_run_logs",
+          "leaderboard_data"
+        ],
+        "riskControls": [
+          "checkpoint_on_each_eval_step",
+          "resume_from_last_checkpoint",
+          "draft_mode_for_interactive_cases"
+        ],
+        "mutationMode": "background_job",
+        "approvalRequired": true,
+        "privacyBoundary": "redaction of private source rows, masking of PII, confidential data boundary maintained, public output only",
+        "traceMustShow": [
+          "read_eval_template_csv",
+          "write_case_definition",
+          "write_trace_assertions",
+          "checkpoint_saved",
+          "model_audit_receipt",
+          "leaderboard_update"
+        ],
+        "blockersToResolve": [
+          "missing_assertions",
+          "template_format_errors",
+          "ci_network_restrictions",
+          "model_audit_failures"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"eval-template-to-harness-run\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"eval_harness\",\n  \"evidencePlan\": [\n    \"parsed_eval_definitions\",\n    \"assertion_validation_results\",\n    \"deterministic_run_logs\",\n    \"leaderboard_data\"\n  ],\n  \"riskControls\": [\n    \"checkpoint_on_each_eval_step\",\n    \"resume_from_last_checkpoint\",\n    \"draft_mode_for_interactive_cases\"\n  ],\n  \"mutationMode\": \"background_job\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"redaction of private source rows, masking of PII, confidential data boundary maintained, public output only\",\n  \"traceMustShow\": [\n    \"read_eval_template_csv\",\n    \"write_case_definition\",\n    \"write_trace_assertions\",\n    \"checkpoint_saved\",\n    \"model_audit_receipt\",\n    \"leaderboard_update\"\n  ],\n  \"blockersToResolve\": [\n    \"missing_assertions\",\n    \"template_format_errors\",\n    \"ci_network_restrictions\",\n    \"model_audit_failures\"\n  ]\n}"
+    },
+    {
+      "caseId": "eval-ui-action-execution-map",
+      "model": "deepseek/deepseek-v4-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 28629,
+      "answer": {
+        "caseId": "eval-ui-action-execution-map",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "browser",
+        "evidencePlan": [
+          "UI selector or user action for each generated step",
+          "expected tool/data layer per action",
+          "expected artifact state after each action",
+          "failure signal for each action",
+          "checkpoint status-chip for long-running actions",
+          "resolvedModel assertions on artifact IDs",
+          "cancel and retry assertions for long-running actions",
+          "artifact reference clickability and canonical artifact id verification"
+        ],
+        "riskControls": [
+          "PII redaction and masking of raw source rows to prevent private data leakage",
+          "human review required to validate evaluation correctness before final output"
+        ],
+        "mutationMode": "background_job",
+        "approvalRequired": true,
+        "privacyBoundary": "private/public boundary enforced by redacting PII and masking confidential data from source rows; no raw private source rows in eval results",
+        "traceMustShow": [
+          "read of UI action mapping CSV rows",
+          "write of generated action definitions",
+          "write of browser-visible step and backend assertion per action",
+          "read of artifact reference IDs for clickability checks",
+          "receipt of checkpoint status for long-running actions",
+          "write of resolvedModel audit log entries"
+        ],
+        "blockersToResolve": [
+          "missing provider API keys for live-provider eval lanes",
+          "checkpoint mechanism not implemented in current test harness",
+          "mapping CSV has ambiguous action types requiring disambiguation",
+          "no existing retry logic for failed long-running actions"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"eval-ui-action-execution-map\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"browser\",\n  \"evidencePlan\": [\n    \"UI selector or user action for each generated step\",\n    \"expected tool/data layer per action\",\n    \"expected artifact state after each action\",\n    \"failure signal for each action\",\n    \"checkpoint status-chip for long-running actions\",\n    \"resolvedModel assertions on artifact IDs\",\n    \"cancel and retry assertions for long-running actions\",\n    \"artifact reference clickability and canonical artifact id verification\"\n  ],\n  \"riskControls\": [\n    \"PII redaction and masking of raw source rows to prevent private data leakage\",\n    \"human review required to validate evaluation correctness before final output\"\n  ],\n  \"mutationMode\": \"background_job\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"private/public boundary enforced by redacting PII and masking confidential data from source rows; no raw private source rows in eval results\",\n  \"traceMustShow\": [\n    \"read of UI action mapping CSV rows\",\n    \"write of generated action definitions\",\n    \"write of browser-visible step and backend assertion per action\",\n    \"read of artifact reference IDs for clickability checks\",\n    \"receipt of checkpoint status for long-running actions\",\n    \"write of resolvedModel audit log entries\"\n  ],\n  \"blockersToResolve\": [\n    \"missing provider API keys for live-provider eval lanes\",\n    \"checkpoint mechanism not implemented in current test harness\",\n    \"mapping CSV has ambiguous action types requiring disambiguation\",\n    \"no existing retry logic for failed long-running actions\"\n  ]\n}"
+    },
+    {
+      "caseId": "analytics-weighted-ranking",
+      "model": "deepseek/deepseek-v4-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 5479,
+      "answer": {
+        "caseId": "analytics-weighted-ranking",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "spreadsheet",
+        "evidencePlan": [
+          "Read option rows from source columns: cost, distance, quality, difficulty, revenue-potential",
+          "Compute weighted scores and ranks using current weight set",
+          "Write score and rank cell payloads with evidence of source column values and weight set used",
+          "On weight change, recompute only dependent score/rank cells; version prior notes",
+          "Log sensitivity report when top choice flips due to weight change"
+        ],
+        "riskControls": [
+          "formula_dependency_locks prevent editing unrelated option rows",
+          "cell_payload_evidence ensures provenance of each score/rank",
+          "artifact_refs maintain link to original source columns"
+        ],
+        "mutationMode": "mutate_with_cas",
+        "approvalRequired": false,
+        "privacyBoundary": "public spreadsheet data only; no PII or confidential fields in source columns",
+        "traceMustShow": [
+          "Read source columns cost, distance, quality, difficulty, revenue-potential for each option row",
+          "Write score cell with weight set and source values as evidencePayload",
+          "Write rank cell with computed rank and evidencePayload",
+          "On weight update: read new weights, recompute score then rank cells, update only those cells",
+          "Write versioned note preserving prior note string"
+        ],
+        "blockersToResolve": []
+      },
+      "raw": "{\n  \"caseId\": \"analytics-weighted-ranking\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"spreadsheet\",\n  \"evidencePlan\": [\n    \"Read option rows from source columns: cost, distance, quality, difficulty, revenue-potential\",\n    \"Compute weighted scores and ranks using current weight set\",\n    \"Write score and rank cell payloads with evidence of source column values and weight set used\",\n    \"On weight change, recompute only dependent score/rank cells; version prior notes\",\n    \"Log sensitivity report when top choice flips due to weight change\"\n  ],\n  \"riskControls\": [\n    \"formula_dependency_locks prevent editing unrelated option rows\",\n    \"cell_payload_evidence ensures provenance of each score/rank\",\n    \"artifact_refs maintain link to original source columns\"\n  ],\n  \"mutationMode\": \"mutate_with_cas\",\n  \"approvalRequired\": false,\n  \"privacyBoundary\": \"public spreadsheet data only; no PII or confidential fields in source columns\",\n  \"traceMustShow\": [\n    \"Read source columns cost, distance, quality, difficulty, revenue-potential for each option row\",\n    \"Write score cell with weight set and source values as evidencePayload\",\n    \"Write rank cell with computed rank and evidencePayload\",\n    \"On weight update: read new weights, recompute score then rank cells, update only those cells\",\n    \"Write versioned note preserving prior note string\"\n  ],\n  \"blockersToResolve\": []\n}"
+    },
+    {
+      "caseId": "analytics-workout-progress-dashboard",
+      "model": "deepseek/deepseek-v4-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 34848,
+      "answer": {
+        "caseId": "analytics-workout-progress-dashboard",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "dashboard",
+        "evidencePlan": [
+          "workout_log_rows",
+          "exercise_metadata_rows",
+          "joined_workout_exercise_rows",
+          "strength_volume_summary",
+          "cardio_duration_distance_summary",
+          "public_dashboard_cell",
+          "private_artifact_cell"
+        ],
+        "riskControls": [
+          "draft_before_publication",
+          "human_review_approval_required",
+          "privacy_redaction_enforced"
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": true,
+        "privacyBoundary": "private_public_boundary: raw timestamps masked, PII redacted, sensitive data in private artifact only",
+        "traceMustShow": [
+          "read_workout_data.csv",
+          "read_exercise_metadata.xlsx",
+          "join_on_exercise_title",
+          "compute_strength_volume",
+          "compute_cardio_duration_distance",
+          "write_public_dashboard_note",
+          "write_private_detailed_artifact"
+        ],
+        "blockersToResolve": [
+          "missing_exercise_metadata",
+          "blank_RPE",
+          "blank_notes",
+          "superset_grouping"
+        ]
+      },
+      "raw": "{\n  \"caseId\": \"analytics-workout-progress-dashboard\",\n  \"intakeModes\": [\"selected_artifact\"],\n  \"primarySurface\": \"dashboard\",\n  \"evidencePlan\": [\n    \"workout_log_rows\",\n    \"exercise_metadata_rows\",\n    \"joined_workout_exercise_rows\",\n    \"strength_volume_summary\",\n    \"cardio_duration_distance_summary\",\n    \"public_dashboard_cell\",\n    \"private_artifact_cell\"\n  ],\n  \"riskControls\": [\n    \"draft_before_publication\",\n    \"human_review_approval_required\",\n    \"privacy_redaction_enforced\"\n  ],\n  \"mutationMode\": \"draft_first\",\n  \"approvalRequired\": true,\n  \"privacyBoundary\": \"private_public_boundary: raw timestamps masked, PII redacted, sensitive data in private artifact only\",\n  \"traceMustShow\": [\n    \"read_workout_data.csv\",\n    \"read_exercise_metadata.xlsx\",\n    \"join_on_exercise_title\",\n    \"compute_strength_volume\",\n    \"compute_cardio_duration_distance\",\n    \"write_public_dashboard_note\",\n    \"write_private_detailed_artifact\"\n  ],\n  \"blockersToResolve\": [\n    \"missing_exercise_metadata\",\n    \"blank_RPE\",\n    \"blank_notes\",\n    \"superset_grouping\"\n  ]\n}"
+    },
+    {
+      "caseId": "legacy-output-migration",
+      "model": "deepseek/deepseek-v4-flash",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 27485,
+      "answer": {
+        "caseId": "legacy-output-migration",
+        "intakeModes": [
+          "selected_artifact"
+        ],
+        "primarySurface": "wiki",
+        "evidencePlan": [
+          "source-file read receipts",
+          "wiki update mutation receipts",
+          "duplicate-skip decision logs",
+          "idempotency check (second run)",
+          "PII masking verification in public summaries"
+        ],
+        "riskControls": [
+          "human review required before finalizing migration",
+          "review of duplicate detection decisions",
+          "approval for wiki update"
+        ],
+        "mutationMode": "draft_first",
+        "approvalRequired": true,
+        "privacyBoundary": "PII masking applied to public summaries; private source files kept confidential; redaction of sensitive data before publishing",
+        "traceMustShow": [
+          "source-file reads",
+          "wiki update receipts",
+          "duplicate-detection decisions",
+          "clickable source references from wiki sections"
+        ],
+        "blockersToResolve": [
+          "duplicate contact detection and handling",
+          "PII identification and masking",
+          "idempotent migration logic",
+          "stable table of contents after re-run"
+        ]
+      },
+      "raw": "{\"caseId\":\"legacy-output-migration\",\"intakeModes\":[\"selected_artifact\"],\"primarySurface\":\"wiki\",\"evidencePlan\":[\"source-file read receipts\",\"wiki update mutation receipts\",\"duplicate-skip decision logs\",\"idempotency check (second run)\",\"PII masking verification in public summaries\"],\"riskControls\":[\"human review required before finalizing migration\",\"review of duplicate detection decisions\",\"approval for wiki update\"],\"mutationMode\":\"draft_first\",\"approvalRequired\":true,\"privacyBoundary\":\"PII masking applied to public summaries; private source files kept confidential; redaction of sensitive data before publishing\",\"traceMustShow\":[\"source-file reads\",\"wiki update receipts\",\"duplicate-detection decisions\",\"clickable source references from wiki sections\"],\"blockersToResolve\":[\"duplicate contact detection and handling\",\"PII identification and masking\",\"idempotent migration logic\",\"stable table of contents after re-run\"]}"
+    }
+  ]
+}

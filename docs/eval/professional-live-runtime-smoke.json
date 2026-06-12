@@ -1,0 +1,331 @@
+{
+  "generatedAt": "2026-06-12T00:09:34.787Z",
+  "harnessVersion": "professional-live-runtime-v1-managed",
+  "model": "scripted",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "passRate": 1,
+  "allPassed": true,
+  "rows": [
+    {
+      "caseId": "gtm-chat-lead-capture-enrich",
+      "model": "scripted:gtm-chat-lead-capture-enrich",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "stoppedCleanly": true,
+        "readBeforeWrite": true,
+        "usedProductionManagedWrite": true,
+        "noModelVisibleLockTools": true,
+        "lockHeldDuringWrite": true,
+        "releaseOrTtlFallback": true,
+        "noSilentClobber": true,
+        "statusWritten": true,
+        "resultPayloadsWritten": true,
+        "evidenceMatchesSourceStrength": true,
+        "expectedTermsPresent": true,
+        "wikiUpdatedIfRequired": true,
+        "protectedAnswerCellsUntouched": true,
+        "privateBoundary": true
+      },
+      "ms": 14,
+      "toolCalls": 6,
+      "surface": "watchlist_row",
+      "runtimeLockMode": "runtime_managed_lock",
+      "finalText": "",
+      "trace": [
+        {
+          "step": 0,
+          "tool": "read_range",
+          "args": {
+            "elementIds": [
+              "request__case_id",
+              "request__workflow",
+              "request__source_a",
+              "request__source_b",
+              "request__requirements",
+              "target__result",
+              "target__evidence",
+              "target__risk",
+              "target__trace",
+              "target__status"
+            ]
+          },
+          "result": [
+            {
+              "id": "request__case_id",
+              "value": "gtm-chat-lead-capture-enrich",
+              "version": 1,
+              "locked": null
+            },
+            {
+              "id": "request__workflow",
+              "value": "Turn an informal chat note about a person, company, funding event, and product claim into a structured watchlist row plus a sourced wiki note.",
+              "version": 1,
+              "locked": null
+            },
+            {
+              "id": "request__source_a",
+              "value": "chat: just spoke with <person>; their startup <company> does <description>",
+              "version": 1,
+              "locked": null
+            },
+            {
+              "id": "request__source_b",
+              "value": "Use a synthetic chat-note fixture with one exact company, one ambiguous company name, one unverified funding claim, and one existing watchlist row that should be updated instead of duplicated.",
+              "version": 1,
+              "locked": null
+            },
+            {
+              "id": "request__requirements",
+              "value": "chat_intake_parser, entity_resolution, clarifying_question_gate, cell_payload_evidence, wiki_grounded_update, privacy_redaction, human_review",
+              "version": 1,
+              "locked": null
+            },
+            {
+              "id": "target__result",
+              "value": "",
+              "version": 1,
+              "locked": null
+            },
+            {
+              "id": "target__evidence",
+              "value": "",
+              "version": 1,
+              "locked": null
+            },
+            {
+              "id": "target__risk",
+              "value": "",
+              "version": 1,
+              "locked": null
+            },
+            {
+              "id": "target__trace",
+              "value": "",
+              "version": 1,
+              "locked": null
+            },
+            {
+              "id": "target__status",
+              "value": "",
+              "version": 1,
+              "locked": null
+            }
+          ],
+          "ms": 3
+        },
+        {
+          "step": 1,
+          "tool": "write_locked_cell_results",
+          "args": {
+            "reason": "runtime proof gtm-chat-lead-capture-enrich",
+            "ops": [
+              {
+                "elementId": "target__result",
+                "value": "gtm-chat-lead-capture-enrich: executed watchlist_row workflow with review, redacted, wiki, row.",
+                "baseVersion": 1,
+                "status": "needs_review",
+                "confidence": 0.82,
+                "evidence": [
+                  {
+                    "id": "gtm-chat-lead-capture-enrich:target__result",
+                    "kind": "manual",
+                    "label": "user said in chat (unverified)",
+                    "snippet": "Turn an informal chat note about a person, company, funding event, and product claim into a structured watchlist row plus a sourced wiki note. | Use a synthetic chat-note fixture with one exact company, one ambiguous company name, one unverified funding claim, and one existing watchlist row that should be updated instead of duplicated.",
+                    "confidence": 0.82
+                  }
+                ],
+                "kind": "set"
+              },
+              {
+                "elementId": "target__evidence",
+                "value": "Evidence comes from chat: just spoke with <person>; their startup <company> does <description> + chat: <company> just raised $<amount> by doing <claim>; provenance is user said in chat (unverified).",
+                "baseVersion": 1,
+                "status": "needs_review",
+                "confidence": 0.82,
+                "evidence": [
+                  {
+                    "id": "gtm-chat-lead-capture-enrich:target__evidence",
+                    "kind": "manual",
+                    "label": "user said in chat (unverified)",
+                    "snippet": "Turn an informal chat note about a person, company, funding event, and product claim into a structured watchlist row plus a sourced wiki note. | Use a synthetic chat-note fixture with one exact company, one ambiguous company name, one unverified funding claim, and one existing watchlist row that should be updated instead of duplicated.",
+                    "confidence": 0.82
+                  }
+                ],
+                "kind": "set"
+              },
+              {
+                "elementId": "target__risk",
+                "value": "Controls: CAS, managed locks, review, redacted, wiki, row, and needs_review for ambiguity.",
+                "baseVersion": 1,
+                "status": "needs_review",
+                "confidence": 0.82,
+                "evidence": [
+                  {
+                    "id": "gtm-chat-lead-capture-enrich:target__risk",
+                    "kind": "manual",
+                    "label": "user said in chat (unverified)",
+                    "snippet": "Turn an informal chat note about a person, company, funding event, and product claim into a structured watchlist row plus a sourced wiki note. | Use a synthetic chat-note fixture with one exact company, one ambiguous company name, one unverified funding claim, and one existing watchlist row that should be updated instead of duplicated.",
+                    "confidence": 0.82
+                  }
+                ],
+                "kind": "set"
+              },
+              {
+                "elementId": "target__trace",
+                "value": "Trace must show read -> managed write -> receipt for gtm-chat-lead-capture-enrich; review, redacted, wiki, row.",
+                "baseVersion": 1,
+                "status": "needs_review",
+                "confidence": 0.82,
+                "evidence": [
+                  {
+                    "id": "gtm-chat-lead-capture-enrich:target__trace",
+                    "kind": "manual",
+                    "label": "user said in chat (unverified)",
+                    "snippet": "Turn an informal chat note about a person, company, funding event, and product claim into a structured watchlist row plus a sourced wiki note. | Use a synthetic chat-note fixture with one exact company, one ambiguous company name, one unverified funding claim, and one existing watchlist row that should be updated instead of duplicated.",
+                    "confidence": 0.82
+                  }
+                ],
+                "kind": "set"
+              }
+            ]
+          },
+          "result": {
+            "ok": true,
+            "results": [
+              {
+                "ok": true,
+                "version": 2,
+                "elementId": "target__result"
+              },
+              {
+                "ok": true,
+                "version": 2,
+                "elementId": "target__evidence"
+              },
+              {
+                "ok": true,
+                "version": 2,
+                "elementId": "target__risk"
+              },
+              {
+                "ok": true,
+                "version": 2,
+                "elementId": "target__trace"
+              }
+            ],
+            "coordination": {
+              "mode": "managed_lock_batch",
+              "targetIds": [
+                "target__result",
+                "target__evidence",
+                "target__risk",
+                "target__trace"
+              ],
+              "acquired": true,
+              "lockId": "lock_8",
+              "released": true,
+              "mergedDrafts": 0
+            }
+          },
+          "ms": 5
+        },
+        {
+          "step": 2,
+          "tool": "write_locked_cells",
+          "args": {
+            "reason": "mark gtm-chat-lead-capture-enrich runtime proof",
+            "ops": [
+              {
+                "elementId": "target__status",
+                "value": "needs_review",
+                "baseVersion": 1,
+                "kind": "set"
+              }
+            ]
+          },
+          "result": {
+            "ok": true,
+            "results": [
+              {
+                "ok": true,
+                "version": 2,
+                "elementId": "target__status"
+              }
+            ],
+            "coordination": {
+              "mode": "managed_lock_batch",
+              "targetIds": [
+                "target__status"
+              ],
+              "acquired": true,
+              "lockId": "lock_17",
+              "released": true,
+              "mergedDrafts": 0
+            }
+          },
+          "ms": 0
+        },
+        {
+          "step": 3,
+          "tool": "read_range",
+          "args": {
+            "artifactId": "art_5",
+            "elementIds": [
+              "doc"
+            ]
+          },
+          "result": [
+            {
+              "id": "doc",
+              "value": "<h1>gtm-chat-lead-capture-enrich</h1><p>Waiting for grounded update.</p>",
+              "version": 1,
+              "locked": null
+            }
+          ],
+          "ms": 0
+        },
+        {
+          "step": 4,
+          "tool": "update_wiki",
+          "args": {
+            "artifactId": "art_5",
+            "baseVersion": 1,
+            "citesArtifactIds": [
+              "primary-runtime-sheet"
+            ],
+            "content": "## gtm-chat-lead-capture-enrich\n\ngtm-chat-lead-capture-enrich: executed watchlist_row workflow with review, redacted, wiki, row."
+          },
+          "result": {
+            "ok": true,
+            "version": 2,
+            "coordination": {
+              "mode": "managed_lock",
+              "targetIds": [
+                "doc"
+              ],
+              "acquired": true,
+              "lockId": "lock_23",
+              "released": true,
+              "mergedDrafts": 0
+            }
+          },
+          "ms": 2
+        },
+        {
+          "step": 5,
+          "tool": "say",
+          "args": {
+            "text": "Runtime proof complete for gtm-chat-lead-capture-enrich."
+          },
+          "result": {
+            "ok": true
+          },
+          "ms": 1
+        }
+      ]
+    }
+  ]
+}

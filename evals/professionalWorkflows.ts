@@ -252,6 +252,7 @@ export const PROFESSIONAL_WORKFLOW_CASES: ProfessionalEvalCase[] = [
       "Every non-unknown tier includes source evidence and confidence.",
       "TotalScore, Coverage, and Confidence are consistent with the populated signal cells.",
       "Bulk /free route records checkpoints, resolvedModel, and no duplicate final writes.",
+      "Public exports redact private account/contact fields while preserving row-level scoring provenance.",
       "Missing-domain or weak-evidence rows are not over-scored.",
     ],
     requiredHarness: [
@@ -265,6 +266,7 @@ export const PROFESSIONAL_WORKFLOW_CASES: ProfessionalEvalCase[] = [
     ],
     productionNotes: [
       "This is a strong featured `/free` case: free-auto can work slowly through many independent company/signal cells while preserving provenance.",
+      "Scoring evidence may reference sensitive account context; public summaries must mask private account/contact details and keep raw rows private.",
       "A paid model should remain the interactive default for live collaboration edits.",
     ],
   },
@@ -946,12 +948,14 @@ export const PROFESSIONAL_WORKFLOW_CASES: ProfessionalEvalCase[] = [
       "Upload the legacy files.",
       "Ask the agent to build a migration summary and wiki update.",
       "Click source references from the wiki.",
+      "Review the trace for source-file reads, wiki update receipts, and duplicate-detection decisions.",
       "Re-run the migration and assert idempotency.",
     ],
     assertions: [
       "Repeated migration does not duplicate wiki sections or contact rows.",
       "Every imported section cites the source artifact id.",
       "PII-like fields are masked in public summaries.",
+      "The migration trace records reviewable source reads, wiki mutation receipts, and duplicate-skip decisions.",
       "The table of contents remains stable after the second run.",
     ],
     requiredHarness: [

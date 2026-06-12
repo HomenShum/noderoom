@@ -1,0 +1,72 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-sheet-undo",
+    "class": "readme_walkthrough",
+    "title": "Sheet Undo",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\sheet-undo.mp4",
+    "relPath": "docs/walkthroughs/sheet-undo.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:sheet-undo"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/sheet-undo.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 4911161,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough clearly demonstrates editing a spreadsheet cell and performing an undo operation, which increments the version control system safely. The workflow is complete and matches the product's collaborative versioning narrative.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "The video shows a cell edit followed by clicking the undo button, reverting the cell value."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Shows the initial empty state, the input of '+20.5%', and the subsequent undo action."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "The dark mode interface is clean, though the left chat panel remains empty and unused."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Integrates spreadsheet edits with the room trace and versioning system."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Captured directly from the working web application with real-time UI updates."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Spreadsheet values and version labels are readable, though font sizes are small."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Demonstrates safe multiplayer cell reversion, highly relevant for financial and data operations."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately shows the version incrementing from v3 to v4 upon undoing, reflecting true CAS behavior."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet cell edit",
+      "Undo button click",
+      "Version increment in the UI",
+      "Room trace event updates"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:09",
+        "severity": "P2",
+        "observed": "The version change from v3 to v4 during undo is subtle and easily missed without the caption.",
+        "fix": "Add a brief visual highlight or flash to the version label when it updates."
+      }
+    ],
+    "suggestedReadmeCaption": "NodeRoom's versioned spreadsheet allows safe, non-clobbering undo operations that sync instantly across the entire room."
+  },
+  "score": 8,
+  "maxScore": 16
+}

@@ -14,6 +14,7 @@ import { chromium, type Page, type BrowserContext } from "@playwright/test";
 import { mkdirSync, rmSync, writeFileSync, readFileSync } from "node:fs";
 import { join } from "node:path";
 import { ConvexHttpClient } from "convex/browser";
+import ExcelJS from "exceljs";
 import { api } from "../../convex/_generated/api.js";
 import { FEATURES, type FeatureSpec, type Step, type After } from "./specs.js";
 
@@ -72,6 +73,37 @@ const DEFAULT_SEED_COMPANIES = [
   { company: "Stripe", website: "https://stripe.com", tier: "A", owner: "Maya" },
   { company: "Figma", website: "https://figma.com", tier: "B", owner: "Sam" },
 ];
+
+async function walkthroughWorkbookFile(): Promise<string> {
+  const dir = join(ROOT, ".tmp-qa", "walkthroughs");
+  mkdirSync(dir, { recursive: true });
+  const path = join(dir, "style-toggle.xlsx");
+  const workbook = new ExcelJS.Workbook();
+  const ws = workbook.addWorksheet("Model");
+  ws.getColumn(2).width = 28;
+  ws.getColumn(4).width = 16;
+  ws.getCell("B2").value = "STYLE TOGGLE MODEL";
+  ws.getCell("B2").font = { bold: true, color: { argb: "FFFFFFFF" } };
+  ws.getCell("B2").fill = { type: "pattern", pattern: "solid", fgColor: { argb: "FF1F4E79" } };
+  ws.mergeCells("B2:D2");
+  ws.getCell("B4").value = "Gross margin %";
+  ws.getCell("D4").value = 0.3374;
+  ws.getCell("D4").numFmt = "0.0%";
+  ws.getCell("B5").value = "EBIT";
+  ws.getCell("D5").value = 65.8;
+  ws.getCell("D5").numFmt = "#,##0.0";
+  const buffer = await workbook.xlsx.writeBuffer();
+  writeFileSync(path, Buffer.from(buffer as ArrayBuffer));
+  return path;
+}
+
+async function uploadWalkthroughWorkbook(page: Page) {
+  const path = await walkthroughWorkbookFile();
+  await page.locator(".r-file-input").setInputFiles(path);
+  await page.getByRole("button", { name: /style-toggle\.xlsx/i }).click({ timeout: 30_000 });
+  await page.getByTestId("excel-paper").waitFor({ timeout: 30_000 });
+  await page.locator('[data-cell-key="D4"]').click();
+}
 
 async function seedResearch(page: Page, code: string, companies = DEFAULT_SEED_COMPANIES) {
   // The room's OWN session token (from the browser) authorizes seeding a research artifact.
@@ -142,7 +174,13 @@ async function runFeature(spec: FeatureSpec, attempt: number): Promise<FeatureOu
         segments.push({ frame: await shoot(page, dir, ++n), caption: step.caption, cursor: cur, click: true, kind: "action", holdMs: step.holdMs ?? 950 });
         await page.locator(step.sel).first().click();
         await waitAfter(page, step.after);
-        segments.push({ frame: await shoot(page, dir, ++n), caption: step.afterCaption ?? step.caption, cursor: null, click: false, kind: "result", holdMs: step.afterCaption ? 1700 : 950 });
+        segments.push({ frame: await shoot(page, dir, ++n), caption: step.afterCaption ?? step.caption, cursor: null, click: false, kind: "result", holdMs: step.afterHoldMs ?? (step.afterCaption ? 1700 : 950) });
+      } else if (step.kind === "uploadWorkbook") {
+        const cur = await center(page, ".r-file.r-upload");
+        segments.push({ frame: await shoot(page, dir, ++n), caption: step.caption, cursor: cur, click: true, kind: "action", holdMs: step.holdMs ?? 950 });
+        await uploadWalkthroughWorkbook(page);
+        await settle(page, 700);
+        segments.push({ frame: await shoot(page, dir, ++n), caption: step.afterCaption ?? step.caption, cursor: null, click: false, kind: "result", holdMs: step.afterHoldMs ?? (step.afterCaption ? 1900 : 1200) });
       } else if (step.kind === "type") {
         const cur = await center(page, step.sel);
         segments.push({ frame: await shoot(page, dir, ++n), caption: step.caption, cursor: cur, click: false, kind: "action", holdMs: 800 });

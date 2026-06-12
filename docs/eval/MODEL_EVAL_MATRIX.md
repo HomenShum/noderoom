@@ -1,6 +1,6 @@
 # Model Eval Matrix
 
-Last updated: 2026-06-10.
+Last updated: 2026-06-11.
 
 NodeRoom now treats model evaluation as a two-axis matrix:
 
@@ -19,22 +19,33 @@ canonical OpenRouter route IDs from NodeRoom internal aliases:
 
 | Route | Role | Suites |
 |---|---|---|
-| `deepseek/deepseek-v4-flash` | current research champion | research, collaboration candidate |
+| `nex-agi/nex-n2-pro:free` | fastest free research smoke clearer | research, collaboration candidate |
+| `deepseek/deepseek-v4-flash` | prior 3-company research champion | research, collaboration candidate |
+| `ibm-granite/granite-4.1-8b` | cheapest paid smoke clearer | research, collaboration candidate |
+| `z-ai/glm-4.7-flash` | low-cost candidate | research, collaboration |
+| `inclusionai/ring-2.6-1t` | low-cost candidate | research, collaboration |
 | `xiaomi/mimo-v2.5` | candidate | research, collaboration |
+| `stepfun/step-3.7-flash` | candidate | research, collaboration |
+| `minimax/minimax-m3` | current MiniMax candidate | research, collaboration |
+| `deepseek/deepseek-v4-pro` | higher-capability cheap candidate | research, collaboration |
+| `google/gemini-3.1-flash-lite` | low-cost OpenRouter research route | research |
 | `qwen/qwen3.7-plus` | candidate | research, collaboration |
 | `nvidia/nemotron-3-ultra-550b-a55b` | candidate | research, collaboration |
-| `moonshotai/kimi-k2.6` | candidate | research, collaboration |
-| `minimax/minimax-m2.7` | candidate | research, collaboration |
-| `z-ai/glm-4.7-flash` | candidate | research, collaboration |
-| `deepseek/deepseek-v3.2-speciale` | candidate | research, collaboration |
-| `google/gemma-4-26b-a4b-it` | light-task candidate | research |
-| `openrouter/free-auto` | internal free-route alias | research, collaboration candidate |
+| `nvidia/nemotron-3-ultra-550b-a55b:free` | concrete free route | research, collaboration candidate |
 | `nvidia/nemotron-3-super-120b-a12b:free` | concrete free route | research, collaboration candidate |
+| `google/gemma-4-31b-it:free` | concrete free route | research |
+| `openai/gpt-oss-120b:free` | concrete free route | research |
+| `poolside/laguna-xs.2:free` | concrete free route | research |
+| `poolside/laguna-m.1:free` | concrete free route | research |
+| `openrouter/free-auto` | internal free-route alias | research, collaboration candidate |
 | `gemini-3.5-flash` | current collaboration fallback | collaboration compatibility |
 
 OpenRouter route names were checked against the live `/models` endpoint during
-this pass. `openrouter/free-auto` is intentionally not an external model ID; it
-is NodeRoom's alias that expands to ranked free OpenRouter routes.
+this pass. The 2026-06-11 cheap/free smoke attempted 28 routes from that live
+catalog; 18 cleared 9/9 and the provider/harness/model failures remain in
+`docs/eval/results.json`. `openrouter/free-auto` is intentionally not an
+external model ID; it is NodeRoom's alias that expands to ranked free
+OpenRouter routes.
 
 ## Scenario Coverage
 

@@ -143,8 +143,8 @@ export const Walkthrough: React.FC<{ feature: Feature }> = ({ feature }) => {
         </div>
 
         {/* step caption — instant in, bottom overlaid */}
-        <div style={{ position: "absolute", left: 0, right: 0, bottom: 0, display: "flex", justifyContent: "center", padding: "0 0 18px", pointerEvents: "none" }}>
-          <div style={{ maxWidth: 920, background: "rgba(11,13,17,.86)", border: "1px solid rgba(255,255,255,.13)", borderRadius: 12, padding: "11px 20px", color: "#f2f4f7", fontSize: 21, fontWeight: 600, letterSpacing: "-.01em", opacity: captionIn, boxShadow: "0 10px 36px rgba(0,0,0,.5)", display: "flex", alignItems: "center", gap: 12 }}>
+        <div style={{ position: "absolute", left: 24, right: 24, bottom: 26, display: "flex", justifyContent: "center", pointerEvents: "none" }}>
+          <div style={{ maxWidth: 920, background: "rgba(11,13,17,.86)", border: "1px solid rgba(255,255,255,.13)", borderRadius: 12, padding: "11px 20px", color: "#f2f4f7", fontSize: 21, fontWeight: 600, letterSpacing: "-.01em", opacity: captionIn, boxShadow: "0 10px 36px rgba(0,0,0,.5)", display: "flex", alignItems: "center", gap: 12, lineHeight: 1.22 }}>
             <span style={{ flex: "none", width: 26, height: 26, borderRadius: 13, background: "#D97757", color: "#fff", fontSize: 14, fontWeight: 800, display: "flex", alignItems: "center", justifyContent: "center" }}>{i + 1}</span>
             {b.seg.caption}
           </div>

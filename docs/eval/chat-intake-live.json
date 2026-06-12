@@ -1,0 +1,552 @@
+{
+  "generatedAt": "2026-06-11T20:06:37.377Z",
+  "caseId": "gtm-chat-lead-capture-enrich:live",
+  "modelName": "deepseek/deepseek-v4-flash",
+  "status": "passed",
+  "score": 1,
+  "checks": {
+    "stoppedCleanly": true,
+    "lockedBeforeWrite": true,
+    "releasedLock": true,
+    "capturedBeforeClarify": true,
+    "atMostOneClarifyingQuestion": true,
+    "noUploadDemanded": true,
+    "newLeadCaptured": true,
+    "chatClaimsStayManual": true,
+    "duplicatePrevented": true,
+    "ambiguousNotGuessed": true,
+    "privateChannelOnly": true
+  },
+  "ms": 44282,
+  "toolCalls": 12,
+  "trace": [
+    {
+      "step": 0,
+      "tool": "propose_lock",
+      "args": {
+        "elementIds": [
+          "r_meridian__company",
+          "r_meridian__contact",
+          "r_meridian__what",
+          "r_meridian__funding",
+          "r_meridian__status",
+          "r_meridian__note",
+          "r_northwind__note",
+          "r_capture_caldera__company",
+          "r_capture_caldera__status"
+        ],
+        "reason": "capturing GTM watchlist updates from chat"
+      },
+      "result": {
+        "ok": true,
+        "lockId": "lock_7"
+      },
+      "ms": 0
+    },
+    {
+      "step": 1,
+      "tool": "write_cell_result",
+      "args": {
+        "elementId": "r_meridian__company",
+        "value": "Meridian Robotics",
+        "baseVersion": 0,
+        "status": "complete",
+        "confidence": 0.7,
+        "evidence": [
+          {
+            "kind": "manual",
+            "label": "user said in chat (unverified)",
+            "snippet": "Just spoke with Sarah Lin at Meridian Robotics — they do warehouse automation retrofits and just raised $12M."
+          }
+        ],
+        "kind": "create"
+      },
+      "result": {
+        "ok": true,
+        "version": 1
+      },
+      "ms": 0
+    },
+    {
+      "step": 1,
+      "tool": "write_cell_result",
+      "args": {
+        "elementId": "r_meridian__contact",
+        "value": "Sarah Lin",
+        "baseVersion": 0,
+        "status": "complete",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "kind": "manual",
+            "label": "user said in chat (unverified)",
+            "snippet": "Just spoke with Sarah Lin at Meridian Robotics"
+          }
+        ],
+        "kind": "create"
+      },
+      "result": {
+        "ok": true,
+        "version": 1
+      },
+      "ms": 0
+    },
+    {
+      "step": 1,
+      "tool": "write_cell_result",
+      "args": {
+        "elementId": "r_meridian__what",
+        "value": "Warehouse automation retrofits",
+        "baseVersion": 0,
+        "status": "complete",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "kind": "manual",
+            "label": "user said in chat (unverified)",
+            "snippet": "they do warehouse automation retrofits and just raised $12M"
+          }
+        ],
+        "kind": "create"
+      },
+      "result": {
+        "ok": true,
+        "version": 1
+      },
+      "ms": 0
+    },
+    {
+      "step": 1,
+      "tool": "write_cell_result",
+      "args": {
+        "elementId": "r_meridian__funding",
+        "value": "$12M raised",
+        "baseVersion": 0,
+        "status": "complete",
+        "confidence": 0.9,
+        "evidence": [
+          {
+            "kind": "manual",
+            "label": "user said in chat (unverified)",
+            "snippet": "just raised $12M"
+          }
+        ],
+        "kind": "create"
+      },
+      "result": {
+        "ok": true,
+        "version": 1
+      },
+      "ms": 1
+    },
+    {
+      "step": 1,
+      "tool": "edit_cell",
+      "args": {
+        "elementId": "r_meridian__status",
+        "value": "needs_review",
+        "baseVersion": 0,
+        "kind": "create"
+      },
+      "result": {
+        "ok": true,
+        "version": 1
+      },
+      "ms": 0
+    },
+    {
+      "step": 1,
+      "tool": "write_cell_result",
+      "args": {
+        "elementId": "r_meridian__note",
+        "value": "Spoke with Sarah Lin. Company does warehouse automation retrofits; recently raised $12M. Provisional entry — needs review before active outreach.",
+        "baseVersion": 0,
+        "status": "complete",
+        "confidence": 0.7,
+        "evidence": [
+          {
+            "kind": "manual",
+            "label": "user said in chat (unverified)",
+            "snippet": "Just spoke with Sarah Lin at Meridian Robotics — they do warehouse automation retrofits and just raised $12M."
+          }
+        ],
+        "kind": "create"
+      },
+      "result": {
+        "ok": true,
+        "version": 1
+      },
+      "ms": 0
+    },
+    {
+      "step": 1,
+      "tool": "write_cell_result",
+      "args": {
+        "elementId": "r_northwind__note",
+        "value": "Expanding into cold chain logistics — worth monitoring for GTM targeting in that segment.",
+        "baseVersion": 1,
+        "status": "complete",
+        "confidence": 0.7,
+        "evidence": [
+          {
+            "kind": "manual",
+            "label": "user said in chat (unverified)",
+            "snippet": "Northwind Logistics; they're expanding into cold chain."
+          }
+        ],
+        "kind": "set"
+      },
+      "result": {
+        "ok": true,
+        "version": 2
+      },
+      "ms": 0
+    },
+    {
+      "step": 1,
+      "tool": "write_cell_result",
+      "args": {
+        "elementId": "r_capture_caldera__company",
+        "value": "Caldera (unresolved mention)",
+        "baseVersion": 0,
+        "status": "needs_review",
+        "confidence": 0.3,
+        "evidence": [
+          {
+            "kind": "manual",
+            "label": "user said in chat (unverified)",
+            "snippet": "someone mentioned Caldera as worth a look."
+          }
+        ],
+        "kind": "create"
+      },
+      "result": {
+        "ok": true,
+        "version": 1
+      },
+      "ms": 0
+    },
+    {
+      "step": 1,
+      "tool": "edit_cell",
+      "args": {
+        "elementId": "r_capture_caldera__status",
+        "value": "needs_review",
+        "baseVersion": 0,
+        "kind": "create"
+      },
+      "result": {
+        "ok": true,
+        "version": 1
+      },
+      "ms": 0
+    },
+    {
+      "step": 2,
+      "tool": "release_lock",
+      "args": {
+        "lockId": "lock_7"
+      },
+      "result": {
+        "merged": []
+      },
+      "ms": 1
+    },
+    {
+      "step": 2,
+      "tool": "say",
+      "args": {
+        "text": "Meridian Robotics (warehouse auto retrofits, $12M) captured; Northwind note updated with cold-chain expansion. Caldera mention is ambiguous — is it Caldera Therapeutics or Caldera Materials?"
+      },
+      "result": {
+        "ok": true
+      },
+      "ms": 0
+    }
+  ],
+  "messages": [
+    {
+      "role": "user",
+      "content": "YOUR TASK: Just spoke with Sarah Lin at Meridian Robotics — they do warehouse automation retrofits and just raised $12M. Also caught up with Northwind Logistics; they're expanding into cold chain. And someone mentioned Caldera as worth a look.\n\nYou are handling a PRIVATE GTM watchlist capture. Use the exact cell ids below.\nSchema: each row uses {rowId}__company, {rowId}__contact, {rowId}__what, {rowId}__funding, {rowId}__status, {rowId}__note.\n\nExisting cells and versions:\nr_northwind__company: version=1, value=\"Northwind Logistics\"\nr_northwind__contact: version=1, value=\"\"\nr_northwind__what: version=1, value=\"Freight coordination platform\"\nr_northwind__funding: version=1, value=\"\"\nr_northwind__status: version=1, value=\"\"\nr_northwind__note: version=1, value=\"\"\nr_caldera_thx__company: version=1, value=\"Caldera Therapeutics\"\nr_caldera_thx__contact: version=1, value=\"\"\nr_caldera_thx__what: version=1, value=\"Oncology biotech\"\nr_caldera_thx__funding: version=1, value=\"\"\nr_caldera_thx__status: version=1, value=\"\"\nr_caldera_thx__note: version=1, value=\"\"\nr_caldera_mat__company: version=1, value=\"Caldera Materials\"\nr_caldera_mat__contact: version=1, value=\"\"\nr_caldera_mat__what: version=1, value=\"Advanced ceramics\"\nr_caldera_mat__funding: version=1, value=\"\"\nr_caldera_mat__status: version=1, value=\"\"\nr_caldera_mat__note: version=1, value=\"\"\n\nRequired writes:\n- First propose one lock over exactly these cells: r_meridian__company, r_meridian__contact, r_meridian__what, r_meridian__funding, r_meridian__status, r_meridian__note, r_northwind__note, r_capture_caldera__company, r_capture_caldera__status.\n- Create Meridian Robotics as a NEW provisional row using row id r_meridian. Create r_meridian__company, r_meridian__contact, r_meridian__what, r_meridian__funding, r_meridian__status, and r_meridian__note with kind=\"create\" and baseVersion=0.\n- Update ONLY r_northwind__note for Northwind Logistics using its current version. Do not create a duplicate Northwind row.\n- Do NOT write to r_caldera_thx__* or r_caldera_mat__*. Caldera is ambiguous. Create exactly one unresolved capture row using r_capture_caldera__company and r_capture_caldera__status with kind=\"create\", status needs_review, and ask one short clarifying question.\n- The unresolved Caldera company value must be exactly: Caldera (unresolved mention). Do not write the words Therapeutics or Materials into any new Caldera cell.\n\nEvidence contract:\n- Use write_cell_result for EVERY business claim cell so value is a CellPayload. This includes r_meridian__company, r_meridian__contact, r_meridian__what, r_meridian__funding, r_meridian__note, r_northwind__note, and r_capture_caldera__company.\n- Use scalar edit_cell only for status flag cells such as r_meridian__status and r_capture_caldera__status.\n- Every evidence item for this chat-only capture must use kind=\"manual\", label=\"user said in chat (unverified)\", and a snippet copied from the user's chat. Do not cite a source you did not fetch.\n- Status for provisional or ambiguous cells is needs_review.\n- Use propose_lock before writes, release_lock when done, and say one short private status/clarifying line. Put the only question mark in that say() call.\n- Do not ask for uploads or files.\n- Do not include Sarah Lin's name in final public-facing prose; keep person details in private cells only.\n- Final answer after tools must be exactly: Captured provisional updates privately."
+    },
+    {
+      "role": "assistant",
+      "content": "",
+      "toolCalls": [
+        {
+          "id": "call_df817d6f68ab4ba9a48a7845",
+          "tool": "propose_lock",
+          "args": {
+            "elementIds": [
+              "r_meridian__company",
+              "r_meridian__contact",
+              "r_meridian__what",
+              "r_meridian__funding",
+              "r_meridian__status",
+              "r_meridian__note",
+              "r_northwind__note",
+              "r_capture_caldera__company",
+              "r_capture_caldera__status"
+            ],
+            "reason": "capturing GTM watchlist updates from chat"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "toolCallId": "call_df817d6f68ab4ba9a48a7845",
+      "toolName": "propose_lock",
+      "content": "{\"ok\":true,\"lockId\":\"lock_7\"}"
+    },
+    {
+      "role": "assistant",
+      "content": "Lock acquired. Now creating the Meridian row (new), updating Northwind note, and adding Caldera unresolved capture",
+      "toolCalls": [
+        {
+          "id": "call_83f4d30f784046e9acebc412",
+          "tool": "write_cell_result",
+          "args": {
+            "elementId": "r_meridian__company",
+            "value": "Meridian Robotics",
+            "baseVersion": 0,
+            "status": "complete",
+            "confidence": 0.7,
+            "evidence": [
+              {
+                "kind": "manual",
+                "label": "user said in chat (unverified)",
+                "snippet": "Just spoke with Sarah Lin at Meridian Robotics — they do warehouse automation retrofits and just raised $12M."
+              }
+            ],
+            "kind": "create"
+          }
+        },
+        {
+          "id": "call_66cf5ee90e8d4b56b3d9f6e8",
+          "tool": "write_cell_result",
+          "args": {
+            "elementId": "r_meridian__contact",
+            "value": "Sarah Lin",
+            "baseVersion": 0,
+            "status": "complete",
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "kind": "manual",
+                "label": "user said in chat (unverified)",
+                "snippet": "Just spoke with Sarah Lin at Meridian Robotics"
+              }
+            ],
+            "kind": "create"
+          }
+        },
+        {
+          "id": "call_6c905eadc78c4deeaa6250b1",
+          "tool": "write_cell_result",
+          "args": {
+            "elementId": "r_meridian__what",
+            "value": "Warehouse automation retrofits",
+            "baseVersion": 0,
+            "status": "complete",
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "kind": "manual",
+                "label": "user said in chat (unverified)",
+                "snippet": "they do warehouse automation retrofits and just raised $12M"
+              }
+            ],
+            "kind": "create"
+          }
+        },
+        {
+          "id": "call_052c9dbe61594be99a4cd927",
+          "tool": "write_cell_result",
+          "args": {
+            "elementId": "r_meridian__funding",
+            "value": "$12M raised",
+            "baseVersion": 0,
+            "status": "complete",
+            "confidence": 0.9,
+            "evidence": [
+              {
+                "kind": "manual",
+                "label": "user said in chat (unverified)",
+                "snippet": "just raised $12M"
+              }
+            ],
+            "kind": "create"
+          }
+        },
+        {
+          "id": "call_8f60bc4d47924a80b812b089",
+          "tool": "edit_cell",
+          "args": {
+            "elementId": "r_meridian__status",
+            "value": "needs_review",
+            "baseVersion": 0,
+            "kind": "create"
+          }
+        },
+        {
+          "id": "call_7b95a5c9153c430eb311f663",
+          "tool": "write_cell_result",
+          "args": {
+            "elementId": "r_meridian__note",
+            "value": "Spoke with Sarah Lin. Company does warehouse automation retrofits; recently raised $12M. Provisional entry — needs review before active outreach.",
+            "baseVersion": 0,
+            "status": "complete",
+            "confidence": 0.7,
+            "evidence": [
+              {
+                "kind": "manual",
+                "label": "user said in chat (unverified)",
+                "snippet": "Just spoke with Sarah Lin at Meridian Robotics — they do warehouse automation retrofits and just raised $12M."
+              }
+            ],
+            "kind": "create"
+          }
+        },
+        {
+          "id": "call_42b6df80938e419a8958c098",
+          "tool": "write_cell_result",
+          "args": {
+            "elementId": "r_northwind__note",
+            "value": "Expanding into cold chain logistics — worth monitoring for GTM targeting in that segment.",
+            "baseVersion": 1,
+            "status": "complete",
+            "confidence": 0.7,
+            "evidence": [
+              {
+                "kind": "manual",
+                "label": "user said in chat (unverified)",
+                "snippet": "Northwind Logistics; they're expanding into cold chain."
+              }
+            ],
+            "kind": "set"
+          }
+        },
+        {
+          "id": "call_4554ee2e95b04f0a8a30e73e",
+          "tool": "write_cell_result",
+          "args": {
+            "elementId": "r_capture_caldera__company",
+            "value": "Caldera (unresolved mention)",
+            "baseVersion": 0,
+            "status": "needs_review",
+            "confidence": 0.3,
+            "evidence": [
+              {
+                "kind": "manual",
+                "label": "user said in chat (unverified)",
+                "snippet": "someone mentioned Caldera as worth a look."
+              }
+            ],
+            "kind": "create"
+          }
+        },
+        {
+          "id": "call_fd5576006e2745c591bb1ac7",
+          "tool": "edit_cell",
+          "args": {
+            "elementId": "r_capture_caldera__status",
+            "value": "needs_review",
+            "baseVersion": 0,
+            "kind": "create"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "toolCallId": "call_83f4d30f784046e9acebc412",
+      "toolName": "write_cell_result",
+      "content": "{\"ok\":true,\"version\":1}"
+    },
+    {
+      "role": "tool",
+      "toolCallId": "call_66cf5ee90e8d4b56b3d9f6e8",
+      "toolName": "write_cell_result",
+      "content": "{\"ok\":true,\"version\":1}"
+    },
+    {
+      "role": "tool",
+      "toolCallId": "call_6c905eadc78c4deeaa6250b1",
+      "toolName": "write_cell_result",
+      "content": "{\"ok\":true,\"version\":1}"
+    },
+    {
+      "role": "tool",
+      "toolCallId": "call_052c9dbe61594be99a4cd927",
+      "toolName": "write_cell_result",
+      "content": "{\"ok\":true,\"version\":1}"
+    },
+    {
+      "role": "tool",
+      "toolCallId": "call_8f60bc4d47924a80b812b089",
+      "toolName": "edit_cell",
+      "content": "{\"ok\":true,\"version\":1}"
+    },
+    {
+      "role": "tool",
+      "toolCallId": "call_7b95a5c9153c430eb311f663",
+      "toolName": "write_cell_result",
+      "content": "{\"ok\":true,\"version\":1}"
+    },
+    {
+      "role": "tool",
+      "toolCallId": "call_42b6df80938e419a8958c098",
+      "toolName": "write_cell_result",
+      "content": "{\"ok\":true,\"version\":2}"
+    },
+    {
+      "role": "tool",
+      "toolCallId": "call_4554ee2e95b04f0a8a30e73e",
+      "toolName": "write_cell_result",
+      "content": "{\"ok\":true,\"version\":1}"
+    },
+    {
+      "role": "tool",
+      "toolCallId": "call_fd5576006e2745c591bb1ac7",
+      "toolName": "edit_cell",
+      "content": "{\"ok\":true,\"version\":1}"
+    },
+    {
+      "role": "assistant",
+      "content": "All writes successful. Releasing lock and asking clarifying question about Caldera",
+      "toolCalls": [
+        {
+          "id": "call_b4a865ff325a4f97a52032bb",
+          "tool": "release_lock",
+          "args": {
+            "lockId": "lock_7"
+          }
+        },
+        {
+          "id": "call_c134e19c9cd24813b910f3e0",
+          "tool": "say",
+          "args": {
+            "text": "Meridian Robotics (warehouse auto retrofits, $12M) captured; Northwind note updated with cold-chain expansion. Caldera mention is ambiguous — is it Caldera Therapeutics or Caldera Materials?"
+          }
+        }
+      ]
+    },
+    {
+      "role": "tool",
+      "toolCallId": "call_b4a865ff325a4f97a52032bb",
+      "toolName": "release_lock",
+      "content": "{\"merged\":[]}"
+    },
+    {
+      "role": "tool",
+      "toolCallId": "call_c134e19c9cd24813b910f3e0",
+      "toolName": "say",
+      "content": "{\"ok\":true}"
+    },
+    {
+      "role": "assistant",
+      "content": "Captured provisional updates privately."
+    }
+  ]
+}

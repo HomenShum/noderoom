@@ -1,0 +1,70 @@
+{
+  "asset": {
+    "id": "episodes-stack-before-after-v1-renders-short",
+    "class": "episode",
+    "title": "Stack Before After V1",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\episodes\\stack-before-after-v1\\renders\\short.mp4",
+    "relPath": "episodes/stack-before-after-v1/renders/short.mp4",
+    "purpose": "Narrated explainer episode. Judge story clarity, visual design, proof quality, and whether it fits the README claim."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "episodes/stack-before-after-v1/renders/short.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 10076124,
+  "judge": {
+    "verdict": "publish",
+    "summary": "A clear before-and-after comparison demonstrating the transition from a single-player Streamlit workflow to a collaborative NodeRoom environment with multi-player state and agent reviews.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Demonstrates the contrast between single-player Streamlit and multi-player NodeRoom."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Shows the initial Streamlit run, explains the limitation, and demonstrates the NodeRoom solution."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean UI presentation, though the text slides are somewhat basic."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns well with NodeRoom's core concepts of shared spreadsheets and agent collaboration."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Features actual product UI captures alongside explanatory slides."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "UI text and spreadsheet cells are generally readable, though small in some areas."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for teams looking to build collaborative agentic workflows."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Clearly distinguishes between the mock/Streamlit phase and the live NodeRoom environment."
+      }
+    },
+    "observedEvidence": [
+      "Streamlit List Intelligence interface",
+      "NodeRoom Research tab account import",
+      "NodeRoom Spreadsheet collaboration and agent proposal UI"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:11",
+        "severity": "P2",
+        "observed": "The transition slides interrupt the product flow with plain text.",
+        "fix": "Integrate the explanatory text as voiceover or overlay on top of the active UI."
+      }
+    ],
+    "suggestedReadmeCaption": "See how NodeRoom upgrades a standard single-player Streamlit pipeline into a live, multi-player collaborative workspace with built-in agent review lanes."
+  },
+  "score": 8,
+  "maxScore": 16
+}

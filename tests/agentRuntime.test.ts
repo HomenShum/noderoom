@@ -39,6 +39,20 @@ describe("agent runtime — collaboration under concurrency", () => {
     expect(r.trace.some((t) => t.tool === "release_lock")).toBe(true);
   });
 
+  it("treats a blank artifactId like the primary artifact for provider tool calls", async () => {
+    const { engine, d, rt } = setup();
+    const [before] = await rt.readRange(["r_rev__variance"], "");
+    expect(before.version).toBe(1);
+
+    const lock = await rt.proposeLock(["r_rev__variance"], "provider supplied blank artifact id", "");
+    expect(lock.ok).toBe(true);
+    const edit = await rt.editCell("r_rev__variance", "+24%", before.version, "");
+    expect(edit.ok).toBe(true);
+    if (lock.ok) await rt.releaseLock(lock.lockId);
+
+    expect(engine.getArtifact(d.sheetId)!.elements["r_rev__variance"].value).toBe("+24%");
+  });
+
   it("review mode creates one proposal per target, then releases the lock without duplicate retries", async () => {
     const { engine, d, rt } = setup();
     engine.toggleAutoAllow(d.roomId, d.members.homen);

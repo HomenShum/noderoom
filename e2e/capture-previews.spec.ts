@@ -26,7 +26,7 @@ const OUT = "docs/eval/workflow-previews";
 const MIN_FRAME_MS = 900;
 /** Frames differing in <0.35% of pixels are "the same moment" — the live activity ticker churns a
  *  few pixels every tick, which defeats exact-hash dedupe and ships dead-air near-duplicates. */
-const SAME_FRAME_PIXEL_RATIO = 0.0035;
+const SAME_FRAME_PIXEL_RATIO = 0.012;
 
 type Frame = { buf: Buffer; delay: number };
 

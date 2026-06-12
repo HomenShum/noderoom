@@ -1,0 +1,72 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-research-upsert",
+    "class": "readme_walkthrough",
+    "title": "Research Upsert",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\research-upsert.gif",
+    "relPath": "docs/walkthroughs/research-upsert.gif",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:research-upsert"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260611T_final_publishable_media/docs-walkthroughs-research-upsert.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/walkthroughs/research-upsert.gif",
+  "bytes": 1306794,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough clearly demonstrates the GTM research sheet's import and upsert capabilities, showing how duplicate accounts are updated rather than duplicated.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.5,
+        "evidence": "The video clearly shows the import of a new account and the subsequent update of an existing account to demonstrate the upsert feature."
+      },
+      "workflowCompleteness": {
+        "score": 1.6,
+        "evidence": "Shows the entire flow: initial state, adding a new row, and updating an existing row with modified data."
+      },
+      "visualDesign": {
+        "score": 1.3,
+        "evidence": "Clean dark-mode interface with clear visual hierarchy, though some input fields are slightly cramped."
+      },
+      "consistency": {
+        "score": 1.4,
+        "evidence": "Matches the NodeRoom theme of GTM research sheets, room traces, and agent-driven workflows."
+      },
+      "evidenceQuality": {
+        "score": 1.5,
+        "evidence": "Captured directly from a live working prototype with real-time UI updates and state changes."
+      },
+      "legibility": {
+        "score": 1.2,
+        "evidence": "The text in the import text area is small but readable at full resolution."
+      },
+      "professionalRelevance": {
+        "score": 1.4,
+        "evidence": "Directly relevant to GTM and sales operations teams managing account lists."
+      },
+      "productionHonesty": {
+        "score": 1.5,
+        "evidence": "Accurately depicts the upsert behavior without masking the manual copy-paste input step."
+      }
+    },
+    "observedEvidence": [
+      "Import accounts modal",
+      "Upsert behavior updating existing row",
+      "Room trace logging the import actions"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:06",
+        "severity": "P2",
+        "observed": "The text pasted into the import text area is quite small and hard to read on smaller screens.",
+        "fix": "Increase the font size of the placeholder and input text in the import modal."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch how NodeRoom's GTM research sheet handles imports: adding new accounts and automatically updating existing ones without creating duplicates."
+  },
+  "score": 11.4,
+  "maxScore": 16
+}

@@ -1,0 +1,72 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-app-research-enrich",
+    "class": "workflow_preview",
+    "title": "App Research Enrich",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\app-research-enrich.gif",
+    "relPath": "docs/eval/workflow-previews/app-research-enrich.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260611T_final_publishable_media/docs-eval-workflow-previews-app-research-enrich.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/app-research-enrich.gif",
+  "bytes": 279333,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The workflow preview clearly demonstrates the automated enrichment of account profiles using background agents, supported by a live execution trace.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Shows the transition from pending accounts to enriched profiles via an explicit trigger."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Captures the entire lifecycle from pending status, active execution, to final completion."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark-themed spreadsheet layout with a well-integrated trace panel."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with the spreadsheet and agent trace paradigm of the platform."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Authentic UI capture showing real-time state updates and log outputs."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Text and status badges are readable, though some table cells are truncated."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly applicable for GTM teams looking to automate account intelligence gathering."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately depicts sequential processing times and detailed agent logs."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet view with account list",
+      "Enrich button trigger",
+      "Sequential status updates (Pending -> Running -> Complete)",
+      "Live Room Trace log updates"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:04",
+        "severity": "P2",
+        "observed": "Research text in the table is truncated, hiding the full output details.",
+        "fix": "Increase column width or add a hover tooltip to display full research text."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch NodeAgents automatically research and enrich pending accounts in real-time, with full execution visibility in the Room Trace."
+  },
+  "score": 8,
+  "maxScore": 16
+}

@@ -1,0 +1,72 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l3-no-clobber",
+    "class": "workflow_preview",
+    "title": "L3 No Clobber",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l3-no-clobber.gif",
+    "relPath": "docs/eval/workflow-previews/l3-no-clobber.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260612T083137Z/docs-eval-workflow-previews-l3-no-clobber.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l3-no-clobber.gif",
+  "bytes": 125658,
+  "judge": {
+    "verdict": "publish",
+    "summary": "An excellent step-by-step visualization of concurrent edit conflict resolution (Compare-And-Swap) between a human and an AI agent, demonstrating robust data integrity.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.5,
+        "evidence": "The step-by-step annotations clearly explain the CAS mechanism and how the agent handles stale writes."
+      },
+      "workflowCompleteness": {
+        "score": 1.6,
+        "evidence": "Shows the full sequence: initial state, concurrent human edit, agent write rejection, re-read, and successful rewrite."
+      },
+      "visualDesign": {
+        "score": 1.4,
+        "evidence": "Clean dark-mode table layout with clear row highlighting and color-coded status badges."
+      },
+      "consistency": {
+        "score": 1.4,
+        "evidence": "Aligns perfectly with NodeRoom's spreadsheet-based collaboration and multi-agent coordination theme."
+      },
+      "evidenceQuality": {
+        "score": 1.5,
+        "evidence": "Provides a realistic simulation of a versioned document state machine during concurrent edits."
+      },
+      "legibility": {
+        "score": 1.6,
+        "evidence": "High-contrast text and clear step indicators at the bottom make it easy to follow."
+      },
+      "professionalRelevance": {
+        "score": 1.5,
+        "evidence": "Highly relevant for developers and system architects concerned with concurrency and data integrity in LLM workflows."
+      },
+      "productionHonesty": {
+        "score": 1.4,
+        "evidence": "Accurately depicts the step-by-step logic of a CAS rejection and retry loop without overclaiming."
+      }
+    },
+    "observedEvidence": [
+      "Step-by-step CAS conflict resolution UI",
+      "Version indicators (V1, V2, V3)",
+      "Human edit simulation badge",
+      "AI agent retry logic visualization"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:07",
+        "severity": "P2",
+        "observed": "The transition during the 'CAS REJECTED' state is slightly rapid, making it easy to miss the exact moment of rejection.",
+        "fix": "Add a brief 0.5-second pause on the rejection state to improve readability."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch NodeRoom's Compare-And-Swap (CAS) engine prevent an AI agent from overwriting a human's mid-write edit, ensuring strict data consistency."
+  },
+  "score": 11.9,
+  "maxScore": 16
+}

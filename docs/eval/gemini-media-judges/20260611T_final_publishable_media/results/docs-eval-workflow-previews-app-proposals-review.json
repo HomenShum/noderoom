@@ -1,0 +1,64 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-app-proposals-review",
+    "class": "workflow_preview",
+    "title": "App Proposals Review",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\app-proposals-review.gif",
+    "relPath": "docs/eval/workflow-previews/app-proposals-review.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260611T_final_publishable_media/docs-eval-workflow-previews-app-proposals-review.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/app-proposals-review.gif",
+  "bytes": 41562,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The preview successfully demonstrates a financial table workflow where cell proposals are reviewed, updated from drafts, and approved with clear visual state transitions.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.3,
+        "evidence": "Shows cell-level variance calculations and approval states, though the exact trigger mechanism is implicit."
+      },
+      "workflowCompleteness": {
+        "score": 1.4,
+        "evidence": "Captures the progression from empty variance cells to draft proposals, and finally to approved states."
+      },
+      "visualDesign": {
+        "score": 1.3,
+        "evidence": "Clean dark-mode table layout with distinct color-coded chips for different proposal states."
+      },
+      "consistency": {
+        "score": 1.2,
+        "evidence": "Aligns well with the spreadsheet-based financial collaboration theme of the platform."
+      },
+      "evidenceQuality": {
+        "score": 1.4,
+        "evidence": "Looks like a direct capture of a working UI with realistic financial data and state changes."
+      },
+      "legibility": {
+        "score": 1.3,
+        "evidence": "Text and numbers are highly legible, though some small status icons require close attention."
+      },
+      "professionalRelevance": {
+        "score": 1.5,
+        "evidence": "Directly relevant to finance and operations users managing collaborative model updates."
+      },
+      "productionHonesty": {
+        "score": 1.2,
+        "evidence": "Accurately depicts the step-by-step resolution of cell proposals without simulated effects."
+      }
+    },
+    "observedEvidence": [
+      "Financial table with Q2 and Q3 columns",
+      "Variance column showing draft, locked, and approved states",
+      "Interactive state updates occurring sequentially across rows"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Review and approve automated variance proposals directly within your financial model."
+  },
+  "score": 10.6,
+  "maxScore": 16
+}

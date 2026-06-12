@@ -1,0 +1,77 @@
+{
+  "generatedAt": "2026-06-11T19:34:06.500Z",
+  "harnessVersion": "professional-live-catalog-v1",
+  "model": "nex-agi/nex-n2-pro:free",
+  "total": 1,
+  "passed": 1,
+  "failed": 0,
+  "passRate": 1,
+  "allPassed": true,
+  "rows": [
+    {
+      "caseId": "gtm-chat-lead-capture-enrich",
+      "model": "nex-agi/nex-n2-pro:free",
+      "status": "passed",
+      "score": 1,
+      "checks": {
+        "validCaseId": true,
+        "intakeCovered": true,
+        "outputSurfaceValid": true,
+        "provenancePlan": true,
+        "mutationDiscipline": true,
+        "tracePlan": true,
+        "requirementCoverage": true,
+        "privacyIfNeeded": true,
+        "longRunningIfNeeded": true,
+        "reviewIfNeeded": true,
+        "privateGoldIfNeeded": true
+      },
+      "ms": 23021,
+      "answer": {
+        "caseId": "gtm-chat-lead-capture-enrich",
+        "intakeModes": [
+          "chat_only",
+          "external_retrieval",
+          "mixed_room_state"
+        ],
+        "primarySurface": "watchlist_row",
+        "evidencePlan": [
+          "Parse the incoming chat note and extract company, person, product description, funding amount, uncertainty, and requested next action.",
+          "Attach CellPayload evidence for each claim: manual chat_note evidence with message id/timestamp/scope for user-provided facts, and external_source evidence with URL/title/retrieval timestamp for fetched public facts.",
+          "Fetch public sources for company, product, and funding claims where possible; mark unverified chat-only claims as needs_review instead of treating them as sourced facts.",
+          "Read existing watchlist or room-state rows to find an exact or likely company match; if ambiguous, trigger a clarifying question or create a needs_review row rather than guessing.",
+          "If a matching watchlist row exists, prepare a CAS update with the new evidence and uncertainty fields; if no match exists, create a bounded private draft/proposal row.",
+          "Generate a grounded wiki note only from cited public sources and explicit user-approved private sections; keep person/meeting facts private by default."
+        ],
+        "riskControls": [
+          "approvalRequired=true: require human approval before shared/public wiki publication and before mutating an existing watchlist row; otherwise keep the result as a private draft or chat acknowledgment.",
+          "Use mutate_with_cas for existing row updates; if CAS fails or conflicts, surface the conflict and do not create a duplicate row.",
+          "Apply a clarifying question gate for ambiguous company names, conflicting entity candidates, or insufficient entity signal.",
+          "Enforce privacy redaction/masking: person names, meeting or relationship facts, PII, confidential, and sensitive data remain private by default and are blocked from public wiki output unless explicitly promoted.",
+          "Do not ask for an uploaded file when the chat note contains enough entity and intent signal; use chat_only, external_retrieval, or mixed_room_state as appropriate.",
+          "Do not create unrequested public artifacts; escalate to background_job only when the user explicitly asks to queue or research the item."
+        ],
+        "mutationMode": "mutate_with_cas",
+        "approvalRequired": true,
+        "privacyBoundary": "Private/public boundary: chat notes, person names, meeting or relationship facts, PII, confidential, and sensitive data remain private by default; only company/product/funding facts with explicit permission may be redacted, masked, and written to shared or public surfaces; person facts are blocked from public wiki output to prevent leakage.",
+        "traceMustShow": [
+          "receipt of chat note with timestamp, scope, and user instruction",
+          "read of existing watchlist or room-state rows with row identifiers",
+          "entity-resolution candidate reads and ambiguity reasons",
+          "public source fetch receipts with URL, title, and retrieval timestamp",
+          "CellPayload writes distinguishing chat_note evidence from external_source evidence",
+          "watchlist row create/update write with CAS version or conflict result",
+          "wiki note read/write receipts only when explicitly requested and approved"
+        ],
+        "blockersToResolve": [
+          "Ambiguous company name with multiple public candidates",
+          "No public source found for funding or product claim",
+          "Existing watchlist row match is uncertain or stale",
+          "CAS update conflict or concurrent edit detected",
+          "Output surface or privacy scope is unclear when user asks to share or add to wiki"
+        ]
+      },
+      "raw": "{\"caseId\":\"gtm-chat-lead-capture-enrich\",\"intakeModes\":[\"chat_only\",\"external_retrieval\",\"mixed_room_state\"],\"primarySurface\":\"watchlist_row\",\"evidencePlan\":[\"Parse the incoming chat note and extract company, person, product description, funding amount, uncertainty, and requested next action.\",\"Attach CellPayload evidence for each claim: manual chat_note evidence with message id/timestamp/scope for user-provided facts, and external_source evidence with URL/title/retrieval timestamp for fetched public facts.\",\"Fetch public sources for company, product, and funding claims where possible; mark unverified chat-only claims as needs_review instead of treating them as sourced facts.\",\"Read existing watchlist or room-state rows to find an exact or likely company match; if ambiguous, trigger a clarifying question or create a needs_review row rather than guessing.\",\"If a matching watchlist row exists, prepare a CAS update with the new evidence and uncertainty fields; if no match exists, create a bounded private draft/proposal row.\",\"Generate a grounded wiki note only from cited public sources and explicit user-approved private sections; keep person/meeting facts private by default.\"],\"riskControls\":[\"approvalRequired=true: require human approval before shared/public wiki publication and before mutating an existing watchlist row; otherwise keep the result as a private draft or chat acknowledgment.\",\"Use mutate_with_cas for existing row updates; if CAS fails or conflicts, surface the conflict and do not create a duplicate row.\",\"Apply a clarifying question gate for ambiguous company names, conflicting entity candidates, or insufficient entity signal.\",\"Enforce privacy redaction/masking: person names, meeting or relationship facts, PII, confidential, and sensitive data remain private by default and are blocked from public wiki output unless explicitly promoted.\",\"Do not ask for an uploaded file when the chat note contains enough entity and intent signal; use chat_only, external_retrieval, or mixed_room_state as appropriate.\",\"Do not create unrequested public artifacts; escalate to background_job only when the user explicitly asks to queue or research the item.\"],\"mutationMode\":\"mutate_with_cas\",\"approvalRequired\":true,\"privacyBoundary\":\"Private/public boundary: chat notes, person names, meeting or relationship facts, PII, confidential, and sensitive data remain private by default; only company/product/funding facts with explicit permission may be redacted, masked, and written to shared or public surfaces; person facts are blocked from public wiki output to prevent leakage.\",\"traceMustShow\":[\"receipt of chat note with timestamp, scope, and user instruction\",\"read of existing watchlist or room-state rows with row identifiers\",\"entity-resolution candidate reads and ambiguity reasons\",\"public source fetch receipts with URL, title, and retrieval timestamp\",\"CellPayload writes distinguishing chat_note evidence from external_source evidence\",\"watchlist row create/update write with CAS version or conflict result\",\"wiki note read/write receipts only when explicitly requested and approved\"],\"blockersToResolve\":[\"Ambiguous company name with multiple public candidates\",\"No public source found for funding or product claim\",\"Existing watchlist row match is uncertain or stale\",\"CAS update conflict or concurrent edit detected\",\"Output surface or privacy scope is unclear when user asks to share or add to wiki\"]}"
+    }
+  ]
+}

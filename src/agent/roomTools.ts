@@ -9,7 +9,7 @@
 import type { RoomEngine } from "../engine/roomEngine";
 import type { Actor, CellPayload, Channel, DataframeColumn } from "../engine/types";
 import type { RoomTools, RoomSnapshot, AwarenessView, CellView, CellMeta, EditOutcome, MergeView, SourceResult, ArtifactRef, SpreadsheetContextHit } from "./types";
-import { buildSpreadsheetSemanticIndex } from "../app/spreadsheetIndex";
+import { buildSpreadsheetSemanticIndex, columnLetters } from "../app/spreadsheetIndex";
 
 export class InMemoryRoomTools implements RoomTools {
   constructor(
@@ -19,6 +19,10 @@ export class InMemoryRoomTools implements RoomTools {
     private actor: Actor,
     private sessionId: string,
   ) {}
+
+  private targetArtifactId(artifactId?: string): string {
+    return artifactId?.trim() || this.artifactId;
+  }
 
   private rowIds(artifactId: string = this.artifactId): string[] {
     const art = this.engine.getArtifact(artifactId);
@@ -72,6 +76,7 @@ export class InMemoryRoomTools implements RoomTools {
   }
 
   async readRange(elementIds: string[], artifactId: string = this.artifactId): Promise<CellView[]> {
+    artifactId = this.targetArtifactId(artifactId);
     const els = this.engine.readRange(artifactId, elementIds);
     return elementIds.map((id) => {
       const el = els[id];
@@ -81,7 +86,42 @@ export class InMemoryRoomTools implements RoomTools {
   }
 
   async searchSheetContext(query: string, artifactId: string = this.artifactId, limit = 8): Promise<SpreadsheetContextHit[]> {
+    artifactId = this.targetArtifactId(artifactId);
     const art = this.engine.getArtifact(artifactId);
+    const grid = excelGridMeta(art?.meta);
+    if (art && grid) {
+      const hits: SpreadsheetContextHit[] = [];
+      const columns = Array.from({ length: grid.columns }, (_, idx) => columnLetters(idx));
+      const rowHeaders = new Map<number, string>();
+      for (let row = 1; row <= grid.rows; row++) {
+        for (const column of columns) {
+          const value = this.displayValue(art.elements[`${column}${row}`]?.value).trim();
+          if (value) { rowHeaders.set(row, value.slice(0, 120)); break; }
+        }
+      }
+      for (let row = 1; row <= grid.rows; row++) {
+        for (let colIndex = 0; colIndex < columns.length; colIndex++) {
+          const column = columns[colIndex];
+          const elementId = `${column}${row}`;
+          const raw = art.elements[elementId]?.value;
+          if (raw === undefined) continue;
+          const rawValue = this.displayValue(raw);
+          const formula = raw && typeof raw === "object" && "formula" in raw ? String((raw as CellPayload).formula ?? "").trim() : "";
+          const formulaText = formula ? ` | Formula: ${formula}` : "";
+          hits.push({
+            kind: "cell",
+            score: 0,
+            elementId,
+            coordinate: elementId,
+            rowHeader: rowHeaders.get(row) ?? String(row),
+            columnHeader: column,
+            rawValue,
+            semanticSummary: `Sheet: ${art.title} | Cell: ${elementId} | Row: ${rowHeaders.get(row) ?? row} | Column: ${column} | Value: ${rawValue}${formulaText}`,
+          });
+        }
+      }
+      return rankSpreadsheetHits(query, hits).slice(0, Math.max(1, Math.min(limit, 20)));
+    }
     const columns = dataframeColumns(art?.meta);
     if (!art || !columns.length) return [];
     const index = buildSpreadsheetSemanticIndex({
@@ -96,6 +136,7 @@ export class InMemoryRoomTools implements RoomTools {
   }
 
   async proposeLock(elementIds: string[], reason: string, artifactId: string = this.artifactId) {
+    artifactId = this.targetArtifactId(artifactId);
     const r = this.engine.proposeLock({ roomId: this.roomId, artifactId, elementIds, holder: this.actor, sessionId: this.sessionId, reason });
     if (r.ok) {
       this.engine.updateSession(this.sessionId, { status: "working", heldLockId: r.lock.id, lastAction: `locked ${elementIds.join(", ")}` });
@@ -112,6 +153,7 @@ export class InMemoryRoomTools implements RoomTools {
   }
 
   async editCell(elementId: string, value: unknown, baseVersion: number, artifactId: string = this.artifactId, kind: "set" | "create" | "delete" = "set"): Promise<EditOutcome> {
+    artifactId = this.targetArtifactId(artifactId);
     const res = this.engine.applyEdit({ roomId: this.roomId, op: { opId: crypto.randomUUID(), artifactId, elementId, kind, value, baseVersion }, actor: this.actor });
     if (res.ok) return { ok: true, version: res.toVersion };
     if (res.reason === "conflict") return { ok: false, conflict: true, expected: res.expected, actual: res.actual };
@@ -121,6 +163,7 @@ export class InMemoryRoomTools implements RoomTools {
   }
 
   async createDraft(ops: { elementId: string; value: unknown; baseVersion: number }[], blockedByLockId: string, note: string, artifactId: string = this.artifactId) {
+    artifactId = this.targetArtifactId(artifactId);
     const draft = this.engine.createDraft({
       roomId: this.roomId, artifactId, author: this.actor, note, blockedByLockId,
       ops: ops.map((o) => ({ opId: crypto.randomUUID(), artifactId, elementId: o.elementId, kind: "set" as const, value: o.value, baseVersion: o.baseVersion })),
@@ -144,6 +187,14 @@ export class InMemoryRoomTools implements RoomTools {
       return { ok: false, error: "invalid url" };
     }
   }
+}
+
+function excelGridMeta(meta: unknown): { rows: number; columns: number; sheetName?: string } | null {
+  const grid = (meta as { excelGrid?: { rows?: unknown; columns?: unknown; sheetName?: unknown } } | undefined)?.excelGrid;
+  const rows = typeof grid?.rows === "number" ? grid.rows : 0;
+  const columns = typeof grid?.columns === "number" ? grid.columns : 0;
+  if (rows <= 0 || columns <= 0) return null;
+  return { rows, columns, sheetName: typeof grid?.sheetName === "string" ? grid.sheetName : undefined };
 }
 
 function dataframeColumns(meta: unknown): DataframeColumn[] {

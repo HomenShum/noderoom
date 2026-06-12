@@ -1,0 +1,21 @@
+{
+  "runId": "20260612T084623Z",
+  "generatedAt": "2026-06-12T08:46:23.347Z",
+  "model": "gemini-3.5-flash",
+  "primaryOnly": true,
+  "all": false,
+  "includeIgnored": true,
+  "only": "workbook-style-toggle",
+  "limit": 1,
+  "assets": [
+    {
+      "id": "docs-walkthroughs-workbook-style-toggle",
+      "class": "readme_walkthrough",
+      "title": "Workbook Style Toggle",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\workbook-style-toggle.mp4",
+      "relPath": "docs/walkthroughs/workbook-style-toggle.mp4",
+      "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+      "duplicateGroup": "walkthrough:workbook-style-toggle"
+    }
+  ]
+}

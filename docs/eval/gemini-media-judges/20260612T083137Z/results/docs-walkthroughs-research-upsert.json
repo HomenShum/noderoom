@@ -1,0 +1,71 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-research-upsert",
+    "class": "readme_walkthrough",
+    "title": "Research Upsert",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\research-upsert.mp4",
+    "relPath": "docs/walkthroughs/research-upsert.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:research-upsert"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/research-upsert.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 7159511,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The video clearly demonstrates the upsert functionality within the GTM research sheet, showing how re-importing an existing account updates the record instead of duplicating it, supported by real-time room trace logs.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.4,
+        "evidence": "Demonstrates importing and then updating the same account to show upsert behavior."
+      },
+      "workflowCompleteness": {
+        "score": 1.5,
+        "evidence": "Captures the full sequence from initial import to re-import and subsequent row update."
+      },
+      "visualDesign": {
+        "score": 1.3,
+        "evidence": "Clean dark-themed interface with clear interactive elements and focus states."
+      },
+      "consistency": {
+        "score": 1.4,
+        "evidence": "Aligns with the NodeRoom ecosystem, featuring the research tab and room trace panel."
+      },
+      "evidenceQuality": {
+        "score": 1.5,
+        "evidence": "Authentic screen recording showing real-time UI updates and trace logs."
+      },
+      "legibility": {
+        "score": 1.2,
+        "evidence": "Text is mostly legible, though some table cells are small at standard resolution."
+      },
+      "professionalRelevance": {
+        "score": 1.4,
+        "evidence": "Highly relevant for GTM teams managing CRM data and account research."
+      },
+      "productionHonesty": {
+        "score": 1.4,
+        "evidence": "Clearly demonstrates the manual import process and actual state changes."
+      }
+    },
+    "observedEvidence": [
+      "Import accounts modal with text area input",
+      "Live table updates showing status and GTM research fields",
+      "Room trace logging events reflecting the import actions"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:04",
+        "severity": "P2",
+        "observed": "The CSV input placeholder text is small and has low contrast.",
+        "fix": "Increase the font size or contrast of the placeholder text in the import modal."
+      }
+    ],
+    "suggestedReadmeCaption": "Demonstrating the GTM research sheet's upsert capability: importing an existing account updates its fields in real-time without creating duplicates."
+  },
+  "score": 11.1,
+  "maxScore": 16
+}

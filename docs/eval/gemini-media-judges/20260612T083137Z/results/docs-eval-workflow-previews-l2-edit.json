@@ -1,0 +1,65 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l2-edit",
+    "class": "workflow_preview",
+    "title": "L2 Edit",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l2-edit.gif",
+    "relPath": "docs/eval/workflow-previews/l2-edit.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260612T083137Z/docs-eval-workflow-previews-l2-edit.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l2-edit.gif",
+  "bytes": 73187,
+  "judge": {
+    "verdict": "publish",
+    "summary": "A clear, step-by-step visualization of a Compare-And-Set (CAS) cell edit workflow. It effectively demonstrates locking, reading, writing, and versioning in a clean, legible UI.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.5,
+        "evidence": "The step-by-step captions and UI state changes clearly illustrate the CAS (Compare-And-Set) mechanism."
+      },
+      "workflowCompleteness": {
+        "score": 1.5,
+        "evidence": "Shows the entire lifecycle from initial state, locking, reading, writing, to the final unlocked V2 state."
+      },
+      "visualDesign": {
+        "score": 1.4,
+        "evidence": "Clean dark-mode table layout with clear visual cues for locked and updated states."
+      },
+      "consistency": {
+        "score": 1.5,
+        "evidence": "Aligns perfectly with the spreadsheet versioning and multi-agent coordination theme."
+      },
+      "evidenceQuality": {
+        "score": 1.4,
+        "evidence": "High-fidelity UI capture that realistically demonstrates the protocol flow."
+      },
+      "legibility": {
+        "score": 1.5,
+        "evidence": "High-contrast text and clear step indicators make it easy to read even at smaller sizes."
+      },
+      "professionalRelevance": {
+        "score": 1.3,
+        "evidence": "Highly relevant for developers interested in concurrency control and collaborative data workflows."
+      },
+      "productionHonesty": {
+        "score": 1.4,
+        "evidence": "Accurately represents the step-by-step execution of a single write operation without embellishment."
+      }
+    },
+    "observedEvidence": [
+      "Table showing financial metrics with version numbers",
+      "Locking state change on the Net Income row",
+      "Value update from empty to +22.4% with version bump to V2",
+      "Step-by-step progress captions at the bottom"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Step-by-step execution of a Compare-And-Set (CAS) write operation, ensuring safe concurrent edits with automatic versioning."
+  },
+  "score": 11.5,
+  "maxScore": 16
+}

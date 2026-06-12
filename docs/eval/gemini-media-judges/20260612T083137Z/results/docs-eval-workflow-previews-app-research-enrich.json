@@ -1,0 +1,73 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-app-research-enrich",
+    "class": "workflow_preview",
+    "title": "App Research Enrich",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\app-research-enrich.gif",
+    "relPath": "docs/eval/workflow-previews/app-research-enrich.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260612T083137Z/docs-eval-workflow-previews-app-research-enrich.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/app-research-enrich.gif",
+  "bytes": 287771,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The video clearly demonstrates the multi-source research enrichment workflow, showing the transition from pending to complete with real-time trace logs.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.4,
+        "evidence": "The 'Enrich 4 pending' button action and subsequent row-by-row agent execution clearly show the data enrichment feature."
+      },
+      "workflowCompleteness": {
+        "score": 1.5,
+        "evidence": "Captures the entire lifecycle from pending state, active execution, to final completion across all rows."
+      },
+      "visualDesign": {
+        "score": 1.3,
+        "evidence": "Clean dark-mode spreadsheet layout with a synchronized live trace panel at the bottom."
+      },
+      "consistency": {
+        "score": 1.5,
+        "evidence": "Perfectly aligns with the NodeRoom paradigm of spreadsheets, agents, and detailed execution traces."
+      },
+      "evidenceQuality": {
+        "score": 1.4,
+        "evidence": "Authentic UI capture showing realistic data, status changes, and detailed system logs."
+      },
+      "legibility": {
+        "score": 1.2,
+        "evidence": "Main table text is highly legible, though some trace log details are dense and slightly truncated."
+      },
+      "professionalRelevance": {
+        "score": 1.4,
+        "evidence": "Highly relevant for GTM and sales operations workflows requiring automated company enrichment."
+      },
+      "productionHonesty": {
+        "score": 1.5,
+        "evidence": "Accurately depicts the sequential nature of agent execution and lock states without skipping steps."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet UI with 'Research' tab active",
+      "Enrich 4 pending button click",
+      "Status column transitioning from PENDING to RUNNING to COMPLETE",
+      "Research column populating with text summaries",
+      "Room trace panel updating dynamically with agent lock/unlock events"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:02",
+        "severity": "P2",
+        "observed": "Trace log text is dense and wraps tightly, making rapid reading during playback slightly difficult.",
+        "fix": "Increase line spacing or slightly truncate verbose variable names in the trace UI."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch NodeRoom agents sequentially lock, research, and enrich account profiles with live execution traces."
+  },
+  "score": 11.2,
+  "maxScore": 16
+}

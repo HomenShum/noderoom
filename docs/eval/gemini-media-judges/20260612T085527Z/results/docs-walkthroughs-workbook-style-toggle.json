@@ -1,0 +1,72 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-workbook-style-toggle",
+    "class": "readme_walkthrough",
+    "title": "Workbook Style Toggle",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\workbook-style-toggle.mp4",
+    "relPath": "docs/walkthroughs/workbook-style-toggle.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:workbook-style-toggle"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/workbook-style-toggle.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 6624468,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough clearly demonstrates toggling between different workbook style views (Excel File, Sheets Collab, and Evidence Review) while maintaining cell selection and state. The transitions are smooth and the UI is highly polished.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.5,
+        "evidence": "The toggle buttons for Excel File, Sheets Collab, and Evidence Review are clearly highlighted and clicked, showing immediate visual updates."
+      },
+      "workflowCompleteness": {
+        "score": 1.5,
+        "evidence": "Shows the entire flow from uploading a styled Excel sheet to cycling through all three view modes."
+      },
+      "visualDesign": {
+        "score": 1.4,
+        "evidence": "High-quality dark mode interface with clean layout, though some bottom captions are slightly tight on spacing."
+      },
+      "consistency": {
+        "score": 1.5,
+        "evidence": "Perfectly aligns with NodeRoom's multi-user spreadsheet and agent trace paradigm."
+      },
+      "evidenceQuality": {
+        "score": 1.5,
+        "evidence": "Captured directly from a live working interface with realistic financial modeling data."
+      },
+      "legibility": {
+        "score": 1.3,
+        "evidence": "Most text is highly legible, though some formula bar details and trace logs are small at standard zoom."
+      },
+      "professionalRelevance": {
+        "score": 1.4,
+        "evidence": "Directly useful for financial analysts and auditors who need to switch between presentation and audit views."
+      },
+      "productionHonesty": {
+        "score": 1.4,
+        "evidence": "Accurately represents the UI state preservation across different rendering modes."
+      }
+    },
+    "observedEvidence": [
+      "Excel File view mode showing custom formatting",
+      "Sheets Collab view mode showing standard gridlines",
+      "Evidence Review view mode highlighting cell provenance",
+      "Successful upload of style-toggle.xlsx"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:00",
+        "severity": "P2",
+        "observed": "The bottom explanatory caption text is slightly clipped by the lower boundary of the video frame.",
+        "fix": "Adjust the padding or safe area of the overlay captions to prevent clipping."
+      }
+    ],
+    "suggestedReadmeCaption": "Seamlessly toggle your workbook between Excel File, Sheets Collab, and Evidence Review modes to match your current workflow without losing cell state."
+  },
+  "score": 11.5,
+  "maxScore": 16
+}

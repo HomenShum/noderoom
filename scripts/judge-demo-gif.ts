@@ -50,7 +50,6 @@ function metaFor(id: string): GifMeta {
     "app-research-enrich": { title: "Research enrichment (real app)", subtitle: "The actual NodeRoom UI: agent fetches sources and writes a sourced research row" },
     "app-ask-reconcile": { title: "/ask reconcile (real app)", subtitle: "The actual NodeRoom UI: the user types /ask in chat and the agent reconciles the sheet with CAS writes" },
     "app-proposals-review": { title: "Review mode proposals (real app)", subtitle: "The actual NodeRoom UI: auto-allow off, agent writes arrive as inline proposals, the host approves one" },
-    "app-wiki-note-grounding": { title: "Grounded wiki note (real app)", subtitle: "The actual NodeRoom UI: the diligence note in the Note tab, then the source spreadsheet it is grounded in" },
   };
   if (APP[id]) return APP[id];
   try {

@@ -1,0 +1,65 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-app-ask-reconcile",
+    "class": "workflow_preview",
+    "title": "App Ask Reconcile",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\app-ask-reconcile.gif",
+    "relPath": "docs/eval/workflow-previews/app-ask-reconcile.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260611T_final_publishable_media/docs-eval-workflow-previews-app-ask-reconcile.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/app-ask-reconcile.gif",
+  "bytes": 160689,
+  "judge": {
+    "verdict": "publish",
+    "summary": "Excellent demonstration of the `/ask reconcile` command. The agent locks the spreadsheet, performs the reconciliation against NetSuite, updates the variance column, and releases the lock, with all steps visible in the trace.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.6,
+        "evidence": "Clear demonstration of the `/ask reconcile` command updating spreadsheet cells."
+      },
+      "workflowCompleteness": {
+        "score": 1.7,
+        "evidence": "Shows the full sequence from command input to agent execution, cell updates, and lock release."
+      },
+      "visualDesign": {
+        "score": 1.6,
+        "evidence": "Clean dark-mode layout with well-structured chat, spreadsheet, and trace panels."
+      },
+      "consistency": {
+        "score": 1.7,
+        "evidence": "Perfect alignment with NodeRoom's spreadsheet, agent, and trace log paradigm."
+      },
+      "evidenceQuality": {
+        "score": 1.7,
+        "evidence": "Authentic UI capture showing real-time state changes and log updates."
+      },
+      "legibility": {
+        "score": 1.4,
+        "evidence": "Main UI text is highly legible, though trace logs are slightly small."
+      },
+      "professionalRelevance": {
+        "score": 1.6,
+        "evidence": "Directly addresses financial reconciliation use cases relevant to business users."
+      },
+      "productionHonesty": {
+        "score": 1.5,
+        "evidence": "Accurately depicts the step-by-step execution and locking mechanism of the agent."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet interface with Q2/Q3 columns",
+      "Chat input with `/ask reconcile` command",
+      "Agent locking spreadsheet and updating variance cells",
+      "Room trace log updating in real-time"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Watch the NodeRoom agent reconcile Q3 revenue against NetSuite exports, automatically updating the spreadsheet variance and logging its steps in the trace."
+  },
+  "score": 12.8,
+  "maxScore": 16
+}

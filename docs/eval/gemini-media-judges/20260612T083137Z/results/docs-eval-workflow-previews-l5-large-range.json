@@ -1,0 +1,71 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l5-large-range",
+    "class": "workflow_preview",
+    "title": "L5 Large Range",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l5-large-range.gif",
+    "relPath": "docs/eval/workflow-previews/l5-large-range.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260612T083137Z/docs-eval-workflow-previews-l5-large-range.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l5-large-range.gif",
+  "bytes": 72583,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The animation clearly demonstrates a 5-row windowing and locking workflow on a large spreadsheet model. It step-by-steps the lock, read, write, and release sequence with clear annotations.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Demonstrates row-level locking and targeted window loading clearly through step-by-step visual updates."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Shows the complete lifecycle from initial load, locking, reading, writing, to lock release."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark-themed layout with clear typography, though highly abstracted."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with the NodeRoom concept of versioned edits and agent-based sheet operations."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Functions well as an explanatory workflow diagram, though it is simulated rather than a raw UI capture."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "High contrast text and clear step counters make it easy to follow at any scale."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for developers interested in concurrency, CAS, and large-scale sheet performance."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately represents a conceptual model execution sequence without pretending to be a full IDE."
+      }
+    },
+    "observedEvidence": [
+      "Step-by-step execution of row locking (Line 420)",
+      "Version increment from V1 to V2 on write",
+      "Status bar showing AI steps 0/4 through 4/4"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "n/a",
+        "severity": "P2",
+        "observed": "The UI is highly abstracted and simulated, which may not represent the final user-facing application interface.",
+        "fix": "Add a small disclaimer or ensure surrounding documentation clarifies that this is a conceptual trace replay."
+      }
+    ],
+    "suggestedReadmeCaption": "Visual trace of NodeRoom's L5 model executing a localized 5-row window lock, read, and versioned write operation on a large range."
+  },
+  "score": 8,
+  "maxScore": 16
+}

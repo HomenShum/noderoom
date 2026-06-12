@@ -1,0 +1,73 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-ic-room",
+    "class": "readme_walkthrough",
+    "title": "Ic Room",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\ic-room.gif",
+    "relPath": "docs/walkthroughs/ic-room.gif",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:ic-room"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260611T_final_publishable_media/docs-walkthroughs-ic-room.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/walkthroughs/ic-room.gif",
+  "bytes": 651658,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough clearly demonstrates importing a CRM row into a research table with real-time room trace updates. It is highly relevant for finance and GTM workflows.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Demonstrates pasting a comma-separated row to import an account into the research table."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Shows the complete flow from clicking import, pasting data, submitting, and seeing the table and trace update."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark-themed UI with clear focus states, though the interface is quite dense."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with the NodeRoom concept of collaborative research tables and audit trails."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Captured directly from a live browser session showing real UI interactions."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Text in the input field and table cells is readable, though some room trace text is small."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Directly applicable to investment and GTM teams managing pipeline accounts."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately depicts manual input parsing and immediate trace logging without artificial speedups."
+      }
+    },
+    "observedEvidence": [
+      "Import accounts modal",
+      "Pasted CSV-style row",
+      "Research table update",
+      "Room trace logging"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:06",
+        "severity": "P2",
+        "observed": "The text pasted into the import box is slightly cut off at the bottom due to line-height constraints.",
+        "fix": "Adjust the padding or line-height of the import textarea to prevent vertical clipping."
+      }
+    ],
+    "suggestedReadmeCaption": "Importing new advisor opportunities directly into your shared research table with automatic provenance tracking."
+  },
+  "score": 8,
+  "maxScore": 16
+}

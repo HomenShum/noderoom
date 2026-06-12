@@ -1,0 +1,64 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l5-large-range",
+    "class": "workflow_preview",
+    "title": "L5 Large Range",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l5-large-range.gif",
+    "relPath": "docs/eval/workflow-previews/l5-large-range.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260611T_final_publishable_media/docs-eval-workflow-previews-l5-large-range.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l5-large-range.gif",
+  "bytes": 72583,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The workflow preview clearly demonstrates the 5-row window loading, locking, reading, writing, and versioning sequence in a simplified UI simulation.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Shows the step-by-step process of targeting, locking, and updating a specific row within a limited window."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Covers the full sequence from initial state to lock, read, write, and final lock release."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark-themed layout with clear step indicators, though highly simplified."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with the spreadsheet cell versioning and agent coordination theme."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Functions well as a conceptual workflow preview, though it is a simplified simulation."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Text and status indicators are readable, though contrast on some labels is low."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Relevant for developers understanding concurrency and range-locking mechanisms."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately represents a simulated step-by-step protocol flow without claiming to be a live complex UI."
+      }
+    },
+    "observedEvidence": [
+      "Step-by-step execution from 0/4 to 4/4",
+      "Row locking visual indicator (LOCKED)",
+      "Value update to +8.2% and version increment to V2"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Step-by-step simulation of the L5 large range protocol, demonstrating row-level locking, reading, and versioned writing within a 5-row window."
+  },
+  "score": 8,
+  "maxScore": 16
+}

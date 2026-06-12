@@ -17,6 +17,19 @@ keys COMMIT the draft and move the selection. An editor opened by **F2/double-cl
 parity table calls the distinction the most-missed detail. Implemented via `editing.seed`
 (`seed !== null` = enter mode).
 
+## MVP view modes (local presentation, shared truth)
+
+`ExcelGridSheet` now exposes a local segmented workbook mode bar: `Excel`, `Sheets`, and `Evidence`.
+This is intentionally a browser preference, persisted in localStorage, not room state.
+Changing the style never changes the artifact, selected cell, lock/CAS write path, or trace.
+
+- `Excel`: uploaded-workbook fidelity first (file formats, merged cells, formula bar).
+- `Sheets`: collaborative muscle memory first (Google-Sheets-like spacing and selection chrome).
+- `Evidence`: agent-review first (provenance/formula emphasis for demos and audits).
+
+The walkthrough target is `workbook-style-toggle`: upload a generated workbook, switch to
+`Sheets`, then `Evidence`, and feed the rendered clip to the Gemini media judge.
+
 ## P0 — must-have
 
 | # | Behavior | Status |

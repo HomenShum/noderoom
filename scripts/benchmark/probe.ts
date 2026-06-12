@@ -25,7 +25,10 @@ const cases: [string, any][] = [
   ["gpt-5.4-mini", openai("gpt-5.4-mini")],
   ["gpt-5.4-nano", openai("gpt-5.4-nano")],
   // OpenRouter (cheap/free) — simple-call reachability
-  ["OR moonshotai/kimi-k2.6", or.chat("moonshotai/kimi-k2.6")],
+  ["OR nex-agi/nex-n2-pro:free", or.chat("nex-agi/nex-n2-pro:free")],
+  ["OR ibm-granite/granite-4.1-8b", or.chat("ibm-granite/granite-4.1-8b")],
+  ["OR deepseek/deepseek-v4-flash", or.chat("deepseek/deepseek-v4-flash")],
+  ["OR z-ai/glm-4.7-flash", or.chat("z-ai/glm-4.7-flash")],
 ];
 for (const [name, model] of cases) {
   try {

@@ -1,0 +1,65 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l2-edit",
+    "class": "workflow_preview",
+    "title": "L2 Edit",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l2-edit.gif",
+    "relPath": "docs/eval/workflow-previews/l2-edit.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260611T_final_publishable_media/docs-eval-workflow-previews-l2-edit.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l2-edit.gif",
+  "bytes": 73187,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The animation clearly demonstrates a step-by-step Compare-and-Set (CAS) cell edit workflow with locking, reading, writing, and versioning. It is highly legible and visually polished.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.4,
+        "evidence": "The step-by-step progression clearly labels locking, reading, and writing with CAS."
+      },
+      "workflowCompleteness": {
+        "score": 1.4,
+        "evidence": "Shows the initial state, locking action, read step, write step, and final unlocked state."
+      },
+      "visualDesign": {
+        "score": 1.3,
+        "evidence": "Clean dark-themed table layout with clear status indicators and progress tracking."
+      },
+      "consistency": {
+        "score": 1.2,
+        "evidence": "Aligns with the spreadsheet and agent execution theme of NodeRoom."
+      },
+      "evidenceQuality": {
+        "score": 1.3,
+        "evidence": "Presents a realistic execution trace of an agent interacting with a versioned cell."
+      },
+      "legibility": {
+        "score": 1.4,
+        "evidence": "High contrast text and clear labels make it easy to read at standard sizes."
+      },
+      "professionalRelevance": {
+        "score": 1.3,
+        "evidence": "Demonstrates concurrency control in financial modeling, highly relevant to engineering and finance readers."
+      },
+      "productionHonesty": {
+        "score": 1.3,
+        "evidence": "Accurately represents the step-by-step logical flow of a CAS operation."
+      }
+    },
+    "observedEvidence": [
+      "Table showing financial metrics with version numbers",
+      "Step-by-step progress indicator (0/4 to 4/4)",
+      "Locking state change to 'LOCKED'",
+      "Value update to '+22.4%' and version bump to 'V2'"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Demonstration of the Compare-and-Set (CAS) protocol ensuring safe, versioned cell edits by agents without clobbering concurrent updates."
+  },
+  "score": 10.6,
+  "maxScore": 16
+}

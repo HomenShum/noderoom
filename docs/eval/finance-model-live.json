@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-06-11T07:45:37.143Z",
+  "generatedAt": "2026-06-11T08:05:38.270Z",
   "caseId": "finance-model-private-v1-full",
   "mode": "live",
   "requestedModelName": "deepseek/deepseek-v4-flash",
@@ -35,9 +35,9 @@
   "modelOwnedRuns": 5,
   "providerOwnedRuns": 0,
   "providerFailureShare": 0,
-  "medianMs": 102292,
-  "p95CostUsd": 0.099626,
-  "totalCostUsd": 0.406337,
+  "medianMs": 105007,
+  "p95CostUsd": 0.106829,
+  "totalCostUsd": 0.44238500000000003,
   "perCheckPassCounts": {
     "allTargetsWritten": 5,
     "distractorsUntouched": 5,
@@ -207,12 +207,12 @@
         "humanEditSurvived": true,
         "lockHeldAgainstMidRunWrite": true
       },
-      "costUsd": 0.075035,
-      "ms": 102292,
-      "toolCalls": 20,
+      "costUsd": 0.106829,
+      "ms": 104024,
+      "toolCalls": 21,
       "modelName": "deepseek/deepseek-v4-flash",
       "requestedModelName": "deepseek/deepseek-v4-flash",
-      "traceRef": "docs/eval/finance-model-runs/2026-06-11T0739-run1-deepseek-deepseek-v4-flash.json"
+      "traceRef": "docs/eval/finance-model-runs/2026-06-11T0758-run1-deepseek-deepseek-v4-flash.json"
     },
     {
       "run": 2,
@@ -234,12 +234,12 @@
         "humanEditSurvived": true,
         "lockHeldAgainstMidRunWrite": true
       },
-      "costUsd": 0.067004,
-      "ms": 75500,
-      "toolCalls": 19,
+      "costUsd": 0.067085,
+      "ms": 71307,
+      "toolCalls": 21,
       "modelName": "deepseek/deepseek-v4-flash",
       "requestedModelName": "deepseek/deepseek-v4-flash",
-      "traceRef": "docs/eval/finance-model-runs/2026-06-11T0740-run2-deepseek-deepseek-v4-flash.json"
+      "traceRef": "docs/eval/finance-model-runs/2026-06-11T0759-run2-deepseek-deepseek-v4-flash.json"
     },
     {
       "run": 3,
@@ -261,12 +261,12 @@
         "humanEditSurvived": true,
         "lockHeldAgainstMidRunWrite": true
       },
-      "costUsd": 0.099626,
-      "ms": 123784,
-      "toolCalls": 20,
+      "costUsd": 0.101536,
+      "ms": 160989,
+      "toolCalls": 21,
       "modelName": "deepseek/deepseek-v4-flash",
       "requestedModelName": "deepseek/deepseek-v4-flash",
-      "traceRef": "docs/eval/finance-model-runs/2026-06-11T0742-run3-deepseek-deepseek-v4-flash.json"
+      "traceRef": "docs/eval/finance-model-runs/2026-06-11T0801-run3-deepseek-deepseek-v4-flash.json"
     },
     {
       "run": 4,
@@ -288,12 +288,12 @@
         "humanEditSurvived": true,
         "lockHeldAgainstMidRunWrite": true
       },
-      "costUsd": 0.090359,
-      "ms": 104829,
+      "costUsd": 0.086034,
+      "ms": 119935,
       "toolCalls": 19,
       "modelName": "deepseek/deepseek-v4-flash",
       "requestedModelName": "deepseek/deepseek-v4-flash",
-      "traceRef": "docs/eval/finance-model-runs/2026-06-11T0744-run4-deepseek-deepseek-v4-flash.json"
+      "traceRef": "docs/eval/finance-model-runs/2026-06-11T0803-run4-deepseek-deepseek-v4-flash.json"
     },
     {
       "run": 5,
@@ -315,12 +315,12 @@
         "humanEditSurvived": true,
         "lockHeldAgainstMidRunWrite": true
       },
-      "costUsd": 0.074313,
-      "ms": 91860,
-      "toolCalls": 21,
+      "costUsd": 0.080901,
+      "ms": 105007,
+      "toolCalls": 19,
       "modelName": "deepseek/deepseek-v4-flash",
       "requestedModelName": "deepseek/deepseek-v4-flash",
-      "traceRef": "docs/eval/finance-model-runs/2026-06-11T0745-run5-deepseek-deepseek-v4-flash.json"
+      "traceRef": "docs/eval/finance-model-runs/2026-06-11T0805-run5-deepseek-deepseek-v4-flash.json"
     }
   ],
   "goldSourceHash": "3d2f577370eaf65c"

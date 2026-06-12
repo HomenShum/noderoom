@@ -1,0 +1,64 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-workbook-style-toggle",
+    "class": "readme_walkthrough",
+    "title": "Workbook Style Toggle",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\workbook-style-toggle.mp4",
+    "relPath": "docs/walkthroughs/workbook-style-toggle.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:workbook-style-toggle"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/workbook-style-toggle.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 6169453,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough clearly demonstrates switching between Excel, Sheets, and Evidence visual styles for a workbook within NodeRoom, showing immediate UI updates.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.5,
+        "evidence": "The dropdown menu clearly switches the spreadsheet view between Excel, Sheets, and Evidence modes."
+      },
+      "workflowCompleteness": {
+        "score": 1.5,
+        "evidence": "Shows the initial Excel view, selection of Sheets, and final transition to Evidence mode."
+      },
+      "visualDesign": {
+        "score": 1.4,
+        "evidence": "The UI is clean, with distinct visual styling for each of the selected workbook modes."
+      },
+      "consistency": {
+        "score": 1.5,
+        "evidence": "Integrates seamlessly with NodeRoom's multi-pane layout, chat, and file sidebar."
+      },
+      "evidenceQuality": {
+        "score": 1.5,
+        "evidence": "Captured directly from the live application showing real-time rendering changes."
+      },
+      "legibility": {
+        "score": 1.4,
+        "evidence": "Spreadsheet cells, dropdown options, and captions are highly legible."
+      },
+      "professionalRelevance": {
+        "score": 1.3,
+        "evidence": "Demonstrates presentation flexibility useful for financial analysts and auditors."
+      },
+      "productionHonesty": {
+        "score": 1.5,
+        "evidence": "Accurately represents the feature as a local UI style toggle without overclaiming."
+      }
+    },
+    "observedEvidence": [
+      "Opening style-toggle.xlsx from the sidebar",
+      "Toggling view mode from Excel to Sheets",
+      "Toggling view mode from Sheets to Evidence"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Easily toggle workbook styles between Excel, Sheets, and Evidence modes to optimize for editing or audit reviews."
+  },
+  "score": 11.6,
+  "maxScore": 16
+}

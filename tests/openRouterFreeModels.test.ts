@@ -49,11 +49,12 @@ describe("OpenRouter free auto routing", () => {
   });
 
   it("keeps free-auto opt-in instead of hiding it behind generic aliases", () => {
-    expect(resolveModelAlias("openrouter")).toBe("kimi-k2.6");
+    expect(resolveModelAlias("openrouter")).toBe("moonshotai/kimi-k2.6");
     expect(resolveModelAlias("auto")).toBe("gemini-3.5-flash");
     expect(resolveModelAlias("free")).toBe(OPENROUTER_FREE_AUTO_MODEL);
     expect(resolveModelAlias("free-auto")).toBe(OPENROUTER_FREE_AUTO_MODEL);
     expect(resolveModelAlias("kimi")).toBe("moonshotai/kimi-k2.6:free");
+    expect(resolveModelAlias("minimax-m2.7")).toBe("minimax/minimax-m2.7");
   });
 
   it("treats discovered slash ids and free-auto as OpenRouter models", () => {

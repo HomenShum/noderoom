@@ -1,0 +1,65 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l1-read",
+    "class": "workflow_preview",
+    "title": "L1 Read",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l1-read.gif",
+    "relPath": "docs/eval/workflow-previews/l1-read.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260611T_final_publishable_media/docs-eval-workflow-previews-l1-read.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l1-read.gif",
+  "bytes": 46797,
+  "judge": {
+    "verdict": "publish",
+    "summary": "A clean and concise workflow preview demonstrating an AI agent reading a specific financial metric from a table without making modifications.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.3,
+        "evidence": "The UI clearly highlights the row being read and updates the status at the bottom to reflect the AI's action."
+      },
+      "workflowCompleteness": {
+        "score": 1.4,
+        "evidence": "Demonstrates the full sequence from goal definition to execution and completion steps."
+      },
+      "visualDesign": {
+        "score": 1.4,
+        "evidence": "Features a polished dark-mode interface with clean typography and clear visual hierarchy."
+      },
+      "consistency": {
+        "score": 1.3,
+        "evidence": "Aligns with the financial spreadsheet and agent execution theme of the platform."
+      },
+      "evidenceQuality": {
+        "score": 1.3,
+        "evidence": "Captures realistic UI interactions and step-by-step state changes."
+      },
+      "legibility": {
+        "score": 1.5,
+        "evidence": "Text and numbers are highly legible with strong contrast against the dark background."
+      },
+      "professionalRelevance": {
+        "score": 1.3,
+        "evidence": "Directly applicable to financial auditing and automated data extraction use cases."
+      },
+      "productionHonesty": {
+        "score": 1.2,
+        "evidence": "Accurately represents the simple read-only nature of the task without overclaiming capabilities."
+      }
+    },
+    "observedEvidence": [
+      "AI goal initialization",
+      "Row highlighting during read action",
+      "Step counter incrementing from 0/2 to 2/2",
+      "Final success state confirmation"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Watch the NodeRoom AI agent locate and read the Net Income variance metric from a financial table without altering any values."
+  },
+  "score": 10.7,
+  "maxScore": 16
+}

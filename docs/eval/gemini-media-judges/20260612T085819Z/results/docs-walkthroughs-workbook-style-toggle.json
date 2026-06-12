@@ -1,0 +1,65 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-workbook-style-toggle",
+    "class": "readme_walkthrough",
+    "title": "Workbook Style Toggle",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\workbook-style-toggle.mp4",
+    "relPath": "docs/walkthroughs/workbook-style-toggle.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:workbook-style-toggle"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/workbook-style-toggle.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 6681400,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough clearly demonstrates the workbook style toggle feature, showing seamless transitions between Excel File, Sheets Collab, and Evidence Review modes with live trace updates.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.6,
+        "evidence": "The toggle buttons for Excel File, Sheets Collab, and Evidence Review are prominently displayed and clicked, showing immediate UI changes."
+      },
+      "workflowCompleteness": {
+        "score": 1.7,
+        "evidence": "Demonstrates the entire flow from uploading an Excel file to switching views and observing the corresponding state changes in the room trace."
+      },
+      "visualDesign": {
+        "score": 1.5,
+        "evidence": "Clean dark mode interface with well-aligned panels, though some text in the chat and trace is slightly dense."
+      },
+      "consistency": {
+        "score": 1.6,
+        "evidence": "Perfectly aligns with NodeRoom's core concepts of files, spreadsheets, and structured room traces."
+      },
+      "evidenceQuality": {
+        "score": 1.7,
+        "evidence": "High-fidelity screen recording showing real-time UI interactions, cursor movements, and state updates."
+      },
+      "legibility": {
+        "score": 1.5,
+        "evidence": "Most text and cell values are highly legible, though some smaller labels in the sidebar require zooming."
+      },
+      "professionalRelevance": {
+        "score": 1.6,
+        "evidence": "Highly relevant for financial and compliance workflows where auditing spreadsheet formulas and data ownership is critical."
+      },
+      "productionHonesty": {
+        "score": 1.6,
+        "evidence": "Accurately represents the UI state and local style changes without implying automated backend magic."
+      }
+    },
+    "observedEvidence": [
+      "Excel File view with formula bar and merged cells",
+      "Sheets Collab view with versioned write path",
+      "Evidence Review view highlighting provenance",
+      "Room trace logging session events"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Toggle between Excel File, Sheets Collab, and Evidence Review modes to audit formulas, collaborate in real-time, or verify data provenance."
+  },
+  "score": 12.8,
+  "maxScore": 16
+}

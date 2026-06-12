@@ -114,13 +114,19 @@ export const modelPricing: Record<string, ModelPricing> = {
   // OpenRouter (pricing used by eval cost checks; USD per 1M tokens)
   "deepseek-r1": { inputPer1M: 0.70, outputPer1M: 2.40, contextWindow: 163840 },
   "deepseek-v3.2-speciale": { inputPer1M: 0.27, outputPer1M: 0.41, contextWindow: 163840 },
+  "deepseek/deepseek-v3.2-speciale": { inputPer1M: 0.27, outputPer1M: 0.41, contextWindow: 163840 },
   "deepseek-v3.2": { inputPer1M: 0.25, outputPer1M: 0.38, contextWindow: 163840 },
+  "deepseek/deepseek-v3.2": { inputPer1M: 0.25, outputPer1M: 0.38, contextWindow: 163840 },
   "qwen3-235b": { inputPer1M: 0.18, outputPer1M: 0.54, contextWindow: 131072 },
   "minimax-m2.7": { inputPer1M: 0.30, outputPer1M: 1.20, contextWindow: 196608 },
+  "minimax/minimax-m2.7": { inputPer1M: 0.30, outputPer1M: 1.20, contextWindow: 196608 },
   "mistral-large": { inputPer1M: 2.00, outputPer1M: 6.00, contextWindow: 131072 },
   "glm-4.7-flash": { inputPer1M: 0.07, outputPer1M: 0.40, cachedInputPer1M: 0.01, contextWindow: 200000 },
+  "z-ai/glm-4.7-flash": { inputPer1M: 0.07, outputPer1M: 0.40, cachedInputPer1M: 0.01, contextWindow: 200000 },
   "glm-4.7": { inputPer1M: 0.40, outputPer1M: 1.50, contextWindow: 202752 },
+  "z-ai/glm-4.7": { inputPer1M: 0.40, outputPer1M: 1.50, contextWindow: 202752 },
   "kimi-k2.6": { inputPer1M: 0.75, outputPer1M: 3.50, contextWindow: 262144 },
+  "moonshotai/kimi-k2.6": { inputPer1M: 0.75, outputPer1M: 3.50, contextWindow: 262144 },
 
   // xAI Grok Series (Jan 2026) - Real-time web search + X integration
   "grok-4-1-fast-reasoning": { inputPer1M: 0.20, outputPer1M: 0.50, cachedInputPer1M: 0.02, contextWindow: 2000000 },
@@ -573,7 +579,7 @@ export const modelAliases: Record<string, string> = {
   "deep-research-max": "deep-research-max-preview-04-2026",
 
   // OpenRouter aliases
-  "openrouter": "kimi-k2.6",
+  "openrouter": "moonshotai/kimi-k2.6",
   "auto": "gemini-3.5-flash",
   "free": OPENROUTER_FREE_AUTO_MODEL,
   "free-auto": OPENROUTER_FREE_AUTO_MODEL,
@@ -582,15 +588,23 @@ export const modelAliases: Record<string, string> = {
   "openrouter/free-auto": OPENROUTER_FREE_AUTO_MODEL,
   "openrouter/free": OPENROUTER_FREE_META_MODEL,
   "kimi": "moonshotai/kimi-k2.6:free",
-  "kimi-k2": "kimi-k2.6",
-  "kimi-k2.6": "kimi-k2.6",
+  "kimi-k2": "moonshotai/kimi-k2.6",
+  "kimi-k2.6": "moonshotai/kimi-k2.6",
   "kimi-free": "moonshotai/kimi-k2.6:free",
   "kimi-k2.6-free": "moonshotai/kimi-k2.6:free",
-  "moonshotai/kimi-k2.6": "kimi-k2.6",
+  "moonshotai/kimi-k2.6": "moonshotai/kimi-k2.6",
   "moonshotai/kimi-k2.6:free": "moonshotai/kimi-k2.6:free",
-  "minimax": "minimax-m2.7",
-  "minimax-m2.7": "minimax-m2.7",
-  "minimax/minimax-m2.7": "minimax-m2.7",
+  "minimax": "minimax/minimax-m2.7",
+  "minimax-m2.7": "minimax/minimax-m2.7",
+  "minimax/minimax-m2.7": "minimax/minimax-m2.7",
+  "glm-4.7-flash": "z-ai/glm-4.7-flash",
+  "z-ai/glm-4.7-flash": "z-ai/glm-4.7-flash",
+  "glm-4.7": "z-ai/glm-4.7",
+  "z-ai/glm-4.7": "z-ai/glm-4.7",
+  "deepseek-v3.2-speciale": "deepseek/deepseek-v3.2-speciale",
+  "deepseek/deepseek-v3.2-speciale": "deepseek/deepseek-v3.2-speciale",
+  "deepseek-v3.2": "deepseek/deepseek-v3.2",
+  "deepseek/deepseek-v3.2": "deepseek/deepseek-v3.2",
 };
 
 /**

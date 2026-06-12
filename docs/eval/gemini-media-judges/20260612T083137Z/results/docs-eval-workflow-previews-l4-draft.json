@@ -1,0 +1,64 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l4-draft",
+    "class": "workflow_preview",
+    "title": "L4 Draft",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l4-draft.gif",
+    "relPath": "docs/eval/workflow-previews/l4-draft.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260612T083137Z/docs-eval-workflow-previews-l4-draft.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l4-draft.gif",
+  "bytes": 82775,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The workflow preview clearly demonstrates how an AI agent handles a locked range by creating a draft instead of overwriting, using a clean step-by-step trace UI.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.3,
+        "evidence": "The UI clearly shows the transition from a locked cell state to a drafted state with step-by-step agent explanations."
+      },
+      "workflowCompleteness": {
+        "score": 1.4,
+        "evidence": "Demonstrates the full sequence: initial locked state, lock denial, reading the value, and generating a draft."
+      },
+      "visualDesign": {
+        "score": 1.3,
+        "evidence": "Clean dark-themed table layout with clear status indicators and a structured progress bar at the bottom."
+      },
+      "consistency": {
+        "score": 1.2,
+        "evidence": "Aligns with the spreadsheet and agent trace concept, showing versioned edits on financial metrics."
+      },
+      "evidenceQuality": {
+        "score": 1.3,
+        "evidence": "Looks like a high-fidelity interactive trace replay showing realistic system behavior."
+      },
+      "legibility": {
+        "score": 1.4,
+        "evidence": "High contrast text and clear labels make it easy to read even at smaller resolutions."
+      },
+      "professionalRelevance": {
+        "score": 1.3,
+        "evidence": "Directly addresses collaborative lock contention issues common in financial modeling workflows."
+      },
+      "productionHonesty": {
+        "score": 1.4,
+        "evidence": "Accurately represents the system's fallback behavior when a write lock is denied."
+      }
+    },
+    "observedEvidence": [
+      "Locked range status indicator",
+      "AI agent step-by-step execution trace",
+      "Draft status badge and updated value"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Watch how the AI agent automatically drafts changes for a smart-merge when encountering a locked range in a collaborative sheet."
+  },
+  "score": 10.6,
+  "maxScore": 16
+}

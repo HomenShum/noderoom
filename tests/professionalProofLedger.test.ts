@@ -11,13 +11,20 @@ describe("professional proof ledger", () => {
 
     expect(summary.total).toBeGreaterThan(10);
     expect(summary.allLiveProven).toBe(false);
+    expect(summary.allLiveCatalogProven).toBe(true);
+    expect(summary.allLiveRuntimeExecuted).toBe(true);
+    expect(summary.liveProviderCatalogPassed).toBe(summary.total);
+    expect(summary.liveProviderRuntimePassed).toBe(summary.total);
     expect(summary.allCatalogsProofed).toBe(true);
     expect(summary.partialLiveProvider).toBeGreaterThan(0);
-    expect(summary.deterministicCatalog).toBeGreaterThan(0);
+    expect(summary.liveProviderCatalog).toBe(0);
+    expect(summary.runtimeManagedLock).toBe(summary.total);
+    expect(summary.catalogOnlyLockMode).toBe(0);
+    expect(summary.deterministicCatalog).toBe(0);
     expect(summary.contractShape).toBe(0);
     expect(summary.unproofedCaseIds).toEqual([]);
     expect(rows.find((row) => row.caseId === "gtm-chat-lead-capture-enrich")?.proofLevel).toBe(
-      "deterministic_runtime",
+      "live_provider",
     );
     expect(rows.find((row) => row.caseId === "finance-three-statement-modeling-private-gold")?.proofLevel).toBe(
       "partial_live_provider",

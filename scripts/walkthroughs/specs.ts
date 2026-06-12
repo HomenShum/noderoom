@@ -11,7 +11,8 @@
 
 export type Step =
   | { kind: "state"; caption: string; settleMs?: number; holdMs?: number }
-  | { kind: "click"; sel: string; caption: string; afterCaption?: string; after?: After; holdMs?: number }
+  | { kind: "click"; sel: string; caption: string; afterCaption?: string; after?: After; holdMs?: number; afterHoldMs?: number }
+  | { kind: "uploadWorkbook"; caption: string; afterCaption?: string; holdMs?: number; afterHoldMs?: number }
   | { kind: "type"; sel: string; text: string; caption: string; pressEnter?: boolean; afterCaption?: string; after?: After }
   | { kind: "key"; key: string; caption: string; after?: After }
   | { kind: "loading"; sel: string; caption: string; timeoutMs?: number }
@@ -82,6 +83,37 @@ export const FEATURES: FeatureSpec[] = [
         after: { textSel: '[data-cell-key="r_opex__variance"]', includes: "add", timeoutMs: 12_000 },
       },
       { kind: "state", caption: "Every edit is CAS-versioned — undo is safe in a multiplayer room", holdMs: 2200 },
+    ],
+  },
+  {
+    id: "workbook-style-toggle",
+    closePanels: ["priv"],
+    title: "Workbook view modes",
+    setup: "memoryDemo",
+    steps: [
+      { kind: "state", caption: "Start with the shared room; the backend contract is the same for every view", holdMs: 1600 },
+      {
+        kind: "uploadWorkbook",
+        caption: "Upload a styled Excel workbook",
+        afterCaption: "The workbook opens as Excel paper: file formats, merged cells, formula bar, and CAS receipt",
+        holdMs: 1100,
+        afterHoldMs: 2600,
+      },
+      {
+        kind: "click",
+        sel: '[data-testid="workbook-style-sheets"]',
+        caption: "Switch the view to Sheets",
+        afterCaption: "Sheets mode keeps the same selected cell and versioned write path",
+        afterHoldMs: 2800,
+      },
+      {
+        kind: "click",
+        sel: '[data-testid="workbook-style-evidence"]',
+        caption: "Switch to Evidence mode for agent review",
+        afterCaption: "Evidence mode emphasizes provenance and review without changing data ownership",
+        afterHoldMs: 3000,
+      },
+      { kind: "state", caption: "MVP rule: style changes are local UI; Convex versions, locks, and traces stay canonical", holdMs: 2400 },
     ],
   },
   {

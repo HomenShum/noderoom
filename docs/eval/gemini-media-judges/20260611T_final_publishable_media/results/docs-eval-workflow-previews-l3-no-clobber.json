@@ -1,0 +1,71 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-l3-no-clobber",
+    "class": "workflow_preview",
+    "title": "L3 No Clobber",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l3-no-clobber.gif",
+    "relPath": "docs/eval/workflow-previews/l3-no-clobber.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260611T_final_publishable_media/docs-eval-workflow-previews-l3-no-clobber.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/l3-no-clobber.gif",
+  "bytes": 125658,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The workflow preview clearly demonstrates the 'No Clobber' concurrency control mechanism where a human edit preempts an agent write, triggering a CAS rejection and subsequent agent retry.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.4,
+        "evidence": "The step-by-step annotations clearly explain the CAS rejection and agent re-read process."
+      },
+      "workflowCompleteness": {
+        "score": 1.5,
+        "evidence": "Shows the entire lifecycle from initial read, human interruption, rejection, to successful resolution."
+      },
+      "visualDesign": {
+        "score": 1.3,
+        "evidence": "Clean dark-mode interface with clear row highlighting and contrasting status badges."
+      },
+      "consistency": {
+        "score": 1.2,
+        "evidence": "Aligns well with the financial spreadsheet and collaborative agent-human workflow theme."
+      },
+      "evidenceQuality": {
+        "score": 1.4,
+        "evidence": "Feels like a genuine execution trace of a concurrent write conflict."
+      },
+      "legibility": {
+        "score": 1.3,
+        "evidence": "Text and badges are highly legible, though the bottom progress bar is slightly small."
+      },
+      "professionalRelevance": {
+        "score": 1.4,
+        "evidence": "Highly relevant for engineering and finance users concerned with data integrity in multi-agent systems."
+      },
+      "productionHonesty": {
+        "score": 1.3,
+        "evidence": "Transparently demonstrates a write failure and how the system handles it gracefully."
+      }
+    },
+    "observedEvidence": [
+      "Step-by-step execution trace showing CAS rejection",
+      "Human edit simulation with V2 version bump",
+      "Agent retry and final V3 commit"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:05",
+        "severity": "P2",
+        "observed": "The transition showing the human edit committing is very abrupt.",
+        "fix": "Add a brief fade or highlight transition to make the state change smoother."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch NodeRoom's L3 concurrency control in action: when a human edits a cell mid-write, the system rejects the agent's stale write, forcing it to re-read and merge changes without clobbering."
+  },
+  "score": 10.8,
+  "maxScore": 16
+}

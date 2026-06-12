@@ -1,0 +1,71 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-naive-overwrite",
+    "class": "readme_walkthrough",
+    "title": "Naive Overwrite",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\naive-overwrite.mp4",
+    "relPath": "docs/walkthroughs/naive-overwrite.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:naive-overwrite"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/naive-overwrite.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 6478281,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough effectively demonstrates the 'naive overwrite' failure mode where an agent silently overwrites a user's manual changes, highlighting the necessity of NodeRoom's collaboration and locking features.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.2,
+        "evidence": "The sequence clearly shows a manual edit being overwritten by an agent command without warning."
+      },
+      "workflowCompleteness": {
+        "score": 1.3,
+        "evidence": "Captures the entire flow: manual input, agent execution, and the resulting silent overwrite."
+      },
+      "visualDesign": {
+        "score": 1.1,
+        "evidence": "Clean dark mode interface with clear visual cues, though some text elements are small."
+      },
+      "consistency": {
+        "score": 1.2,
+        "evidence": "Aligns perfectly with the spreadsheet, chat, and agent trace components of NodeRoom."
+      },
+      "evidenceQuality": {
+        "score": 1.3,
+        "evidence": "Authentic UI capture showing real-time interactions and state changes."
+      },
+      "legibility": {
+        "score": 1.1,
+        "evidence": "Most text is readable, though some smaller spreadsheet cells require close attention."
+      },
+      "professionalRelevance": {
+        "score": 1.3,
+        "evidence": "Highly relevant for demonstrating the risks of uncoordinated agent-human collaboration."
+      },
+      "productionHonesty": {
+        "score": 1.4,
+        "evidence": "Transparently demonstrates a system limitation/failure state to justify advanced features."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet cell manual edit",
+      "Agent execution via chat command",
+      "Silent overwrite of cell value"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:09",
+        "severity": "P2",
+        "observed": "The chat input command is entered very quickly, which might be hard to follow for some viewers.",
+        "fix": "Slightly pause or slow down the typing animation for the command input."
+      }
+    ],
+    "suggestedReadmeCaption": "Demonstration of a naive agent overwriting a manual human edit, highlighting the need for NodeRoom's collaborative locking mechanisms."
+  },
+  "score": 9.9,
+  "maxScore": 16
+}

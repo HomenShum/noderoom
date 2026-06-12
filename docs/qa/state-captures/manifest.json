@@ -2,6 +2,70 @@
   "generatedNote": "regenerate with `npm run qa:states`",
   "captures": [
     {
+      "surface": "sheet",
+      "state": "empty-cells",
+      "theme": "dark",
+      "width": 1860,
+      "file": "sheet/empty-cells--dark--1860.png",
+      "mustBeTrue": "Empty variance cells show a '+ add' affordance (not 'null'); existing values use neutral/sign-aware color, not all-green."
+    },
+    {
+      "surface": "sheet",
+      "state": "cell-editing",
+      "theme": "dark",
+      "width": 1860,
+      "file": "sheet/cell-editing--dark--1860.png",
+      "mustBeTrue": "An editing cell shows a clearly-bordered input; a negative value previews in the danger color (sign-aware)."
+    },
+    {
+      "surface": "sheet",
+      "state": "proposal-pending",
+      "theme": "dark",
+      "width": 1860,
+      "file": "sheet/proposal-pending--dark--1860.png",
+      "mustBeTrue": "Agent edits arrive as inline proposals: the suggested VALUE carries the accent; the ✓ accept / ✗ reject controls are neutral ghosts of equal weight (no ban-circle, no solid-accent button)."
+    },
+    {
+      "surface": "sheet",
+      "state": "proposal-accept-hover",
+      "theme": "dark",
+      "width": 1860,
+      "file": "sheet/proposal-accept-hover--dark--1860.png",
+      "mustBeTrue": "Hovering ✓ accept tints green (semantic confirm), not the brand accent."
+    },
+    {
+      "surface": "sheet",
+      "state": "proposal-reject-hover",
+      "theme": "dark",
+      "width": 1860,
+      "file": "sheet/proposal-reject-hover--dark--1860.png",
+      "mustBeTrue": "Hovering ✗ reject tints soft-red (semantic decline); the glyph is an X, never a ban-circle."
+    },
+    {
+      "surface": "research",
+      "state": "default",
+      "theme": "dark",
+      "width": 1860,
+      "file": "research/default--dark--1860.png",
+      "mustBeTrue": "Research grid with pending rows; the 'Enrich N pending' and 'Import accounts' buttons are normally-sized, not slabs."
+    },
+    {
+      "surface": "research",
+      "state": "import-open",
+      "theme": "dark",
+      "width": 1860,
+      "file": "research/import-open--dark--1860.png",
+      "mustBeTrue": "The import form: the 'Import / update rows' button sits bottom-right beside the textarea at NORMAL height — it does NOT stretch to a giant orange block matching the 3-row textarea."
+    },
+    {
+      "surface": "research",
+      "state": "import-empty-error",
+      "theme": "dark",
+      "width": 1860,
+      "file": "research/import-empty-error--dark--1860.png",
+      "mustBeTrue": "Submitting an empty paste shows an inline explanation full-width below the field (no silent dead button, no layout shift of the submit)."
+    },
+    {
       "surface": "landing",
       "state": "default",
       "theme": "dark",
@@ -136,70 +200,6 @@
       "width": 1860,
       "file": "chat/message-hover--dark--1860.png",
       "mustBeTrue": "Hovering YOUR OWN message reveals its action controls (copy/edit/promote) at a legible size."
-    },
-    {
-      "surface": "sheet",
-      "state": "empty-cells",
-      "theme": "dark",
-      "width": 1860,
-      "file": "sheet/empty-cells--dark--1860.png",
-      "mustBeTrue": "Empty variance cells show a '+ add' affordance (not 'null'); existing values use neutral/sign-aware color, not all-green."
-    },
-    {
-      "surface": "sheet",
-      "state": "cell-editing",
-      "theme": "dark",
-      "width": 1860,
-      "file": "sheet/cell-editing--dark--1860.png",
-      "mustBeTrue": "An editing cell shows a clearly-bordered input; a negative value previews in the danger color (sign-aware)."
-    },
-    {
-      "surface": "sheet",
-      "state": "proposal-pending",
-      "theme": "dark",
-      "width": 1860,
-      "file": "sheet/proposal-pending--dark--1860.png",
-      "mustBeTrue": "Agent edits arrive as inline proposals: the suggested VALUE carries the accent; the ✓ accept / ✗ reject controls are neutral ghosts of equal weight (no ban-circle, no solid-accent button)."
-    },
-    {
-      "surface": "sheet",
-      "state": "proposal-accept-hover",
-      "theme": "dark",
-      "width": 1860,
-      "file": "sheet/proposal-accept-hover--dark--1860.png",
-      "mustBeTrue": "Hovering ✓ accept tints green (semantic confirm), not the brand accent."
-    },
-    {
-      "surface": "sheet",
-      "state": "proposal-reject-hover",
-      "theme": "dark",
-      "width": 1860,
-      "file": "sheet/proposal-reject-hover--dark--1860.png",
-      "mustBeTrue": "Hovering ✗ reject tints soft-red (semantic decline); the glyph is an X, never a ban-circle."
-    },
-    {
-      "surface": "research",
-      "state": "default",
-      "theme": "dark",
-      "width": 1860,
-      "file": "research/default--dark--1860.png",
-      "mustBeTrue": "Research grid with pending rows; the 'Enrich N pending' and 'Import accounts' buttons are normally-sized, not slabs."
-    },
-    {
-      "surface": "research",
-      "state": "import-open",
-      "theme": "dark",
-      "width": 1860,
-      "file": "research/import-open--dark--1860.png",
-      "mustBeTrue": "The import form: the 'Import / update rows' button sits bottom-right beside the textarea at NORMAL height — it does NOT stretch to a giant orange block matching the 3-row textarea."
-    },
-    {
-      "surface": "research",
-      "state": "import-empty-error",
-      "theme": "dark",
-      "width": 1860,
-      "file": "research/import-empty-error--dark--1860.png",
-      "mustBeTrue": "Submitting an empty paste shows an inline explanation full-width below the field (no silent dead button, no layout shift of the submit)."
     }
   ]
 }

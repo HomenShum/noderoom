@@ -86,7 +86,6 @@
         "scripts/content-fluency-check.ts",
         "scripts/render-workflow-preview.ts",
         "scripts/workflow-preview/**",
-        "scripts/workflow-preview-gifs.ts",
         "scripts/qa-matrix.ts",
         "src/eval/**",
         "tests/**",

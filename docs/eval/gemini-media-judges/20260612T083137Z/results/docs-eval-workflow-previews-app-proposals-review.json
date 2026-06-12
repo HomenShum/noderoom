@@ -1,0 +1,73 @@
+{
+  "asset": {
+    "id": "docs-eval-workflow-previews-app-proposals-review",
+    "class": "workflow_preview",
+    "title": "App Proposals Review",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\app-proposals-review.gif",
+    "relPath": "docs/eval/workflow-previews/app-proposals-review.gif",
+    "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": ".tmp-qa/gemini-media-judge/20260612T083137Z/docs-eval-workflow-previews-app-proposals-review.mp4",
+  "mediaType": "video/mp4",
+  "convertedFrom": "docs/eval/workflow-previews/app-proposals-review.gif",
+  "bytes": 49733,
+  "judge": {
+    "verdict": "fix-then-publish",
+    "summary": "The preview demonstrates a financial table proposal review workflow, showing variance calculations and approval states, but lacks broader system context.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Shows proposal review and variance calculations in a financial table, though the exact mechanism is implicit."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Captures the transition from empty states to draft proposals and final accepted values, but lacks user interaction cues."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark-themed table layout, though the spacing around action buttons is tight."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with the spreadsheet and financial data story, but does not show agent or trace integration."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Appears to be a direct UI capture of a working prototype rather than a mock."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Text and numerical values are readable, though some status badges are small."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for financial analysts and operations workflows involving automated proposals."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately depicts state changes and manual overrides without overpromising automation."
+      }
+    },
+    "observedEvidence": [
+      "Financial table with Q2/Q3 columns",
+      "Variance proposal chips with accept/reject actions",
+      "Draft state indicators"
+    ],
+    "missingEvidence": [
+      "Agent trace panel or sidebar showing who proposed the changes."
+    ],
+    "defects": [
+      {
+        "ts": "00:03",
+        "severity": "P2",
+        "observed": "The 'NA' badge and proposal actions on the COGS row are crowded together.",
+        "fix": "Adjust spacing or hide inactive badges when a proposal is active."
+      }
+    ],
+    "suggestedReadmeCaption": "Review and approve automated variance proposals directly within your financial sheets."
+  },
+  "score": 8,
+  "maxScore": 16
+}

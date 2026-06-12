@@ -1,0 +1,168 @@
+{
+  "runId": "20260611T_final_publishable_media",
+  "generatedAt": "2026-06-11T09:37:23.034Z",
+  "model": "gemini-3.5-flash",
+  "primaryOnly": false,
+  "all": true,
+  "includeIgnored": false,
+  "assets": [
+    {
+      "id": "docs-eval-workflow-previews-app-ask-reconcile",
+      "class": "workflow_preview",
+      "title": "App Ask Reconcile",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\app-ask-reconcile.gif",
+      "relPath": "docs/eval/workflow-previews/app-ask-reconcile.gif",
+      "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+    },
+    {
+      "id": "docs-eval-workflow-previews-app-proposals-review",
+      "class": "workflow_preview",
+      "title": "App Proposals Review",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\app-proposals-review.gif",
+      "relPath": "docs/eval/workflow-previews/app-proposals-review.gif",
+      "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+    },
+    {
+      "id": "docs-eval-workflow-previews-app-research-enrich",
+      "class": "workflow_preview",
+      "title": "App Research Enrich",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\app-research-enrich.gif",
+      "relPath": "docs/eval/workflow-previews/app-research-enrich.gif",
+      "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+    },
+    {
+      "id": "docs-eval-workflow-previews-app-variance-fill",
+      "class": "workflow_preview",
+      "title": "App Variance Fill",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\app-variance-fill.gif",
+      "relPath": "docs/eval/workflow-previews/app-variance-fill.gif",
+      "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+    },
+    {
+      "id": "docs-eval-workflow-previews-finance-model-solve",
+      "class": "workflow_preview",
+      "title": "Finance Model Solve",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\finance-model-solve.gif",
+      "relPath": "docs/eval/workflow-previews/finance-model-solve.gif",
+      "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+    },
+    {
+      "id": "docs-eval-workflow-previews-l1-read",
+      "class": "workflow_preview",
+      "title": "L1 Read",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l1-read.gif",
+      "relPath": "docs/eval/workflow-previews/l1-read.gif",
+      "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+    },
+    {
+      "id": "docs-eval-workflow-previews-l2-edit",
+      "class": "workflow_preview",
+      "title": "L2 Edit",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l2-edit.gif",
+      "relPath": "docs/eval/workflow-previews/l2-edit.gif",
+      "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+    },
+    {
+      "id": "docs-eval-workflow-previews-l3-no-clobber",
+      "class": "workflow_preview",
+      "title": "L3 No Clobber",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l3-no-clobber.gif",
+      "relPath": "docs/eval/workflow-previews/l3-no-clobber.gif",
+      "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+    },
+    {
+      "id": "docs-eval-workflow-previews-l4-draft",
+      "class": "workflow_preview",
+      "title": "L4 Draft",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l4-draft.gif",
+      "relPath": "docs/eval/workflow-previews/l4-draft.gif",
+      "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+    },
+    {
+      "id": "docs-eval-workflow-previews-l5-large-range",
+      "class": "workflow_preview",
+      "title": "L5 Large Range",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l5-large-range.gif",
+      "relPath": "docs/eval/workflow-previews/l5-large-range.gif",
+      "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+    },
+    {
+      "id": "docs-eval-workflow-previews-l6-long-horizon",
+      "class": "workflow_preview",
+      "title": "L6 Long Horizon",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\workflow-previews\\l6-long-horizon.gif",
+      "relPath": "docs/eval/workflow-previews/l6-long-horizon.gif",
+      "purpose": "Silent workflow preview generated from app captures or trace replays. Judge whether it communicates the workflow and gate clearly."
+    },
+    {
+      "id": "docs-walkthroughs-chat",
+      "class": "readme_walkthrough",
+      "title": "Chat",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\chat.gif",
+      "relPath": "docs/walkthroughs/chat.gif",
+      "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+      "duplicateGroup": "walkthrough:chat"
+    },
+    {
+      "id": "docs-walkthroughs-ic-room",
+      "class": "readme_walkthrough",
+      "title": "Ic Room",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\ic-room.gif",
+      "relPath": "docs/walkthroughs/ic-room.gif",
+      "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+      "duplicateGroup": "walkthrough:ic-room"
+    },
+    {
+      "id": "docs-walkthroughs-research-upsert",
+      "class": "readme_walkthrough",
+      "title": "Research Upsert",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\research-upsert.gif",
+      "relPath": "docs/walkthroughs/research-upsert.gif",
+      "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+      "duplicateGroup": "walkthrough:research-upsert"
+    },
+    {
+      "id": "docs-walkthroughs-review-approve",
+      "class": "readme_walkthrough",
+      "title": "Review Approve",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\review-approve.gif",
+      "relPath": "docs/walkthroughs/review-approve.gif",
+      "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+      "duplicateGroup": "walkthrough:review-approve"
+    },
+    {
+      "id": "docs-walkthroughs-sheet-undo",
+      "class": "readme_walkthrough",
+      "title": "Sheet Undo",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\sheet-undo.gif",
+      "relPath": "docs/walkthroughs/sheet-undo.gif",
+      "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+      "duplicateGroup": "walkthrough:sheet-undo"
+    },
+    {
+      "id": "docs-walkthroughs-two-client-live-sync",
+      "class": "readme_walkthrough",
+      "title": "Two Client Live Sync",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\two-client-live-sync.gif",
+      "relPath": "docs/walkthroughs/two-client-live-sync.gif",
+      "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+      "duplicateGroup": "walkthrough:two-client-live-sync"
+    },
+    {
+      "id": "episodes-noderoom-live-collab-v1-renders-short",
+      "class": "episode",
+      "title": "Noderoom Live Collab V1",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\episodes\\noderoom-live-collab-v1\\renders\\short.mp4",
+      "relPath": "episodes/noderoom-live-collab-v1/renders/short.mp4",
+      "purpose": "Narrated explainer episode. Judge story clarity, visual design, proof quality, and whether it fits the README claim."
+    },
+    {
+      "id": "episodes-stack-before-after-v1-renders-short",
+      "class": "episode",
+      "title": "Stack Before After V1",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\episodes\\stack-before-after-v1\\renders\\short.mp4",
+      "relPath": "episodes/stack-before-after-v1/renders/short.mp4",
+      "purpose": "Narrated explainer episode. Judge story clarity, visual design, proof quality, and whether it fits the README claim."
+    }
+  ]
+}

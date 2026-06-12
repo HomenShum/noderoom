@@ -1,0 +1,70 @@
+{
+  "asset": {
+    "id": "episodes-private-investment-room-v1-renders-short",
+    "class": "episode",
+    "title": "Private Investment Room V1",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\episodes\\private-investment-room-v1\\renders\\short.mp4",
+    "relPath": "episodes/private-investment-room-v1/renders/short.mp4",
+    "purpose": "Narrated explainer episode. Judge story clarity, visual design, proof quality, and whether it fits the README claim."
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "episodes/private-investment-room-v1/renders/short.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 8772909,
+  "judge": {
+    "verdict": "publish",
+    "summary": "An exceptionally polished, narrated explainer video demonstrating the collaborative investment workflow with AI agents, version control, and proposal reviews in NodeRoom.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.5,
+        "evidence": "The video clearly demonstrates the proposal-review mechanism and version history features."
+      },
+      "workflowCompleteness": {
+        "score": 1.4,
+        "evidence": "Shows the full cycle from agent draft to user approval and final version tracking."
+      },
+      "visualDesign": {
+        "score": 1.5,
+        "evidence": "High-quality dark mode UI with smooth transitions and clear focal highlights."
+      },
+      "consistency": {
+        "score": 1.5,
+        "evidence": "Perfectly aligns with the NodeRoom paradigm of spreadsheets, notes, and agent traces."
+      },
+      "evidenceQuality": {
+        "score": 1.4,
+        "evidence": "Looks like a real, high-fidelity product interface rather than a conceptual mockup."
+      },
+      "legibility": {
+        "score": 1.3,
+        "evidence": "Most text and numbers are readable, though some smaller UI labels require close attention."
+      },
+      "professionalRelevance": {
+        "score": 1.5,
+        "evidence": "Directly addresses high-trust financial workflows, making it highly relevant for target users."
+      },
+      "productionHonesty": {
+        "score": 1.4,
+        "evidence": "Accurately depicts the distinction between AI suggestions and human-in-the-loop approvals."
+      }
+    },
+    "observedEvidence": [
+      "Narrated audio track explaining the investment committee preparation scenario",
+      "Interactive spreadsheet showing live cell updates and version history",
+      "Agent chat panel displaying proposal generation and approval states"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:08",
+        "severity": "P2",
+        "observed": "Slightly abrupt transition during the zoom-in on the spreadsheet import action.",
+        "fix": "Soften the camera pan or add a brief cross-fade to ease the visual jump."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch how NodeRoom enables high-trust investment workflows with versioned spreadsheets and reviewable AI agent proposals."
+  },
+  "score": 11.5,
+  "maxScore": 16
+}

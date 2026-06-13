@@ -93,6 +93,7 @@ describe("official benchmark readiness", () => {
       const runner = item.capabilities.find((capability) => capability.capability === "official_runner_adapter");
       const format = item.capabilities.find((capability) => capability.capability === "format_diff");
       const xlsx = item.capabilities.find((capability) => capability.capability === "xlsx_import_export");
+      const formula = item.capabilities.find((capability) => capability.capability === "formula_recompute");
 
       expect(ingest).toMatchObject({
         state: "implemented",
@@ -119,6 +120,12 @@ describe("official benchmark readiness", () => {
         state: "implemented",
         evidence: "src/eval/spreadsheetBenchRunner.ts",
       });
+      expect(formula).toMatchObject({
+        state: "partial",
+        evidence: "src/eval/spreadsheetBenchRunner.ts",
+      });
+      expect(formula?.blocker).toContain("SUM/AVERAGE/MIN/MAX/COUNT");
+      expect(formula?.blocker).toContain("full Excel-compatible");
       expect(format).toMatchObject({
         state: "partial",
         evidence: "src/eval/spreadsheetBenchScorer.ts",

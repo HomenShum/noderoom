@@ -246,6 +246,13 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "implemented",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
     },
+    formula_recompute: {
+      capability: "formula_recompute",
+      state: "partial",
+      evidence: "src/eval/spreadsheetBenchRunner.ts",
+      blocker:
+        "The SpreadsheetBench runner caches deterministic results for a local formula subset covering arithmetic, same-sheet cell refs/ranges, and SUM/AVERAGE/MIN/MAX/COUNT before export/reopen scoring; a full Excel-compatible recompute engine is not complete.",
+    },
     format_diff: {
       capability: "format_diff",
       state: "partial",
@@ -278,6 +285,13 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       capability: "xlsx_import_export",
       state: "implemented",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
+    },
+    formula_recompute: {
+      capability: "formula_recompute",
+      state: "partial",
+      evidence: "src/eval/spreadsheetBenchRunner.ts",
+      blocker:
+        "The SpreadsheetBench runner caches deterministic results for a local formula subset covering arithmetic, same-sheet cell refs/ranges, and SUM/AVERAGE/MIN/MAX/COUNT before export/reopen scoring; full Excel-compatible recompute, chart formulas, external refs, and volatile functions are not complete.",
     },
     format_diff: {
       capability: "format_diff",

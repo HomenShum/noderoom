@@ -1,6 +1,6 @@
 # Official Benchmark Readiness
 
-Generated: 2026-06-13T12:10:35.110Z
+Generated: 2026-06-13T12:17:37.893Z
 
 This is the benchmark-faithful gate for the public targets we care about most: BankerToolBench and SpreadsheetBench. It is deliberately stricter than NodeRoom's internal professional evals. Internal green runs do not imply an official benchmark claim.
 
@@ -67,13 +67,13 @@ Scoring shape: Online-judge style multi-test-case evaluation; the agent must pro
 | `trajectory_capture` | implemented | `evals/evalStore.ts` |
 | `cost_latency_retries` | implemented | `evals/financeModelLive.ts` |
 | `xlsx_import_export` | implemented | `src/eval/spreadsheetBenchRunner.ts` |
-| `formula_recompute` | partial | `evals/financeModelLive.ts` |
+| `formula_recompute` | partial | `src/eval/spreadsheetBenchRunner.ts` |
 | `format_diff` | partial | `src/eval/spreadsheetBenchScorer.ts` |
 
 Blockers:
 - official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; runner attempts now copy agent-visible files into an agent-workspace manifest before candidate generation, contamination checks cover staged and candidate metadata including those workspace manifests, and official V1 N=5/retry failed model smokes exist, but official full-bundle OS/Docker process isolation and output policy proof are still missing.
 - official_runner_adapter: A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; official V1 N=5 and retry-policy smokes now record fair larger workbook snapshots, raw model output, simple SUM result caching, pass rate, p95 latency, model usage/cost, workspace manifests, scored partial candidates, retry exhaustion, and failure taxonomy, but larger full-bundle runs, OS/Docker sandbox proof, and route selection remain incomplete.
-- formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.
+- formula_recompute: The SpreadsheetBench runner caches deterministic results for a local formula subset covering arithmetic, same-sheet cell refs/ranges, and SUM/AVERAGE/MIN/MAX/COUNT before export/reopen scoring; a full Excel-compatible recompute engine is not complete.
 - format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy and full style coverage are not complete.
 
 ### SpreadsheetBench 2
@@ -92,14 +92,14 @@ Scoring shape: Workflow-level grading across exact cell values/formulas/formats 
 | `trajectory_capture` | implemented | `evals/evalStore.ts` |
 | `cost_latency_retries` | implemented | `evals/financeModelLive.ts` |
 | `xlsx_import_export` | implemented | `src/eval/spreadsheetBenchRunner.ts` |
-| `formula_recompute` | partial | `evals/financeModelLive.ts` |
+| `formula_recompute` | partial | `src/eval/spreadsheetBenchRunner.ts` |
 | `format_diff` | partial | `src/eval/spreadsheetBenchScorer.ts` |
 | `chart_visual_grade` | missing | No VLM/chart-visual evaluator is wired into benchmark-faithful mode. |
 
 Blockers:
 - official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; runner attempts now copy agent-visible files into an agent-workspace manifest before candidate generation and V1 contamination/N=5/retry evidence exists, but V2 chart/visual grading, V2 official model runs, and OS/Docker process isolation are still missing.
 - official_runner_adapter: A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; V1 N=5 and retry-policy model smoke evidence exists with fair larger snapshots, raw model output, simple SUM result caching, and workspace manifests, but V2 official runs, OS/Docker sandbox proof, route selection, and chart lane remain incomplete.
-- formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.
+- formula_recompute: The SpreadsheetBench runner caches deterministic results for a local formula subset covering arithmetic, same-sheet cell refs/ranges, and SUM/AVERAGE/MIN/MAX/COUNT before export/reopen scoring; full Excel-compatible recompute, chart formulas, external refs, and volatile functions are not complete.
 - format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy, chart rendering, and visual grading are not complete.
 - chart_visual_grade: No VLM/chart-visual evaluator is wired into benchmark-faithful mode.
 

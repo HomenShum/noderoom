@@ -1051,6 +1051,12 @@ boundaries, fuller context capture, formula-result packaging, and leakage scanni
 surfacing the planner gap honestly. This is not OS/Docker process isolation, and these artifacts are
 not official benchmark scores until run across official bundles under the benchmark policy.
 
+The deterministic formula-result lane has since moved beyond `SUM(...)`: `apply-agent-patch` and
+`model-edit-plan` candidate manifests now record `formulaResultPolicy:
+deterministic_local_subset`, covering arithmetic, same-sheet cell refs/ranges, and
+`SUM`/`AVERAGE`/`MIN`/`MAX`/`COUNT` before export/reopen scoring. That is useful for SpreadsheetBench
+smokes, but still not a complete Excel calculation engine.
+
 BankerToolBench now has the same first boundary in place: `npm run
 benchmark:bankertoolbench:ingest` scans an already-downloaded BTB bundle (`tasks.jsonl`,
 `task-data/`, optional `golden-outputs/`) and parses input files plus weighted rubric metadata

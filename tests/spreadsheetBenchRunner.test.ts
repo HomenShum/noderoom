@@ -203,6 +203,66 @@ describe("SpreadsheetBench staged runner", () => {
     expect(sheet.getCell("C2").numFmt).toBe("#,##0.00");
   });
 
+  it("caches deterministic results for arithmetic and aggregate formulas before scoring", async () => {
+    const source = tempRoot("source");
+    const stage = tempRoot("stage");
+    const out = tempRoot("out");
+    mkdirSync(join(source, "spreadsheet", "13-12"), { recursive: true });
+    await writeFormulaSubsetWorkbook(join(source, "spreadsheet", "13-12", "1_13-12_init.xlsx"), false);
+    await writeFormulaSubsetWorkbook(join(source, "spreadsheet", "13-12", "1_13-12_golden.xlsx"), true);
+    writeJson(join(source, "dataset.json"), [
+      {
+        id: "13-12",
+        instruction: "Write the formula result cells using arithmetic and aggregate formulas.",
+        spreadsheet_path: "spreadsheet/13-12",
+        answer_position: "Sheet1!C2:F2",
+        answer_sheet: "Sheet1",
+      },
+    ]);
+    stageSpreadsheetBenchBundle(source, {
+      track: "spreadsheetbench-v1",
+      outputRoot: stage,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+    writeJson(join(stage, "tasks", "13-12", "agent", "edit-plan.json"), {
+      schema: 1,
+      operations: [
+        { sheet: "Sheet1", cell: "C2", formula: "A2*2+B2/2" },
+        { sheet: "Sheet1", cell: "D2", value: "=AVERAGE(A2:A3)" },
+        { sheet: "Sheet1", cell: "E2", formula: "MAX(A2:A3)-MIN(A2:A3)" },
+        { sheet: "Sheet1", cell: "F2", formula: "COUNT(A2:A3)" },
+      ],
+    });
+
+    const report = await runStagedSpreadsheetBench({
+      stageRoot: stage,
+      outputRoot: out,
+      mode: "apply-agent-patch",
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(report.passCount).toBe(1);
+    expect(report.results[0].score?.totals).toMatchObject({
+      comparedCells: 4,
+      valueMatches: 4,
+      formulaCells: 4,
+      formulaMatches: 4,
+      mismatches: 0,
+    });
+    const candidate = new ExcelJS.Workbook();
+    await candidate.xlsx.readFile(join(out, report.results[0].candidateWorkbook!));
+    const sheet = candidate.getWorksheet("Sheet1")!;
+    expect(sheet.getCell("C2").value).toMatchObject({ formula: "A2*2+B2/2", result: 25 });
+    expect(sheet.getCell("D2").value).toMatchObject({ formula: "AVERAGE(A2:A3)", result: 15 });
+    expect(sheet.getCell("E2").value).toMatchObject({ formula: "MAX(A2:A3)-MIN(A2:A3)", result: 10 });
+    expect(sheet.getCell("F2").value).toMatchObject({ formula: "COUNT(A2:A3)", result: 2 });
+    const candidateManifest = readFileSync(join(out, "13-12", "candidate-manifest.json"), "utf8");
+    expect(candidateManifest).toContain("deterministic_local_subset");
+    expect(candidateManifest).toContain("AVERAGE");
+  });
+
   it("asks a model for an edit plan and records usage before evaluator scoring", async () => {
     const source = tempRoot("source");
     const stage = tempRoot("stage");
@@ -737,5 +797,18 @@ async function writeFormulaSemanticsWorkbook(path: string, completed: boolean) {
   sheet.getCell("B2").value = completed ? { formula: "SUM(A2:A3)", result: 2 } : "";
   sheet.getCell("C2").value = 7;
   if (completed) sheet.getCell("C2").numFmt = "#,##0.00";
+  await workbook.xlsx.writeFile(path);
+}
+
+async function writeFormulaSubsetWorkbook(path: string, completed: boolean) {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Sheet1");
+  sheet.getCell("A2").value = 10;
+  sheet.getCell("A3").value = 20;
+  sheet.getCell("B2").value = 10;
+  sheet.getCell("C2").value = completed ? { formula: "A2*2+B2/2", result: 25 } : "";
+  sheet.getCell("D2").value = completed ? { formula: "AVERAGE(A2:A3)", result: 15 } : "";
+  sheet.getCell("E2").value = completed ? { formula: "MAX(A2:A3)-MIN(A2:A3)", result: 10 } : "";
+  sheet.getCell("F2").value = completed ? { formula: "COUNT(A2:A3)", result: 2 } : "";
   await workbook.xlsx.writeFile(path);
 }

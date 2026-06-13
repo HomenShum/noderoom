@@ -8,6 +8,9 @@ import { priceRun } from "../agent/model";
 
 export type SpreadsheetBenchRunnerMode = "copy-input-baseline" | "apply-agent-patch" | "model-edit-plan";
 
+const FORMULA_RESULT_POLICY = "deterministic_local_subset";
+const SUPPORTED_FORMULA_FUNCTIONS = ["SUM", "AVERAGE", "MIN", "MAX", "COUNT"] as const;
+
 export type SpreadsheetBenchRunnerOptions = {
   stageRoot: string;
   outputRoot: string;
@@ -593,6 +596,8 @@ async function emitPatchedCandidateWorkbook(args: {
     sourceEditPlan: rel(args.taskOutDir, editPlanPath),
     candidateWorkbook: basename(args.target),
     appliedOperationCount: plan.operations.length,
+    formulaResultPolicy: FORMULA_RESULT_POLICY,
+    supportedFormulaFunctions: SUPPORTED_FORMULA_FUNCTIONS,
     note: "apply-agent-patch proves agent-side workbook edit/export/reopen plumbing; it is not an official model score.",
   });
   return args.target;
@@ -659,6 +664,8 @@ async function emitModelEditCandidateWorkbook(args: {
       rawModelOutput: basename(rawModelOutputPath),
       candidateWorkbook: basename(args.target),
       appliedOperationCount: plan.operations.length,
+      formulaResultPolicy: FORMULA_RESULT_POLICY,
+      supportedFormulaFunctions: SUPPORTED_FORMULA_FUNCTIONS,
       modelUsage: usage,
       modelCostUsd: costUsd,
       note: "model-edit-plan asks a model to produce an agent-side edit plan before scoring; this is a benchmark runner path, not an official score unless run on official tasks with the recorded model/tool policy.",
@@ -887,12 +894,132 @@ function evaluateSimpleFormula(
   currentSheet: ExcelJS.Worksheet,
   formula: string,
 ): number | undefined {
-  const match = formula.trim().replace(/^=/, "").match(/^SUM\((.+)\)$/i);
+  const expression = formula.trim().replace(/^=/, "");
+  return evaluateFormulaExpression(workbook, currentSheet, expression);
+}
+
+function evaluateFormulaExpression(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  expression: string,
+): number | undefined {
+  const functionResult = evaluateFormulaFunction(workbook, currentSheet, expression);
+  if (functionResult !== undefined) return functionResult;
+  return evaluateArithmeticFormula(workbook, currentSheet, expression);
+}
+
+function evaluateFormulaFunction(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  expression: string,
+): number | undefined {
+  const match = expression.trim().match(/^([A-Z]+)\((.*)\)$/i);
   if (!match) return undefined;
-  const values = match[1].split(",").flatMap((part) => valuesForFormulaRef(workbook, currentSheet, part.trim()));
+  const fn = match[1].toUpperCase();
+  if (!SUPPORTED_FORMULA_FUNCTIONS.includes(fn as (typeof SUPPORTED_FORMULA_FUNCTIONS)[number])) return undefined;
+  const values = splitFormulaArgs(match[2]).flatMap((part) => valuesForFormulaArg(workbook, currentSheet, part.trim()));
   if (values.length === 0 || values.some((value) => value === undefined)) return undefined;
   const numericValues = values.filter((value): value is number => value !== undefined);
-  return Number(numericValues.reduce((sum, value) => sum + value, 0).toFixed(12));
+  if (fn === "COUNT") return numericValues.length;
+  if (numericValues.length === 0) return undefined;
+  if (fn === "SUM") return roundFormulaNumber(numericValues.reduce((sum, value) => sum + value, 0));
+  if (fn === "AVERAGE") return roundFormulaNumber(numericValues.reduce((sum, value) => sum + value, 0) / numericValues.length);
+  if (fn === "MIN") return Math.min(...numericValues);
+  if (fn === "MAX") return Math.max(...numericValues);
+  return undefined;
+}
+
+function valuesForFormulaArg(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  arg: string,
+): Array<number | undefined> {
+  if (formulaArgLooksLikeRange(arg)) return valuesForFormulaRef(workbook, currentSheet, arg);
+  return [evaluateFormulaExpression(workbook, currentSheet, arg)];
+}
+
+function formulaArgLooksLikeRange(arg: string): boolean {
+  return /^(?:'[^']+'!|[A-Z0-9_ .-]+!)?\$?[A-Z]{1,3}\$?[1-9][0-9]*(?::\$?[A-Z]{1,3}\$?[1-9][0-9]*)?$/i.test(arg.trim());
+}
+
+function splitFormulaArgs(raw: string): string[] {
+  const args: string[] = [];
+  let depth = 0;
+  let inSheetQuote = false;
+  let start = 0;
+  for (let index = 0; index < raw.length; index += 1) {
+    const char = raw[index];
+    if (char === "'") {
+      inSheetQuote = !inSheetQuote;
+      continue;
+    }
+    if (inSheetQuote) continue;
+    if (char === "(") depth += 1;
+    else if (char === ")") depth -= 1;
+    else if (char === "," && depth === 0) {
+      args.push(raw.slice(start, index));
+      start = index + 1;
+    }
+  }
+  args.push(raw.slice(start));
+  return args.map((arg) => arg.trim()).filter(Boolean);
+}
+
+function evaluateArithmeticFormula(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  expression: string,
+): number | undefined {
+  const expandedFunctions = replaceFormulaFunctionCalls(workbook, currentSheet, expression);
+  if (expandedFunctions === undefined) return undefined;
+  const normalized = replaceFormulaRefs(workbook, currentSheet, expandedFunctions);
+  if (normalized === undefined || !/^[0-9+\-*/^().\s]+$/.test(normalized)) return undefined;
+  try {
+    return roundFormulaNumber(new FormulaMathParser(normalized).parse());
+  } catch {
+    return undefined;
+  }
+}
+
+function replaceFormulaFunctionCalls(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  expression: string,
+): string | undefined {
+  let failed = false;
+  let current = expression;
+  for (let pass = 0; pass < 20; pass += 1) {
+    let changed = false;
+    current = current.replace(/\b(SUM|AVERAGE|MIN|MAX|COUNT)\(([^()]+)\)/gi, (match) => {
+      const result = evaluateFormulaFunction(workbook, currentSheet, match);
+      if (result === undefined) {
+        failed = true;
+        return "0";
+      }
+      changed = true;
+      return String(result);
+    });
+    if (failed) return undefined;
+    if (!changed) return current;
+  }
+  return undefined;
+}
+
+function replaceFormulaRefs(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  expression: string,
+): string | undefined {
+  let failed = false;
+  const replaced = expression.replace(/(?:'[^']+'!|[A-Z0-9_ .-]+!)?\$?[A-Z]{1,3}\$?[1-9][0-9]*/gi, (ref) => {
+    const values = valuesForFormulaRef(workbook, currentSheet, ref);
+    if (values.length !== 1 || values[0] === undefined) {
+      failed = true;
+      return "0";
+    }
+    return String(values[0]);
+  });
+  return failed ? undefined : replaced;
 }
 
 function valuesForFormulaRef(
@@ -928,7 +1055,7 @@ function parseFormulaRef(
 }
 
 function parseA1(ref: string): { row: number; col: number } | undefined {
-  const match = ref.match(/^([A-Z]{1,3})([1-9][0-9]*)$/);
+  const match = ref.replace(/\$/g, "").match(/^([A-Z]{1,3})([1-9][0-9]*)$/);
   if (!match) return undefined;
   return {
     row: Number(match[2]),
@@ -945,6 +1072,86 @@ function numericCellValue(value: ExcelJS.CellValue): number | undefined {
   if (value && typeof value === "object" && "result" in value) return numericCellValue(value.result as ExcelJS.CellValue);
   if (value === null || value === undefined || value === "") return 0;
   return undefined;
+}
+
+function roundFormulaNumber(value: number): number {
+  return Number(value.toFixed(12));
+}
+
+class FormulaMathParser {
+  private index = 0;
+
+  constructor(private readonly expression: string) {}
+
+  parse(): number {
+    const value = this.parseExpression();
+    this.skipWhitespace();
+    if (this.index !== this.expression.length) throw new Error("trailing formula characters");
+    if (!Number.isFinite(value)) throw new Error("non-finite formula result");
+    return value;
+  }
+
+  private parseExpression(): number {
+    let value = this.parseTerm();
+    while (true) {
+      this.skipWhitespace();
+      if (this.take("+")) value += this.parseTerm();
+      else if (this.take("-")) value -= this.parseTerm();
+      else return value;
+    }
+  }
+
+  private parseTerm(): number {
+    let value = this.parsePower();
+    while (true) {
+      this.skipWhitespace();
+      if (this.take("*")) value *= this.parsePower();
+      else if (this.take("/")) value /= this.parsePower();
+      else return value;
+    }
+  }
+
+  private parsePower(): number {
+    const base = this.parseUnary();
+    this.skipWhitespace();
+    if (!this.take("^")) return base;
+    return base ** this.parsePower();
+  }
+
+  private parseUnary(): number {
+    this.skipWhitespace();
+    if (this.take("+")) return this.parseUnary();
+    if (this.take("-")) return -this.parseUnary();
+    return this.parsePrimary();
+  }
+
+  private parsePrimary(): number {
+    this.skipWhitespace();
+    if (this.take("(")) {
+      const value = this.parseExpression();
+      if (!this.take(")")) throw new Error("unterminated formula parentheses");
+      return value;
+    }
+    return this.parseNumber();
+  }
+
+  private parseNumber(): number {
+    this.skipWhitespace();
+    const match = this.expression.slice(this.index).match(/^(?:\d+(?:\.\d*)?|\.\d+)/);
+    if (!match) throw new Error("expected formula number");
+    this.index += match[0].length;
+    return Number(match[0]);
+  }
+
+  private take(value: string): boolean {
+    if (this.expression[this.index] !== value) return false;
+    this.index += value.length;
+    return true;
+  }
+
+  private skipWhitespace() {
+    while (/\s/.test(this.expression[this.index] ?? "")) this.index += 1;
+  }
 }
 
 function aggregateUsage(results: SpreadsheetBenchRunnerTaskResult[]) {

@@ -1,6 +1,6 @@
 /** Public room chat (`.r-panel.center`) and private agent (`.r-panel.right`). Reads via useStore(). */
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ChangeEvent, type DragEvent, type KeyboardEvent } from "react";
-import { Lock, MessageCircle, Globe, Send, Sparkles, Copy, Check, ArrowUpRight, Pencil, Paperclip, X, Timer, RefreshCw, ChevronDown, ChevronUp } from "lucide-react";
+import { Lock, MessageCircle, Globe, Send, Sparkles, Copy, Check, ArrowUpRight, Pencil, Paperclip, X, Timer, RefreshCw, ChevronDown, ChevronUp, ListChecks, GitBranch, ShieldCheck, Database } from "lucide-react";
 import { useQuery } from "convex/react";
 import { useStore, CONVEX_SITE_URL, type PrivateStreamAccess, type RoomStore } from "../app/store";
 import type { StreamId } from "@convex-dev/persistent-text-streaming";
@@ -138,6 +138,80 @@ const SLASH_CMDS = [
   { label: "/ask reconcile Q3 revenue", insert: "/ask reconcile Q3 revenue against the NetSuite export", hint: "recompute the variance column" },
   { label: "/ask flag variance > 15%", insert: "/ask flag any variance over 15%", hint: "footnote the outliers" },
   { label: "/free", insert: "/free ", hint: "force the resumable free-auto model policy" },
+  { label: "/demo multi-agent", insert: "/demo multi-agent ", hint: "show concurrent queue lanes" },
+];
+
+type DemoAgent = {
+  id: string;
+  name: string;
+  scope: string;
+  lane: string;
+  color: string;
+  startTick: number;
+  doneTick: number;
+  chunks: string[];
+  commit: string;
+};
+
+const MULTI_AGENT_DEMO_MAX_TICK = 10;
+
+const MULTI_AGENT_QUEUE = [
+  { label: "Split burst prompt into child jobs", startTick: 0, doneTick: 1 },
+  { label: "Claim row ranges and artifact targets", startTick: 1, doneTick: 3 },
+  { label: "Stream progress through persisted chunks", startTick: 2, doneTick: 7 },
+  { label: "Batch safe writes through CAS proposals", startTick: 6, doneTick: 9 },
+  { label: "Compare against golden checks and trace", startTick: 8, doneTick: 10 },
+];
+
+const MULTI_AGENT_AGENTS: DemoAgent[] = [
+  {
+    id: "agent-a",
+    name: "Agent A",
+    scope: "GTM rows 1-10",
+    lane: "Owner token stream",
+    color: "#7DD3FC",
+    startTick: 1,
+    doneTick: 8,
+    chunks: [
+      "Loaded companies.csv + CRM notes.",
+      "Claimed rows 1-10 with 90s lease.",
+      "Matched 8 owners; 2 need review.",
+      "Queued 18 evidence cell payloads.",
+    ],
+    commit: "18 safe cells, 2 review chips",
+  },
+  {
+    id: "agent-b",
+    name: "Agent B",
+    scope: "Finance rows 11-22",
+    lane: "Observer semantic chunks",
+    color: "#A7F3D0",
+    startTick: 2,
+    doneTick: 9,
+    chunks: [
+      "Read workbook ranges safely.",
+      "Classified Q2/Q3 vendor deltas.",
+      "Preserved formula dependency.",
+      "Committed notes in one mutation.",
+    ],
+    commit: "12 notes, 1 formula preserved",
+  },
+  {
+    id: "agent-c",
+    name: "Agent C",
+    scope: "Wiki + chart + trace",
+    lane: "Artifact mutation stream",
+    color: "#FDE68A",
+    startTick: 3,
+    doneTick: 10,
+    chunks: [
+      "Subscribed to child receipts.",
+      "Built chart from cell versions.",
+      "Updated wiki TOC from room evidence.",
+      "Stored trace + golden comparison.",
+    ],
+    commit: "1 chart, 1 wiki block, 1 trace",
+  },
 ];
 
 type ChatProps = {
@@ -162,6 +236,8 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
   const [jobBusy, setJobBusy] = useState<null | "cancel" | "retry">(null);
   const [jobErr, setJobErr] = useState<string | null>(null);
   const [roomLane, setRoomLane] = useState(false); // private panel: false = whisper to me, true = act in the room
+  const [multiAgentDemoStarted, setMultiAgentDemoStarted] = useState(false);
+  const [multiAgentTick, setMultiAgentTick] = useState(0);
   const feedRef = useRef<HTMLDivElement>(null);
   const taRef = useRef<HTMLTextAreaElement>(null);
   const nearBottom = useRef(true);
@@ -183,7 +259,19 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
   const canRetryLongJob = !!longJob && ["failed", "blocked", "cancelled", "paused", "retrying"].includes(longJob.status);
   const beginThinking = () => { thinkingStartCount.current = messages.length; setThinking(true); };
 
-  useEffect(() => { const el = feedRef.current; if (el && nearBottom.current) el.scrollTop = el.scrollHeight; }, [messages.length, thinking]);
+  useEffect(() => { const el = feedRef.current; if (el && nearBottom.current) el.scrollTop = el.scrollHeight; }, [messages.length, thinking, multiAgentDemoStarted, multiAgentTick]);
+  useEffect(() => {
+    setMultiAgentDemoStarted(false);
+    setMultiAgentTick(0);
+  }, [roomId, channel]);
+  useEffect(() => {
+    if (!multiAgentDemoStarted) return;
+    const prefersReducedMotion = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    const timer = window.setInterval(() => {
+      setMultiAgentTick((tick) => Math.min(MULTI_AGENT_DEMO_MAX_TICK, tick + 1));
+    }, prefersReducedMotion ? 1 : 650);
+    return () => window.clearInterval(timer);
+  }, [multiAgentDemoStarted]);
   useEffect(() => {
     if (!thinking) return;
     if (messages.slice(thinkingStartCount.current).some((m) => m.author.kind === "agent")) setThinking(false);
@@ -202,6 +290,12 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
       .then((fb) => { if (fb && !fb.ok) setFailedSends((f) => (f.some((x) => x.cid === cid) ? f : [...f, { cid, text: messageText }])); });
     setText(""); setRefs([]); setSlashOpen(false);
     requestAnimationFrame(grow);
+
+    if (!isPrivate && store.mode === "memory" && /^\/demo\s+multi-agent\b/i.test(t)) {
+      setMultiAgentTick(0);
+      setMultiAgentDemoStarted(true);
+      return;
+    }
 
     if (!isPrivate && /^\/ask\b/i.test(t)) {
       const goal = t.replace(/^\/ask\s*/i, "").trim() || "Recompute the Q3 variance from the audited NetSuite numbers.";
@@ -403,6 +497,7 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
             </div>
           </div>
         ))}
+        {!isPrivate && multiAgentDemoStarted && <MultiAgentWorkbenchDemo tick={multiAgentTick} />}
         {thinking && (
           <div className="r-msg agent" aria-label={`${agentName} is thinking`}>
             <span className="r-avatar agent sm" style={{ background: "#d97757" }}>N</span>
@@ -427,7 +522,7 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
         )}
         {slashOpen && (
           <div className="r-slash" role="listbox" aria-label="Commands">
-            {SLASH_CMDS.map((c) => (
+            {SLASH_CMDS.filter((c) => store.mode === "memory" || c.label !== "/demo multi-agent").map((c) => (
               <button key={c.label} className="r-slash-item" role="option" aria-selected="false" onMouseDown={(e) => { e.preventDefault(); applySlash(c.insert); }}>
                 <span className="cmd">{c.label}</span><span className="hint">{c.hint}</span>
               </button>
@@ -459,9 +554,103 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
           <div className="r-composer-hint">
             <button className="r-chip" onClick={() => applySlash(SLASH_CMDS[1].insert)}>/ask reconcile Q3 revenue</button>
             <button className="r-chip" onClick={() => applySlash(SLASH_CMDS[2].insert)}>/ask flag variance &gt; 15%</button>
+            {store.mode === "memory" && <button className="r-chip" onClick={() => applySlash(SLASH_CMDS[4].insert)}>/demo multi-agent</button>}
             <span className="r-composer-kbd" aria-hidden="true">Enter sends; Shift+Enter newline; / commands</span>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+function statusForTick(startTick: number, doneTick: number, tick: number) {
+  if (tick >= doneTick) return "done";
+  if (tick >= startTick) return "running";
+  return "queued";
+}
+
+function pctForTick(startTick: number, doneTick: number, tick: number) {
+  if (tick <= startTick) return tick >= startTick ? 12 : 0;
+  if (tick >= doneTick) return 100;
+  return Math.max(12, Math.round(((tick - startTick) / Math.max(1, doneTick - startTick)) * 100));
+}
+
+function MultiAgentWorkbenchDemo({ tick }: { tick: number }) {
+  const complete = tick >= MULTI_AGENT_DEMO_MAX_TICK;
+  return (
+    <div className="r-agent-workbench" data-testid="multi-agent-workbench" aria-label="Multi-agent work queue demo">
+      <div className="r-agent-workbench-head">
+        <div>
+          <span className="r-agent-eyebrow"><GitBranch size={13} /> Work queue</span>
+          <strong>Three agents, one room, structured commits</strong>
+        </div>
+        <span className="r-agent-proof-pill" data-done={String(complete)}>{complete ? "handoff sealed" : "streaming"}</span>
+      </div>
+
+      <div className="r-agent-lanes" aria-label="Stream lanes">
+        <span><Sparkles size={12} /> Owner stream</span>
+        <span><Database size={12} /> Observer chunks</span>
+        <span><ShieldCheck size={12} /> CAS batch commits</span>
+      </div>
+
+      <div className="r-command-queue" aria-label="Command queue">
+        {MULTI_AGENT_QUEUE.map((item) => {
+          const status = statusForTick(item.startTick, item.doneTick, tick);
+          return (
+            <div className="r-command-item" data-status={status} key={item.label}>
+              <ListChecks size={13} />
+              <span>{item.label}</span>
+              <b>{status}</b>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="r-agent-grid">
+        {MULTI_AGENT_AGENTS.map((agent) => {
+          const status = statusForTick(agent.startTick, agent.doneTick, tick);
+          const pct = pctForTick(agent.startTick, agent.doneTick, tick);
+          const visibleCount = Math.max(1, Math.min(agent.chunks.length, Math.floor(Math.max(0, tick - agent.startTick) / 2) + 1));
+          const chunks = agent.chunks.slice(0, visibleCount);
+          const active = status === "running";
+          return (
+            <div className="r-agent-card" data-status={status} data-testid={`multi-agent-${agent.id}`} key={agent.id} style={{ "--agent-color": agent.color } as CSSProperties}>
+              <div className="r-agent-card-head">
+                <span className="r-agent-dot" />
+                <span>
+                  <strong>{agent.name}</strong>
+                  <small>{agent.scope}</small>
+                </span>
+                <b>{status}</b>
+              </div>
+              <div className="r-agent-progress" aria-label={`${agent.name} progress`}>
+                <span style={{ width: `${pct}%` }} />
+              </div>
+              <div className="r-agent-stream" aria-label={`${agent.name} stream`}>
+                <em>{agent.lane}</em>
+                {chunks.map((chunk, idx) => (
+                  <span key={`${agent.id}-${idx}`}>{chunk}{active && idx === chunks.length - 1 ? <i aria-hidden="true">|</i> : null}</span>
+                ))}
+              </div>
+              <div className="r-agent-commit">
+                <span>{agent.commit}</span>
+              </div>
+            </div>
+          );
+        })}
+      </div>
+
+      <div className="r-agent-claims" aria-label="Claimed ranges">
+        <span style={{ "--claim-color": "#7DD3FC" } as CSSProperties}>Rows 1-10 claimed</span>
+        <span style={{ "--claim-color": "#A7F3D0" } as CSSProperties}>Rows 11-22 claimed</span>
+        <span style={{ "--claim-color": "#FDE68A" } as CSSProperties}>Chart + wiki target claimed</span>
+      </div>
+
+      <div className="r-agent-proof-grid" data-testid={complete ? "multi-agent-complete" : undefined}>
+        <span><b>Golden comparison</b><em>30/30 entities checked</em></span>
+        <span><b>No clobber</b><em>stale writes rejected</em></span>
+        <span><b>Evidence</b><em>29 pass, 1 review</em></span>
+        <span><b>Privacy</b><em>private refs excluded</em></span>
       </div>
     </div>
   );

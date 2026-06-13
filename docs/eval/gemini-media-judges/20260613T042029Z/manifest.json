@@ -1,0 +1,21 @@
+{
+  "runId": "20260613T042029Z",
+  "generatedAt": "2026-06-13T04:20:29.793Z",
+  "model": "gemini-3.5-flash",
+  "primaryOnly": true,
+  "all": false,
+  "includeIgnored": true,
+  "only": "multi-agent-workbench",
+  "limit": 1,
+  "assets": [
+    {
+      "id": "docs-walkthroughs-multi-agent-workbench",
+      "class": "readme_walkthrough",
+      "title": "Multi Agent Workbench",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\multi-agent-workbench.mp4",
+      "relPath": "docs/walkthroughs/multi-agent-workbench.mp4",
+      "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+      "duplicateGroup": "walkthrough:multi-agent-workbench"
+    }
+  ]
+}

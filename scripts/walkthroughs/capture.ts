@@ -192,7 +192,7 @@ async function runFeature(spec: FeatureSpec, attempt: number): Promise<FeatureOu
         if (step.pressEnter) {
           await loc.press("Enter");
           await waitAfter(page, step.after);
-          if (step.afterCaption) segments.push({ frame: await shoot(page, dir, ++n), caption: step.afterCaption, cursor: null, click: false, kind: "result", holdMs: 1700 });
+          if (step.afterCaption) segments.push({ frame: await shoot(page, dir, ++n), caption: step.afterCaption, cursor: null, click: false, kind: "result", holdMs: step.afterHoldMs ?? 1700 });
         } else if (step.after) {
           await waitAfter(page, step.after);
         }

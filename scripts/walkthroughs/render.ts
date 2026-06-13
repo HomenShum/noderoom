@@ -15,6 +15,7 @@ import { join } from "node:path";
 
 const ROOT = process.cwd();
 const only = process.argv.slice(2);
+const REMOTION_RENDER_PORT = process.env.REMOTION_RENDER_PORT ?? "3997";
 const FILTER = "fps=12,scale=896:-1:flags=lanczos,split[s0][s1];[s0]palettegen=max_colors=128:stats_mode=diff[p];[s1][p]paletteuse=dither=bayer:bayer_scale=3:diff_mode=rectangle";
 
 // SYSTEM ffmpeg required for the palette pass — Remotion's bundled ffmpeg is a minimal build
@@ -39,10 +40,10 @@ const run = async () => {
       // The MP4 is a first-class output (episode/social cuts, 60–90% smaller than the GIF),
       // not a temp file — kept beside the GIF, gitignored (regenerable).
       const mp4 = join("docs", "walkthroughs", `${f.id}.mp4`);
-      execSync(`npx remotion render remotion/index.ts ${f.id} ${mp4} --codec=h264 --crf=16`, { stdio: "inherit" });
+      execSync(`npx remotion render remotion/index.ts ${f.id} ${mp4} --codec=h264 --crf=16 --port=${REMOTION_RENDER_PORT}`, { stdio: "inherit" });
       execSync(`ffmpeg -y -i ${mp4} -vf "${FILTER}" -loop 0 ${gif}`, { stdio: "inherit" });
     } else {
-      execSync(`npx remotion render remotion/index.ts ${f.id} ${gif} --codec=gif --every-nth-frame=2 --scale=0.7`, { stdio: "inherit" });
+      execSync(`npx remotion render remotion/index.ts ${f.id} ${gif} --codec=gif --every-nth-frame=2 --scale=0.7 --port=${REMOTION_RENDER_PORT}`, { stdio: "inherit" });
     }
     console.log(`[render] ${f.id} done — ${(statSync(join(ROOT, gif)).size / 1024 / 1024).toFixed(2)} MB`);
   }

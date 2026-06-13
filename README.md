@@ -71,10 +71,12 @@ One privacy note before you bring real data: `/free` routes work through communi
 models whose providers may log prompts — keep sensitive GTM/finance figures out of `/free` runs
 (the paid interactive lane does not use those routes).
 
-Every clip below is a **captured walkthrough of the real running app** (noderoom.live, live
-Convex backend, real agent runs) — not a staged hero shot. You see the empty state, the cursor
-glide to each click (with a ripple), the loading state, and the result, with step captions and a
-progress bar. Regenerate any time with `npm run walkthroughs` (capture) + `npm run walkthroughs:render`.
+Every clip below is a **captured walkthrough of the real running app UI** - not a staged hero
+shot. Live-provider clips use noderoom.live + Convex; deterministic clips are explicitly marked
+and use the same browser UI in memory mode so the walkthrough is stable enough to teach. You see
+the empty state, the cursor glide to each click (with a ripple), the loading state, and the
+result, with step captions and a progress bar. Regenerate any time with `npm run walkthroughs`
+(capture) + `npm run walkthroughs:render`.
 
 ### Join a live room & chat
 ![Join a live room and chat — walkthrough](docs/walkthroughs/chat.gif)
@@ -84,6 +86,12 @@ progress bar. Regenerate any time with `npm run walkthroughs` (capture) + `npm r
 
 ### Ask the Room agent to do the work (`/ask`)
 ![/ask reconcile drives the sheet through chat](docs/eval/workflow-previews/app-ask-reconcile.gif)
+
+### Multi-agent work queue (`/demo multi-agent`)
+![Multi-agent work queue: one prompt splits into concurrent agent lanes with claims, streams, batched commits, and final proof](docs/walkthroughs/multi-agent-workbench.gif)
+<sub>Deterministic memory-mode walkthrough of the same UI contract: one burst prompt becomes child jobs,
+concurrent progress streams, visible row/artifact claims, CAS batch commits, and a sealed handoff.
+This is media evidence for the workbench interaction, not a live-provider proof.</sub>
 
 ### GTM research import — updates, never duplicates
 ![CRM-style research import upsert — walkthrough](docs/walkthroughs/research-upsert.gif)

@@ -13,7 +13,7 @@ export type Step =
   | { kind: "state"; caption: string; settleMs?: number; holdMs?: number }
   | { kind: "click"; sel: string; caption: string; afterCaption?: string; after?: After; holdMs?: number; afterHoldMs?: number }
   | { kind: "uploadWorkbook"; caption: string; afterCaption?: string; holdMs?: number; afterHoldMs?: number }
-  | { kind: "type"; sel: string; text: string; caption: string; pressEnter?: boolean; afterCaption?: string; after?: After }
+  | { kind: "type"; sel: string; text: string; caption: string; pressEnter?: boolean; afterCaption?: string; after?: After; afterHoldMs?: number }
   | { kind: "key"; key: string; caption: string; after?: After }
   | { kind: "loading"; sel: string; caption: string; timeoutMs?: number }
   | { kind: "waitResult"; predicate: "cellsFilled" | "chipsVisible" | "textVisible" | "textGone"; arg?: string; sel?: string; caption: string; timeoutMs?: number };
@@ -132,6 +132,27 @@ export const FEATURES: FeatureSpec[] = [
       { kind: "loading", sel: `${CENTER} .r-typing`, caption: "The agent reads the sheet, locks cells, and works — live status, no dead spinner", timeoutMs: 30_000 },
       { kind: "waitResult", predicate: "cellsFilled", arg: "2", caption: "Cells filled with lock→CAS-safe edits + a summary in chat", timeoutMs: 150_000 },
       { kind: "state", caption: "Every agent step is traced — auditable, never silent", holdMs: 2400 },
+    ],
+  },
+  {
+    id: "multi-agent-workbench",
+    closePanels: ["left", "artifact", "priv"],
+    title: "Multi-agent work queue",
+    setup: "memoryDemo",
+    steps: [
+      { kind: "state", caption: "A messy professional request hits the room: enrich accounts, reconcile finance rows, and update the wiki", holdMs: 1800 },
+      { kind: "click", sel: COMPOSER, caption: "One burst prompt becomes durable queue work, not one polluted agent thread" },
+      {
+        kind: "type", sel: COMPOSER, text: "/demo multi-agent enrich 30 companies, reconcile Q3 spend, make a chart, and update the wiki with evidence",
+        caption: "Submit the burst prompt",
+        pressEnter: true,
+        afterCaption: "The workbench splits it into child jobs with separate stream lanes",
+        afterHoldMs: 2400,
+      },
+      { kind: "state", caption: "Agents stream progress concurrently while spreadsheet writes stay batched", holdMs: 2500 },
+      { kind: "state", caption: "Claims are visible: row ranges, chart target, wiki target, and CAS commit receipts", holdMs: 2500 },
+      { kind: "waitResult", predicate: "textVisible", arg: "HANDOFF SEALED", caption: "Final proof closes the loop: golden comparison, no-clobber, evidence, and privacy checks", timeoutMs: 16_000 },
+      { kind: "state", caption: "The stream is only the view; the job ledger and artifact versions are the system of record", holdMs: 2600 },
     ],
   },
   {

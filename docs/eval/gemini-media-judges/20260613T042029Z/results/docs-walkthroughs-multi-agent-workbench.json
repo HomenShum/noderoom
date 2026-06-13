@@ -1,0 +1,65 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-multi-agent-workbench",
+    "class": "readme_walkthrough",
+    "title": "Multi Agent Workbench",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\multi-agent-workbench.mp4",
+    "relPath": "docs/walkthroughs/multi-agent-workbench.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:multi-agent-workbench"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/multi-agent-workbench.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 5415457,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough demonstrates the multi-agent workbench splitting a complex prompt into three distinct agent tasks, showing real-time progress and final completion.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Shows prompt splitting into three parallel agent workflows."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Shows prompt entry, agent execution, and final sealed state."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark-mode UI with clear progress indicators."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Matches NodeRoom's structured agent queue and verification model."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Real UI interaction with live state transitions."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Text is readable, though card details are small."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Relevant for multi-agent coordination in data tasks."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Depicts realistic execution steps and queue latency."
+      }
+    },
+    "observedEvidence": [
+      "Multi-agent work queue interface",
+      "Prompt input and submission",
+      "Agent A, B, and C execution states",
+      "Handoff sealed status"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Watch NodeRoom's Multi-Agent Workbench automatically decompose a complex financial request into parallel, specialized agent tasks with verifiable handoffs."
+  },
+  "score": 8,
+  "maxScore": 16
+}

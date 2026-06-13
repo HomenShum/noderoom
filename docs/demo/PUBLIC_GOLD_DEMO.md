@@ -5,6 +5,11 @@ It is still a memory-mode walkthrough of the UI contract, but the cases are no
 longer vague synthetic tasks. Each row cites a public dataset or official source,
 an expected answer, and the validators the production eval must run.
 
+Status: yellow in the QA matrix. This is deterministic public-source proof-board
+evidence, not live parser/provider proof, until public fixtures are downloaded
+into a gitignored cache and re-extracted through LiteParse/provider adapters
+against the same validators.
+
 ## Demo Shape
 
 The walkthrough shows one burst prompt split into three child jobs:

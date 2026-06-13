@@ -1,6 +1,6 @@
 # Gaps Not Yet Done
 
-Last updated: 2026-06-10
+Last updated: 2026-06-13
 
 NodeRoom is production-shaped, but it is not yet fully production-proven. The
 core harness exists: versioned room artifacts, bounded agent tools, lock/CAS
@@ -69,6 +69,7 @@ Do not claim a feature is production-complete until it has:
 | Job controls | Status chips exist. | Add cancel, manual retry, attempt details, latest resolved model, stop reason, next run time, duration, tokens/cost, and linked agent run. | A host can operate a long-running job without reading logs. |
 | Auto-accept UX | Accept/reject proposal flow exists. | Host opt-in modal for auto-accept/accept-all, scoped to safe proposal classes, with remember-my-preference. | Auto-accept never applies blocked, stale, or policy-failed proposals. |
 | Spreadsheet/agent interaction | Spreadsheet, trace, notes, and chat are wired. | Browser E2E for spreadsheet row selection -> ask agent -> proposed cells -> accept -> trace -> note/wiki reference. | Agent and spreadsheet remain synchronized under concurrent human edits. |
+| June 2026 workroom shell | Current MVP is still left rail + public chat + artifact + private chat as peer panels; the left rail is now labeled Room Binder but the artifact is not yet the non-optional center stage and Copilot is still split. | Implement and test Binder -> Work Surface -> Copilot -> Signal Tape/Status Strip at desktop/tablet/mobile breakpoints. | Browser specs prove binder navigation, center split source/proof mode, right-side Copilot steering, thin bottom status, no overflow, and no private-data leakage in ambient events. |
 | Wall operations | Wall exists. | Create/delete/edit post-it E2E, including multi-user conflict handling. | Two users can create/delete without ghost posts or stale UI. |
 | Resizable containers | Desired by user. | Persist panel widths per user/room and keep accessible keyboard reset. | Users can give more space to spreadsheet or chat without breaking layout. |
 

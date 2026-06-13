@@ -1,4 +1,4 @@
-/** Left rail (`.r-panel.left`): Room header · Files (subtitles) · People (roles + live dots). lucide icons. */
+/** Room Binder (`.r-panel.left`): source files, room artifacts, people, and public agents. */
 import { useRef, useState, type CSSProperties, type DragEvent } from "react";
 import { FolderOpen, Table2, FileText, StickyNote, Database, BookOpen, Upload, Loader2, type LucideIcon } from "lucide-react";
 import { useStore, type UploadedArtifactInput } from "../app/store";
@@ -52,10 +52,10 @@ export function LeftRail({ roomId, me, artId, onPick, style }: { roomId: string;
 
   return (
     <div className="r-panel left" style={style} data-testid="left-rail">
-      <div className="r-panel-head"><FolderOpen size={15} /><span className="h-title">Room</span></div>
+      <div className="r-panel-head"><FolderOpen size={15} /><span className="h-title">Room Binder</span></div>
       <div className="r-rail">
         <div className="r-rail-section">
-          <div className="kicker" style={{ padding: "2px 9px 8px" }}>Files</div>
+          <div className="kicker" style={{ padding: "2px 9px 8px" }}>Source files</div>
           {arts.map((a) => {
             const FI = fileIcon(a);
             return (
@@ -95,7 +95,7 @@ export function LeftRail({ roomId, me, artId, onPick, style }: { roomId: string;
         </div>
 
         <div className="r-rail-section">
-          <div className="kicker" style={{ padding: "2px 9px 8px" }}>People · {members.length} live</div>
+          <div className="kicker" style={{ padding: "2px 9px 8px" }}>People & agents · {members.length} live</div>
           {members.map((m) => (
             <div key={m.id} className="r-person">
               <span className="r-avatar sm" style={{ background: m.color }}>{initials(m.name)}</span>

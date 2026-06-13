@@ -1,5 +1,7 @@
 /**
- * RoomShell — top bar + the 4 peer panels. Reads everything through `useStore()`,
+ * RoomShell — top bar + MVP room panels. The June 2026 target is Room Binder,
+ * center Work Surface, right Copilot, and a thin shell-level status strip.
+ * Reads everything through `useStore()`,
  * so it renders identically whether the data is the in-memory engine or live
  * Convex. The collaboration "Run" button calls `store.runCollab()` — the scripted
  * demo in-memory, the real `runRoomAgent` Convex action when live.
@@ -84,8 +86,8 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
     },
     {
       selector: '[data-testid="left-rail"]',
-      title: "The shared room",
-      body: "Every artifact lives here — a spreadsheet, notes, a research sheet, and a post-it wall — alongside the people and agents in the room.",
+      title: "Room Binder",
+      body: "Files, uploads, people, and public agents live here. Use it to open work on the main stage or drag files into chat; detailed agent steering belongs in Copilot.",
       placement: "right",
     },
     {
@@ -192,7 +194,7 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
         {store.mode === "memory" && <span className="r-tag r-demo-badge" title="Scripted demo — no backend or API keys needed; everything runs locally and offline.">● demo</span>}
         <span className="r-spacer" />
         <div className="r-toggle-group">
-          <button className="r-iconbtn" data-on={String(show.left)} title="Files & people" aria-label="Toggle files & people panel" aria-pressed={show.left} onClick={() => setShow((s) => ({ ...s, left: !s.left }))}><PanelLeft size={16} /></button>
+          <button className="r-iconbtn" data-on={String(show.left)} title="Room Binder" aria-label="Toggle Room Binder panel" aria-pressed={show.left} onClick={() => setShow((s) => ({ ...s, left: !s.left }))}><PanelLeft size={16} /></button>
           <button className="r-iconbtn" data-on={String(show.artifact)} title="Artifact" aria-label="Toggle artifact panel" aria-pressed={show.artifact} onClick={() => setShow((s) => ({ ...s, artifact: !s.artifact }))}><Table2 size={16} /></button>
           <button className="r-iconbtn" data-on={String(show.priv)} title="Private agent" aria-label="Toggle private agent panel" aria-pressed={show.priv} onClick={() => setShow((s) => ({ ...s, priv: !s.priv }))}><PanelRight size={16} /></button>
         </div>

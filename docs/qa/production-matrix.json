@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "updatedAt": "2026-06-10",
+  "updatedAt": "2026-06-13",
   "sourceOfTruth": "Append new product or runtime guarantees to features[] and rerun npm run qa:matrix.",
   "releaseRule": "A feature is production-ready only when deterministic tests, live/backend smoke where applicable, traceability, privacy boundaries, and documented failure behavior are all present.",
   "features": [
@@ -236,6 +236,160 @@
       "nextReview": "Install and wire the real-DOM harness, add data-testid hooks only for asserted surfaces, and promote the row after the first two-context specs pass in CI."
     },
     {
+      "id": "professional_workroom_shell",
+      "area": "Professional workroom shell",
+      "claim": "The desktop shell follows Room/Deal Binder -> Work Surface -> Copilot, with proofs, sources, and gold comparisons opening on the center stage instead of competing side or bottom panels.",
+      "status": "red",
+      "productionGate": "Browser layout E2E proves wide desktop binder, center work surface, right Copilot, tablet binder collapse, mobile tabs/sheets, no overflow, and no lost spreadsheet affordances.",
+      "deterministicChecks": [
+        "e2e/responsive-qa.spec.ts",
+        "missing: e2e/workroom-shell.spec.ts"
+      ],
+      "liveChecks": [
+        "missing: Playwright shell spec against local app and live Convex room",
+        "missing: Gemini UI judge walkthrough for the June 2026 target"
+      ],
+      "evidence": [
+        { "type": "doc", "ref": "docs/TARGET_2026_06.md" },
+        { "type": "doc", "ref": "docs/ARCHITECTURE.md" },
+        { "type": "code", "ref": "src/ui/RoomShell.tsx" },
+        { "type": "code", "ref": "src/ui/LeftRail.tsx" }
+      ],
+      "nextReview": "Replace the MVP four-peer-panel composition with Binder -> Work Surface -> Copilot after browser specs prove navigation, center split, responsive collapse, and right-side steering."
+    },
+    {
+      "id": "signal_tape_status_strip",
+      "area": "Signal tape + status strip",
+      "claim": "The bottom UI separates configurable ambient Signal Tape from the authoritative non-scrolling Status Strip for commit, conflict, eval, sync, cost, and runtime truth.",
+      "status": "red",
+      "productionGate": "DOM/browser tests prove two distinct bottom rows, pause/reduced-motion/filter behavior, click-to-open related artifact, no unauthorized private data in the tape, and precise non-scrolling status events.",
+      "deterministicChecks": [
+        "missing: e2e/signal-tape-status.spec.ts"
+      ],
+      "liveChecks": [
+        "missing: live/browser smoke for room, source, agent, risk, eval, and cost status events"
+      ],
+      "evidence": [
+        { "type": "doc", "ref": "docs/TARGET_2026_06.md" },
+        { "type": "doc", "ref": "docs/GAPS_NOT_DONE.md" },
+        { "type": "code", "ref": "src/ui/panels/Artifact.tsx" }
+      ],
+      "nextReview": "Extract trace/status out of the artifact panel into a shell-level status contract before publishing the June shell as current product behavior."
+    },
+    {
+      "id": "intake_preflight_scheduler",
+      "area": "Intake preflight scheduler",
+      "claim": "Every user message is classified as command, steering patch, parallel subagent, wait, clarification, note, cancel, or priority change; the deterministic harness computes PlanPreview and owns scheduling authority.",
+      "status": "red",
+      "productionGate": "Unit/runtime evals prove affected-set expansion, partial scheduling, intent claims, short commit leases, dedupe, cost authorization, privacy/formula checks, and that the LLM recommends while the harness schedules.",
+      "deterministicChecks": [
+        "tests/chatIntakeRuntime.test.ts",
+        "missing: tests/intakePreflightScheduler.test.ts"
+      ],
+      "liveChecks": [
+        "npm run eval:chat-intake:live -- --managed-locks",
+        "missing: browser plan-preview routing badges smoke"
+      ],
+      "evidence": [
+        { "type": "doc", "ref": "docs/TARGET_2026_06.md" },
+        { "type": "doc", "ref": "docs/NODEAGENT_ARCHITECTURE.md" },
+        { "type": "eval", "ref": "evals/chatIntakeRuntime.ts" }
+      ],
+      "nextReview": "Promote only after PlanPreview is a typed artifact and scheduler decisions are checked before expensive model work."
+    },
+    {
+      "id": "workbook_runtime_adapter",
+      "area": "Workbook runtime adapter",
+      "claim": "The spreadsheet work surface has an explicit workbook-runtime adapter path for command/mutation/operation separation, formula dependency expansion, worker/headless validation, and spreadsheet-native overlays.",
+      "status": "yellow",
+      "productionGate": "A POC loads the Q3 sheet into a candidate runtime, captures local mutations into Convex CAS ops, replays remote patches, preserves focus/selection, renders evidence/human/agent overlays, and runs headless formula/gold validation.",
+      "deterministicChecks": [
+        "tests/spreadsheetParser.test.ts",
+        "tests/numberFormat.test.ts",
+        "e2e/excel-grid.spec.ts",
+        "missing: tests/workbookRuntimeAdapter.test.ts"
+      ],
+      "liveChecks": [
+        "npx playwright test e2e/excel-grid.spec.ts",
+        "missing: workbook-runtime POC"
+      ],
+      "evidence": [
+        { "type": "doc", "ref": "docs/TARGET_2026_06.md" },
+        { "type": "doc", "ref": "docs/architecture/MVP_WORKBOOK_STACK.md" },
+        { "type": "doc", "ref": "docs/UI_EXCEL_PAPER.md" },
+        { "type": "test", "ref": "e2e/excel-grid.spec.ts" }
+      ],
+      "nextReview": "Run the workbook-runtime POC before treating a workbook runtime as more than an architecture option."
+    },
+    {
+      "id": "public_gold_demo",
+      "area": "Public gold demo",
+      "claim": "The public demo tracks public-document finance and no-clobber proof rows with source URLs, expected answers, validators, and stable fingerprints.",
+      "status": "yellow",
+      "productionGate": "Manifest check, public fixture downloader/cache hash, LiteParse/provider extraction, formula/citation/page or bbox validators, CellPayload evidence, and trace read/write-set validators all pass.",
+      "deterministicChecks": [
+        "npm run demo:public-gold:check"
+      ],
+      "liveChecks": [
+        "missing: public fixture downloader plus live parser/provider eval"
+      ],
+      "evidence": [
+        { "type": "doc", "ref": "docs/TARGET_2026_06.md" },
+        { "type": "doc", "ref": "docs/demo/PUBLIC_GOLD_DEMO.md" },
+        { "type": "data", "ref": "docs/demo/public-gold-demo-manifest.json" },
+        { "type": "script", "ref": "scripts/validate-public-gold-demo.ts" }
+      ],
+      "nextReview": "Do not call the public proof board a live parser proof until public fixtures are downloaded, extracted, and scored against the same manifest."
+    },
+    {
+      "id": "finance_model_gold_pack",
+      "area": "Finance model gold pack",
+      "claim": "Private banker-model evals are tracked as model plus NodeRoom harness proof across solve, guide, collaborate, reconstruction, export, formula, value, citation, no-clobber, and trace dimensions.",
+      "status": "yellow",
+      "productionGate": "Current solve batch stays fresh; guide zero-write, collaborate human-agent injection, withheld-data reconstruction, XLSX export/reopen, formula AST/value tie-out, citation coverage, and trace completeness lanes are added.",
+      "deterministicChecks": [
+        "tests/financeModelRuntime.test.ts",
+        "tests/financeModelReliability.test.ts",
+        "tests/financeModelLive.test.ts",
+        "npm run proofs:staleness"
+      ],
+      "liveChecks": [
+        "missing: Guide/Collaborate/Reconstruction/export live lanes"
+      ],
+      "evidence": [
+        { "type": "doc", "ref": "docs/TARGET_2026_06.md" },
+        { "type": "doc", "ref": "docs/eval/FINANCE_MODEL_EVAL.md" },
+        { "type": "data", "ref": "docs/eval/finance-model-live.json" },
+        { "type": "eval", "ref": "evals/financeModelLive.ts" }
+      ],
+      "nextReview": "Keep Solve measured, not best-run; add Guide/Collaborate/Reconstruction/export before claiming full banker work-product coverage."
+    },
+    {
+      "id": "noderoombench_reporting_trust",
+      "area": "NodeRoomBench + eval trust",
+      "claim": "NodeRoomBench-style results report final artifact, formula, format/usability, collaboration trajectory, privacy, cost, latency, model route, harness, tool policy, budget, and evaluator instead of raw model-only scores.",
+      "status": "yellow",
+      "productionGate": "Eval store records required metadata; eval:diff catches regressions, removed cases, model swaps, and check redefinitions; external benchmark adapters run benchmark-faithful mode without hidden gold access, evaluator edits, public answer lookup, or hardcoded cases.",
+      "deterministicChecks": [
+        "tests/evalTrustPolicy.test.ts",
+        "tests/evalStore.test.ts",
+        "tests/benchmarkHarness.test.ts",
+        "tests/financeModelReliability.test.ts"
+      ],
+      "liveChecks": [
+        "npm run eval:diff",
+        "npm run benchmark:free",
+        "missing: external benchmark-faithful contamination/hidden-gold adapter tests"
+      ],
+      "evidence": [
+        { "type": "doc", "ref": "docs/TARGET_2026_06.md" },
+        { "type": "doc", "ref": "docs/AGENT_EVAL.md" },
+        { "type": "test", "ref": "tests/evalTrustPolicy.test.ts" },
+        { "type": "test", "ref": "tests/benchmarkHarness.test.ts" }
+      ],
+      "nextReview": "Add a NodeRoomBench package outline with cases, artifacts, gold, runners, validators, and allowed/disallowed harness policy."
+    },
+    {
       "id": "unified_nodeagent_jobs",
       "area": "Unified NodeAgent jobs",
       "claim": "Every mutating or long-running NodeAgent request uses a durable agentJobs root with request envelope, operation accounting, leases, and links to runs/steps; private read-only advise remains a one-call private reply.",
@@ -457,7 +611,7 @@
     ]
   },
   "readme": {
-    "maxFeatureRows": 14,
+    "maxFeatureRows": 22,
     "summaryTitle": "Production QA cockpit"
   }
 }

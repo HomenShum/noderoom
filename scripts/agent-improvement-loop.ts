@@ -126,6 +126,14 @@ const steps: StepSpec[] = [
     timeoutMs: 120_000,
   },
   {
+    id: "algorithm-artifact-smoke",
+    label: "Algorithm artifact runner smoke",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "algorithm-artifact:smoke"],
+    timeoutMs: 120_000,
+  },
+  {
     id: "collaboration-ladder",
     label: "Collaboration ladder L1-L6",
     lane: "deterministic",

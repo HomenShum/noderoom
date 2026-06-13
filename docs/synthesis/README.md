@@ -28,6 +28,12 @@ PlanPreview gating, and workbook-runtime adapter work remain tracked gaps.
    - [specs/C_UNIVER_RUNTIME.md](specs/C_UNIVER_RUNTIME.md) — extend-vs-adopt verdict + the runtime-independent wins worth building now.
    - [specs/D_NODEROOMBENCH.md](specs/D_NODEROOMBENCH.md) — 4-layer naming + thin packaging + the two genuinely-missing graders.
 
+## Scaling, cost & architecture boundaries (added 2026-06-13)
+
+4. [SCALING_COST_ANALYSIS.md](SCALING_COST_ANALYSIS.md) — real latency / multi-user / multi-agent / bandwidth / cost, grounded in the measured perf docs (memory mode vs live Convex).
+5. [PRODUCTION_SCALING_PATTERNS.md](PRODUCTION_SCALING_PATTERNS.md) — how production apps (Figma, Linear, Replicache, Convex, …) solve each bottleneck B1–B6, web-sourced. *(The B5 per-cell-LWW line is superseded for finance cells — keep CAS + proposals; see CONVEX_AS_LEDGER.md §B5.)*
+6. [../architecture/CONVEX_AS_LEDGER.md](../architecture/CONVEX_AS_LEDGER.md) — **authoritative architecture rule**: Convex = ledger (not keystroke pipe / scratchpad / OLAP); per-bottleneck prescription, the C2/A1:C5 runtime, streaming policy, algorithm artifacts, implementation order. Validated against code: ~70% confirms shipped/designed primitives; net-new = pagination, viewport-range index, branch/patch-bundle layer, `/ask` admission control.
+
 ## Key grounding facts that reframe the corpus
 
 - The Deal Binder / Work Surface / Copilot / Signal Tape / Status Strip shell, the four-role contract,

@@ -1,0 +1,257 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T18:11:55.318Z",
+  "commitSha": "c5d04cd",
+  "worktreeHash": "f5d77aa1fc31b5b7",
+  "gitDirty": true,
+  "suite": "ladder",
+  "caseId": "ladder:L7_resume:scripted",
+  "score": 1,
+  "checks": {
+    "sliceDeathReal": true,
+    "remainingTargetsSet": true,
+    "completedWorkKept": true,
+    "humanRevisionSurvived": true,
+    "resumeTouchedOnlyRemaining": true,
+    "freshReadProvenance": true,
+    "noLockShortcut": true,
+    "notExhausted": true
+  },
+  "checkDetails": {},
+  "result": {
+    "pass": true,
+    "checkDetails": {},
+    "requestedModel": "scripted",
+    "resolvedModel": "scripted-resume",
+    "resolvedModels": [
+      "scripted-slice1",
+      "scripted-resume"
+    ],
+    "rung": "L7_resume",
+    "level": 7,
+    "ms": 6,
+    "tools": 12,
+    "cost": 0,
+    "stopReason": "done",
+    "reason": "",
+    "checks": {
+      "sliceDeathReal": true,
+      "remainingTargetsSet": true,
+      "completedWorkKept": true,
+      "humanRevisionSurvived": true,
+      "resumeTouchedOnlyRemaining": true,
+      "freshReadProvenance": true,
+      "noLockShortcut": true,
+      "notExhausted": true
+    }
+  },
+  "trace": [
+    {
+      "step": 0,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "r_rev__variance"
+        ]
+      },
+      "result": [
+        {
+          "id": "r_rev__variance",
+          "value": "",
+          "version": 1,
+          "locked": null
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": 1,
+      "tool": "edit_cell",
+      "args": {
+        "elementId": "r_rev__variance",
+        "value": "+24%",
+        "baseVersion": 1
+      },
+      "result": {
+        "ok": true,
+        "version": 2
+      },
+      "ms": 0
+    },
+    {
+      "step": 2,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "r_cogs__variance"
+        ]
+      },
+      "result": [
+        {
+          "id": "r_cogs__variance",
+          "value": "",
+          "version": 1,
+          "locked": null
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": 3,
+      "tool": "edit_cell",
+      "args": {
+        "elementId": "r_cogs__variance",
+        "value": "+27.5%",
+        "baseVersion": 1
+      },
+      "result": {
+        "ok": true,
+        "version": 2
+      },
+      "ms": 1
+    },
+    {
+      "step": 4,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "r_gp__variance"
+        ]
+      },
+      "result": [
+        {
+          "id": "r_gp__variance",
+          "value": "",
+          "version": 1,
+          "locked": null
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": 5,
+      "tool": "handoff",
+      "args": {
+        "reason": "step_budget",
+        "reserveMs": 5000
+      },
+      "result": {
+        "reason": "step_budget",
+        "summary": "Paused after reaching the 5-step budget.",
+        "nextGoal": "Set these exact Q3 variance values without locking: r_rev__variance=+24%, r_cogs__variance=+27.5%, r_gp__variance=+21.7%, r_opex__variance=+20.5%, r_ni__variance=+22.4%. Do not call propose_lock. Before every edit_cell call, call read_range for that exact cell and use the version returned by that read.",
+        "remainingToolCalls": [],
+        "messageCount": 11,
+        "traceCount": 5
+      },
+      "ms": 0
+    },
+    {
+      "step": -1,
+      "tool": "slice_boundary",
+      "args": {
+        "forced": true,
+        "slice1Exhausted": true
+      },
+      "result": {
+        "handoff": "Paused after reaching the 5-step budget."
+      },
+      "ms": 0
+    },
+    {
+      "step": 0,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "r_gp__variance"
+        ]
+      },
+      "result": [
+        {
+          "id": "r_gp__variance",
+          "value": "",
+          "version": 1,
+          "locked": null
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": 1,
+      "tool": "edit_cell",
+      "args": {
+        "elementId": "r_gp__variance",
+        "value": "+21.7%",
+        "baseVersion": 1
+      },
+      "result": {
+        "ok": true,
+        "version": 2
+      },
+      "ms": 0
+    },
+    {
+      "step": 2,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "r_opex__variance"
+        ]
+      },
+      "result": [
+        {
+          "id": "r_opex__variance",
+          "value": "",
+          "version": 1,
+          "locked": null
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": 3,
+      "tool": "edit_cell",
+      "args": {
+        "elementId": "r_opex__variance",
+        "value": "+20.5%",
+        "baseVersion": 1
+      },
+      "result": {
+        "ok": true,
+        "version": 2
+      },
+      "ms": 0
+    },
+    {
+      "step": 4,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "r_ni__variance"
+        ]
+      },
+      "result": [
+        {
+          "id": "r_ni__variance",
+          "value": "",
+          "version": 1,
+          "locked": null
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": 5,
+      "tool": "edit_cell",
+      "args": {
+        "elementId": "r_ni__variance",
+        "value": "+22.4%",
+        "baseVersion": 1
+      },
+      "result": {
+        "ok": true,
+        "version": 2
+      },
+      "ms": 0
+    }
+  ]
+}

@@ -1,60 +1,61 @@
 # Agent Improvement Loop
 
-Generated: 2026-06-13T16:56:41.704Z
+Generated: 2026-06-13T18:30:48.488Z
 
 Source pattern: https://developers.openai.com/cookbook/examples/agents_sdk/agent_improvement_loop
 
 NodeRoom adapts the cookbook loop as: traces -> human/model feedback -> reusable evals -> gate -> Codex handoff -> next harness change.
 
-Latest run artifact: `docs/eval/agent-improvement-loop/20260613T164937Z.json`
+Latest run artifact: `docs/eval/agent-improvement-loop/20260613T182233Z.json`
 
-Summary: 37 pass, 4 blocked, 0 fail, 8 skip.
+Summary: 38 pass, 4 blocked, 0 fail, 8 skip.
 
 ## Step Results
 
 | Step | Lane | Status | Duration | Command |
 |---|---|---:|---:|---|
-| Professional workflow catalog shape | deterministic | PASS | 1.8s | `npm run eval:professional` |
-| Professional catalog proof gate | deterministic | PASS | 0.7s | `npm run eval:professional:catalog-proofs` |
-| Professional proof ledger | deterministic | PASS | 0.9s | `npm run eval:professional:proofs` |
-| GTM/finance workflow evals | deterministic | PASS | 2.4s | `npx vitest run tests/workflowEvals.test.ts` |
-| Collaboration ladder L1-L6 | deterministic | PASS | 1.2s | `npm run ladder -- --record` |
-| MM-banking credit decision evals | deterministic | PASS | 1.0s | `npm run eval:credit -- --record` |
-| Official benchmark readiness report | deterministic | PASS | 0.7s | `npm run benchmark:official:readiness` |
-| Official benchmark promotion gate | deterministic | BLOCKED | 0.7s | `npm run benchmark:official:readiness -- --strict` |
-| Official benchmark contamination fixture | deterministic | PASS | 2.0s | `npx vitest run tests/benchmarkContamination.test.ts` |
-| BankerToolBench official ingest fixture | deterministic | PASS | 1.9s | `npx vitest run tests/bankerToolBenchAdapter.test.ts` |
-| BankerToolBench sandbox stage fixture | deterministic | PASS | 2.0s | `npx vitest run tests/bankerToolBenchStage.test.ts` |
-| BankerToolBench manifest lock fixture | deterministic | PASS | 0.7s | `npm run benchmark:bankertoolbench:manifest-lock -- --root .tmp/official-benchmarks/btb-fixture --json-out docs/eval/bankertoolbench-manifest-lock-smoke.json` |
-| BankerToolBench staged runner fixture | deterministic | PASS | 2.9s | `npx vitest run tests/bankerToolBenchRunner.test.ts` |
-| BankerToolBench local harness proof gate | deterministic | PASS | 0.7s | `npm run benchmark:bankertoolbench:proof` |
-| BankerToolBench official execution contract | deterministic | BLOCKED | 0.9s | `npm run benchmark:bankertoolbench:official-contract -- --strict` |
-| SpreadsheetBench official ingest fixture | deterministic | PASS | 2.1s | `npx vitest run tests/spreadsheetBenchAdapter.test.ts` |
-| SpreadsheetBench sandbox stage fixture | deterministic | PASS | 2.2s | `npx vitest run tests/spreadsheetBenchStage.test.ts` |
-| SpreadsheetBench V1 full-stage isolation proof | deterministic | PASS | 0.8s | `npm run benchmark:spreadsheetbench:stage-proof -- --report docs/eval/spreadsheetbench-v1-full-stage-smoke.json --stage-root .tmp/official-benchmarks/staged-v1-full --track spreadsheetbench-v1 --min-tasks 400` |
-| SpreadsheetBench V2 public-example stage proof | deterministic | PASS | 0.7s | `npm run benchmark:spreadsheetbench:stage-proof -- --report docs/eval/spreadsheetbench-v2-stage-smoke.json --stage-root .tmp/official-benchmarks/staged-v2 --track spreadsheetbench-v2 --min-tasks 3` |
-| SpreadsheetBench V1 route selection report | deterministic | PASS | 0.7s | `npm run benchmark:spreadsheetbench:routes -- --stage-root .tmp/official-benchmarks/staged-v1-full --json-out docs/eval/spreadsheetbench-v1-route-selection.json` |
-| SpreadsheetBench V2 route selection report | deterministic | PASS | 0.7s | `npm run benchmark:spreadsheetbench:routes -- --stage-root .tmp/official-benchmarks/staged-v2 --json-out docs/eval/spreadsheetbench-v2-route-selection.json` |
-| SpreadsheetBench V1 full-bundle copy-input baseline | deterministic | PASS | 376.9s | `npm run benchmark:spreadsheetbench:run-chunked -- --stage-root .tmp/official-benchmarks/staged-v1-full --output-root .tmp/official-benchmarks/run-v1-copy-full --mode copy-input-baseline --chunk-size 25 --json-out docs/eval/spreadsheetbench-v1-copy-input-full-smoke.json --max-mismatches 5` |
-| SpreadsheetBench workbook score fixture | deterministic | PASS | 2.3s | `npx vitest run tests/spreadsheetBenchScorer.test.ts` |
-| SpreadsheetBench chart package score fixture | deterministic | PASS | 1.7s | `npx vitest run tests/spreadsheetBenchChartScorer.test.ts` |
-| SpreadsheetBench rendered/VLM chart visual probe | deterministic | BLOCKED | 0.6s | `npm run benchmark:spreadsheetbench:chart-visual:probe -- --strict` |
-| SpreadsheetBench staged runner fixture | deterministic | PASS | 4.2s | `npx vitest run tests/spreadsheetBenchRunner.test.ts` |
-| Agent workspace process sandbox | deterministic | PASS | 0.7s | `npm run benchmark:agent-sandbox -- --json-out docs/eval/agent-workspace-sandbox-smoke.json` |
-| Docker/Harbor availability probe | deterministic | BLOCKED | 1.1s | `npm run benchmark:docker-sandbox:probe -- --require-pass` |
-| SpreadsheetBench staged artifact contamination | deterministic | PASS | 0.6s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/staged-v1 --strict` |
-| SpreadsheetBench V1 full-stage contamination | deterministic | PASS | 0.7s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/staged-v1-full --strict` |
-| SpreadsheetBench N5 run artifact contamination | deterministic | PASS | 0.6s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v1-model-edit-n5 --strict` |
-| SpreadsheetBench 3-task N5 run artifact contamination | deterministic | PASS | 0.6s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v1-model-edit-3task-n5 --strict` |
-| SpreadsheetBench 3-task N5 proof gate | deterministic | PASS | 0.6s | `npm run benchmark:spreadsheetbench:proof -- --require-sidecar-files` |
-| SpreadsheetBench retry run artifact contamination | deterministic | PASS | 0.6s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v1-model-edit-retry --strict` |
-| SpreadsheetBench V2 staged artifact contamination | deterministic | PASS | 0.6s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/staged-v2 --strict` |
-| SpreadsheetBench V2 run artifact contamination | deterministic | PASS | 0.6s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v2 --strict` |
-| BankerToolBench staged artifact contamination | deterministic | PASS | 0.6s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/staged-btb --strict` |
-| BankerToolBench run artifact contamination | deterministic | PASS | 0.6s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-btb --strict` |
-| Eval regression diff | deterministic | PASS | 0.7s | `npm run eval:diff` |
-| Convex query/action/mutation boundaries | deterministic | PASS | 1.6s | `npm run convex:boundaries` |
-| Architecture budget review | deterministic | PASS | 0.8s | `npm run architecture:budget` |
+| Professional workflow catalog shape | deterministic | PASS | 2.4s | `npm run eval:professional` |
+| Professional catalog proof gate | deterministic | PASS | 0.9s | `npm run eval:professional:catalog-proofs` |
+| Professional proof ledger | deterministic | PASS | 1.2s | `npm run eval:professional:proofs` |
+| GTM/finance workflow evals | deterministic | PASS | 3.1s | `npx vitest run tests/workflowEvals.test.ts` |
+| Algorithm artifact runner smoke | deterministic | PASS | 1.0s | `npm run algorithm-artifact:smoke` |
+| Collaboration ladder L1-L6 | deterministic | PASS | 1.5s | `npm run ladder -- --record` |
+| MM-banking credit decision evals | deterministic | PASS | 1.2s | `npm run eval:credit -- --record` |
+| Official benchmark readiness report | deterministic | PASS | 0.8s | `npm run benchmark:official:readiness` |
+| Official benchmark promotion gate | deterministic | BLOCKED | 0.9s | `npm run benchmark:official:readiness -- --strict` |
+| Official benchmark contamination fixture | deterministic | PASS | 2.6s | `npx vitest run tests/benchmarkContamination.test.ts` |
+| BankerToolBench official ingest fixture | deterministic | PASS | 2.5s | `npx vitest run tests/bankerToolBenchAdapter.test.ts` |
+| BankerToolBench sandbox stage fixture | deterministic | PASS | 2.6s | `npx vitest run tests/bankerToolBenchStage.test.ts` |
+| BankerToolBench manifest lock fixture | deterministic | PASS | 0.9s | `npm run benchmark:bankertoolbench:manifest-lock -- --root .tmp/official-benchmarks/btb-fixture --json-out docs/eval/bankertoolbench-manifest-lock-smoke.json` |
+| BankerToolBench staged runner fixture | deterministic | PASS | 3.8s | `npx vitest run tests/bankerToolBenchRunner.test.ts` |
+| BankerToolBench local harness proof gate | deterministic | PASS | 0.8s | `npm run benchmark:bankertoolbench:proof` |
+| BankerToolBench official execution contract | deterministic | BLOCKED | 0.8s | `npm run benchmark:bankertoolbench:official-contract -- --strict` |
+| SpreadsheetBench official ingest fixture | deterministic | PASS | 3.1s | `npx vitest run tests/spreadsheetBenchAdapter.test.ts` |
+| SpreadsheetBench sandbox stage fixture | deterministic | PASS | 2.6s | `npx vitest run tests/spreadsheetBenchStage.test.ts` |
+| SpreadsheetBench V1 full-stage isolation proof | deterministic | PASS | 1.0s | `npm run benchmark:spreadsheetbench:stage-proof -- --report docs/eval/spreadsheetbench-v1-full-stage-smoke.json --stage-root .tmp/official-benchmarks/staged-v1-full --track spreadsheetbench-v1 --min-tasks 400` |
+| SpreadsheetBench V2 public-example stage proof | deterministic | PASS | 0.9s | `npm run benchmark:spreadsheetbench:stage-proof -- --report docs/eval/spreadsheetbench-v2-stage-smoke.json --stage-root .tmp/official-benchmarks/staged-v2 --track spreadsheetbench-v2 --min-tasks 3` |
+| SpreadsheetBench V1 route selection report | deterministic | PASS | 0.9s | `npm run benchmark:spreadsheetbench:routes -- --stage-root .tmp/official-benchmarks/staged-v1-full --json-out docs/eval/spreadsheetbench-v1-route-selection.json` |
+| SpreadsheetBench V2 route selection report | deterministic | PASS | 1.0s | `npm run benchmark:spreadsheetbench:routes -- --stage-root .tmp/official-benchmarks/staged-v2 --json-out docs/eval/spreadsheetbench-v2-route-selection.json` |
+| SpreadsheetBench V1 full-bundle copy-input baseline | deterministic | PASS | 434.2s | `npm run benchmark:spreadsheetbench:run-chunked -- --stage-root .tmp/official-benchmarks/staged-v1-full --output-root .tmp/official-benchmarks/run-v1-copy-full --mode copy-input-baseline --chunk-size 25 --json-out docs/eval/spreadsheetbench-v1-copy-input-full-smoke.json --max-mismatches 5` |
+| SpreadsheetBench workbook score fixture | deterministic | PASS | 2.9s | `npx vitest run tests/spreadsheetBenchScorer.test.ts` |
+| SpreadsheetBench chart package score fixture | deterministic | PASS | 2.1s | `npx vitest run tests/spreadsheetBenchChartScorer.test.ts` |
+| SpreadsheetBench rendered/VLM chart visual probe | deterministic | BLOCKED | 0.8s | `npm run benchmark:spreadsheetbench:chart-visual:probe -- --strict` |
+| SpreadsheetBench staged runner fixture | deterministic | PASS | 5.4s | `npx vitest run tests/spreadsheetBenchRunner.test.ts` |
+| Agent workspace process sandbox | deterministic | PASS | 0.9s | `npm run benchmark:agent-sandbox -- --json-out docs/eval/agent-workspace-sandbox-smoke.json` |
+| Docker/Harbor availability probe | deterministic | BLOCKED | 1.5s | `npm run benchmark:docker-sandbox:probe -- --require-pass` |
+| SpreadsheetBench staged artifact contamination | deterministic | PASS | 0.8s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/staged-v1 --strict` |
+| SpreadsheetBench V1 full-stage contamination | deterministic | PASS | 0.9s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/staged-v1-full --strict` |
+| SpreadsheetBench N5 run artifact contamination | deterministic | PASS | 0.7s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v1-model-edit-n5 --strict` |
+| SpreadsheetBench 3-task N5 run artifact contamination | deterministic | PASS | 0.8s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v1-model-edit-3task-n5 --strict` |
+| SpreadsheetBench 3-task N5 proof gate | deterministic | PASS | 0.7s | `npm run benchmark:spreadsheetbench:proof -- --require-sidecar-files` |
+| SpreadsheetBench retry run artifact contamination | deterministic | PASS | 0.7s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v1-model-edit-retry --strict` |
+| SpreadsheetBench V2 staged artifact contamination | deterministic | PASS | 0.7s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/staged-v2 --strict` |
+| SpreadsheetBench V2 run artifact contamination | deterministic | PASS | 0.8s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v2 --strict` |
+| BankerToolBench staged artifact contamination | deterministic | PASS | 0.7s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/staged-btb --strict` |
+| BankerToolBench run artifact contamination | deterministic | PASS | 0.7s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-btb --strict` |
+| Eval regression diff | deterministic | PASS | 0.9s | `npm run eval:diff` |
+| Convex query/action/mutation boundaries | deterministic | PASS | 1.5s | `npm run convex:boundaries` |
+| Architecture budget review | deterministic | PASS | 1.0s | `npm run architecture:budget` |
 | OpenRouter free-auto discovery | live | SKIP | 0.0s | `npm run openrouter:free -- --limit=5` |
 | Professional live-provider catalog champion | live | SKIP | 0.0s | `npm run eval:professional:live-catalog -- --real deepseek/deepseek-v4-flash --require-full --retry-failed 2 --json-out docs/eval/professional-live-catalog.json` |
 | Chat-first GTM live runtime | live | SKIP | 0.0s | `npm run eval:chat-intake:live -- --json-out docs/eval/chat-intake-live.json --timeout-ms 240000` |

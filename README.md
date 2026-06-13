@@ -250,6 +250,36 @@ The safety invariant did not move to the model: `tests/managedLockTools.test.ts`
 
 **Rule of thumb:** give the agent business intent, target cells, formulas/values/evidence, and base versions. Take away lock acquisition, unlock sequencing, range coordination, draft-on-blocked mechanics, and release cleanup. Deterministic coordination belongs in the harness.
 
+### Algorithm Artifacts: Learn Like AI, Run Like Code
+
+The next tool-contract lesson is the same one artifact systems teach for
+generated UI: model output should become a durable artifact the runtime can
+inspect and rerun, not a one-off answer. For NodeRoom spreadsheets, the artifact
+is a deterministic calculation plan.
+
+`run_algorithm_artifact` now lets the model submit a narrow
+`spreadsheet_formula` artifact with named input cells, output cells, formula-DSL
+expressions, deterministic constraints, and small fixtures. The runtime reads
+the current versioned cells, validates the artifact, runs the fixture tests,
+materializes evidence-bearing `CellPayload` patches, and returns a patch bundle
+plus ready-to-pass `write_locked_cell_results` arguments. It does **not** commit.
+The managed write tool still owns lock, CAS, proposal/review, draft behavior, and
+trace evidence.
+
+The checked proof is [`docs/eval/algorithm-artifact-smoke.json`](docs/eval/algorithm-artifact-smoke.json):
+`revenue_variance_pct_v1` computes `(q3 - q2) / q2` from source cells, passes its
+fixture, writes `+24.0%` through `write_locked_cell_results`, preserves the
+formula on the resulting `CellPayload`, and attaches three evidence entries
+(algorithm proof plus two source-cell refs). `tests/algorithmArtifacts.test.ts`
+also proves deterministic rerun on a changed snapshot, managed-write application,
+and rejection of unknown identifiers or non-deterministic constraints.
+
+This is intentionally L1/L2 only: formula/DSL artifacts. Convex persistence,
+artifact promotion/version UI, workbook-wide runtime adapters, and any sandboxed
+code lane remain tracked gaps. The product rule is stricter now: high-stakes
+calculation work should be authored by AI when useful, but committed only after a
+deterministic runner turns it into auditable patches.
+
 ### Where the walkthroughs go next
 
 The clip set expands along the **six user → agent interaction modes** from the

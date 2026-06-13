@@ -1,5 +1,7 @@
 # NodeRoom — architecture
 
+> **Architecture boundaries / scaling rule:** see [architecture/CONVEX_AS_LEDGER.md](architecture/CONVEX_AS_LEDGER.md) — *Convex is the durable collaboration ledger, not the keystroke pipe, the agent scratchpad, or the OLAP warehouse.* It carries the per-bottleneck prescription (B1 split `rooms.full`, B2 paginate history, B3 narrow queries, B4 `/ask` admission control, B5 intent-claim + short commit-lease + CAS + proposals, B6 patch-bundles vs a snapshot baseVersion), the canonical C2/A1:C5 runtime, the streaming policy, and the implementation order.
+
 ## The one idea everything rests on: the uniform element model
 
 Every artifact — spreadsheet, note, post-it wall — is a **bag of elements**, and an element is just:

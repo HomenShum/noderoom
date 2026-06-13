@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "ok": true,
+  "generatedAt": "2026-06-13T18:22:41.662Z",
+  "ms": 13,
+  "algorithmId": "revenue_variance_pct_v1",
+  "artifactHash": "fnv1a32:0239470c",
+  "commitPolicy": "patch_bundle_only_runtime_must_cas",
+  "patchCount": 1,
+  "writeTool": "write_locked_cell_results",
+  "runnerVersion": "algorithm-artifact-runner:v1",
+  "testsPassed": 1,
+  "finalCell": {
+    "elementId": "r_rev__variance",
+    "version": 2,
+    "value": "+24.0%",
+    "normalizedValue": 0.24,
+    "formula": "(q3 - q2) / q2",
+    "evidenceCount": 3
+  },
+  "proof": {
+    "runnerVersion": "algorithm-artifact-runner:v1",
+    "deterministic": true,
+    "testsPassed": 1,
+    "inputRefs": [
+      {
+        "id": "q2",
+        "elementId": "r_rev__q2",
+        "version": 1,
+        "valueHash": "fnv1a32:156953dc"
+      },
+      {
+        "id": "q3",
+        "elementId": "r_rev__q3",
+        "version": 1,
+        "valueHash": "fnv1a32:c8ef7e6e"
+      }
+    ],
+    "outputRefs": [
+      {
+        "id": "variancePct",
+        "elementId": "r_rev__variance",
+        "baseVersion": 1,
+        "expression": "(q3 - q2) / q2",
+        "normalizedValue": 0.24
+      }
+    ]
+  }
+}

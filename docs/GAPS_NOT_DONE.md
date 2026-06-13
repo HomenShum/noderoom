@@ -151,6 +151,24 @@ deployment is clean.
 | Retry/backoff/concurrency | Basic attempts exist. | Centralize retry policy, concurrency limits, and crash recovery. | Backpressure protects providers and Convex while jobs still make progress. |
 | Step journal | Attempts are persisted. | Durable per-step journal for model calls, tool calls, parser calls, and artifact commits. | Replays are explainable and exactly-once where side effects matter. |
 
+## P1: Algorithm Artifacts And Calculation Promotion
+
+The first formula/DSL runner is now implemented, tested, and HALO-wired:
+`run_algorithm_artifact` validates a deterministic `spreadsheet_formula`
+artifact, reads versioned cells, executes fixture tests, returns an
+evidence-bearing patch bundle, and hands off ready-to-pass
+`write_locked_cell_results` arguments. The checked smoke
+`docs/eval/algorithm-artifact-smoke.json` proves a reusable revenue variance
+artifact can rerun over room cells and commit only through managed lock/CAS.
+
+| Gap | Current state | Needed proof | Acceptance gate |
+|---|---|---|---|
+| Durable artifact storage | Formula/DSL artifacts run in memory through the agent tool and smoke script. | Persist algorithm artifacts and runs in Convex with spec hash, runner version, input snapshot refs, output patch bundle refs, and promotion status. | A user can reopen, inspect, rerun, deprecate, and compare algorithm versions from durable state. |
+| Artifact promotion UI | README/docs describe the contract; no product UI yet. | Copilot/stage view for draft -> validated -> promoted artifacts, fixture failures, source refs, and ready-to-apply patches. | Host can approve or reject a calculation artifact without reading logs or raw JSON. |
+| CAS rebase integration | Runner returns base versions and managed-write args; write tool commits safely. | End-to-end browser eval where an artifact is produced, a human edits a target before commit, and the runtime drafts/conflicts instead of clobbering. | Artifact patch bundles never bypass no-clobber behavior under live multi-user edits. |
+| Wider calculation coverage | Runner supports safe numeric formula DSL only. | Add workbook-range/table transforms, formula-preservation checks, source extraction rules, and benchmark-backed route selection before sandboxed code. | Finance/SpreadsheetBench cases use reusable artifacts where deterministic logic beats one-off model edits. |
+| Sandboxed code lane | Not implemented by design. | Only add after process isolation, resource limits, network denial, package policy, and promotion review are proven. | No arbitrary LLM-authored code can become product truth without sandbox and promotion proof. |
+
 ## P1: Observability, Audit, And Retention
 
 | Gap | Current state | Needed proof | Acceptance gate |

@@ -50,6 +50,7 @@
     "eval:model-matrix:live": "tsx scripts/model-eval-matrix.ts --live --allow-failures --json-out docs/eval/model-eval-matrix-plan.json",
     "openrouter:free": "tsx scripts/openrouter-free-discover.ts",
     "provider-parser:smoke": "tsx scripts/provider-parser-smoke.ts",
+    "algorithm-artifact:smoke": "tsx scripts/algorithm-artifact-smoke.ts",
     "agent:improve": "tsx scripts/agent-improvement-loop.ts",
     "halo:status": "tsx scripts/halo-status.ts",
     "halo:snapshots": "tsx scripts/halo-snapshot-report.ts",

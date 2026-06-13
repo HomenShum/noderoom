@@ -105,7 +105,7 @@ The honest, important framing for Homen: **none of B1–B6 are novel.** They are
 - **Op-log + rebase** auto-merges non-overlapping edits instead of a CAS-retry (LiveStore total-order log + rebase; Replicache mutators). ([LiveStore](https://docs.livestore.dev/reference/syncing/), high; [Replicache](https://doc.replicache.dev/concepts/how-it-works), high)
 
 **Convex-specific NodeRoom adoption:**
-1. **For ordinary single-value cells, drop the range lock + CAS entirely** and use **per-cell version LWW**: `setCell(elementId, value, baseVersion)`; on `baseVersion` mismatch, accept last-write-wins (Convex's serializable commit defines order) instead of re-running a model turn. This is also B1's write path.
+1. **Correction (supersedes the LWW framing — see [CONVEX_AS_LEDGER.md](../architecture/CONVEX_AS_LEDGER.md) §B5):** blanket per-cell **last-writer-wins is WRONG for finance cells** — silently dropping a number with no audit trail is unacceptable in an auditable model. **Keep CAS**, and on a `baseVersion` mismatch route the losing write to a **proposal**, not a silent overwrite. What to actually drop is the *broad/long* range lock + the `O(active-locks)` scan (use a soft **intent-claim** + a **short commit-lease at publish**), not CAS itself. Reserve true LWW only for **non-finance, trivially-atomic, single-human** values (e.g. a sticky-note position). This is also B1's write path.
 2. **Make the conflict domain one cell (one Convex doc), not an expanded range.** Then Convex's own OCC serializes naturally and you delete the per-element `activeLockOn` scan for the common case.
 3. **Keep locks only for genuine multi-cell semantic invariants** (e.g. a formula-driver range that must update atomically), and fix the janitor: `sweepExpiredLocks` full-table `.collect()` (locks.ts:120) should query `by_room_status`/an expiry index, not scan all locks.
 4. **Don't hold a lock across an LLM call.** Dispatch the agent off-path (B4 queue) and apply its result as a normal queued write — see B6.
@@ -163,7 +163,7 @@ For a **finance-grade, auditable** workroom, the decision axis is not "best auto
 2. **B3 normalized store + memo + virtualize lists** — M. *(stop rendering it)*
 3. **B4 route `/ask` through `agentJobs` with a concurrency + token cap** — M. *(bound cost)*
 4. **B1 split `rooms.full` into per-artifact / per-range reactive queries + hot/cold segmentation** — L. *(the big bandwidth win)*
-5. **B5 per-cell version LWW, drop range-lock for single-value cells; lean on Convex OCC** — L. *(kill the lock scan + CAS-model-turn)*
+5. **B5 drop the *broad* range lock + `O(active-locks)` scan; keep CAS + intent-claim + short commit-lease + proposals (NOT blanket LWW for finance cells — see [CONVEX_AS_LEDGER.md](../architecture/CONVEX_AS_LEDGER.md) §B5)** — L. *(kill the lock scan + the CAS-conflict-as-model-turn, not CAS itself)*
 6. **B6 agents emit `drafts` against a base version + working-set-windowed context + programmatic accept gate** — M.
 7. **B-presence: isolate presence into its own throttled bounded table** — M; graduate to a DO/PartyKit side-channel only if cursor churn is still binding.
 

@@ -13,6 +13,7 @@
 import { z } from "zod";
 import type { AgentTool, EditOutcome, RoomTools } from "./types";
 import type { CellEvidence, CellPayload, CellStatus } from "../engine/types";
+import { runAlgorithmArtifactFromRoomTools, type AlgorithmArtifact } from "./algorithmArtifacts";
 
 const opSchema = z.object({ elementId: z.string(), value: z.any(), baseVersion: z.number().int() });
 const cellStatusSchema = z.enum(["empty", "running", "complete", "needs_review", "failed", "gap"]);
@@ -37,6 +38,7 @@ function cellPayload(args: {
   confidence?: number;
   error?: string;
   normalizedValue?: unknown;
+  formula?: string;
 }): CellPayload {
   return {
     value: args.value,
@@ -44,6 +46,7 @@ function cellPayload(args: {
     confidence: args.confidence,
     error: args.error,
     normalizedValue: args.normalizedValue,
+    formula: args.formula,
     evidence: args.evidence.map((e, idx) => ({
       ...e,
       id: e.id || `${e.kind}:${args.elementId}:${idx + 1}`,
@@ -237,6 +240,7 @@ const WRITE_LOCKED_CELL_RESULT_TOOL: AgentTool = {
     status: cellStatusSchema.default("complete"),
     confidence: z.number().min(0).max(1).optional(),
     normalizedValue: z.any().optional(),
+    formula: z.string().optional(),
     error: z.string().optional(),
     evidence: z.array(evidenceSchema).min(1),
     reason: z.string().optional().describe("one short phrase shown in the room trace"),
@@ -250,6 +254,7 @@ const WRITE_LOCKED_CELL_RESULT_TOOL: AgentTool = {
     status: CellStatus;
     confidence?: number;
     normalizedValue?: unknown;
+    formula?: string;
     error?: string;
     evidence: CellEvidence[];
     reason?: string;
@@ -271,6 +276,7 @@ const WRITE_LOCKED_CELL_RESULTS_TOOL: AgentTool = {
       status: cellStatusSchema.default("complete"),
       confidence: z.number().min(0).max(1).optional(),
       normalizedValue: z.any().optional(),
+      formula: z.string().optional(),
       error: z.string().optional(),
       evidence: z.array(evidenceSchema).min(1),
       kind: z.enum(["set", "create"]).optional(),
@@ -286,6 +292,7 @@ const WRITE_LOCKED_CELL_RESULTS_TOOL: AgentTool = {
       status: CellStatus;
       confidence?: number;
       normalizedValue?: unknown;
+      formula?: string;
       error?: string;
       evidence: CellEvidence[];
       kind?: "set" | "create";
@@ -337,6 +344,7 @@ export const ROOM_TOOLS: AgentTool[] = [
       status: cellStatusSchema.default("complete"),
       confidence: z.number().min(0).max(1).optional(),
       normalizedValue: z.any().optional(),
+      formula: z.string().optional(),
       error: z.string().optional(),
       evidence: z.array(evidenceSchema).min(1),
       kind: z.enum(["set", "create"]).optional().describe("'set' updates an existing result cell; 'create' adds a new one"),
@@ -349,6 +357,7 @@ export const ROOM_TOOLS: AgentTool[] = [
       status: CellStatus;
       confidence?: number;
       normalizedValue?: unknown;
+      formula?: string;
       error?: string;
       evidence: CellEvidence[];
       kind?: "set" | "create";
@@ -403,6 +412,52 @@ export const ROOM_TOOLS: AgentTool[] = [
       }, rt);
       return res.ok ? { ok: true as const, corrected: true as const, version: res.version } : res;
     },
+  },
+  {
+    name: "run_algorithm_artifact",
+    description: "Validate and execute a deterministic spreadsheet calculation artifact against the current room cells. This returns an evidence-bearing patch bundle only; it never commits. After inspection, apply returned patches with write_locked_cell_results so lock/CAS/review policy remains runtime-managed.",
+    schema: z.object({
+      artifactId: z.string().optional().describe("another sheet artifact id from list_artifacts; omit for the primary sheet"),
+      artifact: z.object({
+        schema: z.literal(1),
+        algorithmId: z.string(),
+        name: z.string(),
+        description: z.string().optional(),
+        kind: z.literal("spreadsheet_formula"),
+        language: z.enum(["formula_dsl", "noderoom_dsl"]),
+        inputs: z.array(z.object({
+          id: z.string(),
+          elementId: z.string(),
+          label: z.string().optional(),
+        })).min(1),
+        outputs: z.array(z.object({
+          id: z.string(),
+          elementId: z.string(),
+          expression: z.string(),
+          format: z.enum(["number", "currency", "percent"]).optional(),
+          label: z.string().optional(),
+        })).min(1),
+        constraints: z.object({
+          deterministic: z.boolean().optional(),
+          noNetwork: z.boolean().optional(),
+          noRandom: z.boolean().optional(),
+          noDateNow: z.boolean().optional(),
+          maxInputs: z.number().int().positive().optional(),
+          maxOutputs: z.number().int().positive().optional(),
+        }).optional(),
+        evidencePolicy: z.object({
+          requireSourceCells: z.boolean().optional(),
+        }).optional(),
+        tests: z.array(z.object({
+          name: z.string(),
+          inputs: z.record(z.number()),
+          expected: z.record(z.number()),
+          tolerance: z.number().optional(),
+        })).optional(),
+      }),
+    }),
+    execute: (a: { artifactId?: string; artifact: AlgorithmArtifact }, rt) =>
+      runAlgorithmArtifactFromRoomTools(a.artifact, rt, a.artifactId),
   },
   {
     name: "create_draft",

@@ -1,3 +1,5 @@
+import { getProviderForModel, llmModelCatalog, resolveModelAlias, type LlmProvider } from "../../src/agent/modelCatalog";
+
 export type ModelEvalSuite = "research" | "collaboration";
 export type ModelPromotion =
   | "research_champion"
@@ -289,6 +291,33 @@ export const DEFAULT_RESEARCH_MODEL_ROUTES = [
   "deepseek/deepseek-v4-flash",
   "z-ai/glm-4.7-flash",
 ];
+
+export function allAgentLlmRoutes(): SupportedModelRoute[] {
+  const byRoute = new Map<string, SupportedModelRoute>();
+  for (const route of SUPPORTED_MODEL_ROUTES) byRoute.set(route.route, route);
+
+  for (const provider of Object.keys(llmModelCatalog) as LlmProvider[]) {
+    for (const rawModel of llmModelCatalog[provider].agent) {
+      const route = resolveModelAlias(rawModel);
+      if (byRoute.has(route)) continue;
+      const resolvedProvider = getProviderForModel(route);
+      byRoute.set(route, {
+        route,
+        provider: route === "openrouter/free-auto"
+          ? "internal_alias"
+          : provider === "openrouter" || resolvedProvider === "openrouter" && route.includes("/")
+            ? "openrouter"
+            : "native",
+        label: `${provider} agent model: ${route}`,
+        promotion: provider === "openrouter" ? "candidate" : "compatibility",
+        suites: ["collaboration"],
+        notes: "Included from llmModelCatalog.agent so the official-style scorecard covers every configured agent LLM route, not only the curated smoke set.",
+      });
+    }
+  }
+
+  return [...byRoute.values()];
+}
 
 export function routesForSuite(suite: ModelEvalSuite): string[] {
   return SUPPORTED_MODEL_ROUTES

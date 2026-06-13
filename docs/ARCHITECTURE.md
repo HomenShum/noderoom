@@ -163,15 +163,23 @@ benchmark task / room goal
 
 The contract is now executable as `npm run benchmark:openrouter-convex`. It is
 NodeRoom's benchmark, inspired by SpreadsheetBench, SpreadsheetBench 2, and
-BankerToolBench, for the product shape we actually ship: OpenRouter routes
-working through Convex-owned jobs, leases, journals, receipts, and artifact
-evidence. The strict gate may pass while official benchmark readiness remains
-blocked, because the two claims are intentionally separate:
+BankerToolBench, for the product shape we actually ship: model routes working
+through Convex-owned jobs, leases, journals, receipts, and artifact evidence.
+The report has two layers: the strict OpenRouter-on-Convex harness gate, and a
+closer official-style scorecard across every configured `llmModelCatalog.agent`
+route plus the curated OpenRouter routes. The strict gate may pass while route
+promotion and official benchmark readiness remain blocked, because the claims
+are intentionally separate:
 
 - **OpenRouter-on-Convex harness ready:** the runtime can safely run
   benchmark-shaped spreadsheet/banker work through `agentJobs` and
   `convexModel`, with CAS/no-clobber, L1-L7 resume, multi-user coordination,
   route selection, chart visual evidence, and Docker workspace isolation.
+- **Official-style route scorecard:** SpreadsheetBench-like N=5 workbook edits,
+  BankerToolBench-like package/verifier tasks, multi-user conflict tasks, and
+  provider-route N=5/p95 path stability are normalized route by route. The
+  latest report covers 35 agent LLM routes, with only routes that own repeated
+  live evidence eligible for interactive promotion.
 - **Official benchmark promoted:** the external benchmark adapters have run
   official held-out tasks with verifier-owned scoring. BankerToolBench still
   needs Harbor/MCP/Gandalf execution before NodeRoom can claim an official

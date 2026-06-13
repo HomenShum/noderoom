@@ -224,7 +224,7 @@ type ModelCatalog = Record<LlmProvider, Record<LlmTask, string[]>>;
 export const llmModelCatalog: ModelCatalog = {
   openai: {
     chat: ["gpt-5.4", "gpt-5.4-mini", "gpt-5.4-nano"],
-    agent: ["gpt-5.4", "gpt-5.4-mini"],
+    agent: ["gpt-5.4", "gpt-5.4-mini", "gpt-5.4-nano"],
     router: ["gpt-5.4-nano", "gpt-5.4-mini"],
     judge: ["gpt-5.4", "gpt-5.4-mini"],
     analysis: ["gpt-5.4", "gpt-5.4-mini"],

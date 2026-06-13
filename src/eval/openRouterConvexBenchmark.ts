@@ -38,6 +38,53 @@ export type OpenRouterConvexRoutePlan = {
   blockers: string[];
 };
 
+export type OfficialStyleSuiteId =
+  | "spreadsheetbench_like"
+  | "bankertoolbench_like"
+  | "multi_user_conflict"
+  | "provider_route_n5_p95";
+
+export type OfficialStyleEvidenceStatus = "pass" | "blocked" | "missing" | "not_applicable";
+
+export type OfficialStyleBenchmarkSuite = {
+  id: OfficialStyleSuiteId;
+  title: string;
+  inspiredBy: Array<"SpreadsheetBench" | "SpreadsheetBench 2" | "BankerToolBench" | "NodeRoom">;
+  status: OfficialStyleEvidenceStatus;
+  acceptance: string;
+  command: string;
+  evidence: string[];
+  metrics: Record<string, string | number | boolean>;
+  blockers: string[];
+};
+
+export type RouteEvidenceCell = {
+  status: OfficialStyleEvidenceStatus;
+  evidence: string[];
+  metrics: Record<string, string | number | boolean>;
+  blockers: string[];
+};
+
+export type AgentRouteScorecard = {
+  route: string;
+  provider: OpenRouterConvexRoute["provider"];
+  label: string;
+  suites: string[];
+  promotion: string;
+  role: "interactive_promoted" | "interactive_candidate" | "background_long_running_only" | "research_only";
+  promotionStatus: "promoted" | "candidate" | "background_only" | "blocked";
+  adapter: "convexModel.openrouter_chat_completions" | "convexModel.openrouter_free_auto" | "convexModel.native_provider";
+  evidence: {
+    research: RouteEvidenceCell;
+    collaborationLadder: RouteEvidenceCell;
+    managedPathN5P95: RouteEvidenceCell;
+    spreadsheetBenchN5: RouteEvidenceCell;
+    bankerToolBenchLocal: RouteEvidenceCell;
+    multiUserContract: RouteEvidenceCell;
+  };
+  blockers: string[];
+};
+
 export type OpenRouterConvexBenchmarkReport = {
   schema: 1;
   generatedAt?: string;
@@ -48,12 +95,21 @@ export type OpenRouterConvexBenchmarkReport = {
     harnessCasesPassing: number;
     officialPromotionCases: number;
     officialPromotionCasesPassing: number;
+    officialStyleSuites: number;
+    officialStyleSuitesPassing: number;
+    agentRouteCount: number;
+    routesWithManagedN5P95: number;
+    routesWithSpreadsheetN5: number;
+    routesInteractivePromoted: number;
     harnessReady: boolean;
+    officialStyleSuitesReady: boolean;
     officialPromotionReady: boolean;
   };
   designPrinciples: string[];
   cases: OpenRouterConvexBenchmarkCase[];
+  officialStyleSuites: OfficialStyleBenchmarkSuite[];
   routePlans: OpenRouterConvexRoutePlan[];
+  routeScorecards: AgentRouteScorecard[];
 };
 
 const CONVEX_CONTRACT = [
@@ -72,12 +128,14 @@ export function buildOpenRouterConvexBenchmarkReport(args: {
   generatedAt?: string;
 }): OpenRouterConvexBenchmarkReport {
   const cases = benchmarkCases();
+  const officialStyleSuites = buildOfficialStyleSuites(args.routes);
   const harnessCases = cases.filter((item) => item.scope === "openrouter_convex_harness");
   const officialCases = cases.filter((item) => item.scope === "official_promotion");
   const harnessReady = harnessCases.every((item) => item.status === "pass");
   const routePlans = args.routes
     .filter((route) => route.provider === "openrouter" || route.provider === "internal_alias")
     .map((route) => routePlan(route, harnessReady));
+  const routeScorecards = buildRouteScorecards(args.routes);
 
   return {
     schema: 1,
@@ -89,7 +147,14 @@ export function buildOpenRouterConvexBenchmarkReport(args: {
       harnessCasesPassing: harnessCases.filter((item) => item.status === "pass").length,
       officialPromotionCases: officialCases.length,
       officialPromotionCasesPassing: officialCases.filter((item) => item.status === "pass").length,
+      officialStyleSuites: officialStyleSuites.length,
+      officialStyleSuitesPassing: officialStyleSuites.filter((item) => item.status === "pass").length,
+      agentRouteCount: routeScorecards.length,
+      routesWithManagedN5P95: routeScorecards.filter((item) => item.evidence.managedPathN5P95.status === "pass").length,
+      routesWithSpreadsheetN5: routeScorecards.filter((item) => item.evidence.spreadsheetBenchN5.status === "pass").length,
+      routesInteractivePromoted: routeScorecards.filter((item) => item.role === "interactive_promoted").length,
       harnessReady,
+      officialStyleSuitesReady: officialStyleSuites.every((item) => item.status === "pass"),
       officialPromotionReady: officialCases.every((item) => item.status === "pass"),
     },
     designPrinciples: [
@@ -97,9 +162,12 @@ export function buildOpenRouterConvexBenchmarkReport(args: {
       "Benchmark-shaped work is routed through deterministic tools first, then bounded model edit plans, then evidence-bearing writes.",
       "Free-auto is a long-running/background lane until ladder and p95 evidence prove it can meet interactive collaboration budgets.",
       "Official benchmark claims stay blocked until the external verifier path is wired; internal Convex benchmark readiness is separate.",
+      "The scorecard includes every configured agent LLM route from llmModelCatalog.agent plus the curated OpenRouter route set.",
     ],
     cases,
+    officialStyleSuites,
     routePlans,
+    routeScorecards,
   };
 }
 
@@ -128,6 +196,140 @@ function routePlan(route: OpenRouterConvexRoute, harnessReady: boolean): OpenRou
     evidence: [route.evidence, "src/agent/convexModel.ts", "convex/agentJobs.ts"].filter(Boolean) as string[],
     blockers,
   };
+}
+
+function buildOfficialStyleSuites(routes: OpenRouterConvexRoute[]): OfficialStyleBenchmarkSuite[] {
+  const spreadsheet = spreadsheetBenchN5Report();
+  const btb = bankerToolBenchLocalReport();
+  const multiUser = readJson<{ summary?: { passed?: boolean; scenarios?: number; passedScenarios?: number } }>("docs/eval/multi-user-coordination-proof.json");
+  const calibration = livePathCalibrationReport();
+  const routeScorecards = buildRouteScorecards(routes);
+  const calibratedRoutes = routeScorecards.filter((route) => route.evidence.managedPathN5P95.status === "pass");
+  const spreadsheetPass = spreadsheetPasses(spreadsheet);
+  const btbPass = btb?.passRate === 1 && (btb.taskCount ?? 0) > 0;
+  const multiUserPass = multiUser?.summary?.passed === true;
+  const allRoutesCalibrated = calibratedRoutes.length === routeScorecards.length && routeScorecards.length > 0;
+
+  return [
+    {
+      id: "spreadsheetbench_like",
+      title: "SpreadsheetBench-like workbook edit-plan tasks",
+      inspiredBy: ["SpreadsheetBench", "SpreadsheetBench 2"],
+      status: spreadsheetPass ? "pass" : spreadsheet ? "blocked" : "missing",
+      acceptance: "At least three staged spreadsheet tasks run five repeats with passRate=1, sidecar evidence, local formula cache, p95 latency, and zero contamination.",
+      command: "npm run benchmark:spreadsheetbench:run -- --mode model-edit-plan --repeats 5",
+      evidence: ["docs/eval/spreadsheetbench-v1-model-edit-plan-3task-n5-live-smoke.json", "docs/eval/spreadsheetbench-v1-run-3task-n5-contamination-smoke.json"],
+      metrics: spreadsheet ? {
+        caseCount: spreadsheet.caseCount ?? 0,
+        repeats: spreadsheet.repeatCount ?? 0,
+        passRate: spreadsheet.passRate ?? 0,
+        p95LatencyMs: spreadsheet.stats?.latencyMs?.p95 ?? 0,
+        modelCalls: spreadsheet.harness?.budget?.modelCalls ?? 0,
+        providerCostUsd: spreadsheet.harness?.budget?.providerCostUsd ?? 0,
+      } : {},
+      blockers: spreadsheetPass ? [] : ["Need a passing N=5 model-edit-plan run with caseCount>=3, repeatCount>=5, passRate=1, and sidecar evidence."],
+    },
+    {
+      id: "bankertoolbench_like",
+      title: "BankerToolBench-like package/verifier workflow",
+      inspiredBy: ["BankerToolBench"],
+      status: btbPass ? "pass" : btb ? "blocked" : "missing",
+      acceptance: "A staged BTB-like task emits the expected deliverable package from agent-only files before evaluator metadata opens and local weighted scoring reaches 1.0.",
+      command: "npm run benchmark:bankertoolbench:run -- --mode apply-agent-output",
+      evidence: ["docs/eval/bankertoolbench-run-positive-smoke.json", "docs/eval/bankertoolbench-official-contract.json"],
+      metrics: btb ? {
+        taskCount: btb.taskCount ?? 0,
+        passRate: btb.passRate ?? 0,
+        averageWeightedScore: btb.averageWeightedScore ?? 0,
+        verifier: btb.harness?.verifier ?? "unknown",
+      } : {},
+      blockers: btbPass ? [] : ["Need a passing local BTB-style candidate package and weighted-rubric smoke."],
+    },
+    {
+      id: "multi_user_conflict",
+      title: "Multi-user and agent conflict tasks",
+      inspiredBy: ["NodeRoom", "SpreadsheetBench"],
+      status: multiUserPass ? "pass" : multiUser ? "blocked" : "missing",
+      acceptance: "Human-vs-human, agent-vs-human, blocked lock, stale base, and finally-release scenarios all end with conflict data and zero lock leaks.",
+      command: "npm run eval:multiuser-coordination -- --strict",
+      evidence: ["docs/eval/multi-user-coordination-proof.json", "evals/multiUserCoordinationProof.ts"],
+      metrics: multiUser?.summary ? {
+        scenarios: multiUser.summary.scenarios ?? 0,
+        passedScenarios: multiUser.summary.passedScenarios ?? 0,
+      } : {},
+      blockers: multiUserPass ? [] : ["Run the multi-user coordination proof and clear failed scenarios."],
+    },
+    {
+      id: "provider_route_n5_p95",
+      title: "Provider route N=5/p95 path stability",
+      inspiredBy: ["NodeRoom", "SpreadsheetBench", "BankerToolBench"],
+      status: allRoutesCalibrated ? "pass" : calibratedRoutes.length > 0 ? "blocked" : "missing",
+      acceptance: "Every route promoted for interactive benchmark-shaped writes has N>=5 live managed-path evidence with p95 model/tool calls, fingerprints, and zero invalid or missing tool results.",
+      command: "npm run halo:live-path:calibrate -- --real <route> --repeats 5",
+      evidence: ["docs/eval/halo-live-path-calibration.json"],
+      metrics: {
+        agentRoutes: routeScorecards.length,
+        calibratedRoutes: calibratedRoutes.length,
+        latestCalibratedRoute: calibration?.providerRoute ?? "none",
+        latestP95ToolCalls: calibration?.summary?.p95ToolCalls ?? 0,
+        latestP95ModelCalls: calibration?.summary?.p95ModelCalls ?? 0,
+      },
+      blockers: allRoutesCalibrated ? [] : [`${routeScorecards.length - calibratedRoutes.length} agent route(s) still need N=5/p95 live path evidence before interactive promotion.`],
+    },
+  ];
+}
+
+function buildRouteScorecards(routes: OpenRouterConvexRoute[]): AgentRouteScorecard[] {
+  return dedupeRoutes(routes).map((route) => {
+    const research = researchEvidence(route.route);
+    const collaborationLadder = collaborationLadderEvidence(route.route);
+    const managedPathN5P95 = managedPathEvidence(route.route);
+    const spreadsheetBenchN5 = spreadsheetN5Evidence(route.route);
+    const bankerToolBenchLocal = bankerToolBenchRouteEvidence(route.route);
+    const multiUserContract = multiUserRouteEvidence();
+    const blockers = [
+      ...research.blockers,
+      ...collaborationLadder.blockers,
+      ...managedPathN5P95.blockers,
+      ...spreadsheetBenchN5.blockers,
+      ...bankerToolBenchLocal.blockers,
+    ];
+    const supportsCollaboration = route.suites.includes("collaboration");
+    const role =
+      !supportsCollaboration ? "research_only" :
+      route.promotion === "demo_only" || route.route === "openrouter/free-auto" ? "background_long_running_only" :
+      collaborationLadder.status === "pass" && managedPathN5P95.status === "pass" ? "interactive_promoted" :
+      "interactive_candidate";
+    const promotionStatus =
+      role === "interactive_promoted" ? "promoted" :
+      role === "background_long_running_only" ? "background_only" :
+      blockers.length > 0 ? "blocked" :
+      "candidate";
+
+    return {
+      route: route.route,
+      provider: route.provider,
+      label: route.label,
+      suites: route.suites,
+      promotion: route.promotion,
+      role,
+      promotionStatus,
+      adapter: route.route === "openrouter/free-auto"
+        ? "convexModel.openrouter_free_auto"
+        : route.provider === "native"
+          ? "convexModel.native_provider"
+          : "convexModel.openrouter_chat_completions",
+      evidence: {
+        research,
+        collaborationLadder,
+        managedPathN5P95,
+        spreadsheetBenchN5,
+        bankerToolBenchLocal,
+        multiUserContract,
+      },
+      blockers,
+    };
+  });
 }
 
 function benchmarkCases(): OpenRouterConvexBenchmarkCase[] {
@@ -273,6 +475,266 @@ function routeReportsPass(
     (v1?.routeCounts?.blocked_chart_visual ?? 1) === 0 &&
     (v2?.routeCounts?.blocked_chart_visual ?? 1) === 0,
   );
+}
+
+function dedupeRoutes(routes: OpenRouterConvexRoute[]): OpenRouterConvexRoute[] {
+  const byRoute = new Map<string, OpenRouterConvexRoute>();
+  for (const route of routes) byRoute.set(route.route, route);
+  return [...byRoute.values()].sort((a, b) => providerRank(a.provider) - providerRank(b.provider) || a.route.localeCompare(b.route));
+}
+
+function providerRank(provider: OpenRouterConvexRoute["provider"]): number {
+  if (provider === "openrouter") return 0;
+  if (provider === "internal_alias") return 1;
+  return 2;
+}
+
+type ResearchReport = {
+  models?: Array<{
+    model?: string;
+    requestedModel?: string;
+    resolvedModel?: string;
+    ok?: boolean;
+    passed?: number;
+    total?: number;
+    ms?: number;
+    costUsd?: number;
+    toolCalls?: number;
+    steps?: number;
+    traceRef?: string;
+  }>;
+};
+
+type LadderReport = {
+  results?: Array<{
+    requestedModel?: string;
+    resolvedModel?: string;
+    rung?: string;
+    pass?: boolean;
+    ms?: number;
+    cost?: number;
+    tools?: number;
+    stopReason?: string;
+  }>;
+};
+
+type SpreadsheetN5Report = {
+  caseCount?: number;
+  repeatCount?: number;
+  passRate?: number;
+  casePassRate?: number;
+  attemptCount?: number;
+  stats?: { latencyMs?: { p50?: number; p95?: number; max?: number }; failureCounts?: Record<string, number> };
+  harness?: { budget?: { modelCalls?: number; inputTokens?: number; outputTokens?: number; providerCostUsd?: number } };
+  results?: Array<{ model?: { name?: string; calls?: number; costUsd?: number } }>;
+};
+
+type BankerLocalReport = {
+  taskCount?: number;
+  passRate?: number;
+  averageWeightedScore?: number;
+  harness?: { verifier?: string };
+};
+
+type LivePathCalibration = {
+  providerRoute?: string;
+  pass?: boolean;
+  status?: string;
+  summary?: {
+    runs?: number;
+    uniqueFingerprintCount?: number;
+    p95ModelCalls?: number;
+    p95ToolCalls?: number;
+    maxInvalidToolCalls?: number;
+    maxMissingToolResults?: number;
+  };
+};
+
+function researchEvidence(route: string): RouteEvidenceCell {
+  const report = readJson<ResearchReport>("docs/eval/results.json");
+  const row = report?.models?.find((item) => item.requestedModel === route || item.model === route || item.resolvedModel === route);
+  if (!row) {
+    return {
+      status: "missing",
+      evidence: ["docs/eval/results.json"],
+      metrics: {},
+      blockers: ["no company-research v3 evidence recorded for this route"],
+    };
+  }
+  const status = row.ok === true && (row.total ?? 0) > 0 && row.passed === row.total ? "pass" : "blocked";
+  return {
+    status,
+    evidence: ["docs/eval/results.json", row.traceRef].filter(Boolean) as string[],
+    metrics: {
+      passed: row.passed ?? 0,
+      total: row.total ?? 0,
+      ms: row.ms ?? 0,
+      costUsd: row.costUsd ?? 0,
+      toolCalls: row.toolCalls ?? 0,
+      steps: row.steps ?? 0,
+    },
+    blockers: status === "pass" ? [] : ["research checks did not all pass for this route"],
+  };
+}
+
+function collaborationLadderEvidence(route: string): RouteEvidenceCell {
+  const report = readJson<LadderReport>("docs/eval/model-ladder-supported.json");
+  const rows = report?.results?.filter((item) => item.requestedModel === route) ?? [];
+  if (rows.length === 0) {
+    return {
+      status: "missing",
+      evidence: ["docs/eval/model-ladder-supported.json"],
+      metrics: {},
+      blockers: ["no route-specific collaboration ladder evidence recorded"],
+    };
+  }
+  const required = ["L1_read", "L2_edit", "L3_conflict", "L4_blocked"];
+  const byRung = new Map(rows.map((row) => [row.rung, row]));
+  const missing = required.filter((rung) => !byRung.has(rung));
+  const failed = required.filter((rung) => byRung.get(rung)?.pass !== true);
+  const status = missing.length === 0 && failed.length === 0 ? "pass" : "blocked";
+  return {
+    status,
+    evidence: ["docs/eval/model-ladder-supported.json"],
+    metrics: {
+      rungs: rows.length,
+      passCount: rows.filter((row) => row.pass === true).length,
+      p95LatencyMs: percentile(rows.map((row) => row.ms ?? 0), 0.95),
+      p95ToolCalls: percentile(rows.map((row) => row.tools ?? 0), 0.95),
+      p95CostUsd: percentile(rows.map((row) => row.cost ?? 0), 0.95),
+    },
+    blockers: status === "pass" ? [] : [`ladder missing=${missing.join(",") || "none"} failed=${failed.join(",") || "none"}`],
+  };
+}
+
+function managedPathEvidence(route: string): RouteEvidenceCell {
+  const report = livePathCalibrationReport();
+  if (!report || report.providerRoute !== route) {
+    return {
+      status: "missing",
+      evidence: ["docs/eval/halo-live-path-calibration.json"],
+      metrics: {},
+      blockers: ["no N=5 live managed-path calibration recorded for this route"],
+    };
+  }
+  const pass = report.pass === true && report.status === "calibrated";
+  return {
+    status: pass ? "pass" : "blocked",
+    evidence: ["docs/eval/halo-live-path-calibration.json"],
+    metrics: {
+      runs: report.summary?.runs ?? 0,
+      uniqueFingerprints: report.summary?.uniqueFingerprintCount ?? 0,
+      p95ModelCalls: report.summary?.p95ModelCalls ?? 0,
+      p95ToolCalls: report.summary?.p95ToolCalls ?? 0,
+      maxInvalidToolCalls: report.summary?.maxInvalidToolCalls ?? 0,
+      maxMissingToolResults: report.summary?.maxMissingToolResults ?? 0,
+    },
+    blockers: pass ? [] : [`managed-path calibration status is ${report.status ?? "unknown"}`],
+  };
+}
+
+function spreadsheetN5Evidence(route: string): RouteEvidenceCell {
+  const report = spreadsheetBenchN5Report();
+  if (!report) {
+    return {
+      status: "missing",
+      evidence: ["docs/eval/spreadsheetbench-v1-model-edit-plan-3task-n5-live-smoke.json"],
+      metrics: {},
+      blockers: ["no SpreadsheetBench-like N=5 report found"],
+    };
+  }
+  const models = new Set((report.results ?? []).map((row) => row.model?.name).filter(Boolean));
+  if (!models.has(route)) {
+    return {
+      status: "missing",
+      evidence: ["docs/eval/spreadsheetbench-v1-model-edit-plan-3task-n5-live-smoke.json"],
+      metrics: {
+        recordedRoutes: [...models].join(", ") || "none",
+      },
+      blockers: ["no SpreadsheetBench-like N=5 model-edit evidence recorded for this route"],
+    };
+  }
+  const pass = spreadsheetPasses(report);
+  return {
+    status: pass ? "pass" : "blocked",
+    evidence: ["docs/eval/spreadsheetbench-v1-model-edit-plan-3task-n5-live-smoke.json"],
+    metrics: {
+      caseCount: report.caseCount ?? 0,
+      repeats: report.repeatCount ?? 0,
+      passRate: report.passRate ?? 0,
+      p95LatencyMs: report.stats?.latencyMs?.p95 ?? 0,
+      providerCostUsd: report.harness?.budget?.providerCostUsd ?? 0,
+    },
+    blockers: pass ? [] : ["SpreadsheetBench-like N=5 report exists for this route but does not meet the promotion bar"],
+  };
+}
+
+function bankerToolBenchRouteEvidence(route: string): RouteEvidenceCell {
+  const report = bankerToolBenchLocalReport();
+  if (!report) {
+    return {
+      status: "missing",
+      evidence: ["docs/eval/bankertoolbench-run-positive-smoke.json"],
+      metrics: {},
+      blockers: ["no BTB local smoke report found"],
+    };
+  }
+  return {
+    status: "missing",
+    evidence: ["docs/eval/bankertoolbench-run-positive-smoke.json"],
+    metrics: {
+      route,
+      localHarnessPassRate: report.passRate ?? 0,
+      averageWeightedScore: report.averageWeightedScore ?? 0,
+      verifier: report.harness?.verifier ?? "unknown",
+    },
+    blockers: ["BTB local smoke is harness/package evidence only; no route-owned candidate generation is recorded yet"],
+  };
+}
+
+function multiUserRouteEvidence(): RouteEvidenceCell {
+  const report = readJson<{ summary?: { passed?: boolean; scenarios?: number; passedScenarios?: number } }>("docs/eval/multi-user-coordination-proof.json");
+  const pass = report?.summary?.passed === true;
+  return {
+    status: pass ? "pass" : report ? "blocked" : "missing",
+    evidence: ["docs/eval/multi-user-coordination-proof.json"],
+    metrics: report?.summary ? {
+      scenarios: report.summary.scenarios ?? 0,
+      passedScenarios: report.summary.passedScenarios ?? 0,
+    } : {},
+    blockers: pass ? [] : ["multi-user coordination proof is missing or failing"],
+  };
+}
+
+function spreadsheetBenchN5Report(): SpreadsheetN5Report | undefined {
+  return readJson<SpreadsheetN5Report>("docs/eval/spreadsheetbench-v1-model-edit-plan-3task-n5-live-smoke.json")
+    ?? readJson<SpreadsheetN5Report>("docs/eval/spreadsheetbench-v1-model-edit-plan-n5-live-smoke.json");
+}
+
+function spreadsheetPasses(report: SpreadsheetN5Report | undefined): boolean {
+  return Boolean(
+    report &&
+    (report.caseCount ?? 0) >= 3 &&
+    (report.repeatCount ?? 0) >= 5 &&
+    report.passRate === 1 &&
+    (report.stats?.latencyMs?.p95 ?? 0) > 0 &&
+    (report.harness?.budget?.modelCalls ?? 0) >= 5,
+  );
+}
+
+function bankerToolBenchLocalReport(): BankerLocalReport | undefined {
+  return readJson<BankerLocalReport>("docs/eval/bankertoolbench-run-positive-smoke.json");
+}
+
+function livePathCalibrationReport(): LivePathCalibration | undefined {
+  return readJson<LivePathCalibration>("docs/eval/halo-live-path-calibration.json");
+}
+
+function percentile(values: number[], p: number): number {
+  const clean = values.filter((value) => Number.isFinite(value)).sort((a, b) => a - b);
+  if (clean.length === 0) return 0;
+  const index = Math.min(clean.length - 1, Math.ceil(clean.length * p) - 1);
+  return clean[index];
 }
 
 function readJson<T>(path: string): T | undefined {

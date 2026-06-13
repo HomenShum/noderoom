@@ -1,7 +1,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { buildOpenRouterConvexBenchmarkReport, type OpenRouterConvexBenchmarkReport } from "../src/eval/openRouterConvexBenchmark";
-import { SUPPORTED_MODEL_ROUTES } from "./benchmark/modelEvalConfig";
+import { allAgentLlmRoutes } from "./benchmark/modelEvalConfig";
 
 const args = process.argv.slice(2);
 const jsonOut = optionValue("--json-out") ?? "docs/eval/openrouter-convex-benchmark.json";
@@ -9,7 +9,7 @@ const mdOut = optionValue("--md-out") ?? "docs/eval/OPENROUTER_CONVEX_BENCHMARK.
 const strict = args.includes("--strict");
 
 const report = buildOpenRouterConvexBenchmarkReport({
-  routes: SUPPORTED_MODEL_ROUTES,
+  routes: allAgentLlmRoutes(),
   generatedAt: new Date().toISOString(),
 });
 
@@ -36,7 +36,11 @@ function renderMarkdown(report: OpenRouterConvexBenchmarkReport): string {
   lines.push("## Summary");
   lines.push("");
   lines.push(`- OpenRouter routes evaluated: ${report.summary.openRouterRouteCount}/${report.summary.routeCount}`);
+  lines.push(`- Agent LLM routes in scorecard: ${report.summary.agentRouteCount}`);
   lines.push(`- OpenRouter-on-Convex harness cases: ${report.summary.harnessCasesPassing}/${report.summary.harnessCases} ${report.summary.harnessReady ? "PASS" : "BLOCKED"}`);
+  lines.push(`- Official-style suites: ${report.summary.officialStyleSuitesPassing}/${report.summary.officialStyleSuites} ${report.summary.officialStyleSuitesReady ? "PASS" : "BLOCKED"}`);
+  lines.push(`- Routes with live N=5/p95 managed-path evidence: ${report.summary.routesWithManagedN5P95}/${report.summary.agentRouteCount}`);
+  lines.push(`- Routes with SpreadsheetBench-like N=5 evidence: ${report.summary.routesWithSpreadsheetN5}/${report.summary.agentRouteCount}`);
   lines.push(`- Official-promotion cases: ${report.summary.officialPromotionCasesPassing}/${report.summary.officialPromotionCases} ${report.summary.officialPromotionReady ? "PASS" : "BLOCKED"}`);
   lines.push("");
   lines.push("## Design Principles");
@@ -49,6 +53,23 @@ function renderMarkdown(report: OpenRouterConvexBenchmarkReport): string {
   lines.push("|---|---|---:|---|---|");
   for (const item of report.cases) {
     lines.push(`| \`${item.id}\` | ${item.scope} | ${item.status} | ${item.inspiredBy.join(", ")} | ${item.acceptance} |`);
+  }
+  lines.push("");
+  lines.push("## Official-Style Suite Scorecard");
+  lines.push("");
+  lines.push("| Suite | Status | Evidence | Key Metrics | Blockers |");
+  lines.push("|---|---:|---|---|---|");
+  for (const suite of report.officialStyleSuites) {
+    const metrics = Object.entries(suite.metrics).map(([key, value]) => `${key}=${String(value)}`).join("; ");
+    lines.push(`| \`${suite.id}\` | ${suite.status} | ${suite.evidence.map((item) => `\`${item}\``).join("<br>")} | ${metrics || "none"} | ${suite.blockers.join("; ") || "none"} |`);
+  }
+  lines.push("");
+  lines.push("## Agent LLM Route Scorecard");
+  lines.push("");
+  lines.push("| Route | Provider | Role | Promotion | Research | Ladder | Managed N=5/p95 | Spreadsheet N=5 | Blockers |");
+  lines.push("|---|---|---|---:|---:|---:|---:|---:|---|");
+  for (const route of report.routeScorecards) {
+    lines.push(`| \`${route.route}\` | ${route.provider} | ${route.role} | ${route.promotionStatus} | ${route.evidence.research.status} | ${route.evidence.collaborationLadder.status} | ${route.evidence.managedPathN5P95.status} | ${route.evidence.spreadsheetBenchN5.status} | ${route.blockers.join("; ") || "none"} |`);
   }
   lines.push("");
   lines.push("## OpenRouter Route Plan");

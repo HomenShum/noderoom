@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildOpenRouterConvexBenchmarkReport } from "../src/eval/openRouterConvexBenchmark";
-import { SUPPORTED_MODEL_ROUTES } from "../scripts/benchmark/modelEvalConfig";
+import { SUPPORTED_MODEL_ROUTES, allAgentLlmRoutes } from "../scripts/benchmark/modelEvalConfig";
 
 describe("OpenRouter-on-Convex benchmark contract", () => {
   it("separates harness readiness from official benchmark promotion", () => {
@@ -13,6 +13,8 @@ describe("OpenRouter-on-Convex benchmark contract", () => {
     expect(report.summary.harnessCases).toBeGreaterThan(5);
     expect(report.summary.harnessReady).toBe(true);
     expect(report.summary.officialPromotionReady).toBe(false);
+    expect(report.summary.officialStyleSuites).toBe(4);
+    expect(report.summary.officialStyleSuitesReady).toBe(false);
     expect(report.cases.find((item) => item.id === "bankertoolbench_official_verifier_path")).toMatchObject({
       scope: "official_promotion",
       status: "blocked",
@@ -58,5 +60,61 @@ describe("OpenRouter-on-Convex benchmark contract", () => {
     expect(cases.spreadsheetbench_route_contract.requiredConvexContract).toContain("formula edit plans with deterministic formula-result cache");
     expect(cases.spreadsheetbench_chart_visual_grade.requiredConvexContract).toContain("candidate/gold PNG hashes are recorded before visual acceptance");
     expect(cases.docker_agent_workspace_isolation.requiredConvexContract).toContain("evaluator gold is denied until scoring phase");
+  });
+
+  it("turns the internal harness into official-style benchmark families without claiming official scores", () => {
+    const report = buildOpenRouterConvexBenchmarkReport({ routes: allAgentLlmRoutes(), generatedAt: "test" });
+    const suites = Object.fromEntries(report.officialStyleSuites.map((item) => [item.id, item]));
+
+    expect(suites.spreadsheetbench_like).toMatchObject({
+      status: "pass",
+      command: expect.stringContaining("benchmark:spreadsheetbench:run"),
+    });
+    expect(suites.bankertoolbench_like).toMatchObject({
+      status: "pass",
+      command: expect.stringContaining("benchmark:bankertoolbench:run"),
+    });
+    expect(suites.multi_user_conflict).toMatchObject({
+      status: "pass",
+    });
+    expect(suites.provider_route_n5_p95).toMatchObject({
+      status: "blocked",
+    });
+    expect(suites.provider_route_n5_p95.blockers[0]).toContain("agent route(s) still need N=5/p95");
+  });
+
+  it("includes every configured agent LLM route in the route scorecard", () => {
+    const report = buildOpenRouterConvexBenchmarkReport({ routes: allAgentLlmRoutes() });
+    const routes = report.routeScorecards.map((item) => item.route);
+
+    expect(routes).toEqual(expect.arrayContaining([
+      "moonshotai/kimi-k2.6",
+      "minimax/minimax-m2.7",
+      "z-ai/glm-4.7",
+      "gpt-5.4",
+      "claude-sonnet-4.6",
+      "gemini-3.1-pro-preview",
+      "grok-4-1-fast-reasoning",
+      "openrouter/free-auto",
+    ]));
+    expect(report.summary.agentRouteCount).toBe(routes.length);
+    expect(new Set(routes).size).toBe(routes.length);
+  });
+
+  it("keeps route promotion tied to route-owned N=5/p95 evidence", () => {
+    const report = buildOpenRouterConvexBenchmarkReport({ routes: allAgentLlmRoutes() });
+    const deepseek = report.routeScorecards.find((item) => item.route === "deepseek/deepseek-v4-flash");
+    const gptNano = report.routeScorecards.find((item) => item.route === "gpt-5.4-nano");
+
+    expect(deepseek?.evidence.managedPathN5P95).toMatchObject({
+      status: "pass",
+      metrics: expect.objectContaining({ runs: 5, p95ToolCalls: 3 }),
+    });
+    expect(deepseek?.evidence.spreadsheetBenchN5.status).toBe("missing");
+    expect(gptNano?.evidence.spreadsheetBenchN5).toMatchObject({
+      status: "pass",
+      metrics: expect.objectContaining({ repeats: 5, passRate: 1 }),
+    });
+    expect(gptNano?.evidence.managedPathN5P95.status).toBe("missing");
   });
 });

@@ -1,14 +1,14 @@
 {
   "schema": 1,
-  "generatedAt": "2026-06-13T19:23:34.325Z",
+  "generatedAt": "2026-06-13T20:51:59.132Z",
   "stageRoot": "staged-v1-full",
   "taskCount": 400,
   "routeCounts": {
     "deterministic_table_transform": 41,
     "model_formula_edit": 218,
     "model_format_edit": 33,
-    "model_general_edit": 106,
-    "blocked_chart_visual": 2
+    "model_general_edit": 108,
+    "blocked_chart_visual": 0
   },
   "selections": [
     {
@@ -3022,12 +3022,13 @@
     },
     {
       "taskId": "50768",
-      "route": "blocked_chart_visual",
+      "route": "model_general_edit",
       "rationale": [
-        "chart or visual wording requires rendered/VLM chart grading"
+        "chart or visual wording routes through bounded model edit planning plus rendered/VLM chart grading"
       ],
       "requiredCapabilities": [
-        "chart_visual_grade"
+        "chart_visual_grade",
+        "model_edit_plan"
       ],
       "agentManifest": "tasks/50768/agent/task.json"
     },
@@ -4306,12 +4307,13 @@
     },
     {
       "taskId": "58904",
-      "route": "blocked_chart_visual",
+      "route": "model_general_edit",
       "rationale": [
-        "chart or visual wording requires rendered/VLM chart grading"
+        "chart or visual wording routes through bounded model edit planning plus rendered/VLM chart grading"
       ],
       "requiredCapabilities": [
-        "chart_visual_grade"
+        "chart_visual_grade",
+        "model_edit_plan"
       ],
       "agentManifest": "tasks/58904/agent/task.json"
     },

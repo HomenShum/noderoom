@@ -43,7 +43,7 @@ export function LeftRail({ roomId, me, artId, onPick, style }: { roomId: string;
   const traces = store.listTraces(roomId);
   const locks = store.awareness(roomId).activeLocks;
   const sub = (a: { kind: string; title: string; version: number; elements: Record<string, unknown>; order?: string[]; meta?: { excelGrid?: { rows: number; columns: number } } }) =>
-    a.title === WIKI_TITLE ? `v${a.version} · live TOC` : uploadDocMeta(a) ?? (a.kind === "sheet" ? `v${a.version} · ${rowCount(a)} rows` : a.kind === "wall" ? `${Object.keys(a.elements).length} notes` : "edited recently");
+    a.title === WIKI_TITLE ? `v${a.version} · live TOC` : uploadDocMeta(a) ?? (a.kind === "sheet" ? `v${a.version} · ${rowCount(a)} rows` : a.kind === "wall" ? `${a.order?.length ?? 0} notes` : "edited recently");
   const onUpload = async (files: FileList | null) => {
     if (!files?.length) return;
     setUploading(true);

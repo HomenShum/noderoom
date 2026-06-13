@@ -361,7 +361,7 @@ function artifactWikiMeta(art: Art): string {
   if (art.title === WIKI_TITLE) return `live TOC; v${art.version}`;
   if (art.kind === "sheet" && art.meta?.excelGrid) return `${art.meta.excelGrid.rows} x ${art.meta.excelGrid.columns}; v${art.version}`;
   if (art.kind === "sheet") return `${rowIdsOf(art).length} rows; v${art.version}`;
-  if (art.kind === "wall") return `${Object.keys(art.elements).length} notes; v${art.version}`;
+  if (art.kind === "wall") return `${Object.keys(art.elements ?? {}).length} notes; v${art.version}`;
   return `doc; v${art.version}`;
 }
 

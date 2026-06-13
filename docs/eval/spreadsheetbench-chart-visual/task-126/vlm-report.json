@@ -1,0 +1,50 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T20:39:51.940Z",
+  "verifier": "spreadsheetbench_chart_visual_vlm",
+  "status": "judged",
+  "pass": true,
+  "verdict": "accept",
+  "model": "gemini-3.5-flash",
+  "taskId": "Visualization/Task 126",
+  "sheet": "Surprise",
+  "candidateKind": "golden-oracle-candidate",
+  "sources": {
+    "candidateWorkbook": ".tmp/official-benchmarks/v2/data_example_05_11/Visualization/spreadsheet/Task 126/Task 126_golden.xlsx",
+    "goldWorkbook": ".tmp/official-benchmarks/v2/data_example_05_11/Visualization/spreadsheet/Task 126/Task 126_golden.xlsx",
+    "negativeControlWorkbook": ".tmp/official-benchmarks/v2/data_example_05_11/Visualization/spreadsheet/Task 126/Task 126_input.xlsx"
+  },
+  "renderedImages": {
+    "candidate": {
+      "path": "docs/eval/spreadsheetbench-chart-visual/task-126/candidate-oracle.png",
+      "sha256": "6a796468c629153041a40d57efb5abc775677051bf1d712c7c9303d2a872782c",
+      "bytes": 163628
+    },
+    "gold": {
+      "path": "docs/eval/spreadsheetbench-chart-visual/task-126/gold.png",
+      "sha256": "6a796468c629153041a40d57efb5abc775677051bf1d712c7c9303d2a872782c",
+      "bytes": 163628
+    },
+    "negativeControl": {
+      "path": "docs/eval/spreadsheetbench-chart-visual/task-126/negative-input.png",
+      "sha256": "3a005a9920794257616a1451a7d0dd32e7693266fbc98c2f6b83382e1ca0551a",
+      "bytes": 117295
+    }
+  },
+  "positive": {
+    "accepted": true,
+    "score": 1,
+    "rationale": "The positive candidate screenshot is identical to the gold chart screenshot, containing both the 'Quarterly Price Impact Analysis' and 'Earnings Per Share: Actual vs. Estimated Performance' charts with identical styling, axes, and data series.",
+    "differences": []
+  },
+  "negativeControl": {
+    "rejected": true,
+    "score": 0,
+    "rationale": "The negative control screenshot is missing both requested charts entirely, showing only the raw data table.",
+    "differences": [
+      "Missing 'Quarterly Price Impact Analysis' chart",
+      "Missing 'Earnings Per Share: Actual vs. Estimated Performance' chart"
+    ]
+  },
+  "summary": "The positive candidate successfully rendered both charts matching the gold standard, while the negative control lacked the charts completely."
+}

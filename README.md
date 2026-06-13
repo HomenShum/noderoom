@@ -1103,16 +1103,16 @@ repeatedly under live model variance: deterministic structural operators for vis
 tool contract, not as fragile one-cell dynamic formulas or short prefix writes. `npm run
 benchmark:spreadsheetbench:routes` now classifies staged SpreadsheetBench V1/V2 tasks into
 deterministic table transforms, model-planned formula edits, model-planned format/general edits, or
-blocked chart-visual work using only agent-visible manifests; the checked-in V1 report classifies
-400 tasks as 41 deterministic table transforms, 218 formula edits, 33 format edits, 106 general
-edits, and 2 chart-visual blockers. The full V1 copy-input baseline also has a chunked runner
+chart-visual work using only agent-visible manifests; the checked-in V1 report classifies
+400 tasks as 41 deterministic table transforms, 218 formula edits, 33 format edits, and 108 general
+edits with `blocked_chart_visual=0`. The full V1 copy-input baseline also has a chunked runner
 (`npm run benchmark:spreadsheetbench:run-chunked`) that records all 400 staged tasks instead of
 letting one pathological workbook abort the run: the checked-in report
 (`docs/eval/spreadsheetbench-v1-copy-input-full-smoke.json`) records 400/400 attempted tasks,
 15/400 pass, average overall `0.257472`, and zero failure counts after malformed answer-position,
 unsupported XLSX package-part, and external-link cell-read repair. This is a benchmark-path lesson, not a broad
-official-readiness claim: larger held-out model/route-execution runs, V2 rendered chart grading,
-Docker/Harbor isolation, and official scoring parity are still tracked as blockers below.
+official-readiness claim: larger held-out model/route-execution runs and official scoring parity are
+still tracked as blockers below.
 The contamination gate
 (`npm run benchmark:contamination`) now scans agent-facing benchmark manifests, candidate manifests,
 agent-workspace manifests, and generated edit plans for evaluator-only gold/rubric/canary metadata; checked-in smokes show 0
@@ -1138,9 +1138,11 @@ denied evaluator-only gold outside that root. This tightens the file-boundary st
 Docker/Harbor isolation, network isolation, or a resource sandbox, and these artifacts are not
 official benchmark scores until run across official bundles under the benchmark policy. `npm run
 benchmark:docker-sandbox:probe` records that stronger boundary separately in
-`docs/eval/docker-sandbox-probe.json`; the current checked-in artifact has the Docker CLI present
-but the daemon unavailable, so official readiness stays red until that artifact records
-`container_isolation_proven`.
+`docs/eval/docker-sandbox-probe.json`; the current checked-in artifact records
+`container_isolation_proven` on Docker `28.5.1` with `node:22-alpine`, `--network=none`,
+`--read-only`, an agent-workspace-only mount, and denied evaluator reads. That closes the local
+Docker tool blocker; official readiness still stays red until the benchmark runners themselves are
+executed under the full official policy.
 
 The deterministic formula-result lane has since moved beyond `SUM(...)`: `apply-agent-patch` and
 `model-edit-plan` candidate manifests now record `formulaResultPolicy:
@@ -1164,21 +1166,21 @@ drift visible in workbook score reports without widening access to evaluator-onl
 candidate emission. It still is not the official benchmark's complete formatting policy, and it
 does not replace rendered chart/layout grading.
 
-SpreadsheetBench V2 chart evidence now has a narrow static lane too:
+SpreadsheetBench V2 chart evidence now has two lanes:
 `src/eval/spreadsheetBenchChartScorer.ts` compares candidate and golden `.xlsx` chart packages by
 normalizing and hashing `xl/charts/*.xml` plus `xl/drawings/*.xml`, then reports matched, missing,
 extra, and mismatched chart parts. The workbook scorer and staged runner can carry that evidence in
-score reports, so V2 chart-package drift is no longer invisible. That closes one blind spot in
-workbook packaging, but it is not a rendered screenshot grade, a layout-quality judge, or a
-Gemini/VLM visual grade. `npm run benchmark:spreadsheetbench:chart-visual:probe` now records that
-remaining blocker in `docs/eval/spreadsheetbench-chart-visual-probe.json`: the checked-in artifact
-is `renderer_unavailable`, with no LibreOffice/soffice renderer, no candidate/gold screenshot pair,
-and no accepted VLM report. When screenshot paths are supplied, the probe records SHA-256, byte
-count, and PNG dimensions for both candidate and gold images before any VLM report can pass. The
-refreshed V2 score/run smokes still show the static signal explicitly: copy-input candidates miss
-two evaluator-only chart/drawing package parts per sampled task, dropping runner best-overall scores
-from workbook-only near-passes to chart-aware failures while the V2 staged/run contamination smokes
-stay at 0 leaks.
+score reports, so V2 chart-package drift is no longer invisible. The rendered lane is now live too:
+`npm run benchmark:spreadsheetbench:chart-visual:grade` exports a real SpreadsheetBench V2
+Visualization chart sheet through Excel, rasterizes it with Poppler, and asks Gemini 3.5 Flash to
+accept the matching oracle candidate while rejecting the raw-input negative control. The resulting
+`docs/eval/spreadsheetbench-chart-visual/task-126/vlm-report.json` is consumed by
+`npm run benchmark:spreadsheetbench:chart-visual:probe -- --strict`, whose current checked-in
+artifact is `chart_visual_grade_proven` with renderer, candidate/gold PNG hashes, dimensions, and an
+accepted VLM report. The refreshed V2 score/run smokes still show the static signal explicitly:
+copy-input candidates miss two evaluator-only chart/drawing package parts per sampled task, dropping
+runner best-overall scores from workbook-only near-passes to chart-aware failures while the V2
+staged/run contamination smokes stay at 0 leaks.
 
 BankerToolBench now has the same first boundary in place: `npm run
 benchmark:bankertoolbench:ingest` scans an already-downloaded BTB bundle (`tasks.jsonl`,

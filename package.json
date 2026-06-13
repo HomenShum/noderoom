@@ -41,6 +41,7 @@
     "benchmark:spreadsheetbench:proof": "tsx scripts/spreadsheetbench-proof-check.ts",
     "benchmark:spreadsheetbench:stage-proof": "tsx scripts/spreadsheetbench-stage-proof-check.ts",
     "benchmark:spreadsheetbench:routes": "tsx scripts/spreadsheetbench-route-selection.ts",
+    "benchmark:spreadsheetbench:chart-visual:grade": "tsx scripts/spreadsheetbench-chart-visual-grade.ts",
     "benchmark:spreadsheetbench:chart-visual:probe": "tsx scripts/spreadsheetbench-chart-visual-probe.ts --json-out docs/eval/spreadsheetbench-chart-visual-probe.json",
     "benchmark:agent-sandbox": "tsx scripts/agent-workspace-sandbox-smoke.ts",
     "benchmark:docker-sandbox:probe": "tsx scripts/docker-sandbox-probe.ts --json-out docs/eval/docker-sandbox-probe.json",

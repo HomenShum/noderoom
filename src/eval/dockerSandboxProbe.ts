@@ -61,7 +61,7 @@ export function runDockerSandboxProbe(options: DockerSandboxProbeOptions = {}): 
       "const agent=fs.readFileSync('/agent/task.json','utf8');",
       "let denied=false;",
       "try{fs.readFileSync('/evaluator/gold.json','utf8')}catch{denied=true}",
-      "process.stdout.write(JSON.stringify({agentVisible:agent.includes('docker-sandbox-probe'),evaluatorDenied:denied}))",
+      "process.stdout.write(JSON.stringify({agentVisible:agent.includes('docker-sandbox-probe'),evaluatorDenied:denied}));",
       "if(!agent.includes('docker-sandbox-probe')||!denied)process.exit(7);",
     ].join("");
     const container = run("docker", [

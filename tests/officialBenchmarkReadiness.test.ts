@@ -79,15 +79,15 @@ describe("official benchmark readiness", () => {
     expect(documentOutputs?.blocker).toContain("multi-file candidate packages");
     expect(documentOutputs?.blocker).toContain("official verifier");
     expect(docker).toMatchObject({
-      state: "external",
+      state: "implemented",
       evidence: "docs/eval/docker-sandbox-probe.json",
     });
     expect(rubric?.blocker).toContain("Gandalf score-import schema");
-    expect(docker?.blocker).toContain("container_isolation_proven");
+    expect(docker?.blocker).toBeUndefined();
     expect(btb?.ready).toBe(false);
     expect(btb?.blockers).toEqual(expect.arrayContaining([
       expect.stringContaining("official_runner_adapter"),
-      expect.stringContaining("docker_sandbox"),
+      expect.stringContaining("mcp_financial_tools"),
     ]));
   });
 
@@ -150,7 +150,6 @@ describe("official benchmark readiness", () => {
         expect(runner?.blocker).toContain("external-link cell-read repair");
       }
       expect(runner?.blocker).toMatch(/route[- ]execution/);
-      expect(runner?.blocker).toContain("Docker/Harbor");
       expect(runner?.blocker).not.toContain("route selection remain incomplete");
       expect(gold?.blocker).toContain("Node permission subprocess");
       expect(runner?.blocker).not.toContain("benchmark retry policy");
@@ -178,13 +177,10 @@ describe("official benchmark readiness", () => {
       expect(format?.blocker).toContain("merge ranges");
       if (item.id === "spreadsheetbench-v2") {
         expect(chart).toMatchObject({
-          state: "partial",
+          state: "implemented",
           evidence: "docs/eval/spreadsheetbench-chart-visual-probe.json",
         });
-        expect(chart?.blocker).toContain("static XLSX chart-package comparison");
-        expect(chart?.blocker).toContain("benchmark:spreadsheetbench:chart-visual:probe");
-        expect(chart?.blocker).toContain("LibreOffice/soffice");
-        expect(chart?.blocker).toContain("VLM visual quality");
+        expect(chart?.blocker).toBeUndefined();
       }
       expect(item.ready).toBe(false);
       expect(item.blockers).toEqual(expect.arrayContaining([

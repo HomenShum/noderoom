@@ -70,9 +70,10 @@ export function classifySpreadsheetBenchTask(manifest: AgentManifest, agentManif
   const requiredCapabilities = new Set<string>();
 
   if (/\b(chart|visuali[sz]ation|graph|plot)\b/.test(instruction)) {
-    rationale.push("chart or visual wording requires rendered/VLM chart grading");
+    rationale.push("chart or visual wording routes through bounded model edit planning plus rendered/VLM chart grading");
+    requiredCapabilities.add("model_edit_plan");
     requiredCapabilities.add("chart_visual_grade");
-    return buildSelection(manifest, agentManifest, "blocked_chart_visual", rationale, requiredCapabilities);
+    return buildSelection(manifest, agentManifest, "model_general_edit", rationale, requiredCapabilities);
   }
 
   if (/\b(filter|start date|end date|sort|duplicate|deduplicate|combine data|matching duplicates|total row|group by)\b/.test(instruction)) {

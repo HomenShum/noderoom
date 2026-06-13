@@ -1,8 +1,8 @@
 {
   "schema": 1,
   "ok": true,
-  "generatedAt": "2026-06-13T19:22:59.767Z",
-  "ms": 17,
+  "generatedAt": "2026-06-13T20:51:33.092Z",
+  "ms": 14,
   "algorithmId": "revenue_variance_pct_v1",
   "artifactHash": "fnv1a32:0239470c",
   "commitPolicy": "patch_bundle_only_runtime_must_cas",

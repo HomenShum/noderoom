@@ -1,3 +1,5 @@
+import { existsSync, readFileSync } from "node:fs";
+
 export type OfficialBenchmarkId = "bankertoolbench" | "spreadsheetbench-v1" | "spreadsheetbench-v2";
 
 export type BenchmarkCapability =
@@ -250,7 +252,7 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; official V1 N=5 records 5/5 pass, average overall 1.0, p95 4.593s, $0.01059125 spend, zero failure counts, retry-policy accounting, workspace manifests, raw model output, sidecar hashes, visible aggregate_section table operations, deterministic SUM total result packaging, unsupported-op repair, expected-formula-only scoring, candidate-output contamination proof, and local Node permission sandbox proof. The broader locally staged official V1 three-task N=5 live smoke now records 15/15 pass across 3 cases and 5 repeats, average overall 1.0, p95 5.080s, $0.0462905 spend, zero failure counts, zero retry attempts, 0 candidate-output leaks across 75 checked files, result-level sidecar hashes for candidate manifests/workspace manifests/edit plans/raw model outputs, and structural filter_rows/sort_unique_rows repair for visible date filters and duplicate-removal/sort tables; npm run benchmark:spreadsheetbench:proof enforces those checked-in artifact thresholds and trajectory order in HALO. Route-selection reports now classify staged V1/V2 tasks into deterministic table transforms, model formula edits, model format/general edits, or blocked chart-visual work, and the chunked full 400-task V1 copy-input baseline records 400/400 attempted tasks, 15/400 pass, average overall 0.257472, zero failure counts after malformed answer-position, unsupported package-part, and external-link cell-read repair. Larger full-bundle model or route-execution runs, Docker/Harbor sandbox proof, and official scoring parity across the full official bundle remain incomplete.",
+        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; official V1 N=5 records 5/5 pass, average overall 1.0, p95 4.593s, $0.01059125 spend, zero failure counts, retry-policy accounting, workspace manifests, raw model output, sidecar hashes, visible aggregate_section table operations, deterministic SUM total result packaging, unsupported-op repair, expected-formula-only scoring, candidate-output contamination proof, and local Node permission sandbox proof. The broader locally staged official V1 three-task N=5 live smoke now records 15/15 pass across 3 cases and 5 repeats, average overall 1.0, p95 5.080s, $0.0462905 spend, zero failure counts, zero retry attempts, 0 candidate-output leaks across 75 checked files, result-level sidecar hashes for candidate manifests/workspace manifests/edit plans/raw model outputs, and structural filter_rows/sort_unique_rows repair for visible date filters and duplicate-removal/sort tables; npm run benchmark:spreadsheetbench:proof enforces those checked-in artifact thresholds and trajectory order in HALO. Route-selection reports now classify staged V1/V2 tasks into deterministic table transforms, model formula edits, model format edits, and model general edits with chart tasks routed to the rendered/VLM visual grader, and the chunked full 400-task V1 copy-input baseline records 400/400 attempted tasks, 15/400 pass, average overall 0.257472, zero failure counts after malformed answer-position, unsupported package-part, and external-link cell-read repair. Larger full-bundle model or route-execution runs and official scoring parity across the full official bundle remain incomplete.",
     },
     xlsx_import_export: {
       capability: "xlsx_import_export",
@@ -283,14 +285,14 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchStage.ts",
       blocker:
-        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; runner attempts now copy agent-visible files into an agent-workspace manifest before candidate generation, the V2 public-example stage proof records 3/26 example tasks with paired input/gold workbooks staged, clean isolation counters, and contamination evidence, a Node permission subprocess smoke proves evaluator-only reads are denied outside the agent workspace, but rendered V2 chart/visual grading, V2 official model runs, and Docker/Harbor process isolation are still missing.",
+        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; runner attempts now copy agent-visible files into an agent-workspace manifest before candidate generation, the V2 public-example stage proof records 3/26 example tasks with paired input/gold workbooks staged, clean isolation counters, and contamination evidence, and a Node permission subprocess smoke proves evaluator-only reads are denied outside the agent workspace. V2 official model runs and full benchmark-runner process isolation are still missing.",
     },
     official_runner_adapter: {
       capability: "official_runner_adapter",
       state: "partial",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; V1 N=5 live model evidence passes 5/5 and the broader locally staged V1 three-task N=5 smoke passes 15/15 with retry-policy accounting, raw model output, sidecar hashes, deterministic SUM total result packaging, visible aggregate_section/filter_rows/sort_unique_rows table operations, expected-formula-only scoring, workspace manifests, local Node permission sandbox proof, a chunked full 400-task V1 copy-input baseline, and static V2 chart-package scoring. Route-selection reports now classify staged V1/V2 tasks into deterministic table transforms, model formula edits, model format/general edits, or blocked chart-visual work, but V2 official model runs, Docker/Harbor sandbox proof, full route execution/scoring, and rendered/VLM chart grading remain incomplete.",
+        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; V1 N=5 live model evidence passes 5/5 and the broader locally staged V1 three-task N=5 smoke passes 15/15 with retry-policy accounting, raw model output, sidecar hashes, deterministic SUM total result packaging, visible aggregate_section/filter_rows/sort_unique_rows table operations, expected-formula-only scoring, workspace manifests, local Node permission sandbox proof, a chunked full 400-task V1 copy-input baseline, static V2 chart-package scoring, and rendered/VLM chart visual grading proof. Route-selection reports now classify staged V1/V2 tasks into deterministic table transforms, model formula edits, model format/general edits, or chart-visual work with a visual grader, but V2 official model runs and full route execution/scoring remain incomplete.",
     },
     xlsx_import_export: {
       capability: "xlsx_import_export",
@@ -309,14 +311,14 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchScorer.ts",
       blocker:
-        "The scorer can diff stable ExcelJS cell style fingerprints plus answer-range column widths/hidden state, row heights/hidden state, and intersecting merge ranges when enabled; official format-grading policy, chart rendering, and visual grading are not complete.",
+        "The scorer can diff stable ExcelJS cell style fingerprints plus answer-range column widths/hidden state, row heights/hidden state, and intersecting merge ranges when enabled; official format-grading policy and full workbook/layout coverage are not complete.",
     },
     chart_visual_grade: {
       capability: "chart_visual_grade",
       state: "partial",
       evidence: "docs/eval/spreadsheetbench-chart-visual-probe.json",
       blocker:
-        "SpreadsheetBench score/run reports can include a static XLSX chart-package comparison over chart and drawing XML parts, and npm run benchmark:spreadsheetbench:chart-visual:probe now records whether a LibreOffice/soffice renderer, candidate/gold chart screenshot pair, Gemini/VLM key, and accepted visual-grade report are present. The current probe is not passing, so rendered chart screenshots and VLM visual quality grading remain incomplete.",
+        "SpreadsheetBench score/run reports can include a static XLSX chart-package comparison over chart and drawing XML parts, and npm run benchmark:spreadsheetbench:chart-visual:probe records whether a renderer, candidate/gold chart screenshot pair, Gemini/VLM key, and accepted visual-grade report are present. If the probe artifact is not chart_visual_grade_proven, rendered chart screenshots and VLM visual quality grading remain incomplete.",
     },
   },
 };
@@ -346,5 +348,37 @@ export function officialBenchmarkSummary(readiness = officialBenchmarkReadiness(
 }
 
 function capabilityStatusFor(benchmarkId: OfficialBenchmarkId, capability: BenchmarkCapability): CapabilityReadiness {
+  const dockerEvidence = "docs/eval/docker-sandbox-probe.json";
+  if (capability === "docker_sandbox" && artifactPasses(dockerEvidence, "container_isolation_proven")) {
+    return {
+      capability,
+      state: "implemented",
+      evidence: dockerEvidence,
+    };
+  }
+
+  const chartEvidence = "docs/eval/spreadsheetbench-chart-visual-probe.json";
+  if (
+    benchmarkId === "spreadsheetbench-v2" &&
+    capability === "chart_visual_grade" &&
+    artifactPasses(chartEvidence, "chart_visual_grade_proven")
+  ) {
+    return {
+      capability,
+      state: "implemented",
+      evidence: chartEvidence,
+    };
+  }
+
   return BENCHMARK_CAPABILITY_STATUS[benchmarkId]?.[capability] ?? CAPABILITY_STATUS[capability];
+}
+
+function artifactPasses(path: string, status: string): boolean {
+  if (!existsSync(path)) return false;
+  try {
+    const parsed = JSON.parse(readFileSync(path, "utf8")) as { pass?: unknown; status?: unknown };
+    return parsed.pass === true && parsed.status === status;
+  } catch {
+    return false;
+  }
 }

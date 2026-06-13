@@ -65,19 +65,13 @@ export type SpreadsheetBenchChartVisualProbeOptions = {
   runCommand?: (command: string, args: string[]) => SpreadsheetBenchChartVisualCommandResult;
 };
 
-const defaultRendererCommands = [
-  { command: "soffice", args: ["--version"] },
-  { command: "libreoffice", args: ["--version"] },
-  { command: "soffice.exe", args: ["--version"] },
-];
-
 export function runSpreadsheetBenchChartVisualProbe(
   options: SpreadsheetBenchChartVisualProbeOptions = {},
 ): SpreadsheetBenchChartVisualProbe {
   const model = options.model ?? process.env.GEMINI_MEDIA_JUDGE_MODEL ?? "gemini-3.5-flash";
   const env = options.env ?? process.env;
   const runCommand = options.runCommand ?? run;
-  const candidates = (options.rendererCommands ?? defaultRendererCommands).map((candidate) =>
+  const candidates = (options.rendererCommands ?? defaultRendererCommands()).map((candidate) =>
     runCommand(candidate.command, candidate.args),
   );
   const selected = candidates.find((candidate) => candidate.ok)?.command;
@@ -135,6 +129,25 @@ export function runSpreadsheetBenchChartVisualProbe(
     },
     warnings,
   };
+}
+
+function defaultRendererCommands(): Array<{ command: string; args: string[] }> {
+  const commands = [
+    { command: "soffice", args: ["--version"] },
+    { command: "libreoffice", args: ["--version"] },
+    { command: "soffice.exe", args: ["--version"] },
+  ];
+  if (process.platform === "win32") {
+    for (const command of [
+      "C:\\Program Files\\LibreOffice\\program\\soffice.com",
+      "C:\\Program Files\\LibreOffice\\program\\soffice.exe",
+      "C:\\Program Files (x86)\\LibreOffice\\program\\soffice.com",
+      "C:\\Program Files (x86)\\LibreOffice\\program\\soffice.exe",
+    ]) {
+      if (existsSync(command)) commands.push({ command, args: ["--headless", "--version"] });
+    }
+  }
+  return commands;
 }
 
 function imageEvidence(path: string): SpreadsheetBenchChartVisualImageEvidence {

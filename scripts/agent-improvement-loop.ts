@@ -90,6 +90,7 @@ const args = process.argv.slice(2);
 const live = args.includes("--live") || args.includes("--full-live");
 const fullLive = args.includes("--full-live");
 const strict = args.includes("--strict");
+const humanApproved = args.includes("--human-approved");
 const uiMedia = optionValue("--ui-media");
 
 const steps: StepSpec[] = [
@@ -401,7 +402,7 @@ const steps: StepSpec[] = [
     args: ["run", "benchmark:spreadsheetbench:chart-visual:probe", "--", "--strict"],
     timeoutMs: 120_000,
     blockedExitCodes: [1],
-    blockedReason: "SpreadsheetBench V2 rendered/VLM chart grading prerequisites are not proven",
+    blockedReason: "SpreadsheetBench V2 rendered/VLM chart grading probe did not pass",
   },
   {
     id: "spreadsheetbench-runner-fixture",
@@ -552,7 +553,13 @@ const steps: StepSpec[] = [
     command: "npm",
     // P0-3: the loop's own --strict arms the budget gate (exit 1 on forbidden-surface dirt).
     // Unarmed runs still REPORT; the zero-false-positive enforcement below is the handoff demotion.
-    args: ["run", "architecture:budget", ...(strict ? ["--", "--strict"] : [])],
+    args: [
+      "run",
+      "architecture:budget",
+      ...((strict || humanApproved) ? ["--"] : []),
+      ...(strict ? ["--strict"] : []),
+      ...(humanApproved ? ["--human-approved"] : []),
+    ],
     timeoutMs: 120_000,
   },
   {

@@ -1,0 +1,108 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T20:51:37.500Z",
+  "commitSha": "2236593",
+  "worktreeHash": "765a8de6eb684b70",
+  "gitDirty": true,
+  "suite": "ladder",
+  "caseId": "ladder:L5_large_range:scripted",
+  "score": 1,
+  "checks": {
+    "targetValue": true,
+    "noFullSnapshot": true,
+    "boundedContext": true,
+    "noFullSheetTool": true,
+    "touchedOnlyTarget": true,
+    "readBeforeWrite": true,
+    "notExhausted": true
+  },
+  "checkDetails": {},
+  "result": {
+    "pass": true,
+    "checkDetails": {},
+    "requestedModel": "scripted",
+    "resolvedModel": "scripted",
+    "resolvedModels": [
+      "scripted"
+    ],
+    "rung": "L5_large_range",
+    "level": 5,
+    "ms": 1,
+    "tools": 4,
+    "cost": 0,
+    "stopReason": "done",
+    "reason": "",
+    "checks": {
+      "targetValue": true,
+      "noFullSnapshot": true,
+      "boundedContext": true,
+      "noFullSheetTool": true,
+      "touchedOnlyTarget": true,
+      "readBeforeWrite": true,
+      "notExhausted": true
+    }
+  },
+  "trace": [
+    {
+      "step": 0,
+      "tool": "propose_lock",
+      "args": {
+        "elementIds": [
+          "lr_0420__variance"
+        ],
+        "reason": "recompute variance"
+      },
+      "result": {
+        "ok": true,
+        "lockId": "lock_9"
+      },
+      "ms": 1
+    },
+    {
+      "step": 1,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "lr_0420__variance"
+        ]
+      },
+      "result": [
+        {
+          "id": "lr_0420__variance",
+          "value": "",
+          "version": 1,
+          "locked": {
+            "by": "Room NodeAgent",
+            "reason": "recompute variance"
+          }
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": 2,
+      "tool": "edit_cell",
+      "args": {
+        "elementId": "lr_0420__variance",
+        "value": "+8.2%",
+        "baseVersion": 1
+      },
+      "result": {
+        "ok": true,
+        "version": 2
+      },
+      "ms": 0
+    },
+    {
+      "step": 3,
+      "tool": "release_lock",
+      "args": {
+        "lockId": "lock_9"
+      },
+      "result": {
+        "merged": []
+      },
+      "ms": 0
+    }
+  ]
+}

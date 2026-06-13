@@ -16,8 +16,8 @@ afterEach(() => {
 describe("SpreadsheetBench route selection", () => {
   it("classifies chart, structural table, formula, format, and general tasks", () => {
     expect(classifySpreadsheetBenchTask({ taskId: "chart", instruction: "Create a chart and visualization" })).toMatchObject({
-      route: "blocked_chart_visual",
-      requiredCapabilities: ["chart_visual_grade"],
+      route: "model_general_edit",
+      requiredCapabilities: ["chart_visual_grade", "model_edit_plan"],
     });
     expect(classifySpreadsheetBenchTask({ taskId: "table", instruction: "Filter by start date, remove duplicates, then sort" })).toMatchObject({
       route: "deterministic_table_transform",

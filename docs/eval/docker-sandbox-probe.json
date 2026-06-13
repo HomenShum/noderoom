@@ -1,9 +1,9 @@
 {
   "schema": 1,
-  "generatedAt": "2026-06-13T19:32:44.993Z",
+  "generatedAt": "2026-06-13T20:59:25.526Z",
   "verifier": "docker_harbor_availability_probe",
-  "status": "daemon_unavailable",
-  "pass": false,
+  "status": "container_isolation_proven",
+  "pass": true,
   "image": "node:22-alpine",
   "dockerCli": {
     "command": "docker --version",
@@ -14,13 +14,20 @@
   },
   "daemon": {
     "command": "docker info --format {{json .ServerVersion}}",
-    "exitCode": 1,
-    "stdoutPreview": "\"\"",
-    "stderrPreview": "error during connect: Get \"http://%2F%2F.%2Fpipe%2FdockerDesktopLinuxEngine/v1.51/info\": open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified.",
-    "ok": false
+    "exitCode": 0,
+    "stdoutPreview": "\"28.5.1\"",
+    "stderrPreview": "",
+    "ok": true
   },
-  "warnings": [
-    "Docker/Harbor process isolation is not proven in this environment; official benchmark readiness must remain red.",
-    "Docker CLI is installed, but the Docker daemon is unavailable or Docker Desktop is not running."
-  ]
+  "container": {
+    "command": "docker run --rm --pull=never --network=none --read-only -v D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\.tmp\\docker-sandbox-probe\\agent-workspace:/agent:ro node:22-alpine node -e const fs=require('node:fs');const agent=fs.readFileSync('/agent/task.json','utf8');let denied=false;try{fs.readFileSync('/evaluator/gold.json','utf8')}catch{denied=true}process.stdout.write(JSON.stringify({agentVisible:agent.includes('docker-sandbox-probe'),evaluatorDenied:denied}));if(!agent.includes('docker-sandbox-probe')||!denied)process.exit(7);",
+    "exitCode": 0,
+    "stdoutPreview": "{\"agentVisible\":true,\"evaluatorDenied\":true}",
+    "stderrPreview": "",
+    "ok": true,
+    "networkMode": "none",
+    "mountedAgentWorkspace": true,
+    "mountedEvaluatorWorkspace": false
+  },
+  "warnings": []
 }

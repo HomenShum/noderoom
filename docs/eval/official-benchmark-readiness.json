@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedAt": "2026-06-13T09:30:00.645Z",
+  "generatedAt": "2026-06-13T09:36:52.138Z",
   "summary": {
     "total": 3,
     "ready": 0,
@@ -145,14 +145,14 @@
         {
           "capability": "official_gold_isolation",
           "state": "partial",
-          "evidence": "src/eval/spreadsheetBenchAdapter.ts",
-          "blocker": "Agent-facing SpreadsheetBench tasks redact golden workbook paths and scorer metadata; runner-level sandboxing and output diff enforcement are still missing."
+          "evidence": "src/eval/spreadsheetBenchStage.ts",
+          "blocker": "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; model execution sandboxing and output diff enforcement are still missing."
         },
         {
           "capability": "official_runner_adapter",
           "state": "partial",
-          "evidence": "src/eval/spreadsheetBenchScorer.ts",
-          "blocker": "A local workbook scorer can compare candidate workbooks to evaluator-only gold, but no model execution/export sandbox is wired yet."
+          "evidence": "src/eval/spreadsheetBenchStage.ts",
+          "blocker": "Local staging and workbook scoring exist, but no model execution/export sandbox is wired yet."
         },
         {
           "capability": "trajectory_capture",
@@ -185,8 +185,8 @@
       ],
       "ready": false,
       "blockers": [
-        "official_gold_isolation: Agent-facing SpreadsheetBench tasks redact golden workbook paths and scorer metadata; runner-level sandboxing and output diff enforcement are still missing.",
-        "official_runner_adapter: A local workbook scorer can compare candidate workbooks to evaluator-only gold, but no model execution/export sandbox is wired yet.",
+        "official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; model execution sandboxing and output diff enforcement are still missing.",
+        "official_runner_adapter: Local staging and workbook scoring exist, but no model execution/export sandbox is wired yet.",
         "xlsx_import_export: Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.",
         "formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.",
         "format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy and full style coverage are not complete."
@@ -221,14 +221,14 @@
         {
           "capability": "official_gold_isolation",
           "state": "partial",
-          "evidence": "src/eval/spreadsheetBenchAdapter.ts",
-          "blocker": "Agent-facing SpreadsheetBench tasks redact golden workbook paths and scorer metadata; chart/visual grading and runner-level sandboxing are still missing."
+          "evidence": "src/eval/spreadsheetBenchStage.ts",
+          "blocker": "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; chart/visual grading and model execution sandboxing are still missing."
         },
         {
           "capability": "official_runner_adapter",
           "state": "partial",
-          "evidence": "src/eval/spreadsheetBenchScorer.ts",
-          "blocker": "A local workbook scorer can compare candidate workbooks to evaluator-only gold, but no model execution/export sandbox or chart lane is wired yet."
+          "evidence": "src/eval/spreadsheetBenchStage.ts",
+          "blocker": "Local staging and workbook scoring exist, but no model execution/export sandbox or chart lane is wired yet."
         },
         {
           "capability": "trajectory_capture",
@@ -266,8 +266,8 @@
       ],
       "ready": false,
       "blockers": [
-        "official_gold_isolation: Agent-facing SpreadsheetBench tasks redact golden workbook paths and scorer metadata; chart/visual grading and runner-level sandboxing are still missing.",
-        "official_runner_adapter: A local workbook scorer can compare candidate workbooks to evaluator-only gold, but no model execution/export sandbox or chart lane is wired yet.",
+        "official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; chart/visual grading and model execution sandboxing are still missing.",
+        "official_runner_adapter: Local staging and workbook scoring exist, but no model execution/export sandbox or chart lane is wired yet.",
         "xlsx_import_export: Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.",
         "formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.",
         "format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy, chart rendering, and visual grading are not complete.",

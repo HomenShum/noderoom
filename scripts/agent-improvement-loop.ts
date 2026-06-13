@@ -156,6 +156,14 @@ const steps: StepSpec[] = [
     timeoutMs: 120_000,
   },
   {
+    id: "spreadsheetbench-stage-fixture",
+    label: "SpreadsheetBench sandbox stage fixture",
+    lane: "deterministic",
+    command: "npx",
+    args: ["vitest", "run", "tests/spreadsheetBenchStage.test.ts"],
+    timeoutMs: 120_000,
+  },
+  {
     id: "spreadsheetbench-score-fixture",
     label: "SpreadsheetBench workbook score fixture",
     lane: "deterministic",

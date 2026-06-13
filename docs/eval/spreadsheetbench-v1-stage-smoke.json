@@ -1,0 +1,69 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T09:36:25.578Z",
+  "sourceRoot": "spreadsheetbench_verified_400",
+  "outputRoot": "staged-v1",
+  "track": "spreadsheetbench-v1",
+  "scannedTaskCount": 400,
+  "stagedTaskCount": 3,
+  "skippedTaskCount": 397,
+  "agentFileCount": 6,
+  "evaluatorGoldFileCount": 3,
+  "isolation": {
+    "agentDirectoryGoldFileCount": 0,
+    "agentManifestGoldPathLeaks": 0,
+    "agentManifestScorerMetadataLeaks": 0,
+    "agentEvaluatorPathOverlap": false
+  },
+  "warnings": [],
+  "tasks": [
+    {
+      "id": "13-1",
+      "taskDir": "tasks/13-1",
+      "agentManifest": "tasks/13-1/agent/task.json",
+      "evaluatorManifest": "tasks/13-1/evaluator/evaluator.json",
+      "agentInputFiles": [
+        "tasks/13-1/agent/inputs/01-1_13-1_init.xlsx"
+      ],
+      "agentPromptFiles": [
+        "tasks/13-1/agent/prompts/01-prompt.txt"
+      ],
+      "evaluatorGoldFiles": [
+        "tasks/13-1/evaluator/gold/01-1_13-1_golden.xlsx"
+      ],
+      "warnings": []
+    },
+    {
+      "id": "17-35",
+      "taskDir": "tasks/17-35",
+      "agentManifest": "tasks/17-35/agent/task.json",
+      "evaluatorManifest": "tasks/17-35/evaluator/evaluator.json",
+      "agentInputFiles": [
+        "tasks/17-35/agent/inputs/01-1_17-35_init.xlsx"
+      ],
+      "agentPromptFiles": [
+        "tasks/17-35/agent/prompts/01-prompt.txt"
+      ],
+      "evaluatorGoldFiles": [
+        "tasks/17-35/evaluator/gold/01-1_17-35_golden.xlsx"
+      ],
+      "warnings": []
+    },
+    {
+      "id": "22-47",
+      "taskDir": "tasks/22-47",
+      "agentManifest": "tasks/22-47/agent/task.json",
+      "evaluatorManifest": "tasks/22-47/evaluator/evaluator.json",
+      "agentInputFiles": [
+        "tasks/22-47/agent/inputs/01-1_22-47_init.xlsx"
+      ],
+      "agentPromptFiles": [
+        "tasks/22-47/agent/prompts/01-prompt.txt"
+      ],
+      "evaluatorGoldFiles": [
+        "tasks/22-47/evaluator/gold/01-1_22-47_golden.xlsx"
+      ],
+      "warnings": []
+    }
+  ]
+}

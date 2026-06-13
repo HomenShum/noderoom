@@ -1,0 +1,70 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T09:36:25.630Z",
+  "sourceRoot": "data_example_05_11",
+  "outputRoot": "staged-v2",
+  "track": "spreadsheetbench-v2",
+  "scannedTaskCount": 26,
+  "stagedTaskCount": 3,
+  "skippedTaskCount": 23,
+  "agentFileCount": 3,
+  "evaluatorGoldFileCount": 3,
+  "isolation": {
+    "agentDirectoryGoldFileCount": 0,
+    "agentManifestGoldPathLeaks": 0,
+    "agentManifestScorerMetadataLeaks": 0,
+    "agentEvaluatorPathOverlap": false
+  },
+  "warnings": [
+    "Visualization/Task 96: no input workbook files found",
+    "Visualization/Task 96: no evaluator gold workbook files found",
+    "Visualization/Task 96: skipped because input workbook or evaluator gold is missing"
+  ],
+  "tasks": [
+    {
+      "id": "Debugging/01_01",
+      "category": "Debugging",
+      "taskDir": "tasks/Debugging_01_01",
+      "agentManifest": "tasks/Debugging_01_01/agent/task.json",
+      "evaluatorManifest": "tasks/Debugging_01_01/evaluator/evaluator.json",
+      "agentInputFiles": [
+        "tasks/Debugging_01_01/agent/inputs/01-Double Counting_input.xlsx"
+      ],
+      "agentPromptFiles": [],
+      "evaluatorGoldFiles": [
+        "tasks/Debugging_01_01/evaluator/gold/01-01_golden.xlsx"
+      ],
+      "warnings": []
+    },
+    {
+      "id": "Debugging/02_01",
+      "category": "Debugging",
+      "taskDir": "tasks/Debugging_02_01",
+      "agentManifest": "tasks/Debugging_02_01/agent/task.json",
+      "evaluatorManifest": "tasks/Debugging_02_01/evaluator/evaluator.json",
+      "agentInputFiles": [
+        "tasks/Debugging_02_01/agent/inputs/01-Embedded Hardcode_input.xlsx"
+      ],
+      "agentPromptFiles": [],
+      "evaluatorGoldFiles": [
+        "tasks/Debugging_02_01/evaluator/gold/01-01_golden.xlsx"
+      ],
+      "warnings": []
+    },
+    {
+      "id": "Debugging/03_01",
+      "category": "Debugging",
+      "taskDir": "tasks/Debugging_03_01",
+      "agentManifest": "tasks/Debugging_03_01/agent/task.json",
+      "evaluatorManifest": "tasks/Debugging_03_01/evaluator/evaluator.json",
+      "agentInputFiles": [
+        "tasks/Debugging_03_01/agent/inputs/01-Errors_input.xlsx"
+      ],
+      "agentPromptFiles": [],
+      "evaluatorGoldFiles": [
+        "tasks/Debugging_03_01/evaluator/gold/01-01_golden.xlsx"
+      ],
+      "warnings": []
+    }
+  ]
+}

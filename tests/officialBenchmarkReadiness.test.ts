@@ -58,11 +58,11 @@ describe("official benchmark readiness", () => {
       });
       expect(gold).toMatchObject({
         state: "partial",
-        evidence: "src/eval/spreadsheetBenchAdapter.ts",
+        evidence: "src/eval/spreadsheetBenchStage.ts",
       });
       expect(runner).toMatchObject({
         state: "partial",
-        evidence: "src/eval/spreadsheetBenchScorer.ts",
+        evidence: "src/eval/spreadsheetBenchStage.ts",
       });
       expect(format).toMatchObject({
         state: "partial",

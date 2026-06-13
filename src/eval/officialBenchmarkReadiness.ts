@@ -195,16 +195,16 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
     official_gold_isolation: {
       capability: "official_gold_isolation",
       state: "partial",
-      evidence: "src/eval/spreadsheetBenchAdapter.ts",
+      evidence: "src/eval/spreadsheetBenchStage.ts",
       blocker:
-        "Agent-facing SpreadsheetBench tasks redact golden workbook paths and scorer metadata; runner-level sandboxing and output diff enforcement are still missing.",
+        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; model execution sandboxing and output diff enforcement are still missing.",
     },
     official_runner_adapter: {
       capability: "official_runner_adapter",
       state: "partial",
-      evidence: "src/eval/spreadsheetBenchScorer.ts",
+      evidence: "src/eval/spreadsheetBenchStage.ts",
       blocker:
-        "A local workbook scorer can compare candidate workbooks to evaluator-only gold, but no model execution/export sandbox is wired yet.",
+        "Local staging and workbook scoring exist, but no model execution/export sandbox is wired yet.",
     },
     format_diff: {
       capability: "format_diff",
@@ -223,16 +223,16 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
     official_gold_isolation: {
       capability: "official_gold_isolation",
       state: "partial",
-      evidence: "src/eval/spreadsheetBenchAdapter.ts",
+      evidence: "src/eval/spreadsheetBenchStage.ts",
       blocker:
-        "Agent-facing SpreadsheetBench tasks redact golden workbook paths and scorer metadata; chart/visual grading and runner-level sandboxing are still missing.",
+        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; chart/visual grading and model execution sandboxing are still missing.",
     },
     official_runner_adapter: {
       capability: "official_runner_adapter",
       state: "partial",
-      evidence: "src/eval/spreadsheetBenchScorer.ts",
+      evidence: "src/eval/spreadsheetBenchStage.ts",
       blocker:
-        "A local workbook scorer can compare candidate workbooks to evaluator-only gold, but no model execution/export sandbox or chart lane is wired yet.",
+        "Local staging and workbook scoring exist, but no model execution/export sandbox or chart lane is wired yet.",
     },
     format_diff: {
       capability: "format_diff",

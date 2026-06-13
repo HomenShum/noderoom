@@ -1010,11 +1010,12 @@ Official benchmark posture: `npm run benchmark:official:readiness` is a reportin
 can execute, export, reopen, and score benchmark work products without hidden-gold access.
 SpreadsheetBench V1/V2 now has a local official-bundle ingest adapter (`npm run
 benchmark:spreadsheetbench:ingest`) that separates agent-visible workbooks/prompts from
-evaluator-only golden files and scorer metadata. It also has a local workbook scoring adapter
-(`npm run benchmark:spreadsheetbench:score`) that reopens candidate/golden workbooks and compares
-values, formulas, and optional style fingerprints. Smoke artifacts cover the V1 verified-400 bundle
-and the V2 public example bundle. Those artifacts prove ingest and diff plumbing; they are not
-model scores.
+evaluator-only golden files and scorer metadata, a staging adapter (`npm run
+benchmark:spreadsheetbench:stage`) that writes separate `agent/` and `evaluator/` manifests, and a
+local workbook scoring adapter (`npm run benchmark:spreadsheetbench:score`) that reopens
+candidate/golden workbooks and compares values, formulas, and optional style fingerprints. Smoke
+artifacts cover the V1 verified-400 bundle and the V2 public example bundle. Those artifacts prove
+ingest, sandbox-staging, and diff plumbing; they are not model scores.
 
 ## Benchmark Harness / v3 Composite-Synthesis Run
 

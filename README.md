@@ -1024,8 +1024,12 @@ which snapshots only the staged `agent/` workbook/prompts, asks the configured m
 edit plan, applies it, records token/cost usage, emits a candidate workbook, then scores afterward.
 The checked-in live smoke (`docs/eval/spreadsheetbench-model-edit-plan-live-smoke.json`) passed one
 staged task with `gpt-5.4-nano` and recorded trajectory, timing, and cost. These artifacts prove
-ingest, sandbox-staging, candidate-output, edit/export/reopen, model-planning, and diff plumbing;
-they are not official benchmark scores until run across official bundles under the benchmark policy.
+ingest, sandbox-staging, candidate-output, edit/export/reopen, model-planning, and diff plumbing.
+The official V1 smoke (`docs/eval/spreadsheetbench-v1-model-edit-plan-live-smoke.json`) deliberately
+shows the next harder truth: the model chose a missing sheet name on a real staged task, and the
+harness now counts that as a failed task with model call, tokens, cost, trajectory, and error instead
+of dropping it into a warning. These artifacts are not official benchmark scores until run across
+official bundles under the benchmark policy.
 
 BankerToolBench now has the same first boundary in place: `npm run
 benchmark:bankertoolbench:ingest` scans an already-downloaded BTB bundle (`tasks.jsonl`,

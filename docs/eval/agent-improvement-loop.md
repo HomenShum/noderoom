@@ -1,12 +1,12 @@
 # Agent Improvement Loop
 
-Generated: 2026-06-13T10:17:35.371Z
+Generated: 2026-06-13T10:28:56.324Z
 
 Source pattern: https://developers.openai.com/cookbook/examples/agents_sdk/agent_improvement_loop
 
 NodeRoom adapts the cookbook loop as: traces -> human/model feedback -> reusable evals -> gate -> Codex handoff -> next harness change.
 
-Latest run artifact: `docs/eval/agent-improvement-loop/20260613T101659Z.json`
+Latest run artifact: `docs/eval/agent-improvement-loop/20260613T102827Z.json`
 
 Summary: 16 pass, 0 fail, 8 skip.
 
@@ -14,22 +14,22 @@ Summary: 16 pass, 0 fail, 8 skip.
 
 | Step | Lane | Status | Duration | Command |
 |---|---|---:|---:|---|
-| Professional workflow catalog shape | deterministic | PASS | 2.4s | `npm run eval:professional` |
-| Professional catalog proof gate | deterministic | PASS | 1.0s | `npm run eval:professional:catalog-proofs` |
-| Professional proof ledger | deterministic | PASS | 1.4s | `npm run eval:professional:proofs` |
-| GTM/finance workflow evals | deterministic | PASS | 3.8s | `npx vitest run tests/workflowEvals.test.ts` |
-| Collaboration ladder L1-L6 | deterministic | PASS | 1.7s | `npm run ladder -- --record` |
-| MM-banking credit decision evals | deterministic | PASS | 1.3s | `npm run eval:credit -- --record` |
-| Official benchmark readiness | deterministic | PASS | 1.0s | `npm run benchmark:official:readiness` |
-| BankerToolBench official ingest fixture | deterministic | PASS | 3.1s | `npx vitest run tests/bankerToolBenchAdapter.test.ts` |
-| BankerToolBench sandbox stage fixture | deterministic | PASS | 3.0s | `npx vitest run tests/bankerToolBenchStage.test.ts` |
-| SpreadsheetBench official ingest fixture | deterministic | PASS | 3.1s | `npx vitest run tests/spreadsheetBenchAdapter.test.ts` |
-| SpreadsheetBench sandbox stage fixture | deterministic | PASS | 3.1s | `npx vitest run tests/spreadsheetBenchStage.test.ts` |
-| SpreadsheetBench workbook score fixture | deterministic | PASS | 3.8s | `npx vitest run tests/spreadsheetBenchScorer.test.ts` |
-| SpreadsheetBench staged runner fixture | deterministic | PASS | 3.6s | `npx vitest run tests/spreadsheetBenchRunner.test.ts` |
-| Eval regression diff | deterministic | PASS | 1.1s | `npm run eval:diff` |
-| Convex query/action/mutation boundaries | deterministic | PASS | 1.7s | `npm run convex:boundaries` |
-| Architecture budget review | deterministic | PASS | 1.0s | `npm run architecture:budget` |
+| Professional workflow catalog shape | deterministic | PASS | 3.3s | `npm run eval:professional` |
+| Professional catalog proof gate | deterministic | PASS | 1.3s | `npm run eval:professional:catalog-proofs` |
+| Professional proof ledger | deterministic | PASS | 1.1s | `npm run eval:professional:proofs` |
+| GTM/finance workflow evals | deterministic | PASS | 2.5s | `npx vitest run tests/workflowEvals.test.ts` |
+| Collaboration ladder L1-L6 | deterministic | PASS | 1.2s | `npm run ladder -- --record` |
+| MM-banking credit decision evals | deterministic | PASS | 1.0s | `npm run eval:credit -- --record` |
+| Official benchmark readiness | deterministic | PASS | 0.8s | `npm run benchmark:official:readiness` |
+| BankerToolBench official ingest fixture | deterministic | PASS | 2.2s | `npx vitest run tests/bankerToolBenchAdapter.test.ts` |
+| BankerToolBench sandbox stage fixture | deterministic | PASS | 2.3s | `npx vitest run tests/bankerToolBenchStage.test.ts` |
+| SpreadsheetBench official ingest fixture | deterministic | PASS | 2.2s | `npx vitest run tests/spreadsheetBenchAdapter.test.ts` |
+| SpreadsheetBench sandbox stage fixture | deterministic | PASS | 2.2s | `npx vitest run tests/spreadsheetBenchStage.test.ts` |
+| SpreadsheetBench workbook score fixture | deterministic | PASS | 2.4s | `npx vitest run tests/spreadsheetBenchScorer.test.ts` |
+| SpreadsheetBench staged runner fixture | deterministic | PASS | 2.9s | `npx vitest run tests/spreadsheetBenchRunner.test.ts` |
+| Eval regression diff | deterministic | PASS | 0.8s | `npm run eval:diff` |
+| Convex query/action/mutation boundaries | deterministic | PASS | 1.4s | `npm run convex:boundaries` |
+| Architecture budget review | deterministic | PASS | 0.8s | `npm run architecture:budget` |
 | OpenRouter free-auto discovery | live | SKIP | 0.0s | `npm run openrouter:free -- --limit=5` |
 | Professional live-provider catalog champion | live | SKIP | 0.0s | `npm run eval:professional:live-catalog -- --real deepseek/deepseek-v4-flash --require-full --retry-failed 2 --json-out docs/eval/professional-live-catalog.json` |
 | Chat-first GTM live runtime | live | SKIP | 0.0s | `npm run eval:chat-intake:live -- --json-out docs/eval/chat-intake-live.json --timeout-ms 240000` |
@@ -89,7 +89,7 @@ Root-cause labels used for HALO diagnosis:
 | Eval candidate | Trust | Gate | Architecture fit | Handoff decision |
 |---|---|---|---|---|
 | candidate-gtm-pitchbook-match | candidate | advisory | existing_capability | more_research: missing research packet evidence; candidate evals are advisory only |
-| research-validated-finance-reconcile | research_validated | advisory | small_gap | implementation: demoted: architecture budget is red (forbidden surfaces dirty / review required) — human approval before any implementation handoff |
+| research-validated-finance-reconcile | research_validated | advisory | small_gap | implementation |
 | contested-eval-harness-expansion | contested | advisory | existing_capability | eval_fixture: contested claims must stay advisory until resolved or explicitly modeled |
 
 ## Codex Handoff
@@ -112,7 +112,7 @@ Forbidden without human approval:
 
 ### Recommendations
 
-- Resolve architecture budget review items or rerun with explicit handoff evidence before implementation.
+- Implement scoped handoff for eval candidate research-validated-finance-reconcile.
 - Run skipped free-route-discovery once prerequisites are present: pass --live and set OPENROUTER_API_KEY to discover current free-auto candidates.
 - Run skipped professional-live-catalog once prerequisites are present: pass --live and set OPENROUTER_API_KEY to prove the professional catalog with the cheap champion route.
 - Run skipped chat-intake-live-runtime once prerequisites are present: pass --live and set OPENROUTER_API_KEY to run the chat-intake room runtime against a real route.
@@ -120,7 +120,6 @@ Forbidden without human approval:
 - Persist each new live trace into a durable eval fixture before promoting README charts.
 - Keep provider benchmarks behind row-level hard timeouts so one stuck free model cannot block the loop.
 - Add browser-visible multi-user checks for public/private chat, artifact references, proposals, and trace accept-all.
-- No implementation handoff candidates passed trust and architecture-fit policy in this run.
 
 ## Next Live Runs
 

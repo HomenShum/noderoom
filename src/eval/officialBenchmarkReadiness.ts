@@ -224,14 +224,14 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchStage.ts",
       blocker:
-        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; one live model-edit smoke exists, but official full-bundle sandboxing and output policy proof are still missing.",
+        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; one passing fixture smoke and one official V1 failed-path model smoke exist, but official full-bundle sandboxing and output policy proof are still missing.",
     },
     official_runner_adapter: {
       capability: "official_runner_adapter",
       state: "partial",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; only a one-task live smoke is recorded, so official full-bundle runs, benchmark policy, retries, and process sandbox proof remain incomplete.",
+        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; one official V1 failed-path smoke now records model usage/cost/error, but full-bundle runs, benchmark policy, retries, and process sandbox proof remain incomplete.",
     },
     xlsx_import_export: {
       capability: "xlsx_import_export",
@@ -257,14 +257,14 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchStage.ts",
       blocker:
-        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; one live model-edit smoke exists, but chart/visual grading and process sandboxing are still missing.",
+        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; model-edit smoke evidence exists for V1, but chart/visual grading and process sandboxing are still missing.",
     },
     official_runner_adapter: {
       capability: "official_runner_adapter",
       state: "partial",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; only a one-task live smoke is recorded, so official full-bundle runs, benchmark policy, retries, process sandbox proof, and chart lane remain incomplete.",
+        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; V1 model smoke evidence exists, but V2 official runs, benchmark policy, retries, process sandbox proof, and chart lane remain incomplete.",
     },
     xlsx_import_export: {
       capability: "xlsx_import_export",

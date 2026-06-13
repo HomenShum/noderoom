@@ -30,8 +30,12 @@ export type SpreadsheetBenchRunnerTaskResult = {
   taskDir: string;
   agentManifest: string;
   evaluatorManifest: string;
-  candidateWorkbook: string;
-  score: SpreadsheetBenchWorkbookScore;
+  candidateWorkbook?: string;
+  score?: SpreadsheetBenchWorkbookScore;
+  error?: {
+    phase: "candidate_generation" | "scoring";
+    message: string;
+  };
   model?: {
     name: string;
     calls: number;
@@ -133,13 +137,15 @@ export async function runStagedSpreadsheetBench(options: SpreadsheetBenchRunnerO
   const results: SpreadsheetBenchRunnerTaskResult[] = [];
   for (const task of tasks) {
     try {
-      results.push(await runTask(stageRoot, outputRoot, task, options));
+      const result = await runTask(stageRoot, outputRoot, task, options);
+      if (result.error) warnings.push(`${result.taskDir}: ${result.error.message}`);
+      results.push(result);
     } catch (error) {
       warnings.push(`${rel(stageRoot, task.taskDir)}: ${error instanceof Error ? error.message : String(error)}`);
     }
   }
   const averageOverall = results.length
-    ? Number((results.reduce((sum, result) => sum + result.score.scores.overall, 0) / results.length).toFixed(6))
+    ? Number((results.reduce((sum, result) => sum + (result.score?.scores.overall ?? 0), 0) / results.length).toFixed(6))
     : 0;
   const usage = aggregateUsage(results);
   return {
@@ -149,7 +155,7 @@ export async function runStagedSpreadsheetBench(options: SpreadsheetBenchRunnerO
     outputRoot: basename(outputRoot),
     mode: options.mode,
     taskCount: results.length,
-    passCount: results.filter((result) => result.score.pass).length,
+    passCount: results.filter((result) => result.score?.pass).length,
     averageOverall,
     harness: {
       toolPolicy: "agent_dir_only_until_candidate",
@@ -202,7 +208,25 @@ async function runTask(
     modelName: options.modelName,
     modelTimeoutMs: options.modelTimeoutMs,
   });
-  const emitted = await candidateWorkbook;
+  let emitted: string | ModelCandidateEmission;
+  try {
+    emitted = await candidateWorkbook;
+  } catch (error) {
+    const modelFailure = modelEditFailure(error);
+    return failedTaskResult({
+      stageRoot,
+      task,
+      agent,
+      mode: options.mode,
+      phase: "candidate_generation",
+      message: error instanceof Error ? error.message : String(error),
+      model: modelFailure?.model,
+      modelPlanningMs: modelFailure?.modelPlanningMs,
+      candidateGenerationMs: Date.now() - generationStarted,
+      totalMs: Date.now() - started,
+      trajectory,
+    });
+  }
   const resolvedCandidateWorkbook = typeof emitted === "string" ? emitted : emitted.path;
   const generationMs = Date.now() - generationStarted;
   trajectory.push({ step: "emit_candidate_workbook", detail: rel(outputRoot, resolvedCandidateWorkbook) });
@@ -211,16 +235,35 @@ async function runTask(
   const evaluator = readJson<EvaluatorManifest>(task.evaluatorManifestPath);
   trajectory.push({ step: "read_evaluator_manifest", detail: rel(stageRoot, task.evaluatorManifestPath) });
   const goldWorkbook = resolveManifestPath(dirname(task.evaluatorManifestPath), evaluator.goldFiles[0]);
-  const score = await scoreSpreadsheetBenchWorkbook({
-    taskId: agent.taskId,
-    candidateWorkbookPath: resolvedCandidateWorkbook,
-    goldWorkbookPath: goldWorkbook,
-    answerPosition: evaluator.answerPosition,
-    answerSheet: evaluator.answerSheet,
-    compareStyles: options.compareStyles,
-    maxMismatches: options.maxMismatches,
-    generatedAt: options.generatedAt,
-  });
+  let score: SpreadsheetBenchWorkbookScore;
+  try {
+    score = await scoreSpreadsheetBenchWorkbook({
+      taskId: agent.taskId,
+      candidateWorkbookPath: resolvedCandidateWorkbook,
+      goldWorkbookPath: goldWorkbook,
+      answerPosition: evaluator.answerPosition,
+      answerSheet: evaluator.answerSheet,
+      compareStyles: options.compareStyles,
+      maxMismatches: options.maxMismatches,
+      generatedAt: options.generatedAt,
+    });
+  } catch (error) {
+    return failedTaskResult({
+      stageRoot,
+      task,
+      agent,
+      mode: options.mode,
+      phase: "scoring",
+      message: error instanceof Error ? error.message : String(error),
+      candidateWorkbook: rel(outputRoot, resolvedCandidateWorkbook),
+      model: typeof emitted === "string" ? undefined : emitted.model,
+      modelPlanningMs: typeof emitted === "string" ? undefined : emitted.modelPlanningMs,
+      candidateGenerationMs: generationMs,
+      scoringMs: Date.now() - scoreStarted,
+      totalMs: Date.now() - started,
+      trajectory,
+    });
+  }
   const scoringMs = Date.now() - scoreStarted;
   trajectory.push({ step: "score_candidate", detail: `${score.totals.mismatches} mismatch(es)` });
 
@@ -242,6 +285,45 @@ async function runTask(
       total: Date.now() - started,
     },
     trajectory,
+  };
+}
+
+function failedTaskResult(args: {
+  stageRoot: string;
+  task: StagedTaskPaths;
+  agent: AgentManifest;
+  mode: SpreadsheetBenchRunnerMode;
+  phase: "candidate_generation" | "scoring";
+  message: string;
+  candidateWorkbook?: string;
+  model?: SpreadsheetBenchRunnerTaskResult["model"];
+  modelPlanningMs?: number;
+  candidateGenerationMs: number;
+  scoringMs?: number;
+  totalMs: number;
+  trajectory: SpreadsheetBenchRunnerTaskResult["trajectory"];
+}): SpreadsheetBenchRunnerTaskResult {
+  return {
+    taskId: args.agent.taskId,
+    track: args.agent.track,
+    category: args.agent.category,
+    mode: args.mode,
+    taskDir: rel(args.stageRoot, args.task.taskDir),
+    agentManifest: rel(args.stageRoot, args.task.agentManifestPath),
+    evaluatorManifest: rel(args.stageRoot, args.task.evaluatorManifestPath),
+    candidateWorkbook: args.candidateWorkbook,
+    error: {
+      phase: args.phase,
+      message: args.message,
+    },
+    model: args.model,
+    timingsMs: {
+      ...(args.modelPlanningMs === undefined ? {} : { modelPlanning: args.modelPlanningMs }),
+      candidateGeneration: args.candidateGenerationMs,
+      scoring: args.scoringMs ?? 0,
+      total: args.totalMs,
+    },
+    trajectory: args.trajectory,
   };
 }
 
@@ -287,6 +369,23 @@ type ModelCandidateEmission = {
     costUsd: number;
   };
 };
+
+class ModelEditCandidateError extends Error {
+  constructor(
+    message: string,
+    readonly model: ModelCandidateEmission["model"],
+    readonly modelPlanningMs: number,
+  ) {
+    super(message);
+    this.name = "ModelEditCandidateError";
+  }
+}
+
+function modelEditFailure(error: unknown): Pick<ModelCandidateEmission, "model" | "modelPlanningMs"> | undefined {
+  return error instanceof ModelEditCandidateError
+    ? { model: error.model, modelPlanningMs: error.modelPlanningMs }
+    : undefined;
+}
 
 async function emitPatchedCandidateWorkbook(args: {
   stageRoot: string;
@@ -347,42 +446,47 @@ async function emitModelEditCandidateWorkbook(args: {
   });
   const modelPlanningMs = Date.now() - planningStarted;
   args.trajectory.push({ step: "call_model_for_edit_plan", detail: args.model.name });
-  if (step.toolCalls.length) throw new Error(`model-edit-plan expected JSON text, got ${step.toolCalls.length} tool call(s)`);
-  const plan = parseEditPlanText(step.text ?? "", args.agent.taskId);
-  validateEditPlan(plan, args.agent.taskId);
-  const editPlanPath = join(args.taskOutDir, "model-edit-plan.json");
-  writeJson(editPlanPath, plan);
-
-  const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.readFile(args.source);
-  for (const operation of plan.operations) applyOperation(workbook, operation);
-  await workbook.xlsx.writeFile(args.target);
-
   const usage = step.usage ?? { inputTokens: 0, outputTokens: 0 };
   const modelName = args.modelName ?? args.model.name;
   const costUsd = step.usage && args.modelName ? priceRun(args.modelName, usage.inputTokens, usage.outputTokens) : 0;
-  writeJson(join(args.taskOutDir, "candidate-manifest.json"), {
-    schema: 1,
-    taskId: args.agent.taskId,
-    mode: args.mode,
-    model: modelName,
-    sourceAgentManifest: rel(args.stageRoot, join(args.taskDir, "agent", "task.json")),
-    generatedEditPlan: basename(editPlanPath),
-    candidateWorkbook: basename(args.target),
-    appliedOperationCount: plan.operations.length,
-    modelUsage: usage,
-    modelCostUsd: costUsd,
-    note: "model-edit-plan asks a model to produce an agent-side edit plan before scoring; this is a benchmark runner path, not an official score unless run on official tasks with the recorded model/tool policy.",
-  });
+  const modelInfo = {
+    name: modelName,
+    calls: 1,
+    usage,
+    costUsd,
+  };
+  try {
+    if (step.toolCalls.length) throw new Error(`model-edit-plan expected JSON text, got ${step.toolCalls.length} tool call(s)`);
+    const plan = parseEditPlanText(step.text ?? "", args.agent.taskId);
+    validateEditPlan(plan, args.agent.taskId);
+    const editPlanPath = join(args.taskOutDir, "model-edit-plan.json");
+    writeJson(editPlanPath, plan);
+
+    const workbook = new ExcelJS.Workbook();
+    await workbook.xlsx.readFile(args.source);
+    for (const operation of plan.operations) applyOperation(workbook, operation);
+    await workbook.xlsx.writeFile(args.target);
+
+    writeJson(join(args.taskOutDir, "candidate-manifest.json"), {
+      schema: 1,
+      taskId: args.agent.taskId,
+      mode: args.mode,
+      model: modelName,
+      sourceAgentManifest: rel(args.stageRoot, join(args.taskDir, "agent", "task.json")),
+      generatedEditPlan: basename(editPlanPath),
+      candidateWorkbook: basename(args.target),
+      appliedOperationCount: plan.operations.length,
+      modelUsage: usage,
+      modelCostUsd: costUsd,
+      note: "model-edit-plan asks a model to produce an agent-side edit plan before scoring; this is a benchmark runner path, not an official score unless run on official tasks with the recorded model/tool policy.",
+    });
+  } catch (error) {
+    throw new ModelEditCandidateError(error instanceof Error ? error.message : String(error), modelInfo, modelPlanningMs);
+  }
   return {
     path: args.target,
     modelPlanningMs,
-    model: {
-      name: modelName,
-      calls: 1,
-      usage,
-      costUsd,
-    },
+    model: modelInfo,
   };
 }
 

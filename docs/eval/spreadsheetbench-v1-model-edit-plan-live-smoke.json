@@ -1,0 +1,66 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T10:25:41.486Z",
+  "stageRoot": "staged-v1",
+  "outputRoot": "run-v1-model-edit",
+  "mode": "model-edit-plan",
+  "taskCount": 1,
+  "passCount": 0,
+  "averageOverall": 0,
+  "harness": {
+    "toolPolicy": "agent_dir_only_until_candidate",
+    "evaluatorAccess": "after_candidate_emit_only",
+    "budget": {
+      "modelCalls": 1,
+      "inputTokens": 6776,
+      "outputTokens": 27,
+      "providerCostUsd": 0.00138895
+    }
+  },
+  "warnings": [
+    "tasks/13-1: edit-plan references missing sheet: Sheet1"
+  ],
+  "results": [
+    {
+      "taskId": "13-1",
+      "track": "spreadsheetbench-v1",
+      "mode": "model-edit-plan",
+      "taskDir": "tasks/13-1",
+      "agentManifest": "tasks/13-1/agent/task.json",
+      "evaluatorManifest": "tasks/13-1/evaluator/evaluator.json",
+      "error": {
+        "phase": "candidate_generation",
+        "message": "edit-plan references missing sheet: Sheet1"
+      },
+      "model": {
+        "name": "gpt-5.4-nano",
+        "calls": 1,
+        "usage": {
+          "inputTokens": 6776,
+          "outputTokens": 27
+        },
+        "costUsd": 0.0013889500000000001
+      },
+      "timingsMs": {
+        "modelPlanning": 1383,
+        "candidateGeneration": 1436,
+        "scoring": 0,
+        "total": 1436
+      },
+      "trajectory": [
+        {
+          "step": "read_agent_manifest",
+          "detail": "tasks/13-1/agent/task.json"
+        },
+        {
+          "step": "snapshot_agent_workbook",
+          "detail": "1 sheet(s), 240 cell(s)"
+        },
+        {
+          "step": "call_model_for_edit_plan",
+          "detail": "gpt-5.4-nano"
+        }
+      ]
+    }
+  ]
+}

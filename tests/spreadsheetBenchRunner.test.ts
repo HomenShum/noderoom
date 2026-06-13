@@ -63,11 +63,13 @@ describe("SpreadsheetBench staged runner", () => {
       "read_evaluator_manifest",
       "score_candidate",
     ]);
-    expect(result.score.pass).toBe(false);
-    expect(result.score.mismatches).toEqual(expect.arrayContaining([
+    expect(result.score).toBeDefined();
+    expect(result.candidateWorkbook).toBeDefined();
+    expect(result.score!.pass).toBe(false);
+    expect(result.score!.mismatches).toEqual(expect.arrayContaining([
       expect.objectContaining({ kind: "value", sheet: "Sheet1", cell: "B2", expected: "2", actual: "1" }),
     ]));
-    expect(existsSync(join(out, result.candidateWorkbook))).toBe(true);
+    expect(existsSync(join(out, result.candidateWorkbook!))).toBe(true);
     const candidateManifest = readFileSync(join(out, "13-1", "candidate-manifest.json"), "utf8");
     expect(candidateManifest.toLowerCase()).not.toContain("gold");
     expect(candidateManifest).not.toContain("evaluator");
@@ -127,7 +129,8 @@ describe("SpreadsheetBench staged runner", () => {
       "read_evaluator_manifest",
       "score_candidate",
     ]);
-    expect(result.score.pass).toBe(true);
+    expect(result.score).toBeDefined();
+    expect(result.score!.pass).toBe(true);
     const candidateManifest = readFileSync(join(out, "13-2", "candidate-manifest.json"), "utf8");
     expect(candidateManifest).toContain("apply-agent-patch");
     expect(candidateManifest.toLowerCase()).not.toContain("gold");
@@ -210,6 +213,78 @@ describe("SpreadsheetBench staged runner", () => {
     expect(candidateManifest.toLowerCase()).not.toContain("gold");
     expect(candidateManifest).not.toContain("evaluator");
   });
+
+  it("counts failed model edit plans with usage, trajectory, and error evidence", async () => {
+    const source = tempRoot("source");
+    const stage = tempRoot("stage");
+    const out = tempRoot("out");
+    mkdirSync(join(source, "spreadsheet", "13-4"), { recursive: true });
+    writeJson(join(source, "dataset.json"), [
+      {
+        id: "13-4",
+        instruction: "Change the workbook value to 2.",
+        spreadsheet_path: "spreadsheet/13-4",
+        answer_position: "Actual!B2:B2",
+        answer_sheet: "Actual",
+      },
+    ]);
+    await writeWorkbookWithSheet(join(source, "spreadsheet", "13-4", "1_13-4_init.xlsx"), "Actual", 1);
+    await writeWorkbookWithSheet(join(source, "spreadsheet", "13-4", "1_13-4_golden.xlsx"), "Actual", 2);
+    stageSpreadsheetBenchBundle(source, {
+      track: "spreadsheetbench-v1",
+      outputRoot: stage,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+    const planner: AgentModel = {
+      name: "bad-spreadsheetbench-planner",
+      async next() {
+        return {
+          text: JSON.stringify({ schema: 1, operations: [{ sheet: "Sheet1", cell: "B2", value: 2 }] }),
+          toolCalls: [],
+          done: true,
+          usage: { inputTokens: 33, outputTokens: 11 },
+        };
+      },
+    };
+
+    const report = await runStagedSpreadsheetBench({
+      stageRoot: stage,
+      outputRoot: out,
+      mode: "model-edit-plan",
+      model: planner,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(report).toMatchObject({
+      mode: "model-edit-plan",
+      taskCount: 1,
+      passCount: 0,
+      averageOverall: 0,
+      harness: {
+        budget: { modelCalls: 1, inputTokens: 33, outputTokens: 11, providerCostUsd: 0 },
+      },
+    });
+    expect(report.warnings[0]).toContain("edit-plan references missing sheet: Sheet1");
+    const result = report.results[0];
+    expect(result.score).toBeUndefined();
+    expect(result.error).toMatchObject({
+      phase: "candidate_generation",
+      message: "edit-plan references missing sheet: Sheet1",
+    });
+    expect(result.model).toMatchObject({
+      name: "bad-spreadsheetbench-planner",
+      calls: 1,
+      usage: { inputTokens: 33, outputTokens: 11 },
+    });
+    expect(result.trajectory.map((step) => step.step)).toEqual([
+      "read_agent_manifest",
+      "snapshot_agent_workbook",
+      "call_model_for_edit_plan",
+    ]);
+    expect(readFileSync(join(out, "13-4", "model-edit-plan.json"), "utf8").toLowerCase()).not.toContain("gold");
+  });
 });
 
 function tempRoot(prefix: string): string {
@@ -223,8 +298,12 @@ function writeJson(path: string, value: unknown) {
 }
 
 async function writeWorkbook(path: string, b2: number) {
+  await writeWorkbookWithSheet(path, "Sheet1", b2);
+}
+
+async function writeWorkbookWithSheet(path: string, sheetName: string, b2: number) {
   const workbook = new ExcelJS.Workbook();
-  const sheet = workbook.addWorksheet("Sheet1");
+  const sheet = workbook.addWorksheet(sheetName);
   sheet.getCell("B2").value = b2;
   await workbook.xlsx.writeFile(path);
 }

@@ -1128,12 +1128,15 @@ benchmark:bankertoolbench:proof` now enforces both local BTB harness boundaries 
 isolation, candidate-before-evaluator trajectory, negative baseline accounting, positive
 weighted-rubric/package scoring, supported deliverable policy, and 0-leak artifacts. This is
 still not a BTB score: Harbor/Docker process isolation, MCP financial tools, and Gandalf verifier
-replay remain red gates. `npm run benchmark:bankertoolbench:official-contract` makes that external
-contract explicit in `docs/eval/bankertoolbench-official-contract.json`: dataset revision and
-manifest-lock hashes, Harbor/Docker mount policy, required SEC/market-data/logo/document/web MCP
-tools, and the Gandalf score-import schema. The Docker availability probe makes the process-isolation
-blocker executable instead of hand-wavy: it must pass with `container_isolation_proven` before any
-public BTB readiness claim can move out of red.
+replay remain red gates. `npm run benchmark:bankertoolbench:manifest-lock` now hashes a BTB bundle's
+`tasks.jsonl`, `task-data/**`, and `golden-outputs/**` into a provenance lockfile; the checked-in
+fixture smoke is `docs/eval/bankertoolbench-manifest-lock-smoke.json`. `npm run
+benchmark:bankertoolbench:official-contract` makes the full external contract explicit in
+`docs/eval/bankertoolbench-official-contract.json`: dataset revision and manifest-lock hashes,
+Harbor/Docker mount policy, required SEC/market-data/logo/document/web MCP tools, and the Gandalf
+score-import schema. The Docker availability probe makes the process-isolation blocker executable
+instead of hand-wavy: it must pass with `container_isolation_proven` before any public BTB readiness
+claim can move out of red.
 
 ## Benchmark Harness / v3 Composite-Synthesis Run
 

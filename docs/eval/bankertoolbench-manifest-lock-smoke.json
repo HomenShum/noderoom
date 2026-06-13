@@ -1,0 +1,43 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T15:08:20.533Z",
+  "verifier": "bankertoolbench_manifest_lock",
+  "sourceRoot": "btb-fixture",
+  "fileCount": 4,
+  "sectionCounts": {
+    "tasks_jsonl": 1,
+    "task_data": 2,
+    "golden_outputs": 1,
+    "other": 0
+  },
+  "aggregateSha256": "ba1c6596045a392e8d9b94ab270cd5a4f4faa2b01ea64b9ff1f987cbe756925f",
+  "files": [
+    {
+      "path": "golden-outputs/0fc7bc3c-a111-4222-8333-444455556666/answer.xlsx",
+      "section": "golden_outputs",
+      "sha256": "5bd17a4a66c4126008a147278511f1fb55774b443fa32bf571a0ffd5a8efc073",
+      "bytes": 9
+    },
+    {
+      "path": "task-data/0fc7bc3c-a111-4222-8333-444455556666/Inputs/model.xlsx",
+      "section": "task_data",
+      "sha256": "5bd17a4a66c4126008a147278511f1fb55774b443fa32bf571a0ffd5a8efc073",
+      "bytes": 9
+    },
+    {
+      "path": "task-data/0fc7bc3c-a111-4222-8333-444455556666/Inputs/source.pdf",
+      "section": "task_data",
+      "sha256": "5bd17a4a66c4126008a147278511f1fb55774b443fa32bf571a0ffd5a8efc073",
+      "bytes": 9
+    },
+    {
+      "path": "tasks.jsonl",
+      "section": "tasks_jsonl",
+      "sha256": "1063903623b6cf5e8464a30b1f20667be2ad6d12a5367c235fa926e7a944b78e",
+      "bytes": 524
+    }
+  ],
+  "warnings": [
+    "dataset revision is not recorded; this lock is a local fixture/provenance smoke, not an official bundle claim"
+  ]
+}

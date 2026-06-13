@@ -184,6 +184,16 @@ const steps: StepSpec[] = [
     timeoutMs: 120_000,
   },
   {
+    id: "bankertoolbench-manifest-lock-fixture",
+    label: "BankerToolBench manifest lock fixture",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "benchmark:bankertoolbench:manifest-lock", "--", "--root", ".tmp/official-benchmarks/btb-fixture", "--json-out", "docs/eval/bankertoolbench-manifest-lock-smoke.json"],
+    timeoutMs: 120_000,
+    includeWhen: () => existsSync(join(process.cwd(), ".tmp", "official-benchmarks", "btb-fixture")),
+    skipReason: "local BankerToolBench fixture root is not present",
+  },
+  {
     id: "bankertoolbench-runner-fixture",
     label: "BankerToolBench staged runner fixture",
     lane: "deterministic",

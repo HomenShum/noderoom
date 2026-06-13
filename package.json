@@ -30,6 +30,7 @@
     "benchmark:bankertoolbench:stage": "tsx scripts/bankertoolbench-stage.ts",
     "benchmark:bankertoolbench:run": "tsx scripts/bankertoolbench-run.ts",
     "benchmark:bankertoolbench:proof": "tsx scripts/bankertoolbench-proof-check.ts",
+    "benchmark:bankertoolbench:manifest-lock": "tsx scripts/bankertoolbench-manifest-lock.ts",
     "benchmark:bankertoolbench:official-contract": "tsx scripts/bankertoolbench-official-contract.ts --json-out docs/eval/bankertoolbench-official-contract.json",
     "benchmark:contamination": "tsx scripts/benchmark-contamination-check.ts",
     "benchmark:spreadsheetbench:ingest": "tsx scripts/spreadsheetbench-ingest.ts",

@@ -97,6 +97,13 @@ revision and manifest-lock hashes, Harbor/Docker execution evidence, SEC /
 market-data / logo / document / web MCP adapters, and Gandalf verifier score
 import before any BTB readiness claim can turn green.
 
+BankerToolBench provenance addendum: `npm run
+benchmark:bankertoolbench:manifest-lock` now hashes `tasks.jsonl`,
+`task-data/**`, and `golden-outputs/**` into a lockfile. HALO runs it against
+the local BTB-shaped fixture and writes
+`docs/eval/bankertoolbench-manifest-lock-smoke.json`; an official claim still
+requires the same lock format over the real dataset revision.
+
 SpreadsheetBench V2 rendered-chart addendum: `npm run
 benchmark:spreadsheetbench:chart-visual:probe` now writes
 `docs/eval/spreadsheetbench-chart-visual-probe.json` and is part of HALO. The

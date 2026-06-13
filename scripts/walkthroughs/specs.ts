@@ -39,18 +39,19 @@ export type FeatureSpec = {
    *  FICTIONAL companies — that restraint is itself the trust signal). */
   seedCompanies?: Array<{ company: string; website?: string; tier?: string; owner?: string }>;
   /** Close panels the story doesn't use — fewer panels = the feature renders larger (the judge's
-   *  systemic "text too small at phone size" finding). Order: [left rail, artifact, private]. */
+   *  systemic "text too small at phone size" finding). Legacy keys map to current toggles:
+   *  left = Room Binder, artifact = Work Surface, priv = Copilot. */
   closePanels?: Array<"left" | "artifact" | "priv">;
   steps: Step[];
 };
 
-const CENTER = ".r-panel.center";
+const CENTER = '[data-testid="public-chat-panel"]';
 const COMPOSER = `${CENTER} [data-testid="chat-composer"]`;
 
 export const FEATURES: FeatureSpec[] = [
   {
     id: "chat",
-    closePanels: ["artifact", "priv"],
+    closePanels: ["left", "artifact"],
     title: "Join a live room & chat",
     setup: "createRoom",
     steps: [
@@ -118,7 +119,7 @@ export const FEATURES: FeatureSpec[] = [
   },
   {
     id: "ask-agent",
-    closePanels: ["left", "priv"],
+    closePanels: ["left"],
     title: "Ask the Room agent to do the work",
     setup: "createRoom",
     retries: 2,
@@ -136,7 +137,7 @@ export const FEATURES: FeatureSpec[] = [
   },
   {
     id: "multi-agent-workbench",
-    closePanels: ["left", "artifact", "priv"],
+    closePanels: ["left", "artifact"],
     title: "Multi-agent work queue",
     setup: "memoryDemo",
     steps: [
@@ -215,7 +216,7 @@ export const FEATURES: FeatureSpec[] = [
   },
   {
     id: "naive-overwrite",
-    closePanels: ["left", "priv"],
+    closePanels: ["left"],
     title: "Failure replay — the naive agent clobbers a human",
     // FAILURE-REPLAY (episode scene `naive-problem`). Runs ONLY against the deliberately-naive
     // build (branch demo/v0-naive-agent: agents skip locks, CAS, and traces — never merged,
@@ -243,7 +244,7 @@ export const FEATURES: FeatureSpec[] = [
   },
   {
     id: "review-approve",
-    closePanels: ["left", "priv"],
+    closePanels: ["left"],
     title: "Review mode — approve agent edits at the cell",
     // LIVE again: the 0/3 review-mode behavior was root-caused (the model was never told review
     // mode exists, so pendingApproval results read as failures → budget-burn or wander-and-quit)

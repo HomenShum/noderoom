@@ -1,19 +1,19 @@
 /**
- * RoomShell — top bar + MVP room panels. The June 2026 target is Room Binder,
- * center Work Surface, right Copilot, and a thin shell-level status strip.
- * Reads everything through `useStore()`,
+ * RoomShell — top bar + June 2026 shell roles: Room Binder, Work Surface,
+ * Copilot, Signal Tape, and Status Strip. Reads everything through `useStore()`,
  * so it renders identically whether the data is the in-memory engine or live
  * Convex. The collaboration "Run" button calls `store.runCollab()` — the scripted
  * demo in-memory, the real `runRoomAgent` Convex action when live.
  */
 
-import { useEffect, useRef, useState } from "react";
-import { PanelLeft, Table2, PanelRight, Moon, Sun, LogOut, Link2, ShieldCheck, X, HelpCircle, Copy, Check } from "lucide-react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
+import { PanelLeft, Table2, PanelRight, Moon, Sun, LogOut, Link2, ShieldCheck, X, HelpCircle, Copy, Check, Activity, MessageCircle } from "lucide-react";
 import { useStore } from "../app/store";
 import { Chat } from "./Chat";
 import { Artifact } from "./panels/Artifact";
 import { LeftRail } from "./LeftRail";
 import { GuidedTour, type TourStep } from "./GuidedTour";
+import { selectPublicSignalTraces, statusText as publicStatusText } from "./signalStatus";
 import type { Actor, Channel } from "../engine/types";
 
 const AUTO_ACCEPT_PREF_KEY = "noderoom:autoAcceptConsent:v1";
@@ -34,9 +34,10 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
   // `live` (= isHost via canRunCollab) at mount — still false on a RELOAD while Convex queries load —
   // so every returning visitor (tour already seen, nothing to force panels open) landed in a chat-only
   // layout. Caught by the walkthrough capturer's reload path; see FRICTION_LOG 2026-06-09.
-  const [show, setShow] = useState({ left: !isCompact, artifact: !isCompact, priv: !isCompact });
+  const [show, setShow] = useState({ left: !isCompact, stage: true, copilot: !isCompact });
   const [codeCopied, setCodeCopied] = useState(false);
-  const [layout, setLayout] = useState({ left: 224, center: 1.15, artifact: 1.35, right: 320 });
+  const [layout, setLayout] = useState({ left: 248, stage: 1, right: 380 });
+  const [copilotTab, setCopilotTab] = useState<"public" | "private">("public");
   const arts = store.listArtifacts(roomId);
   const [artId, setArtId] = useState(() => arts.find((a) => a.kind === "sheet")?.id ?? arts[0]?.id ?? "");
   const [collab, setCollab] = useState({ running: false, done: false });
@@ -56,7 +57,7 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
     tourAutoStarted.current = true;
     // On compact screens panels are stacked fixed overlays — opening all three would bury the chat
     // the tour is pointing at, so the tour starts from the chat-only default there.
-    if (!seen) { if (!isCompact) setShow({ left: true, artifact: true, priv: true }); setTourOpen(true); }
+    if (!seen) { if (!isCompact) setShow({ left: true, stage: true, copilot: true }); setTourOpen(true); }
   }, [isDemoRoom, isCompact]);
   if (!room) return <div className="r-app"><div className="r-screen"><div style={{ margin: "auto" }} className="muted">Loading room…</div></div></div>;
 
@@ -67,7 +68,7 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
   const openArtifact = (id: string) => {
     if (!store.listArtifacts(roomId).some((a) => a.id === id)) return;
     setArtId(id);
-    setShow((s) => ({ ...s, artifact: true }));
+    setShow((s) => ({ ...s, stage: true }));
   };
 
   const varianceArt = arts.find((a) => a.title === "Q3 variance") ?? arts.find((a) => a.kind === "sheet");
@@ -75,7 +76,8 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
   // Steps then anchor only to always-visible elements, so there are no per-step side-effects to thrash.
   const startTour = () => {
     if (varianceArt) openArtifact(varianceArt.id);
-    setShow({ left: true, artifact: true, priv: true });
+    setShow({ left: true, stage: true, copilot: true });
+    setCopilotTab("public");
     setTourOpen(true);
   };
   const tourSteps: TourStep[] = [
@@ -91,9 +93,9 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
       placement: "right",
     },
     {
-      selector: '.r-panel.center [data-testid="chat-composer"]',
-      title: "Ask the room — or the agent",
-      body: "Talk in plain language. Start a message with /ask to put the Room NodeAgent to work on the spreadsheet, e.g. /ask reconcile Q3 revenue.",
+      selector: '[data-testid="copilot-panel"]',
+      title: "Ask Copilot",
+      body: "Talk in plain language. Public chat, private agent work, job controls, and steering now live in Copilot.",
       placement: "top",
     },
     {
@@ -105,7 +107,7 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
     {
       selector: '[data-testid="room-trace"]',
       title: "Everything is auditable",
-      body: "Every change — by hand or by agent — is recorded here. With Auto-allow off, agent edits arrive as proposals the host approves or rejects.",
+      body: "Every change — by hand or by agent — is recorded. The bottom strip shows what just happened; the full trace remains inspectable.",
       placement: "left",
     },
     {
@@ -115,9 +117,9 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
       placement: "bottom",
     },
     {
-      selector: '.r-panel.right [data-testid="chat-composer"]',
-      title: "Your private NodeAgent",
-      body: "It reads the room for context, but its output stays yours until you Promote it to the public chat.",
+      selector: '[data-testid="copilot-panel"]',
+      title: "Public and private lanes",
+      body: "Switch Copilot between the public room lane and your private NodeAgent. Private output stays yours until you promote it.",
       placement: "left",
     },
     {
@@ -129,7 +131,8 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
 
   const runCollab = async () => {
     if (collab.running) return;
-    setShow({ left: true, artifact: true, priv: true });
+    setShow({ left: true, stage: true, copilot: true });
+    setCopilotTab("public");
     setCollab({ running: true, done: false });
     try { await store.runCollab(); } finally { setCollab({ running: false, done: true }); }
   };
@@ -151,17 +154,32 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
     setAutoAcceptModal(false);
     store.toggleAutoAllow(roomId, me);
   };
-  const startResize = (target: "left" | "middle" | "right", startX: number) => {
+  const toggleBinder = () => {
+    setShow((s) => {
+      if (!isCompact) return { ...s, left: !s.left, stage: true };
+      return { left: !s.left, stage: true, copilot: false };
+    });
+  };
+  const showWorkSurface = () => {
+    setShow((s) => {
+      if (!isCompact) return { ...s, stage: true };
+      return { left: false, stage: true, copilot: false };
+    });
+  };
+  const toggleCopilot = () => {
+    setShow((s) => {
+      if (!isCompact) return { ...s, stage: true, copilot: !s.copilot };
+      const nextCopilot = !s.copilot;
+      return { left: false, stage: !nextCopilot, copilot: nextCopilot };
+    });
+  };
+  const startResize = (target: "left" | "right", startX: number) => {
     const start = layout;
     const move = (ev: PointerEvent) => {
       const dx = ev.clientX - startX;
       setLayout((cur) => {
         if (target === "left") return { ...cur, left: clamp(start.left + dx, 176, 380) };
-        if (target === "right") return { ...cur, right: clamp(start.right - dx, 240, 520) };
-        const delta = dx / 220;
-        const center = clamp(start.center + delta, 0.7, 2.4);
-        const artifact = clamp(start.artifact - delta, 0.8, 2.8);
-        return { ...cur, center, artifact };
+        return { ...cur, right: clamp(start.right - dx, 280, 560) };
       });
     };
     const up = () => {
@@ -194,9 +212,9 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
         {store.mode === "memory" && <span className="r-tag r-demo-badge" title="Scripted demo — no backend or API keys needed; everything runs locally and offline.">● demo</span>}
         <span className="r-spacer" />
         <div className="r-toggle-group">
-          <button className="r-iconbtn" data-on={String(show.left)} title="Room Binder" aria-label="Toggle Room Binder panel" aria-pressed={show.left} onClick={() => setShow((s) => ({ ...s, left: !s.left }))}><PanelLeft size={16} /></button>
-          <button className="r-iconbtn" data-on={String(show.artifact)} title="Artifact" aria-label="Toggle artifact panel" aria-pressed={show.artifact} onClick={() => setShow((s) => ({ ...s, artifact: !s.artifact }))}><Table2 size={16} /></button>
-          <button className="r-iconbtn" data-on={String(show.priv)} title="Private agent" aria-label="Toggle private agent panel" aria-pressed={show.priv} onClick={() => setShow((s) => ({ ...s, priv: !s.priv }))}><PanelRight size={16} /></button>
+          <button className="r-iconbtn" data-on={String(show.left)} title="Room Binder" aria-label="Toggle Room Binder panel" aria-pressed={show.left} onClick={toggleBinder}><PanelLeft size={16} /></button>
+          <button className="r-iconbtn" data-on={String(!isCompact || show.stage)} title="Work Surface" aria-label={isCompact ? "Show Work Surface panel" : "Focus Work Surface"} aria-pressed={!isCompact || show.stage} onClick={showWorkSurface}><Table2 size={16} /></button>
+          <button className="r-iconbtn" data-on={String(show.copilot)} title="Copilot" aria-label="Toggle Copilot panel" aria-pressed={show.copilot} onClick={toggleCopilot}><PanelRight size={16} /></button>
         </div>
         <div className="r-pill-auto">
           Auto-allow
@@ -213,15 +231,24 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
         <button className="r-iconbtn" title="Leave room" aria-label="Leave room" onClick={onLeave}><LogOut size={16} /></button>
       </div>
 
-      <div className="r-workspace">
+      <div className="r-workspace" data-shell="june-2026">
         {show.left && <LeftRail roomId={roomId} me={me} artId={curArt?.id ?? artId} style={{ width: layout.left }} onPick={openArtifact} />}
         {show.left && <ResizeHandle label="Resize files panel" onPointerDown={(x) => startResize("left", x)} />}
-        <Chat roomId={roomId} me={me} channel="public" variant="public" agentName="Room NodeAgent" style={{ flex: layout.center }} onOpenArtifact={openArtifact} />
-        {show.artifact && <ResizeHandle label="Resize spreadsheet panel" onPointerDown={(x) => startResize("middle", x)} />}
-        {show.artifact && <Artifact roomId={roomId} me={me} artId={curArt?.id ?? artId} onArt={setArtId} style={{ flex: layout.artifact }} collab={store.canRunCollab ? { ...collab, onRun: runCollab } : undefined} />}
-        {show.priv && <ResizeHandle label="Resize private agent panel" onPointerDown={(x) => startResize("right", x)} />}
-        {show.priv && <Chat roomId={roomId} me={me} channel={privChannel} variant="private" agentName="Your NodeAgent" style={{ width: layout.right }} onOpenArtifact={openArtifact} />}
+        {(!isCompact || show.stage) && <Artifact roomId={roomId} me={me} artId={curArt?.id ?? artId} onArt={setArtId} style={{ flex: layout.stage }} collab={store.canRunCollab ? { ...collab, onRun: runCollab } : undefined} />}
+        {show.copilot && <ResizeHandle label="Resize Copilot panel" onPointerDown={(x) => startResize("right", x)} />}
+        {show.copilot && (
+          <CopilotPanel
+            roomId={roomId}
+            me={me}
+            privChannel={privChannel}
+            active={copilotTab}
+            onActive={setCopilotTab}
+            onOpenArtifact={openArtifact}
+            style={{ width: layout.right }}
+          />
+        )}
       </div>
+      <SignalStatusStrip roomId={roomId} />
       {autoAcceptModal && (
         <div className="r-modal-backdrop" role="presentation">
           <div className="r-modal" role="dialog" aria-modal="true" aria-labelledby="auto-accept-title">
@@ -241,6 +268,84 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
         </div>
       )}
       <GuidedTour steps={tourSteps} open={tourOpen} onClose={() => setTourOpen(false)} storageKey={TOUR_KEY} />
+    </div>
+  );
+}
+
+function CopilotPanel({
+  roomId,
+  me,
+  privChannel,
+  active,
+  onActive,
+  onOpenArtifact,
+  style,
+}: {
+  roomId: string;
+  me: Actor;
+  privChannel: Channel;
+  active: "public" | "private";
+  onActive: (tab: "public" | "private") => void;
+  onOpenArtifact: (id: string) => void;
+  style?: CSSProperties;
+}) {
+  return (
+    <div className="r-panel right r-copilot" style={style} data-testid="copilot-panel">
+      <div className="r-panel-head r-copilot-head">
+        <PanelRight size={14} />
+        <span className="h-title">Copilot</span>
+        <span className="grow" />
+        <div className="r-copilot-tabs" role="tablist" aria-label="Copilot lanes">
+          <button type="button" role="tab" aria-selected={active === "public"} data-on={String(active === "public")} data-testid="copilot-tab-public" onClick={() => onActive("public")}>
+            <MessageCircle size={12} /> Room
+          </button>
+          <button type="button" role="tab" aria-selected={active === "private"} data-on={String(active === "private")} data-testid="copilot-tab-private" onClick={() => onActive("private")}>
+            <ShieldCheck size={12} /> Private
+          </button>
+        </div>
+      </div>
+      <div className="r-copilot-body">
+        {active === "public" ? (
+          <Chat roomId={roomId} me={me} channel="public" variant="public" agentName="Room NodeAgent" embedded testId="public-chat-panel" onOpenArtifact={onOpenArtifact} />
+        ) : (
+          <Chat roomId={roomId} me={me} channel={privChannel} variant="private" agentName="Your NodeAgent" embedded testId="private-chat-panel" onOpenArtifact={onOpenArtifact} />
+        )}
+      </div>
+    </div>
+  );
+}
+
+function SignalStatusStrip({ roomId }: { roomId: string }) {
+  const store = useStore();
+  const traces = selectPublicSignalTraces(store.listTraces(roomId));
+  const proposals = store.listProposals(roomId);
+  const artifacts = store.listArtifacts(roomId);
+  const sessions = store.listSessions(roomId);
+  const run = store.lastRun();
+  const job = store.lastLongFreeJob();
+  const latest = traces.at(-1);
+  const status = publicStatusText(latest, proposals.length, job?.status);
+  const signals = [
+    { k: "Sources", v: `${artifacts.length} artifacts` },
+    { k: "Agents", v: `${sessions.length} active` },
+    { k: "Review", v: proposals.length ? `${proposals.length} pending` : "clear" },
+    { k: "Eval", v: run ? `${run.model} · ${run.toolCalls} tools` : "ready" },
+    { k: "Cost", v: run ? `$${run.costUsd.toFixed(3)}` : job ? job.modelPolicy : "$0.000" },
+  ];
+
+  return (
+    <div className="r-shell-bottom" data-testid="shell-bottom">
+      <div className="r-signal-tape" data-testid="signal-tape" aria-label="Signal Tape">
+        <Activity size={13} />
+        {signals.map((s) => (
+          <span key={s.k} className="r-signal-chip"><b>{s.k}</b>{s.v}</span>
+        ))}
+      </div>
+      <div className="r-status-strip" data-testid="status-strip" role="status" aria-live="polite">
+        <span className="r-status-dot" data-kind={status.kind} />
+        <span className="r-status-main">{status.text}</span>
+        {latest && <span className="r-status-meta">{latest.actor.name} · {latest.type}</span>}
+      </div>
     </div>
   );
 }

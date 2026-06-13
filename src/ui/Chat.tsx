@@ -1,4 +1,4 @@
-/** Public room chat (`.r-panel.center`) and private agent (`.r-panel.right`). Reads via useStore(). */
+/** Public/private Copilot chat surfaces. Reads via useStore(). */
 import { useEffect, useMemo, useRef, useState, type CSSProperties, type ChangeEvent, type DragEvent, type KeyboardEvent } from "react";
 import { Lock, MessageCircle, Globe, Send, Sparkles, Copy, Check, ArrowUpRight, Pencil, Paperclip, X, Timer, RefreshCw, ChevronDown, ChevronUp, ListChecks, GitBranch, ShieldCheck, Database } from "lucide-react";
 import { useQuery } from "convex/react";
@@ -274,9 +274,11 @@ type ChatProps = {
   agentName: string;
   style?: CSSProperties;
   onOpenArtifact?: (id: string) => void;
+  embedded?: boolean;
+  testId?: string;
 };
 
-export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArtifact }: ChatProps) {
+export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArtifact, embedded = false, testId }: ChatProps) {
   const store = useStore();
   const [text, setText] = useState("");
   const [refs, setRefs] = useState<ArtifactRef[]>([]);
@@ -452,12 +454,14 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
     if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); }
     else if (e.key === "Escape") { if (slashOpen) setSlashOpen(false); else taRef.current?.blur(); }
   };
+  const rootClass = embedded ? `r-chat-embedded ${isPrivate ? "private" : "public"}` : `r-panel ${isPrivate ? "right" : "center"}`;
 
   return (
     <div
-      className={"r-panel " + (isPrivate ? "right" : "center")}
+      className={rootClass}
       style={style}
       data-drop={String(dropActive)}
+      data-testid={testId ?? (isPrivate ? "private-chat-panel" : "public-chat-panel")}
       onDragOver={onDragOver}
       onDragLeave={onDragLeave}
       onDrop={onDrop}

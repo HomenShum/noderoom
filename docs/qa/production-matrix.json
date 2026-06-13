@@ -239,11 +239,10 @@
       "id": "professional_workroom_shell",
       "area": "Professional workroom shell",
       "claim": "The desktop shell follows Room/Deal Binder -> Work Surface -> Copilot, with proofs, sources, and gold comparisons opening on the center stage instead of competing side or bottom panels.",
-      "status": "red",
-      "productionGate": "Browser layout E2E proves wide desktop binder, center work surface, right Copilot, tablet binder collapse, mobile tabs/sheets, no overflow, and no lost spreadsheet affordances.",
+      "status": "yellow",
+      "productionGate": "Browser layout E2E proves wide desktop binder, center work surface, right Copilot, compact overlays, no overflow, no lost spreadsheet affordances, plus live/Convex and Gemini UI judge walkthrough evidence.",
       "deterministicChecks": [
-        "e2e/responsive-qa.spec.ts",
-        "missing: e2e/workroom-shell.spec.ts"
+        "e2e/responsive-qa.spec.ts"
       ],
       "liveChecks": [
         "missing: Playwright shell spec against local app and live Convex room",
@@ -252,19 +251,21 @@
       "evidence": [
         { "type": "doc", "ref": "docs/TARGET_2026_06.md" },
         { "type": "doc", "ref": "docs/ARCHITECTURE.md" },
+        { "type": "test", "ref": "e2e/responsive-qa.spec.ts" },
         { "type": "code", "ref": "src/ui/RoomShell.tsx" },
         { "type": "code", "ref": "src/ui/LeftRail.tsx" }
       ],
-      "nextReview": "Replace the MVP four-peer-panel composition with Binder -> Work Surface -> Copilot after browser specs prove navigation, center split, responsive collapse, and right-side steering."
+      "nextReview": "Add center split source/proof mode, live/Convex shell smoke, and Gemini UI judge before promoting the workroom shell to green."
     },
     {
       "id": "signal_tape_status_strip",
       "area": "Signal tape + status strip",
       "claim": "The bottom UI separates configurable ambient Signal Tape from the authoritative non-scrolling Status Strip for commit, conflict, eval, sync, cost, and runtime truth.",
-      "status": "red",
+      "status": "yellow",
       "productionGate": "DOM/browser tests prove two distinct bottom rows, pause/reduced-motion/filter behavior, click-to-open related artifact, no unauthorized private data in the tape, and precise non-scrolling status events.",
       "deterministicChecks": [
-        "missing: e2e/signal-tape-status.spec.ts"
+        "e2e/responsive-qa.spec.ts",
+        "tests/signalStatus.test.ts"
       ],
       "liveChecks": [
         "missing: live/browser smoke for room, source, agent, risk, eval, and cost status events"
@@ -272,19 +273,21 @@
       "evidence": [
         { "type": "doc", "ref": "docs/TARGET_2026_06.md" },
         { "type": "doc", "ref": "docs/GAPS_NOT_DONE.md" },
-        { "type": "code", "ref": "src/ui/panels/Artifact.tsx" }
+        { "type": "code", "ref": "src/ui/RoomShell.tsx" },
+        { "type": "test", "ref": "e2e/responsive-qa.spec.ts" },
+        { "type": "test", "ref": "tests/signalStatus.test.ts" }
       ],
-      "nextReview": "Extract trace/status out of the artifact panel into a shell-level status contract before publishing the June shell as current product behavior."
+      "nextReview": "Add dedicated browser status-event tests for commit, conflict, job, eval, cost, pause/filter controls, and click-through artifact drilldown."
     },
     {
       "id": "intake_preflight_scheduler",
       "area": "Intake preflight scheduler",
       "claim": "Every user message is classified as command, steering patch, parallel subagent, wait, clarification, note, cancel, or priority change; the deterministic harness computes PlanPreview and owns scheduling authority.",
-      "status": "red",
-      "productionGate": "Unit/runtime evals prove affected-set expansion, partial scheduling, intent claims, short commit leases, dedupe, cost authorization, privacy/formula checks, and that the LLM recommends while the harness schedules.",
+      "status": "yellow",
+      "productionGate": "Unit/runtime evals prove affected-set expansion, partial scheduling, intent claims, short commit leases, dedupe, cost authorization, privacy/formula checks, and that the LLM recommends while the harness schedules before live provider spend.",
       "deterministicChecks": [
         "tests/chatIntakeRuntime.test.ts",
-        "missing: tests/intakePreflightScheduler.test.ts"
+        "tests/intakePreflightScheduler.test.ts"
       ],
       "liveChecks": [
         "npm run eval:chat-intake:live -- --managed-locks",
@@ -293,9 +296,11 @@
       "evidence": [
         { "type": "doc", "ref": "docs/TARGET_2026_06.md" },
         { "type": "doc", "ref": "docs/NODEAGENT_ARCHITECTURE.md" },
+        { "type": "code", "ref": "src/agent/intakePreflight.ts" },
+        { "type": "test", "ref": "tests/intakePreflightScheduler.test.ts" },
         { "type": "eval", "ref": "evals/chatIntakeRuntime.ts" }
       ],
-      "nextReview": "Promote only after PlanPreview is a typed artifact and scheduler decisions are checked before expensive model work."
+      "nextReview": "Wire PlanPreview into the live /ask and /free entrypoints and add browser routing badges before promoting to green."
     },
     {
       "id": "workbook_runtime_adapter",

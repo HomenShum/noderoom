@@ -132,7 +132,7 @@ test("real-app preview — GTM research enrichment (source-backed CellPayload)",
 
 test("real-app preview — /ask reconcile drives the sheet through chat (chat + sheet framing)", async ({ page }) => {
   await enterDemoRoom(page);
-  const chatPanel = page.locator(".r-panel.center");
+  const chatPanel = page.getByTestId("public-chat-panel");
   const artifact = page.getByTestId("artifact-panel");
   await expect(artifact).toBeVisible();
 

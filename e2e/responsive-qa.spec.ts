@@ -1,18 +1,12 @@
 /**
- * Responsive QA probe (read-only, additive) — see QA task 2026-06-09.
+ * Responsive QA probe for the June 2026 shell.
  *
- * Drives the app in MEMORY mode (no backend) across 4 viewports and asserts:
- *   1. No horizontal overflow: document.documentElement.scrollWidth <= viewport width + 1
- *   2. Public chat composer visible
- *   3. Artifact panel visible (desktop) or intentionally collapsed (<=980px per
- *      src/app/styles.css:404 — `.r-panel.left/.artifact/.right { display:none }`)
- *   4. Left rail usable (desktop) or intentionally collapsed (same media query)
- *   5. Tab bar (artifact-tabs) reachable — fully inside the viewport when shown
- * Screenshots land in test-results/responsive/<name>.png.
- *
- * "Intentionally collapsed" is verified, not assumed: at <=980px the panels
- * start hidden, the .r-toggle-group affordances must exist, and tapping the
- * artifact toggle must open a usable overlay with its tab bar inside the viewport.
+ * Drives the app in MEMORY mode (no backend) across four viewports and asserts:
+ *   1. no horizontal overflow,
+ *   2. Work Surface is the primary visible surface,
+ *   3. Room Binder + Copilot are visible on desktop and reachable overlays on compact screens,
+ *   4. artifact tabs stay in viewport,
+ *   5. shell-level Signal Tape + Status Strip remain visible.
  */
 import * as fs from "node:fs";
 import * as path from "node:path";
@@ -21,13 +15,14 @@ import { test, expect, enterDemoRoom, publicChat } from "./fixtures";
 const VIEWPORTS = [
   { name: "phone-375x812", width: 375, height: 812 },
   { name: "tablet-768x1024", width: 768, height: 1024 },
+  { name: "workspace-1024x768", width: 1024, height: 768 },
   { name: "laptop-1280x800", width: 1280, height: 800 },
+  { name: "desktop-1440x900", width: 1440, height: 900 },
   { name: "desktop-1860x900", width: 1860, height: 900 },
 ] as const;
 
 const OUT_DIR = path.join("test-results", "responsive");
 
-/** Diagnostic: list the widest offenders if the page overflows horizontally. */
 async function widestElements(page: import("@playwright/test").Page, limit = 5) {
   return page.evaluate((max) => {
     const vw = document.documentElement.clientWidth;
@@ -47,10 +42,9 @@ async function widestElements(page: import("@playwright/test").Page, limit = 5) 
 }
 
 for (const vp of VIEWPORTS) {
-  test(`responsive QA — ${vp.name}`, async ({ page }, testInfo) => {
+  test(`responsive QA - ${vp.name}`, async ({ page }, testInfo) => {
     await page.setViewportSize({ width: vp.width, height: vp.height });
     await enterDemoRoom(page);
-    // Let the workspace settle (panel mount + fonts) before measuring.
     await page.waitForTimeout(250);
 
     fs.mkdirSync(OUT_DIR, { recursive: true });
@@ -58,65 +52,57 @@ for (const vp of VIEWPORTS) {
     await page.screenshot({ path: shot, fullPage: false });
     testInfo.annotations.push({ type: "screenshot", description: shot });
 
-    // ── 1. No horizontal overflow ──────────────────────────────────────────
     const scrollWidth = await page.evaluate(() => document.documentElement.scrollWidth);
     if (scrollWidth > vp.width + 1) {
       const offenders = await widestElements(page);
       testInfo.annotations.push({ type: "overflow-offenders", description: JSON.stringify(offenders) });
     }
-    expect(
-      scrollWidth,
-      `horizontal overflow at ${vp.name}: documentElement.scrollWidth=${scrollWidth} > viewport ${vp.width}+1`,
-    ).toBeLessThanOrEqual(vp.width + 1);
-
-    // ── 2. Public chat composer visible ────────────────────────────────────
-    await expect(publicChat(page).getByTestId("chat-composer")).toBeVisible();
+    expect(scrollWidth, `horizontal overflow at ${vp.name}`).toBeLessThanOrEqual(vp.width + 1);
 
     const artifact = page.getByTestId("artifact-panel");
     const leftRail = page.getByTestId("left-rail");
+    const copilot = page.getByTestId("copilot-panel");
     const tabs = page.getByTestId("artifact-tabs");
     const toggles = page.locator(".r-toggle-group");
+    const bottom = page.getByTestId("shell-bottom");
+
+    await expect(artifact, "Work Surface is the primary surface").toBeVisible();
+    await expect(tabs, "artifact tabs are reachable").toBeVisible();
+    await expect(bottom, "Signal Tape + Status Strip remain visible").toBeVisible();
+
+    const tabBox = await tabs.boundingBox();
+    expect(tabBox, "artifact-tabs must have a bounding box").not.toBeNull();
+    expect(tabBox!.x, "tab bar starts inside viewport").toBeGreaterThanOrEqual(0);
+    expect(tabBox!.x + tabBox!.width, "tab bar ends inside viewport").toBeLessThanOrEqual(vp.width + 1);
+
+    await expect(toggles, "panel toggles stay available").toBeVisible();
+    const toggleButtons = toggles.locator("button");
+    await expect(toggleButtons, "Room Binder, Work Surface, and Copilot toggles exist").toHaveCount(3);
+    for (let i = 0; i < 3; i++) {
+      const b = await toggleButtons.nth(i).boundingBox();
+      expect(b, `panel toggle ${i} has a bounding box`).not.toBeNull();
+      expect(Math.min(b!.width, b!.height), `panel toggle ${i} meets the >=24px floor`).toBeGreaterThanOrEqual(24);
+    }
 
     if (vp.width > 980) {
-      // ── 3/4/5 desktop: all panels up, tab bar fully reachable ────────────
-      await expect(artifact).toBeVisible();
-      await expect(leftRail).toBeVisible();
-      await expect(tabs).toBeVisible();
-      const box = await tabs.boundingBox();
-      expect(box, "artifact-tabs must have a bounding box").not.toBeNull();
-      expect(box!.x, "tab bar starts inside viewport").toBeGreaterThanOrEqual(0);
-      expect(box!.x + box!.width, "tab bar ends inside viewport").toBeLessThanOrEqual(vp.width + 1);
-      // Tab buttons are actually clickable (reachable), not just painted.
-      const firstTab = tabs.locator("button").first();
-      await expect(firstTab).toBeVisible();
-      // Panel toggles remain available on desktop.
-      await expect(toggles).toBeVisible();
-    } else {
-      // ── 3/4/5 compact — HARD ASSERTS for the P0 fix (was annotation-only when the old media
-      // query display:none'd both the panels AND the toggles, making them unreachable):
-      // chat is the default single pane; the top-bar toggles are the panel switcher; a toggle tap
-      // MUST yield a visible overlay panel (same show-state path openArtifact/ref-chips use).
-      await expect(artifact, "artifact panel starts closed <=980px (chat-first)").toBeHidden();
-      await expect(leftRail, "left rail starts closed <=980px (chat-first)").toBeHidden();
-      await expect(toggles, "panel toggles MUST be visible — they are the only path to the panels").toBeVisible();
-      const toggleButtons = toggles.locator("button");
-      await expect(toggleButtons, "all three panel toggles exist").toHaveCount(3);
-      for (let i = 0; i < 3; i++) {
-        const b = await toggleButtons.nth(i).boundingBox();
-        expect(b, `panel toggle ${i} has a bounding box`).not.toBeNull();
-        expect(Math.min(b!.width, b!.height), `panel toggle ${i} meets the >=24px floor`).toBeGreaterThanOrEqual(24);
-      }
-      // Tap the artifact toggle → the overlay opens with a usable tab bar inside the viewport.
-      await toggleButtons.nth(1).click(); // order: [files&people, artifact, private agent]
-      await expect(artifact, "artifact overlay visible after toggle tap").toBeVisible();
-      await expect(tabs, "artifact tab bar usable in the overlay").toBeVisible();
-      const box = await tabs.boundingBox();
-      expect(box, "artifact-tabs must have a bounding box").not.toBeNull();
-      expect(box!.x + box!.width, "tab bar ends inside viewport").toBeLessThanOrEqual(vp.width + 1);
-      // Close it — chat returns as the single pane.
-      await toggleButtons.nth(1).click();
-      await expect(artifact).toBeHidden();
+      await expect(leftRail, "Room Binder visible on desktop").toBeVisible();
+      await expect(copilot, "Copilot visible on desktop").toBeVisible();
       await expect(publicChat(page).getByTestId("chat-composer")).toBeVisible();
+    } else {
+      await expect(leftRail, "Room Binder starts closed on compact screens").toBeHidden();
+      await expect(copilot, "Copilot starts closed on compact screens").toBeHidden();
+
+      await toggleButtons.nth(0).click();
+      await expect(leftRail, "Room Binder overlay opens").toBeVisible();
+      await toggleButtons.nth(0).click();
+      await expect(leftRail).toBeHidden();
+
+      await toggleButtons.nth(2).click();
+      await expect(copilot, "Copilot overlay opens").toBeVisible();
+      await expect(publicChat(page).getByTestId("chat-composer")).toBeVisible();
+      await toggleButtons.nth(2).click();
+      await expect(copilot).toBeHidden();
+      await expect(artifact, "Work Surface remains after closing Copilot").toBeVisible();
     }
   });
 }

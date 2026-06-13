@@ -1,6 +1,6 @@
 /** Room Binder (`.r-panel.left`): source files, room artifacts, people, and public agents. */
 import { useRef, useState, type CSSProperties, type DragEvent } from "react";
-import { FolderOpen, Table2, FileText, StickyNote, Database, BookOpen, Upload, Loader2, type LucideIcon } from "lucide-react";
+import { FolderOpen, Table2, FileText, StickyNote, Database, BookOpen, Upload, Loader2, ShieldCheck, Activity, type LucideIcon } from "lucide-react";
 import { useStore, type UploadedArtifactInput } from "../app/store";
 import type { Actor } from "../engine/types";
 import { ARTIFACT_REF_MIME, encodeArtifactRef } from "./artifactRefs";
@@ -29,6 +29,8 @@ export function LeftRail({ roomId, me, artId, onPick, style }: { roomId: string;
   const arts = store.listArtifacts(roomId);
   const members = store.listMembers(roomId);
   const sessions = store.listSessions(roomId);
+  const proposals = store.listProposals(roomId);
+  const traces = store.listTraces(roomId);
   const sub = (a: { kind: string; title: string; version: number; elements: Record<string, unknown>; order?: string[]; meta?: { excelGrid?: { rows: number; columns: number } } }) =>
     a.title === WIKI_TITLE ? `v${a.version} · live TOC` : uploadDocMeta(a) ?? (a.kind === "sheet" ? `v${a.version} · ${rowCount(a)} rows` : a.kind === "wall" ? `${Object.keys(a.elements).length} notes` : "edited recently");
   const onUpload = async (files: FileList | null) => {
@@ -55,7 +57,7 @@ export function LeftRail({ roomId, me, artId, onPick, style }: { roomId: string;
       <div className="r-panel-head"><FolderOpen size={15} /><span className="h-title">Room Binder</span></div>
       <div className="r-rail">
         <div className="r-rail-section">
-          <div className="kicker" style={{ padding: "2px 9px 8px" }}>Source files</div>
+          <div className="kicker" style={{ padding: "2px 9px 8px" }}>Workbooks & work products</div>
           {arts.map((a) => {
             const FI = fileIcon(a);
             return (
@@ -91,6 +93,18 @@ export function LeftRail({ roomId, me, artId, onPick, style }: { roomId: string;
           <div className="r-file r-file-static">
             <span className="fi"><Database size={14} /></span>
             <span><div className="fn">NetSuite export</div><div className="fm">source · read-only</div></span>
+          </div>
+        </div>
+
+        <div className="r-rail-section">
+          <div className="kicker" style={{ padding: "2px 9px 8px" }}>Review & proof</div>
+          <div className="r-file r-file-static">
+            <span className="fi"><Activity size={14} /></span>
+            <span><div className="fn">Review queue</div><div className="fm">{proposals.length ? `${proposals.length} pending proposal${proposals.length === 1 ? "" : "s"}` : "no pending proposals"}</div></span>
+          </div>
+          <div className="r-file r-file-static">
+            <span className="fi"><ShieldCheck size={14} /></span>
+            <span><div className="fn">Permissions</div><div className="fm">host controls · {traces.length} trace events</div></span>
           </div>
         </div>
 

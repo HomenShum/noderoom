@@ -37,7 +37,7 @@ It runs in **two modes from the same code**:
 
 ![NodeRoom — the live 4-panel room after the real agent filled the variance column](docs/screenshots/live-room-after-agent.png)
 
-<sub>Current captured UI is the MVP four-panel shell: <b>Room Binder</b>, public chat, artifact/work surface, and private NodeAgent. The June 2026 target is <b>Room/Deal Binder</b> + <b>Work Surface</b> + <b>Copilot</b> + <b>Signal Tape</b> + <b>Status Strip</b>; the production matrix tracks that target as red/yellow until browser layout specs pass.</sub>
+<sub>Legacy capture from the pre-migration MVP four-panel shell. The shipped shell now follows the June 2026 target roles: <b>Room/Deal Binder</b> + <b>Work Surface</b> + <b>Copilot</b> + <b>Signal Tape</b> + <b>Status Strip</b>. The production matrix keeps the remaining live/Gemini/source-split proof gates visible until the media is recaptured.</sub>
 
 </div>
 
@@ -762,7 +762,7 @@ Professional proof state:
 
 This section is generated from `docs/qa/production-matrix.json`. When the system grows, append or update a matrix row, then run `npm run qa:matrix`; CI can run `npm run qa:matrix:check` to catch stale docs.
 
-<sub>22 feature guarantees tracked | 5 green | 13 yellow | 4 red | 1 live model route(s) cleared L1-L4 in the latest recorded ladder.</sub>
+<sub>22 feature guarantees tracked | 5 green | 16 yellow | 1 red | 1 live model route(s) cleared L1-L4 in the latest recorded ladder.</sub>
 
 ![QA coverage graph](docs/eval/qa-coverage.svg)
 
@@ -781,9 +781,9 @@ This section is generated from `docs/qa/production-matrix.json`. When the system
 | Provider parser | Green | Adapter separation tests, live provider smoke, redacted errors, and artifact evidence checks. |
 | QA system | Green | Matrix schema tests plus qa:matrix --check as a docs-sync drift gate, not a quality gate. |
 | Browser E2E dogfood | Red | Playwright or equivalent real-browser specs for two-context cell edits, optimistic chat failure/retry, public/private leak checks, wall CRUD, job controls, and proposal conflict feedback. |
-| Professional workroom shell | Red | Browser layout E2E proves wide desktop binder, center work surface, right Copilot, tablet binder collapse, mobile tabs/sheets, no overflow, and no lost spreadsheet affordances. |
-| Signal tape + status strip | Red | DOM/browser tests prove two distinct bottom rows, pause/reduced-motion/filter behavior, click-to-open related artifact, no unauthorized private data in the tape, and precise non-scrolling status events. |
-| Intake preflight scheduler | Red | Unit/runtime evals prove affected-set expansion, partial scheduling, intent claims, short commit leases, dedupe, cost authorization, privacy/formula checks, and that the LLM recommends while the harness schedules. |
+| Professional workroom shell | Yellow | Browser layout E2E proves wide desktop binder, center work surface, right Copilot, compact overlays, no overflow, no lost spreadsheet affordances, plus live/Convex and Gemini UI judge walkthrough evidence. |
+| Signal tape + status strip | Yellow | DOM/browser tests prove two distinct bottom rows, pause/reduced-motion/filter behavior, click-to-open related artifact, no unauthorized private data in the tape, and precise non-scrolling status events. |
+| Intake preflight scheduler | Yellow | Unit/runtime evals prove affected-set expansion, partial scheduling, intent claims, short commit leases, dedupe, cost authorization, privacy/formula checks, and that the LLM recommends while the harness schedules before live provider spend. |
 | Workbook runtime adapter | Yellow | A POC loads the Q3 sheet into a candidate runtime, captures local mutations into Convex CAS ops, replays remote patches, preserves focus/selection, renders evidence/human/agent overlays, and runs headless formula/gold validation. |
 | Public gold demo | Yellow | Manifest check, public fixture downloader/cache hash, LiteParse/provider extraction, formula/citation/page or bbox validators, CellPayload evidence, and trace read/write-set validators all pass. |
 | Finance model gold pack | Yellow | Current solve batch stays fresh; guide zero-write, collaborate human-agent injection, withheld-data reconstruction, XLSX export/reopen, formula AST/value tie-out, citation coverage, and trace completeness lanes are added. |

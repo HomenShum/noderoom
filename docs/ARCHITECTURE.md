@@ -147,13 +147,12 @@ receipts, and embedding sync, lives in
 
 - **Runtime mirror:** `src/app/roomStore.ts` exposes the engine via `useEngineRev()` (a
   `useSyncExternalStore` over `engine.subscribe`) — the local stand-in for a Convex reactive query.
-- **Current MVP shell:** `RoomShell` is a flex layout that toggles 1→4 panels (Room Binder/left rail,
-  public chat, artifact/work surface, and private agent). This is the shipped MVP composition, not the
-  final shell contract.
-- **June 2026 target shell:** left = stable Room/Deal Binder context, center = primary work product,
-  right = Copilot conversation/orchestration, bottom = ambient Signal Tape plus authoritative Status
-  Strip. The binder is navigational, not operational; agent streams, queues, and steering stay in
-  Copilot or center-stage proof artifacts. Canonical target: [`docs/TARGET_2026_06.md`](TARGET_2026_06.md).
+- **June 2026 shell:** `RoomShell` composes the target roles directly: left = stable Room/Deal Binder
+  context, center = primary Work Surface, right = Copilot conversation/orchestration, and bottom =
+  ambient Signal Tape plus authoritative Status Strip. The binder is navigational, not operational;
+  agent streams, queues, and steering stay in Copilot or center-stage proof artifacts. Remaining target
+  work is live/Convex shell proof, center source/proof split mode, and richer status drilldowns.
+  Canonical target: [`docs/TARGET_2026_06.md`](TARGET_2026_06.md).
 - **Chats:** the **public room feed is custom** (assistant-ui's thread model is 1:1 user↔assistant, so
   a multi-author room is off-label). The **private `/ask` thread** is where `@assistant-ui/react`'s
   `ExternalStoreRuntime` + tool UIs fit — already built in the sibling **NodeAgent** repo.

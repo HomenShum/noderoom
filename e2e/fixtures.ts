@@ -10,13 +10,13 @@ export async function enterDemoRoom(page: Page): Promise<void> {
   // (The dedicated tour spec clears this flag to exercise auto-start.)
   await page.evaluate(() => { try { localStorage.setItem("noderoom:tour:v1", "done"); } catch { /* ignore */ } });
   await page.getByRole("button", { name: /Enter the Q3 diligence room/i }).click();
-  // The public chat panel (center) is the anchor for most assertions.
-  await expect(publicChat(page).getByTestId("chat-composer")).toBeVisible();
+  // The Work Surface is the always-on anchor; Copilot may be closed on compact screens.
+  await expect(page.getByTestId("artifact-panel")).toBeVisible();
 }
 
-/** The public chat panel (center). Scopes selectors so the private agent panel (right) never matches. */
+/** The public chat lane in Copilot. Scopes selectors so the private agent lane never matches. */
 export function publicChat(page: Page) {
-  return page.locator(".r-panel.center");
+  return page.getByTestId("public-chat-panel");
 }
 
 export const test = base;

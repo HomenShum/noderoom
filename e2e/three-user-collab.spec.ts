@@ -15,8 +15,18 @@ const REQUIRE_REVIEW_MODE = process.env.E2E_REQUIRE_REVIEW_MODE === "1";
 const v = (row: string) => `${row}__variance`;
 
 async function dismissTour(p: Page) { await p.getByTestId("tour-skip").click({ timeout: 5000 }).catch(() => {}); }
-function chat(p: Page) { return p.locator(".r-panel.center"); }
+function chat(p: Page) { return p.getByTestId("public-chat-panel"); }
+function priv(p: Page) { return p.getByTestId("private-chat-panel"); }
+async function openPublic(p: Page) {
+  await p.getByTestId("copilot-tab-public").click({ timeout: 10_000 }).catch(() => {});
+  await expect(chat(p).getByTestId("chat-composer")).toBeVisible({ timeout: 20_000 });
+}
+async function openPrivate(p: Page) {
+  await p.getByTestId("copilot-tab-private").click({ timeout: 10_000 });
+  await expect(priv(p).getByTestId("chat-composer")).toBeVisible({ timeout: 20_000 });
+}
 async function say(p: Page, msg: string) {
+  await openPublic(p);
   await chat(p).getByTestId("chat-composer").fill(msg);
   await chat(p).getByTestId("chat-send").click();
 }
@@ -123,8 +133,8 @@ test("three users chat, edit the same sheet concurrently, and run the public age
 
   // ── Act 6: private AGENT + isolation. Maya asks her private NodeAgent; it replies in HER private
   //    channel only. Neither her question nor the agent reply leaks to Dev/Sam.
-  const priv = (p: Page) => p.locator(".r-panel.right");
   const secret = "which variance row is riskiest? tag-" + Math.floor(Math.random() * 1e6);
+  await openPrivate(maya);
   const privAgentBefore = await priv(maya).locator('[data-testid="chat-message"].agent').count();
   await priv(maya).getByTestId("chat-composer").fill(secret);
   await priv(maya).getByTestId("chat-send").click();
@@ -138,6 +148,7 @@ test("three users chat, edit the same sheet concurrently, and run the public age
   // isolation: Dev & Sam see neither Maya's question nor any private-agent bubble.
   await maya.waitForTimeout(1500);
   for (const p of [dev, sam]) {
+    await openPrivate(p);
     await expect(priv(p).getByText(secret, { exact: false })).toHaveCount(0);
     await expect(priv(p).locator('[data-testid="chat-message"].agent')).toHaveCount(0);
   }
@@ -148,12 +159,14 @@ test("three users chat, edit the same sheet concurrently, and run the public age
   let personalPublic = "not-run";
   try {
     await setAutoAllow(maya, true);
+    await openPrivate(maya);
     await priv(maya).getByTestId("lane-room").click();
     const personalKey = "r_ni__note";
     const personalValue = `personal-room proof ${CODE}`;
     const viaBefore = await chat(sam).locator('[data-testid="agent-via"]').count();
     await priv(maya).getByTestId("chat-composer").fill(`In the Q3 variance spreadsheet, set ${personalKey} exactly to "${personalValue}", then post a one-line summary to the room.`);
     await priv(maya).getByTestId("chat-send").click();
+    await openPublic(sam);
     await expect.poll(async () => {
       const viaNow = await chat(sam).locator('[data-testid="agent-via"]').count();
       const values = await Promise.all(all.map((p) => cellText(p, personalKey)));

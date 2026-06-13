@@ -18,14 +18,14 @@ test.skip(!HAS_BACKEND, "set E2E_CONVEX_URL (+ start dev with that VITE_CONVEX_U
 async function joinLiveRoom(ctx: BrowserContext) {
   const page = await ctx.newPage();
   await page.goto("/"); // live mode: auto-joins the seeded Q3DEMO room as a fresh anonymous member
-  await expect(page.locator(".r-panel.center").getByTestId("chat-composer")).toBeVisible({ timeout: 20_000 });
+  await expect(page.getByTestId("public-chat-panel").getByTestId("chat-composer")).toBeVisible({ timeout: 20_000 });
   return page;
 }
 
 test("Spec A — optimistic confirm-swap is flicker-free and reconciles to one bubble", async ({ browser }) => {
   const ctx = await browser.newContext();
   const page = await joinLiveRoom(ctx);
-  const chat = page.locator(".r-panel.center");
+  const chat = page.getByTestId("public-chat-panel");
   const body = `e2e-${Date.now().toString(36)}`;
   await chat.getByTestId("chat-composer").fill(body);
   await chat.getByTestId("chat-send").click();

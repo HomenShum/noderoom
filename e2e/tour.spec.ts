@@ -27,9 +27,9 @@ test.describe("guided tour (memory mode)", () => {
     expect(Math.abs(spotBox!.x - (rail!.x - 6))).toBeLessThan(8);
     expect(Math.abs(spotBox!.width - (rail!.width + 12))).toBeLessThan(8);
 
-    // Step 3 is the chat step; copy advances.
+    // Step 3 is the Copilot step; copy advances.
     await page.getByTestId("tour-next").click();
-    await expect(page.getByText("Ask the room — or the agent")).toBeVisible();
+    await expect(page.getByText("Ask Copilot")).toBeVisible();
 
     // Skip closes the tour and persists the seen-flag (no nag).
     await page.getByTestId("tour-skip").click();
@@ -47,7 +47,7 @@ test.describe("guided tour (memory mode)", () => {
     await page.goto("/?mode=memory");
     await page.evaluate(() => { try { localStorage.setItem("noderoom:tour:v1", "done"); } catch { /* ignore */ } });
     await page.getByRole("button", { name: /Enter the Q3 diligence room/i }).click();
-    await expect(page.locator(".r-panel.center").getByTestId("chat-composer")).toBeVisible();
+    await expect(page.getByTestId("public-chat-panel").getByTestId("chat-composer")).toBeVisible();
     await expect(page.getByTestId("guided-tour")).toHaveCount(0);
   });
 });

@@ -132,6 +132,8 @@ describe("official benchmark readiness", () => {
         state: "partial",
         evidence: "src/eval/spreadsheetBenchScorer.ts",
       });
+      expect(format?.blocker).toContain("column widths");
+      expect(format?.blocker).toContain("merge ranges");
       if (item.id === "spreadsheetbench-v2") {
         expect(chart).toMatchObject({
           state: "partial",

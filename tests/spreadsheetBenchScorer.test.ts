@@ -72,6 +72,40 @@ describe("SpreadsheetBench workbook scorer", () => {
     expect(score.scores.overall).toBeLessThan(1);
   });
 
+  it("scores row, column, and merge layout drift when style comparison is enabled", async () => {
+    const root = tempRoot();
+    const candidate = join(root, "candidate.xlsx");
+    const gold = join(root, "gold.xlsx");
+    await writeLayoutWorkbook(candidate, { formatted: false });
+    await writeLayoutWorkbook(gold, { formatted: true });
+
+    const score = await scoreSpreadsheetBenchWorkbook({
+      taskId: "fixture/layout",
+      candidateWorkbookPath: candidate,
+      goldWorkbookPath: gold,
+      answerPosition: "'Model'!B2:B3",
+      compareStyles: true,
+      maxMismatches: 10,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(score.pass).toBe(false);
+    expect(score.totals).toMatchObject({
+      comparedCells: 2,
+      valueMatches: 2,
+      styleCells: 2,
+      styleMatches: 2,
+      styleLayoutItems: 4,
+      styleLayoutMatches: 1,
+    });
+    expect(score.mismatches).toEqual(expect.arrayContaining([
+      expect.objectContaining({ kind: "style", cell: "column:B" }),
+      expect.objectContaining({ kind: "style", cell: "row:2" }),
+      expect.objectContaining({ kind: "style", cell: "merges" }),
+    ]));
+    expect(score.scores.style).toBeLessThan(1);
+  });
+
   it("includes optional static chart-package evidence in workbook scores", async () => {
     const root = tempRoot();
     const candidate = join(root, "candidate.xlsx");
@@ -128,6 +162,21 @@ async function writeWorkbook(path: string, args: { value: number; formula: strin
   sheet.getCell("C2").value = { formula: args.formula, result: args.value * 2 };
   sheet.getCell("C2").numFmt = args.numFmt;
   sheet.getCell("C2").font = { bold: args.bold };
+  await workbook.xlsx.writeFile(path);
+}
+
+async function writeLayoutWorkbook(path: string, args: { formatted: boolean }) {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Model");
+  sheet.getCell("B2").value = "Section";
+  sheet.getCell("B3").value = 42;
+  sheet.getCell("B2").font = { bold: true };
+  sheet.getCell("B3").font = { bold: false };
+  if (args.formatted) {
+    sheet.getColumn("B").width = 28;
+    sheet.getRow(2).height = 32;
+    sheet.mergeCells("B2:C2");
+  }
   await workbook.xlsx.writeFile(path);
 }
 

@@ -1015,8 +1015,9 @@ benchmark:spreadsheetbench:stage`) that writes separate `agent/` and `evaluator/
 baseline runner (`npm run benchmark:spreadsheetbench:run`) that emits candidate workbooks from the
 staged `agent/` directory before opening the evaluator manifest. A local workbook scoring adapter
 (`npm run benchmark:spreadsheetbench:score`) then reopens candidate/golden workbooks and compares
-values, formulas, and optional style fingerprints. Smoke artifacts cover the V1 verified-400 bundle
-and the V2 public example bundle. The runner also supports `--mode apply-agent-patch`, which reads
+values, formulas, optional cell style fingerprints, answer-range column/row layout, and merge
+ranges. Smoke artifacts cover the V1 verified-400 bundle and the V2 public example bundle. The
+runner also supports `--mode apply-agent-patch`, which reads
 `agent/edit-plan.json`, applies cell-level value/formula/style edits, emits a candidate workbook,
 then opens evaluator metadata for scoring; the checked-in edit-plan smoke records a passing
 candidate and a zero-mismatch score. It also supports `--mode model-edit-plan --model <route>`,
@@ -1061,6 +1062,13 @@ deterministic_local_subset`, covering arithmetic, same-sheet cell refs/ranges,
 `ROUND`/`ROUNDUP`/`ROUNDDOWN`, `IF`/`IFERROR`, and `SUMIF`/`COUNTIF`
 before export/reopen scoring. That is useful for SpreadsheetBench smokes, but still not a
 complete Excel calculation engine.
+
+SpreadsheetBench format evidence now goes beyond individual cell style hashes when
+`--compare-styles` is enabled: the scorer also checks answer-range column widths/hidden state,
+row heights/hidden state, and merge ranges that intersect the answer region. That makes layout
+drift visible in workbook score reports without widening access to evaluator-only gold before
+candidate emission. It still is not the official benchmark's complete formatting policy, and it
+does not replace rendered chart/layout grading.
 
 SpreadsheetBench V2 chart evidence now has a narrow static lane too:
 `src/eval/spreadsheetBenchChartScorer.ts` compares candidate and golden `.xlsx` chart packages by

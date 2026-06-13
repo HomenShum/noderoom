@@ -39,6 +39,8 @@ export type SpreadsheetBenchWorkbookScore = {
     formulaMatches: number;
     styleCells: number;
     styleMatches: number;
+    styleLayoutItems: number;
+    styleLayoutMatches: number;
     mismatches: number;
     missingSheets: number;
   };
@@ -95,6 +97,8 @@ export async function scoreSpreadsheetBenchWorkbook(options: SpreadsheetBenchSco
   let formulaMatches = 0;
   let styleCells = 0;
   let styleMatches = 0;
+  let styleLayoutItems = 0;
+  let styleLayoutMatches = 0;
   let missingSheets = 0;
   let mismatchCount = 0;
 
@@ -169,11 +173,21 @@ export async function scoreSpreadsheetBenchWorkbook(options: SpreadsheetBenchSco
         }
       }
     }
+
+    if (options.compareStyles) {
+      const layout = compareSheetLayoutStyles(candidateSheet, goldSheet, range, maxMismatches - mismatches.length);
+      styleLayoutItems += layout.items;
+      styleLayoutMatches += layout.matches;
+      mismatchCount += layout.mismatchCount;
+      mismatches.push(...layout.mismatches);
+    }
   }
 
   const valueScore = ratio(valueMatches, comparedCells);
   const formulaScore = formulaCells > 0 ? ratio(formulaMatches, formulaCells) : null;
-  const styleScore = options.compareStyles && styleCells > 0 ? ratio(styleMatches, styleCells) : null;
+  const styleTotal = styleCells + styleLayoutItems;
+  const styleMatched = styleMatches + styleLayoutMatches;
+  const styleScore = options.compareStyles && styleTotal > 0 ? ratio(styleMatched, styleTotal) : null;
   const hasChartPackageEvidence = chartPackage
     ? chartPackage.totals.goldChartParts > 0 || chartPackage.totals.candidateChartParts > 0
     : false;
@@ -206,6 +220,8 @@ export async function scoreSpreadsheetBenchWorkbook(options: SpreadsheetBenchSco
       formulaMatches,
       styleCells,
       styleMatches,
+      styleLayoutItems,
+      styleLayoutMatches,
       mismatches: mismatchCount,
       missingSheets,
     },
@@ -319,6 +335,104 @@ function valuesEqual(actual: unknown, expected: unknown): boolean {
 
 function normalizeText(value: unknown): string {
   return String(value ?? "").replace(/\r\n/g, "\n").trim();
+}
+
+function compareSheetLayoutStyles(
+  candidateSheet: ExcelJS.Worksheet,
+  goldSheet: ExcelJS.Worksheet,
+  range: ParsedRange,
+  maxMismatches: number,
+): {
+  items: number;
+  matches: number;
+  mismatchCount: number;
+  mismatches: SpreadsheetBenchCellMismatch[];
+} {
+  const mismatches: SpreadsheetBenchCellMismatch[] = [];
+  let items = 0;
+  let matches = 0;
+  let mismatchCount = 0;
+  const compare = (label: string, expected: unknown, actual: unknown) => {
+    items += 1;
+    const expectedText = stableJson(expected);
+    const actualText = stableJson(actual);
+    if (expectedText === actualText) {
+      matches += 1;
+      return;
+    }
+    mismatchCount += 1;
+    pushMismatch(mismatches, maxMismatches, {
+      kind: "style",
+      sheet: goldSheet.name,
+      cell: label,
+      expected: expectedText,
+      actual: actualText,
+    });
+  };
+
+  for (let col = range.startCol; col <= range.endCol; col += 1) {
+    compare(`column:${colToLetters(col)}`, columnLayoutFingerprint(goldSheet.getColumn(col)), columnLayoutFingerprint(candidateSheet.getColumn(col)));
+  }
+  for (let row = range.startRow; row <= range.endRow; row += 1) {
+    compare(`row:${row}`, rowLayoutFingerprint(goldSheet.getRow(row)), rowLayoutFingerprint(candidateSheet.getRow(row)));
+  }
+  compare("merges", mergesIntersectingRange(goldSheet, range), mergesIntersectingRange(candidateSheet, range));
+  return { items, matches, mismatchCount, mismatches };
+}
+
+function columnLayoutFingerprint(column: ExcelJS.Column): Record<string, unknown> {
+  return compact({
+    width: column.width,
+    hidden: column.hidden,
+    outlineLevel: column.outlineLevel,
+    collapsed: column.collapsed,
+  });
+}
+
+function rowLayoutFingerprint(row: ExcelJS.Row): Record<string, unknown> {
+  return compact({
+    height: row.height,
+    hidden: row.hidden,
+    outlineLevel: row.outlineLevel,
+    collapsed: row.collapsed,
+  });
+}
+
+function mergesIntersectingRange(sheet: ExcelJS.Worksheet, range: ParsedRange): string[] {
+  return sheetMergeRanges(sheet)
+    .map(normalizeRangeLabel)
+    .filter((merge) => rangesIntersect(merge, range))
+    .map((merge) => merge.label)
+    .sort((a, b) => a.localeCompare(b));
+}
+
+function sheetMergeRanges(sheet: ExcelJS.Worksheet): string[] {
+  const model = sheet.model as { merges?: string[] | Record<string, unknown> };
+  if (Array.isArray(model.merges)) return model.merges;
+  if (model.merges && typeof model.merges === "object") return Object.keys(model.merges);
+  return [];
+}
+
+function normalizeRangeLabel(value: string): ParsedRange {
+  const [startText, endText = startText] = value.replace(/\$/g, "").split(":").map((item) => item.trim().toUpperCase());
+  const start = parseCellRef(startText);
+  const end = parseCellRef(endText);
+  const normalizedStart = `${colToLetters(Math.min(start.col, end.col))}${Math.min(start.row, end.row)}`;
+  const normalizedEnd = `${colToLetters(Math.max(start.col, end.col))}${Math.max(start.row, end.row)}`;
+  return {
+    startRow: Math.min(start.row, end.row),
+    endRow: Math.max(start.row, end.row),
+    startCol: Math.min(start.col, end.col),
+    endCol: Math.max(start.col, end.col),
+    label: normalizedStart === normalizedEnd ? normalizedStart : `${normalizedStart}:${normalizedEnd}`,
+  };
+}
+
+function rangesIntersect(a: ParsedRange, b: ParsedRange): boolean {
+  return a.startRow <= b.endRow
+    && a.endRow >= b.startRow
+    && a.startCol <= b.endCol
+    && a.endCol >= b.startCol;
 }
 
 function styleFingerprint(cell: ExcelJS.Cell): string {

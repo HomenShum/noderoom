@@ -1068,7 +1068,11 @@ surfacing the planner gap honestly. `npm run benchmark:agent-sandbox` now adds a
 permission subprocess proof: an agent process can read its copied `agent-workspace/` file and is
 denied evaluator-only gold outside that root. This tightens the file-boundary story, but it is not
 Docker/Harbor isolation, network isolation, or a resource sandbox, and these artifacts are not
-official benchmark scores until run across official bundles under the benchmark policy.
+official benchmark scores until run across official bundles under the benchmark policy. `npm run
+benchmark:docker-sandbox:probe` records that stronger boundary separately in
+`docs/eval/docker-sandbox-probe.json`; the current checked-in artifact has the Docker CLI present
+but the daemon unavailable, so official readiness stays red until that artifact records
+`container_isolation_proven`.
 
 The deterministic formula-result lane has since moved beyond `SUM(...)`: `apply-agent-patch` and
 `model-edit-plan` candidate manifests now record `formulaResultPolicy:
@@ -1116,7 +1120,9 @@ semantic scoring, and 0-leak artifact path. `npm run benchmark:bankertoolbench:p
 that local BTB harness boundary in HALO: staged isolation, candidate-before-evaluator trajectory,
 weighted-rubric/package accounting, supported deliverable policy, and 0-leak artifacts. This is
 still not a BTB score: Harbor/Docker process isolation, MCP financial tools, and Gandalf verifier
-replay remain red gates.
+replay remain red gates. The Docker availability probe makes that blocker executable instead of
+hand-wavy: it must pass with `container_isolation_proven` before any public BTB readiness claim can
+move out of red.
 
 ## Benchmark Harness / v3 Composite-Synthesis Run
 

@@ -84,6 +84,7 @@
         "scripts/architecture-budget-check.ts",
         "scripts/bankertoolbench-run.ts",
         "scripts/benchmark-contamination-check.ts",
+        "scripts/docker-sandbox-probe.ts",
         "scripts/benchmark/**",
         "scripts/spreadsheetbench-*.ts",
         "scripts/convex-boundary-check.ts",

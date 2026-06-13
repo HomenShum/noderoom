@@ -236,6 +236,14 @@ const steps: StepSpec[] = [
     timeoutMs: 120_000,
   },
   {
+    id: "docker-sandbox-probe",
+    label: "Docker/Harbor availability probe",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "benchmark:docker-sandbox:probe"],
+    timeoutMs: 120_000,
+  },
+  {
     id: "spreadsheetbench-stage-contamination",
     label: "SpreadsheetBench staged artifact contamination",
     lane: "deterministic",

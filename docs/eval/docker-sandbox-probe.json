@@ -1,0 +1,26 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T14:36:21.818Z",
+  "verifier": "docker_harbor_availability_probe",
+  "status": "daemon_unavailable",
+  "pass": false,
+  "image": "node:22-alpine",
+  "dockerCli": {
+    "command": "docker --version",
+    "exitCode": 0,
+    "stdoutPreview": "Docker version 28.5.1, build e180ab8",
+    "stderrPreview": "",
+    "ok": true
+  },
+  "daemon": {
+    "command": "docker info --format {{json .ServerVersion}}",
+    "exitCode": 1,
+    "stdoutPreview": "\"\"",
+    "stderrPreview": "error during connect: Get \"http://%2F%2F.%2Fpipe%2FdockerDesktopLinuxEngine/v1.51/info\": open //./pipe/dockerDesktopLinuxEngine: The system cannot find the file specified.",
+    "ok": false
+  },
+  "warnings": [
+    "Docker/Harbor process isolation is not proven in this environment; official benchmark readiness must remain red.",
+    "Docker CLI is installed, but the Docker daemon is unavailable or Docker Desktop is not running."
+  ]
+}

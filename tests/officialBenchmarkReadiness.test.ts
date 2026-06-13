@@ -35,6 +35,7 @@ describe("official benchmark readiness", () => {
     const runner = btb?.capabilities.find((capability) => capability.capability === "official_runner_adapter");
     const xlsx = btb?.capabilities.find((capability) => capability.capability === "xlsx_import_export");
     const documentOutputs = btb?.capabilities.find((capability) => capability.capability === "pptx_docx_pdf_outputs");
+    const docker = btb?.capabilities.find((capability) => capability.capability === "docker_sandbox");
 
     expect(ingest).toMatchObject({
       state: "implemented",
@@ -69,6 +70,11 @@ describe("official benchmark readiness", () => {
     });
     expect(documentOutputs?.blocker).toContain("multi-file candidate packages");
     expect(documentOutputs?.blocker).toContain("official verifier");
+    expect(docker).toMatchObject({
+      state: "external",
+      evidence: "docs/eval/docker-sandbox-probe.json",
+    });
+    expect(docker?.blocker).toContain("container_isolation_proven");
     expect(btb?.ready).toBe(false);
     expect(btb?.blockers).toEqual(expect.arrayContaining([
       expect.stringContaining("official_runner_adapter"),

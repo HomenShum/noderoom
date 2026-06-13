@@ -176,7 +176,9 @@ const CAPABILITY_STATUS: Record<BenchmarkCapability, CapabilityReadiness> = {
   docker_sandbox: {
     capability: "docker_sandbox",
     state: "external",
-    blocker: "BTB requires Docker/Harbor execution outside the Vite/Convex app runtime.",
+    evidence: "docs/eval/docker-sandbox-probe.json",
+    blocker:
+      "BTB/official process isolation requires Docker/Harbor execution outside the Vite/Convex app runtime; npm run benchmark:docker-sandbox:probe records whether the local daemon can prove a container with --network=none, an agent workspace mount, and no evaluator mount. If the artifact status is not container_isolation_proven, official readiness remains red.",
   },
   rubric_weighted_scoring: {
     capability: "rubric_weighted_scoring",

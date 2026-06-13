@@ -79,6 +79,13 @@ bundles and add Docker/Harbor isolation, route selection, V2 rendered chart
 grading, and BankerToolBench production verifier integration before claiming
 official benchmark readiness.
 
+Docker/Harbor addendum: `npm run benchmark:docker-sandbox:probe` now writes
+`docs/eval/docker-sandbox-probe.json` and is part of HALO. The current artifact
+records Docker CLI present but Docker daemon unavailable, so it is blocker
+evidence, not readiness proof. Acceptance remains a
+`container_isolation_proven` artifact, then Harbor/Gandalf-backed official runs
+that keep raw agent workspaces separate from evaluator-only gold/rubrics.
+
 ## P1: UI Operations
 
 | Gap | Current state | Needed proof | Acceptance gate |

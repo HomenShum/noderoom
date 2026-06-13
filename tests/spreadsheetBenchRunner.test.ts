@@ -352,6 +352,69 @@ describe("SpreadsheetBench staged runner", () => {
     expect(candidateManifest).toContain("IFERROR");
   });
 
+  it("caches deterministic results for exact lookup formulas", async () => {
+    const source = tempRoot("source");
+    const stage = tempRoot("stage");
+    const out = tempRoot("out");
+    mkdirSync(join(source, "spreadsheet", "13-14"), { recursive: true });
+    await writeLookupFormulaWorkbook(join(source, "spreadsheet", "13-14", "1_13-14_init.xlsx"), false);
+    await writeLookupFormulaWorkbook(join(source, "spreadsheet", "13-14", "1_13-14_golden.xlsx"), true);
+    writeJson(join(source, "dataset.json"), [
+      {
+        id: "13-14",
+        instruction: "Write exact lookup formulas for product rows.",
+        spreadsheet_path: "spreadsheet/13-14",
+        answer_position: "Sheet1!D2:H2",
+        answer_sheet: "Sheet1",
+      },
+    ]);
+    stageSpreadsheetBenchBundle(source, {
+      track: "spreadsheetbench-v1",
+      outputRoot: stage,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+    writeJson(join(stage, "tasks", "13-14", "agent", "edit-plan.json"), {
+      schema: 1,
+      operations: [
+        { sheet: "Sheet1", cell: "D2", formula: "MATCH(\"SKU2\",A2:A4,0)" },
+        { sheet: "Sheet1", cell: "E2", formula: "INDEX(B2:C4,2,2)" },
+        { sheet: "Sheet1", cell: "F2", formula: "VLOOKUP(\"SKU3\",A2:C4,3,FALSE)" },
+        { sheet: "Sheet1", cell: "G2", formula: "XLOOKUP(\"SKU1\",A2:A4,C2:C4)" },
+        { sheet: "Sheet1", cell: "H2", formula: "INDEX(C2:C4,MATCH(\"SKU3\",A2:A4,0),1)" },
+      ],
+    });
+
+    const report = await runStagedSpreadsheetBench({
+      stageRoot: stage,
+      outputRoot: out,
+      mode: "apply-agent-patch",
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(report.passCount).toBe(1);
+    expect(report.results[0].score?.totals).toMatchObject({
+      comparedCells: 5,
+      valueMatches: 5,
+      formulaCells: 5,
+      formulaMatches: 5,
+      mismatches: 0,
+    });
+    const candidate = new ExcelJS.Workbook();
+    await candidate.xlsx.readFile(join(out, report.results[0].candidateWorkbook!));
+    const sheet = candidate.getWorksheet("Sheet1")!;
+    expect(sheet.getCell("D2").value).toMatchObject({ formula: "MATCH(\"SKU2\",A2:A4,0)", result: 2 });
+    expect(sheet.getCell("E2").value).toMatchObject({ formula: "INDEX(B2:C4,2,2)", result: 20 });
+    expect(sheet.getCell("F2").value).toMatchObject({ formula: "VLOOKUP(\"SKU3\",A2:C4,3,FALSE)", result: 30 });
+    expect(sheet.getCell("G2").value).toMatchObject({ formula: "XLOOKUP(\"SKU1\",A2:A4,C2:C4)", result: 10 });
+    expect(sheet.getCell("H2").value).toMatchObject({ formula: "INDEX(C2:C4,MATCH(\"SKU3\",A2:A4,0),1)", result: 30 });
+    const candidateManifest = readFileSync(join(out, "13-14", "candidate-manifest.json"), "utf8");
+    expect(candidateManifest).toContain("VLOOKUP");
+    expect(candidateManifest).toContain("XLOOKUP");
+    expect(candidateManifest).toContain("MATCH");
+  });
+
   it("asks a model for an edit plan and records usage before evaluator scoring", async () => {
     const source = tempRoot("source");
     const stage = tempRoot("stage");
@@ -1384,5 +1447,28 @@ async function writeBusinessFormulaWorkbook(path: string, completed: boolean) {
   sheet.getCell("N2").value = completed ? { formula: "AVERAGEIF(C2:C4,\"North\",D2:D4)", result: 20 } : "";
   sheet.getCell("O2").value = completed ? { formula: "AVERAGEIFS(D2:D4,C2:C4,\"North\",A2:A4,\">=60\")", result: 10 } : "";
   sheet.getCell("P2").value = completed ? { formula: "SUMIFS(D2:D4,C2:C4,\"<>South\",A2:A4,\">50\")", result: 40 } : "";
+  await workbook.xlsx.writeFile(path);
+}
+
+async function writeLookupFormulaWorkbook(path: string, completed: boolean) {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Sheet1");
+  sheet.getCell("A1").value = "SKU";
+  sheet.getCell("B1").value = "Category";
+  sheet.getCell("C1").value = "Revenue";
+  sheet.getCell("A2").value = "SKU1";
+  sheet.getCell("A3").value = "SKU2";
+  sheet.getCell("A4").value = "SKU3";
+  sheet.getCell("B2").value = "North";
+  sheet.getCell("B3").value = "South";
+  sheet.getCell("B4").value = "West";
+  sheet.getCell("C2").value = 10;
+  sheet.getCell("C3").value = 20;
+  sheet.getCell("C4").value = 30;
+  sheet.getCell("D2").value = completed ? { formula: "MATCH(\"SKU2\",A2:A4,0)", result: 2 } : "";
+  sheet.getCell("E2").value = completed ? { formula: "INDEX(B2:C4,2,2)", result: 20 } : "";
+  sheet.getCell("F2").value = completed ? { formula: "VLOOKUP(\"SKU3\",A2:C4,3,FALSE)", result: 30 } : "";
+  sheet.getCell("G2").value = completed ? { formula: "XLOOKUP(\"SKU1\",A2:A4,C2:C4)", result: 10 } : "";
+  sheet.getCell("H2").value = completed ? { formula: "INDEX(C2:C4,MATCH(\"SKU3\",A2:A4,0),1)", result: 30 } : "";
   await workbook.xlsx.writeFile(path);
 }

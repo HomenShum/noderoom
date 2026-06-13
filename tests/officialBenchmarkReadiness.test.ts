@@ -151,6 +151,8 @@ describe("official benchmark readiness", () => {
       });
       expect(formula?.blocker).toContain("SUM/AVERAGE/MIN/MAX/COUNT");
       expect(formula?.blocker).toContain("SUMIFS/COUNTIFS/AVERAGEIFS");
+      expect(formula?.blocker).toContain("MATCH/INDEX/VLOOKUP/XLOOKUP");
+      expect(formula?.blocker).toContain("approximate lookup");
       expect(formula?.blocker).toContain("full Excel-compatible");
       expect(format).toMatchObject({
         state: "partial",

@@ -29,6 +29,10 @@ const SUPPORTED_FORMULA_FUNCTIONS = [
   "SUMIFS",
   "COUNTIFS",
   "AVERAGEIFS",
+  "MATCH",
+  "INDEX",
+  "VLOOKUP",
+  "XLOOKUP",
 ] as const;
 
 export type SpreadsheetBenchRunnerOptions = {
@@ -1808,6 +1812,10 @@ function evaluateFormulaFunction(
   if (fn === "SUMIFS") return evaluateSumIfsFunction(workbook, currentSheet, args);
   if (fn === "COUNTIFS") return evaluateCountIfsFunction(workbook, currentSheet, args);
   if (fn === "AVERAGEIFS") return evaluateAverageIfsFunction(workbook, currentSheet, args);
+  if (fn === "MATCH") return evaluateMatchFunction(workbook, currentSheet, args);
+  if (fn === "INDEX") return evaluateIndexFunction(workbook, currentSheet, args);
+  if (fn === "VLOOKUP") return evaluateVLookupFunction(workbook, currentSheet, args);
+  if (fn === "XLOOKUP") return evaluateXLookupFunction(workbook, currentSheet, args);
   if (fn === "COUNTA") return args.flatMap((part) => rawValuesForFormulaArg(workbook, currentSheet, part.trim())).filter(isNonBlankFormulaValue).length;
 
   const values = args.flatMap((part) => valuesForFormulaArg(workbook, currentSheet, part.trim()));
@@ -2015,6 +2023,132 @@ function criteriaSetsFromFormulaArgs(
   return sets;
 }
 
+function evaluateMatchFunction(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  args: string[],
+): number | undefined {
+  if (args.length < 2 || args.length > 3) return undefined;
+  if (args[2] !== undefined && numericFormulaArg(workbook, currentSheet, args[2]) !== 0) return undefined;
+  const lookupValue = lookupFormulaArg(workbook, currentSheet, args[0]);
+  const lookupCells = cellsForFormulaRef(workbook, currentSheet, args[1]);
+  if (lookupValue === undefined || !lookupCells) return undefined;
+  const matchIndex = lookupCells.findIndex((cell) => compareFormulaValues(cell.value, lookupValue, "="));
+  return matchIndex >= 0 ? matchIndex + 1 : undefined;
+}
+
+function evaluateIndexFunction(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  args: string[],
+): FormulaResult | undefined {
+  if (args.length < 2 || args.length > 3) return undefined;
+  const cells = cellsForFormulaRef(workbook, currentSheet, args[0]);
+  const rowNumber = numericFormulaArg(workbook, currentSheet, args[1]);
+  const columnNumber = args[2] === undefined ? 1 : numericFormulaArg(workbook, currentSheet, args[2]);
+  if (!cells || rowNumber === undefined || columnNumber === undefined) return undefined;
+  const rowOffset = Math.trunc(rowNumber) - 1;
+  const colOffset = Math.trunc(columnNumber) - 1;
+  if (rowOffset < 0 || colOffset < 0) return undefined;
+  return cellAtFormulaRangeOffset(cells, rowOffset, colOffset)?.value ?? undefined;
+}
+
+function evaluateVLookupFunction(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  args: string[],
+): FormulaResult | undefined {
+  if (args.length < 4 || args.length > 4) return undefined;
+  if (!formulaArgRequestsExactLookup(workbook, currentSheet, args[3])) return undefined;
+  const lookupValue = lookupFormulaArg(workbook, currentSheet, args[0]);
+  const tableCells = cellsForFormulaRef(workbook, currentSheet, args[1]);
+  const colIndex = numericFormulaArg(workbook, currentSheet, args[2]);
+  if (lookupValue === undefined || !tableCells || colIndex === undefined) return undefined;
+  const shape = formulaRangeShape(tableCells);
+  const targetColOffset = Math.trunc(colIndex) - 1;
+  if (targetColOffset < 0 || targetColOffset >= shape.colCount) return undefined;
+  for (let rowOffset = 0; rowOffset < shape.rowCount; rowOffset += 1) {
+    const firstColumn = cellAtFormulaRangeOffset(tableCells, rowOffset, 0);
+    if (!firstColumn || !compareFormulaValues(firstColumn.value, lookupValue, "=")) continue;
+    return cellAtFormulaRangeOffset(tableCells, rowOffset, targetColOffset)?.value ?? undefined;
+  }
+  return undefined;
+}
+
+function evaluateXLookupFunction(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  args: string[],
+): FormulaResult | undefined {
+  if (args.length < 3 || args.length > 6) return undefined;
+  const matchMode = args[4] === undefined ? 0 : numericFormulaArg(workbook, currentSheet, args[4]);
+  const searchMode = args[5] === undefined ? 1 : numericFormulaArg(workbook, currentSheet, args[5]);
+  if (matchMode !== 0 || (searchMode !== 1 && searchMode !== -1)) return undefined;
+  const lookupValue = lookupFormulaArg(workbook, currentSheet, args[0]);
+  const lookupCells = cellsForFormulaRef(workbook, currentSheet, args[1]);
+  const returnCells = cellsForFormulaRef(workbook, currentSheet, args[2]);
+  if (lookupValue === undefined || !lookupCells || !returnCells || returnCells.length < lookupCells.length) return undefined;
+  const indexes = lookupCells.map((_, index) => index);
+  if (searchMode === -1) indexes.reverse();
+  const matchIndex = indexes.find((index) => compareFormulaValues(lookupCells[index].value, lookupValue, "="));
+  if (matchIndex !== undefined) return returnCells[matchIndex].value ?? undefined;
+  return args[3] === undefined ? undefined : lookupFormulaArg(workbook, currentSheet, args[3]);
+}
+
+function formulaRangeShape(cells: Array<{ row: number; col: number; value: FormulaCellValue }>): { startRow: number; startCol: number; rowCount: number; colCount: number } {
+  const rows = cells.map((cell) => cell.row);
+  const cols = cells.map((cell) => cell.col);
+  const startRow = Math.min(...rows);
+  const startCol = Math.min(...cols);
+  return {
+    startRow,
+    startCol,
+    rowCount: Math.max(...rows) - startRow + 1,
+    colCount: Math.max(...cols) - startCol + 1,
+  };
+}
+
+function cellAtFormulaRangeOffset(
+  cells: Array<{ row: number; col: number; value: FormulaCellValue }>,
+  rowOffset: number,
+  colOffset: number,
+): { row: number; col: number; value: FormulaCellValue } | undefined {
+  const shape = formulaRangeShape(cells);
+  return cells.find((cell) => cell.row === shape.startRow + rowOffset && cell.col === shape.startCol + colOffset);
+}
+
+function numericFormulaArg(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  arg: string,
+): number | undefined {
+  return numericComparableValue(lookupFormulaArg(workbook, currentSheet, arg));
+}
+
+function formulaArgRequestsExactLookup(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  arg: string,
+): boolean {
+  const value = lookupFormulaArg(workbook, currentSheet, arg);
+  if (value === false) return true;
+  if (typeof value === "number") return value === 0;
+  if (typeof value === "string") return /^FALSE$/i.test(value.trim()) || value.trim() === "0";
+  return false;
+}
+
+function lookupFormulaArg(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  arg: string,
+): FormulaResult | undefined {
+  const literal = parseFormulaStringLiteral(arg);
+  if (literal !== undefined) return literal;
+  const cells = formulaArgLooksLikeRange(arg) ? cellsForFormulaRef(workbook, currentSheet, arg) : undefined;
+  if (cells?.length === 1) return cells[0].value ?? undefined;
+  return evaluateFormulaExpression(workbook, currentSheet, arg);
+}
+
 function valuesForFormulaArg(
   workbook: ExcelJS.Workbook,
   currentSheet: ExcelJS.Worksheet,
@@ -2096,7 +2230,7 @@ function replaceFormulaFunctionCalls(
   let current = expression;
   for (let pass = 0; pass < 20; pass += 1) {
     let changed = false;
-    current = current.replace(/\b(SUM|AVERAGE|MIN|MAX|COUNT|COUNTA|ABS|ROUND|ROUNDUP|ROUNDDOWN|IF|IFERROR|SUMIF|COUNTIF|AVERAGEIF|SUMIFS|COUNTIFS|AVERAGEIFS)\(([^()]+)\)/gi, (match) => {
+    current = current.replace(/\b(SUM|AVERAGE|MIN|MAX|COUNT|COUNTA|ABS|ROUND|ROUNDUP|ROUNDDOWN|IF|IFERROR|SUMIF|COUNTIF|AVERAGEIF|SUMIFS|COUNTIFS|AVERAGEIFS|MATCH|INDEX|VLOOKUP|XLOOKUP)\(([^()]+)\)/gi, (match) => {
       const result = evaluateFormulaFunction(workbook, currentSheet, match);
       if (typeof result !== "number") {
         failed = true;
@@ -2249,6 +2383,8 @@ function criteriaFromFormulaArg(
 ): FormulaResult | undefined {
   const literal = parseFormulaStringLiteral(arg);
   if (literal !== undefined) return literal;
+  const cells = formulaArgLooksLikeRange(arg) ? cellsForFormulaRef(workbook, currentSheet, arg) : undefined;
+  if (cells?.length === 1) return cells[0].value ?? undefined;
   return evaluateFormulaExpression(workbook, currentSheet, arg);
 }
 

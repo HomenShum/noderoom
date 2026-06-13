@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedAt": "2026-06-13T15:17:37.077Z",
+  "generatedAt": "2026-06-13T15:24:38.925Z",
   "verifier": "docker_harbor_availability_probe",
   "status": "daemon_unavailable",
   "pass": false,

@@ -42,6 +42,7 @@ describe("official benchmark readiness", () => {
       state: "partial",
       evidence: "src/eval/bankerToolBenchStage.ts",
     });
+    expect(gold?.blocker).toContain("contamination checker");
     expect(rubric).toMatchObject({
       state: "partial",
       evidence: "src/eval/bankerToolBenchAdapter.ts",
@@ -90,6 +91,7 @@ describe("official benchmark readiness", () => {
         state: "partial",
         evidence: "src/eval/spreadsheetBenchStage.ts",
       });
+      expect(gold?.blocker).toContain("contamination");
       expect(runner).toMatchObject({
         state: "partial",
         evidence: "src/eval/spreadsheetBenchRunner.ts",

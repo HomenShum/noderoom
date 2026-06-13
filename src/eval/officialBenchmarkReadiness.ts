@@ -197,7 +197,7 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/bankerToolBenchStage.ts",
       blocker:
-        "BankerToolBench staging separates final prompts/input files from evaluator-only prompt context, formatting context, canary, weighted rubric, and golden outputs; Harbor/Docker execution and verifier handoff are still missing.",
+        "BankerToolBench staging separates final prompts/input files from evaluator-only prompt context, formatting context, canary, weighted rubric, and golden outputs; a contamination checker covers staged agent manifests, but Harbor/Docker process isolation and verifier handoff are still missing.",
     },
     official_runner_adapter: {
       capability: "official_runner_adapter",
@@ -224,7 +224,7 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchStage.ts",
       blocker:
-        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; one passing fixture smoke and one official V1 N=5 failed/partial model smoke exist, but official full-bundle sandboxing and output policy proof are still missing.",
+        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; contamination checks cover the staged V1 root and N=5 candidate metadata, and one official V1 N=5 failed/partial model smoke exists, but official full-bundle process sandboxing and output policy proof are still missing.",
     },
     official_runner_adapter: {
       capability: "official_runner_adapter",
@@ -257,7 +257,7 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchStage.ts",
       blocker:
-        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; V1 N=5 model-edit smoke evidence exists, but V2 chart/visual grading, V2 official model runs, and process sandboxing are still missing.",
+        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; V1 contamination and N=5 model-edit smoke evidence exists, but V2 chart/visual grading, V2 official model runs, and process sandboxing are still missing.",
     },
     official_runner_adapter: {
       capability: "official_runner_adapter",

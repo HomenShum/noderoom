@@ -1,6 +1,6 @@
 # Official Benchmark Readiness
 
-Generated: 2026-06-13T10:37:22.349Z
+Generated: 2026-06-13T11:09:00.190Z
 
 This is the benchmark-faithful gate for the public targets we care about most: BankerToolBench and SpreadsheetBench. It is deliberately stricter than NodeRoom's internal professional evals. Internal green runs do not imply an official benchmark claim.
 
@@ -42,7 +42,7 @@ Scoring shape: Agentic verifier opens deliverables and scores weighted binary ru
 | `rubric_weighted_scoring` | partial | `src/eval/bankerToolBenchAdapter.ts` |
 
 Blockers:
-- official_gold_isolation: BankerToolBench staging separates final prompts/input files from evaluator-only prompt context, formatting context, canary, weighted rubric, and golden outputs; Harbor/Docker execution and verifier handoff are still missing.
+- official_gold_isolation: BankerToolBench staging separates final prompts/input files from evaluator-only prompt context, formatting context, canary, weighted rubric, and golden outputs; a contamination checker covers staged agent manifests, but Harbor/Docker process isolation and verifier handoff are still missing.
 - official_runner_adapter: No Harbor-compatible NodeRoom runner adapter exists yet; the current BTB support stops at official bundle ingest and staged manifests.
 - xlsx_import_export: Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.
 - formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.
@@ -71,7 +71,7 @@ Scoring shape: Online-judge style multi-test-case evaluation; the agent must pro
 | `format_diff` | partial | `src/eval/spreadsheetBenchScorer.ts` |
 
 Blockers:
-- official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; one passing fixture smoke and one official V1 N=5 failed/partial model smoke exist, but official full-bundle sandboxing and output policy proof are still missing.
+- official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; contamination checks cover the staged V1 root and N=5 candidate metadata, and one official V1 N=5 failed/partial model smoke exists, but official full-bundle process sandboxing and output policy proof are still missing.
 - official_runner_adapter: A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; an official V1 N=5 smoke now records pass rate, p95 latency, model usage/cost, scored partial candidates, and failure taxonomy, but larger full-bundle runs, benchmark retry policy, process sandbox proof, and route selection remain incomplete.
 - formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.
 - format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy and full style coverage are not complete.
@@ -97,7 +97,7 @@ Scoring shape: Workflow-level grading across exact cell values/formulas/formats 
 | `chart_visual_grade` | missing | No VLM/chart-visual evaluator is wired into benchmark-faithful mode. |
 
 Blockers:
-- official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; V1 N=5 model-edit smoke evidence exists, but V2 chart/visual grading, V2 official model runs, and process sandboxing are still missing.
+- official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; V1 contamination and N=5 model-edit smoke evidence exists, but V2 chart/visual grading, V2 official model runs, and process sandboxing are still missing.
 - official_runner_adapter: A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; V1 N=5 model smoke evidence exists, but V2 official runs, benchmark retry policy, process sandbox proof, route selection, and chart lane remain incomplete.
 - formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.
 - format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy, chart rendering, and visual grading are not complete.

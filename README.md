@@ -1033,8 +1033,11 @@ of dropping it into a warning. The N=5 live smoke
 times and records `taskCount: 5`, `caseCount: 1`, `passRate: 0`, p95 latency 4.462s,
 `providerCostUsd: 0.0078935`, three invalid-sheet candidate-generation failures, and two scored
 partial candidates. That is the agent-path drift signal: same task and model, different paths, all
-captured in the benchmark report instead of summarized away. These artifacts are not official
-benchmark scores until run across official bundles under the benchmark policy.
+captured in the benchmark report instead of summarized away. The contamination gate
+(`npm run benchmark:contamination`) now scans agent-facing benchmark manifests, candidate manifests,
+and generated edit plans for evaluator-only gold/rubric/canary metadata; checked-in smokes show 0
+leaks for the staged V1 root, the N=5 V1 candidate output, and the staged BTB fixture. These artifacts
+are not official benchmark scores until run across official bundles under the benchmark policy.
 
 BankerToolBench now has the same first boundary in place: `npm run
 benchmark:bankertoolbench:ingest` scans an already-downloaded BTB bundle (`tasks.jsonl`,
@@ -1043,9 +1046,9 @@ without putting rubric, canary, or golden-output paths into the agent-facing tas
 benchmark:bankertoolbench:stage` writes separate `agent/` and `evaluator/` manifests; the agent
 side contains only the official default `final_prompt` plus input files, while the evaluator side
 holds prompt context, formatting context, canary, weighted rubric, and golden outputs. Checked-in
-smoke artifacts prove that boundary on a local BTB-shaped fixture. This is still not a BTB score:
-Harbor/Docker execution, MCP financial tools, Gandalf verifier replay, and multi-file deliverable
-packaging remain red gates.
+smoke artifacts and the contamination gate prove that boundary on a local BTB-shaped fixture. This is
+still not a BTB score: Harbor/Docker process isolation, MCP financial tools, Gandalf verifier replay,
+and multi-file deliverable packaging remain red gates.
 
 ## Benchmark Harness / v3 Composite-Synthesis Run
 

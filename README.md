@@ -1036,8 +1036,15 @@ partial candidates. That is the agent-path drift signal: same task and model, di
 captured in the benchmark report instead of summarized away. The contamination gate
 (`npm run benchmark:contamination`) now scans agent-facing benchmark manifests, candidate manifests,
 and generated edit plans for evaluator-only gold/rubric/canary metadata; checked-in smokes show 0
-leaks for the staged V1 root, the N=5 V1 candidate output, and the staged BTB fixture. These artifacts
-are not official benchmark scores until run across official bundles under the benchmark policy.
+leaks for the staged V1 root, the N=5 V1 candidate output, the retry V1 candidate output, and the
+staged BTB fixture. The runner also has an explicit retry policy: `--retry-failed N` retries candidate-generation or
+scoring errors, `--retry-score-failures` opts into retrying scored-but-wrong candidates, and the
+report records case-level attempts, retry exhaustion, pass-after-retry counts, p95 latency, tokens,
+and provider cost. The checked-in retry smoke
+(`docs/eval/spreadsheetbench-v1-model-edit-plan-retry-live-smoke.json`) exhausted three attempts on
+one official V1 task with `gpt-5.4-nano`, proving the retry accounting and the current planner gap at
+the same time. These artifacts are not official benchmark scores until run across official bundles
+under the benchmark policy.
 
 BankerToolBench now has the same first boundary in place: `npm run
 benchmark:bankertoolbench:ingest` scans an already-downloaded BTB bundle (`tasks.jsonl`,

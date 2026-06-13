@@ -1,0 +1,210 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T11:14:52.411Z",
+  "stageRoot": "staged-v1",
+  "outputRoot": "run-v1-model-edit-retry",
+  "mode": "model-edit-plan",
+  "taskCount": 3,
+  "passCount": 0,
+  "averageOverall": 0,
+  "caseCount": 1,
+  "caseRunCount": 1,
+  "casePassCount": 0,
+  "casePassRate": 0,
+  "repeatCount": 1,
+  "attemptCount": 3,
+  "passRate": 0,
+  "retryPolicy": {
+    "maxRetries": 2,
+    "retryOn": [
+      "candidate_generation",
+      "scoring"
+    ],
+    "stopOnPass": true
+  },
+  "retryStats": {
+    "retriedCaseRunCount": 1,
+    "retryAttemptCount": 2,
+    "passedAfterRetryCount": 0,
+    "exhaustedCaseRunCount": 1
+  },
+  "stats": {
+    "latencyMs": {
+      "p50": 3023,
+      "p95": 8436,
+      "max": 8436
+    },
+    "failureCounts": {
+      "candidate_generation:Expected ',' or '}' after property value in JSON at position 742 (line 1 column 743)": 1,
+      "candidate_generation:edit-plan references missing sheet: Sheet1": 1,
+      "candidate_generation:Expected ',' or '}' after property value in JSON at position 218 (line 1 column 219)": 1
+    }
+  },
+  "harness": {
+    "toolPolicy": "agent_dir_only_until_candidate",
+    "evaluatorAccess": "after_candidate_emit_only",
+    "budget": {
+      "modelCalls": 3,
+      "inputTokens": 20328,
+      "outputTokens": 1422,
+      "providerCostUsd": 0.0058431
+    }
+  },
+  "warnings": [
+    "tasks/13-1#1.1: Expected ',' or '}' after property value in JSON at position 742 (line 1 column 743)",
+    "tasks/13-1#1.2: edit-plan references missing sheet: Sheet1",
+    "tasks/13-1#1.3: Expected ',' or '}' after property value in JSON at position 218 (line 1 column 219)"
+  ],
+  "caseRuns": [
+    {
+      "taskId": "13-1",
+      "taskDir": "tasks/13-1",
+      "repeatIndex": 1,
+      "attempts": [
+        1,
+        2,
+        3
+      ],
+      "finalAttemptIndex": 3,
+      "pass": false,
+      "stopReason": "retry_exhausted",
+      "bestOverall": 0
+    }
+  ],
+  "results": [
+    {
+      "taskId": "13-1",
+      "track": "spreadsheetbench-v1",
+      "mode": "model-edit-plan",
+      "attemptIndex": 1,
+      "repeatIndex": 1,
+      "tryIndex": 1,
+      "taskDir": "tasks/13-1",
+      "agentManifest": "tasks/13-1/agent/task.json",
+      "evaluatorManifest": "tasks/13-1/evaluator/evaluator.json",
+      "error": {
+        "phase": "candidate_generation",
+        "message": "Expected ',' or '}' after property value in JSON at position 742 (line 1 column 743)"
+      },
+      "model": {
+        "name": "gpt-5.4-nano",
+        "calls": 1,
+        "usage": {
+          "inputTokens": 6776,
+          "outputTokens": 1122
+        },
+        "costUsd": 0.0027576999999999996
+      },
+      "timingsMs": {
+        "modelPlanning": 8400,
+        "candidateGeneration": 8436,
+        "scoring": 0,
+        "total": 8436
+      },
+      "trajectory": [
+        {
+          "step": "read_agent_manifest",
+          "detail": "tasks/13-1/agent/task.json"
+        },
+        {
+          "step": "snapshot_agent_workbook",
+          "detail": "1 sheet(s), 240 cell(s)"
+        },
+        {
+          "step": "call_model_for_edit_plan",
+          "detail": "gpt-5.4-nano"
+        }
+      ]
+    },
+    {
+      "taskId": "13-1",
+      "track": "spreadsheetbench-v1",
+      "mode": "model-edit-plan",
+      "attemptIndex": 2,
+      "repeatIndex": 1,
+      "tryIndex": 2,
+      "retryOfAttemptIndex": 1,
+      "taskDir": "tasks/13-1",
+      "agentManifest": "tasks/13-1/agent/task.json",
+      "evaluatorManifest": "tasks/13-1/evaluator/evaluator.json",
+      "error": {
+        "phase": "candidate_generation",
+        "message": "edit-plan references missing sheet: Sheet1"
+      },
+      "model": {
+        "name": "gpt-5.4-nano",
+        "calls": 1,
+        "usage": {
+          "inputTokens": 6776,
+          "outputTokens": 27
+        },
+        "costUsd": 0.0013889500000000001
+      },
+      "timingsMs": {
+        "modelPlanning": 1394,
+        "candidateGeneration": 1430,
+        "scoring": 0,
+        "total": 1430
+      },
+      "trajectory": [
+        {
+          "step": "read_agent_manifest",
+          "detail": "tasks/13-1/agent/task.json"
+        },
+        {
+          "step": "snapshot_agent_workbook",
+          "detail": "1 sheet(s), 240 cell(s)"
+        },
+        {
+          "step": "call_model_for_edit_plan",
+          "detail": "gpt-5.4-nano"
+        }
+      ]
+    },
+    {
+      "taskId": "13-1",
+      "track": "spreadsheetbench-v1",
+      "mode": "model-edit-plan",
+      "attemptIndex": 3,
+      "repeatIndex": 1,
+      "tryIndex": 3,
+      "retryOfAttemptIndex": 2,
+      "taskDir": "tasks/13-1",
+      "agentManifest": "tasks/13-1/agent/task.json",
+      "evaluatorManifest": "tasks/13-1/evaluator/evaluator.json",
+      "error": {
+        "phase": "candidate_generation",
+        "message": "Expected ',' or '}' after property value in JSON at position 218 (line 1 column 219)"
+      },
+      "model": {
+        "name": "gpt-5.4-nano",
+        "calls": 1,
+        "usage": {
+          "inputTokens": 6776,
+          "outputTokens": 273
+        },
+        "costUsd": 0.00169645
+      },
+      "timingsMs": {
+        "modelPlanning": 3017,
+        "candidateGeneration": 3023,
+        "scoring": 0,
+        "total": 3023
+      },
+      "trajectory": [
+        {
+          "step": "read_agent_manifest",
+          "detail": "tasks/13-1/agent/task.json"
+        },
+        {
+          "step": "snapshot_agent_workbook",
+          "detail": "1 sheet(s), 240 cell(s)"
+        },
+        {
+          "step": "call_model_for_edit_plan",
+          "detail": "gpt-5.4-nano"
+        }
+      ]
+    }
+  ]
+}

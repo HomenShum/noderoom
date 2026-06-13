@@ -15,7 +15,7 @@ const ownershipManifest = loadOwnershipManifest();
 
 const result = checkArchitectureBudget({ changedFiles, evidenceFiles, humanApproved, ownershipManifest });
 
-if (result.outsideEvidenceScope.length === 0 && result.forbiddenFiles.length === 0) {
+if (!result.requiresHumanApproval) {
   console.log("architecture budget: ok");
 } else {
   console.log("architecture budget: review required");

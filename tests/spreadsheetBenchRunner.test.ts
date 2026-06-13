@@ -226,6 +226,56 @@ describe("SpreadsheetBench staged runner", () => {
     expect(candidateManifest).not.toContain("evaluator");
   });
 
+  it("keeps attempt indices globally unique across staged tasks", async () => {
+    const source = tempRoot("source");
+    const stage = tempRoot("stage");
+    const out = tempRoot("out");
+    for (const id of ["13-7", "13-8"]) {
+      mkdirSync(join(source, "spreadsheet", id), { recursive: true });
+      await writeWorkbook(join(source, "spreadsheet", id, `1_${id}_init.xlsx`), 1);
+      await writeWorkbook(join(source, "spreadsheet", id, `1_${id}_golden.xlsx`), 2);
+    }
+    writeJson(join(source, "dataset.json"), [
+      {
+        id: "13-7",
+        instruction: "Change Sheet1 B2 to 2.",
+        spreadsheet_path: "spreadsheet/13-7",
+        answer_position: "Sheet1!B2:B2",
+        answer_sheet: "Sheet1",
+      },
+      {
+        id: "13-8",
+        instruction: "Change Sheet1 B2 to 2.",
+        spreadsheet_path: "spreadsheet/13-8",
+        answer_position: "Sheet1!B2:B2",
+        answer_sheet: "Sheet1",
+      },
+    ]);
+    stageSpreadsheetBenchBundle(source, {
+      track: "spreadsheetbench-v1",
+      outputRoot: stage,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    const report = await runStagedSpreadsheetBench({
+      stageRoot: stage,
+      outputRoot: out,
+      mode: "copy-input-baseline",
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(report.results.map((result) => [result.taskId, result.attemptIndex])).toEqual([
+      ["13-7", 1],
+      ["13-8", 2],
+    ]);
+    expect(report.caseRuns.map((run) => [run.taskId, run.attempts, run.finalAttemptIndex])).toEqual([
+      ["13-7", [1], 1],
+      ["13-8", [2], 2],
+    ]);
+  });
+
   it("counts failed model edit plans with usage, trajectory, and error evidence", async () => {
     const source = tempRoot("source");
     const stage = tempRoot("stage");
@@ -302,7 +352,7 @@ describe("SpreadsheetBench staged runner", () => {
     expect(readFileSync(join(out, "13-4", "model-edit-plan.json"), "utf8").toLowerCase()).not.toContain("gold");
   });
 
-  it("accounts repeated model edit attempts with pass rate, p95, and failure counts", async () => {
+  it("retries retryable model edit failures and records case-level stop policy", async () => {
     const source = tempRoot("source");
     const stage = tempRoot("stage");
     const out = tempRoot("out");
@@ -318,6 +368,99 @@ describe("SpreadsheetBench staged runner", () => {
     ]);
     await writeWorkbookWithSheet(join(source, "spreadsheet", "13-5", "1_13-5_init.xlsx"), "Actual", 1);
     await writeWorkbookWithSheet(join(source, "spreadsheet", "13-5", "1_13-5_golden.xlsx"), "Actual", 2);
+    stageSpreadsheetBenchBundle(source, {
+      track: "spreadsheetbench-v1",
+      outputRoot: stage,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+    let calls = 0;
+    const planner: AgentModel = {
+      name: "retrying-spreadsheetbench-planner",
+      async next() {
+        calls += 1;
+        const sheet = calls === 1 ? "Sheet1" : "Actual";
+        return {
+          text: JSON.stringify({ schema: 1, operations: [{ sheet, cell: "B2", value: 2 }] }),
+          toolCalls: [],
+          done: true,
+          usage: { inputTokens: 40, outputTokens: 10 },
+        };
+      },
+    };
+
+    const report = await runStagedSpreadsheetBench({
+      stageRoot: stage,
+      outputRoot: out,
+      mode: "model-edit-plan",
+      model: planner,
+      retryFailed: 1,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(report).toMatchObject({
+      mode: "model-edit-plan",
+      taskCount: 2,
+      caseCount: 1,
+      caseRunCount: 1,
+      casePassCount: 1,
+      casePassRate: 1,
+      repeatCount: 1,
+      attemptCount: 2,
+      passCount: 1,
+      retryPolicy: {
+        maxRetries: 1,
+        retryOn: ["candidate_generation", "scoring"],
+        stopOnPass: true,
+      },
+      retryStats: {
+        retriedCaseRunCount: 1,
+        retryAttemptCount: 1,
+        passedAfterRetryCount: 1,
+        exhaustedCaseRunCount: 0,
+      },
+      harness: {
+        budget: { modelCalls: 2, inputTokens: 80, outputTokens: 20, providerCostUsd: 0 },
+      },
+    });
+    expect(report.caseRuns).toEqual([
+      expect.objectContaining({
+        taskId: "13-5",
+        repeatIndex: 1,
+        attempts: [1, 2],
+        finalAttemptIndex: 2,
+        pass: true,
+        stopReason: "passed",
+        bestOverall: 1,
+      }),
+    ]);
+    expect(report.results.map((result) => [result.attemptIndex, result.repeatIndex, result.tryIndex, result.retryOfAttemptIndex])).toEqual([
+      [1, 1, 1, undefined],
+      [2, 1, 2, 1],
+    ]);
+    expect(report.results[0].error?.message).toBe("edit-plan references missing sheet: Sheet1");
+    expect(report.results[1].score?.pass).toBe(true);
+    expect(existsSync(join(out, "13-5", "attempt-01", "model-edit-plan.json"))).toBe(true);
+    expect(existsSync(join(out, "13-5", "attempt-02", "candidate-01-1_13-5_init.xlsx"))).toBe(true);
+  });
+
+  it("accounts repeated model edit attempts with pass rate, p95, and failure counts", async () => {
+    const source = tempRoot("source");
+    const stage = tempRoot("stage");
+    const out = tempRoot("out");
+    mkdirSync(join(source, "spreadsheet", "13-6"), { recursive: true });
+    writeJson(join(source, "dataset.json"), [
+      {
+        id: "13-6",
+        instruction: "Change the workbook value to 2.",
+        spreadsheet_path: "spreadsheet/13-6",
+        answer_position: "Actual!B2:B2",
+        answer_sheet: "Actual",
+      },
+    ]);
+    await writeWorkbookWithSheet(join(source, "spreadsheet", "13-6", "1_13-6_init.xlsx"), "Actual", 1);
+    await writeWorkbookWithSheet(join(source, "spreadsheet", "13-6", "1_13-6_golden.xlsx"), "Actual", 2);
     stageSpreadsheetBenchBundle(source, {
       track: "spreadsheetbench-v1",
       outputRoot: stage,
@@ -371,8 +514,8 @@ describe("SpreadsheetBench staged runner", () => {
       "edit-plan references missing sheet: Sheet1",
       "edit-plan references missing sheet: Sheet1",
     ]);
-    expect(existsSync(join(out, "13-5", "attempt-01", "model-edit-plan.json"))).toBe(true);
-    expect(readFileSync(join(out, "13-5", "attempt-01", "model-edit-plan.json"), "utf8").toLowerCase()).not.toContain("gold");
+    expect(existsSync(join(out, "13-6", "attempt-01", "model-edit-plan.json"))).toBe(true);
+    expect(readFileSync(join(out, "13-6", "attempt-01", "model-edit-plan.json"), "utf8").toLowerCase()).not.toContain("gold");
   });
 });
 

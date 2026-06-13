@@ -98,6 +98,8 @@ describe("official benchmark readiness", () => {
       });
       expect(runner?.blocker).toContain("model-edit-plan");
       expect(runner?.blocker).toContain("N=5");
+      expect(runner?.blocker).toContain("retry-policy");
+      expect(runner?.blocker).not.toContain("benchmark retry policy");
       expect(xlsx).toMatchObject({
         state: "implemented",
         evidence: "src/eval/spreadsheetBenchRunner.ts",

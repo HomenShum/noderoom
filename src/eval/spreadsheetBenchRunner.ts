@@ -16,6 +16,8 @@ export type SpreadsheetBenchRunnerOptions = {
   modelName?: string;
   modelTimeoutMs?: number;
   repeats?: number;
+  retryFailed?: number;
+  retryScoreFailures?: boolean;
   limit?: number;
   clean?: boolean;
   compareStyles?: boolean;
@@ -29,6 +31,9 @@ export type SpreadsheetBenchRunnerTaskResult = {
   category?: string;
   mode: SpreadsheetBenchRunnerMode;
   attemptIndex: number;
+  repeatIndex: number;
+  tryIndex: number;
+  retryOfAttemptIndex?: number;
   taskDir: string;
   agentManifest: string;
   evaluatorManifest: string;
@@ -73,9 +78,23 @@ export type SpreadsheetBenchRunnerReport = {
   passCount: number;
   averageOverall: number;
   caseCount: number;
+  caseRunCount: number;
+  casePassCount: number;
+  casePassRate: number;
   repeatCount: number;
   attemptCount: number;
   passRate: number;
+  retryPolicy: {
+    maxRetries: number;
+    retryOn: Array<"candidate_generation" | "scoring" | "score_failure">;
+    stopOnPass: true;
+  };
+  retryStats: {
+    retriedCaseRunCount: number;
+    retryAttemptCount: number;
+    passedAfterRetryCount: number;
+    exhaustedCaseRunCount: number;
+  };
   stats: {
     latencyMs: {
       p50: number;
@@ -95,7 +114,19 @@ export type SpreadsheetBenchRunnerReport = {
     };
   };
   warnings: string[];
+  caseRuns: SpreadsheetBenchRunnerCaseRun[];
   results: SpreadsheetBenchRunnerTaskResult[];
+};
+
+export type SpreadsheetBenchRunnerCaseRun = {
+  taskId: string;
+  taskDir: string;
+  repeatIndex: number;
+  attempts: number[];
+  finalAttemptIndex?: number;
+  pass: boolean;
+  stopReason: "passed" | "failed_score" | "retry_exhausted" | "non_retryable_error" | "runner_error";
+  bestOverall: number;
 };
 
 type AgentManifest = {
@@ -148,24 +179,45 @@ export async function runStagedSpreadsheetBench(options: SpreadsheetBenchRunnerO
 
   const tasks = findStagedTasks(stageRoot).slice(0, options.limit ?? Number.POSITIVE_INFINITY);
   const repeatCount = Math.max(1, Math.trunc(options.repeats ?? 1));
+  const retryPolicy = buildRetryPolicy(options);
   const warnings: string[] = [];
   const results: SpreadsheetBenchRunnerTaskResult[] = [];
+  const caseRuns: SpreadsheetBenchRunnerCaseRun[] = [];
+  let nextAttemptIndex = 1;
   for (let repeat = 1; repeat <= repeatCount; repeat++) {
     for (const task of tasks) {
-      try {
-        const result = await runTask(stageRoot, outputRoot, task, options, { attemptIndex: repeat, repeatCount });
-        if (result.error) warnings.push(`${result.taskDir}#${repeat}: ${result.error.message}`);
-        results.push(result);
-      } catch (error) {
-        warnings.push(`${rel(stageRoot, task.taskDir)}#${repeat}: ${error instanceof Error ? error.message : String(error)}`);
+      const caseAttempts: SpreadsheetBenchRunnerTaskResult[] = [];
+      for (let tryIndex = 1; tryIndex <= retryPolicy.maxRetries + 1; tryIndex++) {
+        const attemptIndex = nextAttemptIndex++;
+        try {
+          const result = await runTask(stageRoot, outputRoot, task, options, {
+            attemptIndex,
+            repeatIndex: repeat,
+            tryIndex,
+            retryOfAttemptIndex: tryIndex > 1 ? attemptIndex - 1 : undefined,
+            repeatCount,
+            maxAttemptsPerRepeat: retryPolicy.maxRetries + 1,
+          });
+          if (result.error) warnings.push(`${result.taskDir}#${repeat}.${tryIndex}: ${result.error.message}`);
+          results.push(result);
+          caseAttempts.push(result);
+          if (!shouldRetry(result, retryPolicy, tryIndex)) break;
+        } catch (error) {
+          warnings.push(`${rel(stageRoot, task.taskDir)}#${repeat}.${tryIndex}: ${error instanceof Error ? error.message : String(error)}`);
+          break;
+        }
       }
+      caseRuns.push(summarizeCaseRun(stageRoot, task, repeat, caseAttempts, retryPolicy));
     }
   }
+  const passCount = results.filter((result) => result.score?.pass).length;
+  const casePassCount = caseRuns.filter((run) => run.pass).length;
   const averageOverall = results.length
     ? Number((results.reduce((sum, result) => sum + (result.score?.scores.overall ?? 0), 0) / results.length).toFixed(6))
     : 0;
   const usage = aggregateUsage(results);
   const stats = aggregateStats(results);
+  const retryStats = aggregateRetryStats(caseRuns);
   return {
     schema: 1,
     generatedAt: options.generatedAt,
@@ -173,12 +225,17 @@ export async function runStagedSpreadsheetBench(options: SpreadsheetBenchRunnerO
     outputRoot: basename(outputRoot),
     mode: options.mode,
     taskCount: results.length,
-    passCount: results.filter((result) => result.score?.pass).length,
+    passCount,
     averageOverall,
     caseCount: tasks.length,
+    caseRunCount: caseRuns.length,
+    casePassCount,
+    casePassRate: caseRuns.length ? Number((casePassCount / caseRuns.length).toFixed(6)) : 0,
     repeatCount,
     attemptCount: results.length,
-    passRate: results.length ? Number((results.filter((result) => result.score?.pass).length / results.length).toFixed(6)) : 0,
+    passRate: results.length ? Number((passCount / results.length).toFixed(6)) : 0,
+    retryPolicy,
+    retryStats,
     stats,
     harness: {
       toolPolicy: "agent_dir_only_until_candidate",
@@ -191,6 +248,7 @@ export async function runStagedSpreadsheetBench(options: SpreadsheetBenchRunnerO
       },
     },
     warnings,
+    caseRuns,
     results,
   };
 }
@@ -213,7 +271,14 @@ async function runTask(
   outputRoot: string,
   task: StagedTaskPaths,
   options: SpreadsheetBenchRunnerOptions,
-  attempt: { attemptIndex: number; repeatCount: number },
+  attempt: {
+    attemptIndex: number;
+    repeatIndex: number;
+    tryIndex: number;
+    retryOfAttemptIndex?: number;
+    repeatCount: number;
+    maxAttemptsPerRepeat: number;
+  },
 ): Promise<SpreadsheetBenchRunnerTaskResult> {
   const started = Date.now();
   const trajectory: SpreadsheetBenchRunnerTaskResult["trajectory"] = [];
@@ -223,7 +288,7 @@ async function runTask(
   const taskOutDir = join(
     outputRoot,
     rel(join(stageRoot, "tasks"), task.taskDir),
-    attempt.repeatCount > 1 ? `attempt-${String(attempt.attemptIndex).padStart(2, "0")}` : "",
+    attempt.repeatCount > 1 || attempt.maxAttemptsPerRepeat > 1 ? `attempt-${String(attempt.attemptIndex).padStart(2, "0")}` : "",
   );
   const candidateWorkbook = emitCandidateWorkbook({
     stageRoot,
@@ -247,6 +312,9 @@ async function runTask(
       agent,
       mode: options.mode,
       attemptIndex: attempt.attemptIndex,
+      repeatIndex: attempt.repeatIndex,
+      tryIndex: attempt.tryIndex,
+      retryOfAttemptIndex: attempt.retryOfAttemptIndex,
       phase: "candidate_generation",
       message: error instanceof Error ? error.message : String(error),
       model: modelFailure?.model,
@@ -283,6 +351,9 @@ async function runTask(
       agent,
       mode: options.mode,
       attemptIndex: attempt.attemptIndex,
+      repeatIndex: attempt.repeatIndex,
+      tryIndex: attempt.tryIndex,
+      retryOfAttemptIndex: attempt.retryOfAttemptIndex,
       phase: "scoring",
       message: error instanceof Error ? error.message : String(error),
       candidateWorkbook: rel(outputRoot, resolvedCandidateWorkbook),
@@ -303,6 +374,9 @@ async function runTask(
     category: agent.category,
     mode: options.mode,
     attemptIndex: attempt.attemptIndex,
+    repeatIndex: attempt.repeatIndex,
+    tryIndex: attempt.tryIndex,
+    retryOfAttemptIndex: attempt.retryOfAttemptIndex,
     taskDir: rel(stageRoot, task.taskDir),
     agentManifest: rel(stageRoot, task.agentManifestPath),
     evaluatorManifest: rel(stageRoot, task.evaluatorManifestPath),
@@ -325,6 +399,9 @@ function failedTaskResult(args: {
   agent: AgentManifest;
   mode: SpreadsheetBenchRunnerMode;
   attemptIndex: number;
+  repeatIndex: number;
+  tryIndex: number;
+  retryOfAttemptIndex?: number;
   phase: "candidate_generation" | "scoring";
   message: string;
   candidateWorkbook?: string;
@@ -341,6 +418,9 @@ function failedTaskResult(args: {
     category: args.agent.category,
     mode: args.mode,
     attemptIndex: args.attemptIndex,
+    repeatIndex: args.repeatIndex,
+    tryIndex: args.tryIndex,
+    retryOfAttemptIndex: args.retryOfAttemptIndex,
     taskDir: rel(args.stageRoot, args.task.taskDir),
     agentManifest: rel(args.stageRoot, args.task.agentManifestPath),
     evaluatorManifest: rel(args.stageRoot, args.task.evaluatorManifestPath),
@@ -662,6 +742,79 @@ function aggregateStats(results: SpreadsheetBenchRunnerTaskResult[]): Spreadshee
       max: latencies.at(-1) ?? 0,
     },
     failureCounts,
+  };
+}
+
+function buildRetryPolicy(options: SpreadsheetBenchRunnerOptions): SpreadsheetBenchRunnerReport["retryPolicy"] {
+  const maxRetries = Math.max(0, Math.trunc(options.retryFailed ?? 0));
+  return {
+    maxRetries,
+    retryOn: [
+      "candidate_generation",
+      "scoring",
+      ...(options.retryScoreFailures ? ["score_failure" as const] : []),
+    ],
+    stopOnPass: true,
+  };
+}
+
+function shouldRetry(
+  result: SpreadsheetBenchRunnerTaskResult,
+  retryPolicy: SpreadsheetBenchRunnerReport["retryPolicy"],
+  tryIndex: number,
+): boolean {
+  if (tryIndex > retryPolicy.maxRetries) return false;
+  if (result.score?.pass) return false;
+  if (result.error) return retryPolicy.retryOn.includes(result.error.phase);
+  if (result.score && !result.score.pass) return retryPolicy.retryOn.includes("score_failure");
+  return false;
+}
+
+function summarizeCaseRun(
+  stageRoot: string,
+  task: StagedTaskPaths,
+  repeatIndex: number,
+  attempts: SpreadsheetBenchRunnerTaskResult[],
+  retryPolicy: SpreadsheetBenchRunnerReport["retryPolicy"],
+): SpreadsheetBenchRunnerCaseRun {
+  const final = attempts.at(-1);
+  const pass = attempts.some((attempt) => attempt.score?.pass);
+  return {
+    taskId: final?.taskId ?? rel(stageRoot, task.taskDir),
+    taskDir: rel(stageRoot, task.taskDir),
+    repeatIndex,
+    attempts: attempts.map((attempt) => attempt.attemptIndex),
+    finalAttemptIndex: final?.attemptIndex,
+    pass,
+    stopReason: caseStopReason(final, pass, attempts.length, retryPolicy),
+    bestOverall: attempts.length
+      ? Number(Math.max(...attempts.map((attempt) => attempt.score?.scores.overall ?? 0)).toFixed(6))
+      : 0,
+  };
+}
+
+function caseStopReason(
+  final: SpreadsheetBenchRunnerTaskResult | undefined,
+  pass: boolean,
+  attemptCount: number,
+  retryPolicy: SpreadsheetBenchRunnerReport["retryPolicy"],
+): SpreadsheetBenchRunnerCaseRun["stopReason"] {
+  if (!final) return "runner_error";
+  if (pass) return "passed";
+  const retryableFinal =
+    (final.error && retryPolicy.retryOn.includes(final.error.phase)) ||
+    (!!final.score && !final.score.pass && retryPolicy.retryOn.includes("score_failure"));
+  if (retryableFinal && attemptCount >= retryPolicy.maxRetries + 1) return "retry_exhausted";
+  if (final.error) return "non_retryable_error";
+  return "failed_score";
+}
+
+function aggregateRetryStats(caseRuns: SpreadsheetBenchRunnerCaseRun[]): SpreadsheetBenchRunnerReport["retryStats"] {
+  return {
+    retriedCaseRunCount: caseRuns.filter((run) => run.attempts.length > 1).length,
+    retryAttemptCount: caseRuns.reduce((sum, run) => sum + Math.max(0, run.attempts.length - 1), 0),
+    passedAfterRetryCount: caseRuns.filter((run) => run.pass && run.attempts.length > 1).length,
+    exhaustedCaseRunCount: caseRuns.filter((run) => run.stopReason === "retry_exhausted").length,
   };
 }
 

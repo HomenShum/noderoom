@@ -1,6 +1,6 @@
 # Official Benchmark Readiness
 
-Generated: 2026-06-13T11:09:00.190Z
+Generated: 2026-06-13T11:24:10.402Z
 
 This is the benchmark-faithful gate for the public targets we care about most: BankerToolBench and SpreadsheetBench. It is deliberately stricter than NodeRoom's internal professional evals. Internal green runs do not imply an official benchmark claim.
 
@@ -72,7 +72,7 @@ Scoring shape: Online-judge style multi-test-case evaluation; the agent must pro
 
 Blockers:
 - official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; contamination checks cover the staged V1 root and N=5 candidate metadata, and one official V1 N=5 failed/partial model smoke exists, but official full-bundle process sandboxing and output policy proof are still missing.
-- official_runner_adapter: A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; an official V1 N=5 smoke now records pass rate, p95 latency, model usage/cost, scored partial candidates, and failure taxonomy, but larger full-bundle runs, benchmark retry policy, process sandbox proof, and route selection remain incomplete.
+- official_runner_adapter: A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; official V1 N=5 and retry-policy smokes now record pass rate, p95 latency, model usage/cost, scored partial candidates, retry exhaustion, and failure taxonomy, but larger full-bundle runs, process sandbox proof, and route selection remain incomplete.
 - formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.
 - format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy and full style coverage are not complete.
 
@@ -98,7 +98,7 @@ Scoring shape: Workflow-level grading across exact cell values/formulas/formats 
 
 Blockers:
 - official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; V1 contamination and N=5 model-edit smoke evidence exists, but V2 chart/visual grading, V2 official model runs, and process sandboxing are still missing.
-- official_runner_adapter: A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; V1 N=5 model smoke evidence exists, but V2 official runs, benchmark retry policy, process sandbox proof, route selection, and chart lane remain incomplete.
+- official_runner_adapter: A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; V1 N=5 and retry-policy model smoke evidence exists, but V2 official runs, process sandbox proof, route selection, and chart lane remain incomplete.
 - formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.
 - format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy, chart rendering, and visual grading are not complete.
 - chart_visual_grade: No VLM/chart-visual evaluator is wired into benchmark-faithful mode.

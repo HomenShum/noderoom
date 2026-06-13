@@ -224,6 +224,16 @@ const steps: StepSpec[] = [
     skipReason: "local SpreadsheetBench N5 run root is not present",
   },
   {
+    id: "spreadsheetbench-retry-run-contamination",
+    label: "SpreadsheetBench retry run artifact contamination",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "benchmark:contamination", "--", "--root", ".tmp/official-benchmarks/run-v1-model-edit-retry", "--strict"],
+    timeoutMs: 120_000,
+    includeWhen: () => existsSync(join(process.cwd(), ".tmp", "official-benchmarks", "run-v1-model-edit-retry")),
+    skipReason: "local SpreadsheetBench retry run root is not present",
+  },
+  {
     id: "bankertoolbench-stage-contamination",
     label: "BankerToolBench staged artifact contamination",
     lane: "deterministic",

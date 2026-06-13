@@ -82,6 +82,7 @@
         "scripts/architecture-budget-check.ts",
         "scripts/benchmark-contamination-check.ts",
         "scripts/benchmark/**",
+        "scripts/spreadsheetbench-*.ts",
         "scripts/convex-boundary-check.ts",
         "scripts/gemini-ui-review.ts",
         "scripts/halo-overnight.ts",

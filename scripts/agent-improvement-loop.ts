@@ -248,6 +248,16 @@ const steps: StepSpec[] = [
     skipReason: "local SpreadsheetBench N5 run root is not present",
   },
   {
+    id: "spreadsheetbench-3task-n5-run-contamination",
+    label: "SpreadsheetBench 3-task N5 run artifact contamination",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "benchmark:contamination", "--", "--root", ".tmp/official-benchmarks/run-v1-model-edit-3task-n5", "--strict"],
+    timeoutMs: 120_000,
+    includeWhen: () => existsSync(join(process.cwd(), ".tmp", "official-benchmarks", "run-v1-model-edit-3task-n5")),
+    skipReason: "local SpreadsheetBench 3-task N5 run root is not present",
+  },
+  {
     id: "spreadsheetbench-retry-run-contamination",
     label: "SpreadsheetBench retry run artifact contamination",
     lane: "deterministic",

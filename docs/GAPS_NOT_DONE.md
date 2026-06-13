@@ -64,17 +64,18 @@ Do not claim a feature is production-complete until it has:
 | QA matrix continuity | `docs/qa/production-matrix.json` and generated docs exist. | Require every new feature to append/update the QA matrix and generated README visualization. | CI fails if matrix docs are stale. |
 
 SpreadsheetBench addendum: the harness now has a broader official V1 three-task
-live smoke on the locally staged corpus. `gpt-5.4-nano` records 3/3 pass,
-average overall 1.0, p95 2.989s, $0.00921785 spend, zero failure counts, and
-0 candidate-output leaks in
-`docs/eval/spreadsheetbench-v1-model-edit-plan-3task-live-smoke.json` plus
-`docs/eval/spreadsheetbench-v1-run-3task-contamination-smoke.json`. The new
+repeated live smoke on the locally staged corpus. `gpt-5.4-nano` records 15/15
+pass across 3 cases and 5 repeats, average overall 1.0, p95 5.080s,
+$0.0462905 spend, zero failure counts, zero retry attempts, and
+0 candidate-output leaks across 60 checked files in
+`docs/eval/spreadsheetbench-v1-model-edit-plan-3task-n5-live-smoke.json` plus
+`docs/eval/spreadsheetbench-v1-run-3task-n5-contamination-smoke.json`. The new
 `filter_rows` and `sort_unique_rows` structural operators cover visible date
 filtering and visible duplicate-removal/sort tables without evaluator-gold
-access. Remaining gap stays the same: run larger held-out official bundles and
-add Docker/Harbor isolation, route selection, V2 rendered chart grading, and
-BankerToolBench production verifier integration before claiming official
-benchmark readiness.
+access, repeatedly under live model variance. Remaining gap stays the same:
+run larger held-out official bundles and add Docker/Harbor isolation, route
+selection, V2 rendered chart grading, and BankerToolBench production verifier
+integration before claiming official benchmark readiness.
 
 ## P1: UI Operations
 

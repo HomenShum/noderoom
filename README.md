@@ -1036,21 +1036,23 @@ five times and records `taskCount: 5`, `caseCount: 1`, `passRate: 1`, p95 latenc
 is visible in the artifacts: the planner sees agent-visible `aggregate_section` candidates for
 section-level table grouping, unsupported invented operations are dropped, section rewrites apply
 after scalar cell edits, and the scorer only enforces formula equality when the evaluator gold cell
-actually contains a formula. A broader official V1 three-task smoke
-(`docs/eval/spreadsheetbench-v1-model-edit-plan-3task-live-smoke.json`) now passes 3/3 with
-`gpt-5.4-nano`, average overall `1`, p95 latency 2.989s, `$0.00921785` spend, zero failure counts,
-and 0 candidate-output leaks
-(`docs/eval/spreadsheetbench-v1-run-3task-contamination-smoke.json`). That run exercises the next
-two spreadsheet-harness lessons: deterministic structural operators for visible date filters
-(`filter_rows`) and visible duplicate-removal/sort tables (`sort_unique_rows`) belong in the
-harness tool contract, not as fragile one-cell dynamic formulas or short prefix writes. This is a
-benchmark-path lesson, not a broad official-readiness claim: larger held-out V1 runs, V2 rendered
-chart grading, Docker/Harbor isolation, and route selection are still tracked as blockers below.
+actually contains a formula. A broader official V1 three-task stability smoke
+(`docs/eval/spreadsheetbench-v1-model-edit-plan-3task-n5-live-smoke.json`) now repeats all three
+locally staged official tasks five times each: `taskCount: 15`, `caseCount: 3`, `repeatCount: 5`,
+`passRate: 1`, average overall `1`, p95 latency 5.080s, `$0.0462905` spend, zero failure counts,
+zero retry attempts, and 0 candidate-output leaks across 60 checked files
+(`docs/eval/spreadsheetbench-v1-run-3task-n5-contamination-smoke.json`). That run exercises the
+next two spreadsheet-harness lessons repeatedly under live model variance: deterministic structural
+operators for visible date filters (`filter_rows`) and visible duplicate-removal/sort tables
+(`sort_unique_rows`) belong in the harness tool contract, not as fragile one-cell dynamic formulas
+or short prefix writes. This is a benchmark-path lesson, not a broad official-readiness claim:
+larger held-out V1 runs, V2 rendered chart grading, Docker/Harbor isolation, and route selection are
+still tracked as blockers below.
 The contamination gate
 (`npm run benchmark:contamination`) now scans agent-facing benchmark manifests, candidate manifests,
 agent-workspace manifests, and generated edit plans for evaluator-only gold/rubric/canary metadata; checked-in smokes show 0
-leaks for the staged V1 root, the N=5 V1 candidate output, the retry V1 candidate output, and the
-staged BTB fixture. The runner also has an explicit retry policy: `--retry-failed N` retries
+leaks for the staged V1 root, the N=5 one-task V1 candidate output, the three-task N=5 V1 candidate
+output, the retry V1 candidate output, and the staged BTB fixture. The runner also has an explicit retry policy: `--retry-failed N` retries
 candidate-generation or scoring errors, `--retry-score-failures` opts into retrying
 scored-but-wrong candidates, and the report records case-level attempts, retry exhaustion,
 pass-after-retry counts, p95 latency, tokens, and provider cost. The checked-in retry smoke

@@ -204,7 +204,7 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/bankerToolBenchRunner.ts",
       blocker:
-        "A local BankerToolBench runner now emits candidate deliverables from per-attempt agent workspaces before opening evaluator-only rubric/golden metadata, validates exact expected package shape for supported Excel/PowerPoint/Word/PDF-style deliverables, reopens Excel deliverables for semantic workbook scoring when hashes drift, and records local exact/semantic-golden smoke scores, but Harbor/Docker execution, MCP financial tools, and Gandalf verifier replay are still missing.",
+        "A local BankerToolBench runner now emits candidate deliverables from per-attempt agent workspaces before opening evaluator-only rubric/golden metadata, validates exact expected package shape for supported Excel/PowerPoint/Word/PDF-style deliverables, reopens Excel deliverables for semantic workbook scoring when hashes drift, and records local exact/semantic-golden smoke scores; npm run benchmark:bankertoolbench:proof enforces the staged isolation, candidate-before-evaluator trajectory, weighted-rubric/package accounting, supported deliverable policy, and 0-leak artifact bounds in HALO. Harbor/Docker execution, MCP financial tools, and Gandalf verifier replay are still missing.",
     },
     xlsx_import_export: {
       capability: "xlsx_import_export",
@@ -225,7 +225,7 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/bankerToolBenchRunner.ts",
       blocker:
-        "Weighted rubric metadata is parsed, isolated for the evaluator, and consumed by a local exact-package/exact-or-workbook-semantic-golden smoke scorer, but Gandalf/Harbor verifier execution and score import are not wired.",
+        "Weighted rubric metadata is parsed, isolated for the evaluator, consumed by a local exact-package/exact-or-workbook-semantic-golden smoke scorer, and guarded by npm run benchmark:bankertoolbench:proof; Gandalf/Harbor verifier execution and score import are not wired.",
     },
   },
   "spreadsheetbench-v1": {

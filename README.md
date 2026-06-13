@@ -1112,8 +1112,11 @@ exact-or-workbook-semantic weighted-rubric smoke verifier. Excel deliverables no
 scored with the workbook scorer, so a semantically identical `.xlsx` can pass even when package
 metadata changes the file hash. The checked-in run smoke is deliberately 0/6 because copy-input is
 not a solution, but it proves the runner/verifier handoff, multi-file package accounting, workbook
-semantic scoring, and 0-leak artifact path. This is still not a BTB score: Harbor/Docker process
-isolation, MCP financial tools, and Gandalf verifier replay remain red gates.
+semantic scoring, and 0-leak artifact path. `npm run benchmark:bankertoolbench:proof` now enforces
+that local BTB harness boundary in HALO: staged isolation, candidate-before-evaluator trajectory,
+weighted-rubric/package accounting, supported deliverable policy, and 0-leak artifacts. This is
+still not a BTB score: Harbor/Docker process isolation, MCP financial tools, and Gandalf verifier
+replay remain red gates.
 
 ## Benchmark Harness / v3 Composite-Synthesis Run
 

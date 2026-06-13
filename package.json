@@ -29,6 +29,7 @@
     "benchmark:bankertoolbench:ingest": "tsx scripts/bankertoolbench-ingest.ts",
     "benchmark:bankertoolbench:stage": "tsx scripts/bankertoolbench-stage.ts",
     "benchmark:bankertoolbench:run": "tsx scripts/bankertoolbench-run.ts",
+    "benchmark:bankertoolbench:proof": "tsx scripts/bankertoolbench-proof-check.ts",
     "benchmark:contamination": "tsx scripts/benchmark-contamination-check.ts",
     "benchmark:spreadsheetbench:ingest": "tsx scripts/spreadsheetbench-ingest.ts",
     "benchmark:spreadsheetbench:stage": "tsx scripts/spreadsheetbench-stage.ts",

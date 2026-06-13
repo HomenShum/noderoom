@@ -180,6 +180,14 @@ const steps: StepSpec[] = [
     timeoutMs: 120_000,
   },
   {
+    id: "bankertoolbench-proof",
+    label: "BankerToolBench local harness proof gate",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "benchmark:bankertoolbench:proof"],
+    timeoutMs: 120_000,
+  },
+  {
     id: "spreadsheetbench-ingest-fixture",
     label: "SpreadsheetBench official ingest fixture",
     lane: "deterministic",

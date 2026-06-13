@@ -993,6 +993,9 @@ The repo-owned runner is:
 ```bash
 npm run agent:improve              # deterministic workflow + ladder evidence
 npm run halo:self-improve:smoke    # N=5 path fingerprints + context quality
+npm run halo:variant:select        # score competing harness variants and write selectedParent
+npm run halo:convex-context:smoke  # mirror Convex job context into HALO metrics
+npm run halo:live-path:calibrate   # N=5 real-provider path calibration
 npm run agent:improve -- --live    # add provider parser, free route discovery, Convex /free smoke
 npm run agent:improve -- --full-live
 npm run agent:improve -- --ui-media=docs/eval/ui-recordings/<recording-or-screenshot>
@@ -1006,9 +1009,15 @@ compaction savings. The checked artifact
 [`docs/eval/halo-self-improvement-smoke.json`](docs/eval/halo-self-improvement-smoke.json)
 currently records 2 cases / 10 runs, one fingerprint per case, zero missing tool
 results, 25 compaction events, 21,600 saved chars, and three meta-improvement
-proposals. The remaining HyperAgents-style step is explicit variant selection:
-generate competing harness variants, score them against the same case set, then
-ask Codex to implement only the selected safe variant.
+proposals. HALO now also runs the HyperAgents-style selection step at a safe
+altitude: [`halo-variant-selection.json`](docs/eval/halo-variant-selection.json)
+scores competing harness variants and writes `selectedParent`; the current parent
+is `runtime-managed-lock-v1` because it removes model-visible lock/unlock calls
+while preserving runtime lock/CAS evidence. [`halo-convex-context-telemetry.json`](docs/eval/halo-convex-context-telemetry.json)
+mirrors real Convex `agentJobs.detail` data into the same context metric shape.
+[`halo-live-path-calibration.json`](docs/eval/halo-live-path-calibration.json)
+records the live N=5 provider calibration: `deepseek/deepseek-v4-flash`, 5 runs,
+2 accepted fingerprints, p95 3 tool calls, p95 4 model calls.
 
 Run the whole loop continuously until a clock deadline. Deterministic-only is the default safe overnight
 shape; full-live adds provider spend, the current benchmark contract, and the free-auto router ladder:

@@ -357,6 +357,22 @@ export const listProposals = query({
   },
 });
 
+// B1: per-artifact cell elements — the companion to `rooms.meta`. A cell edit changes an `elements`
+// row for ONE artifact, so only this query (for that artifactId) re-runs/re-ships, not the whole room.
+// Guards the artifact is in the requester's room so a member can't read another room's cells.
+export const elements = query({
+  args: { roomId: v.id("rooms"), artifactId: v.id("artifacts"), requester: actorProofV },
+  handler: async (ctx, { roomId, artifactId, requester }) => {
+    await requireActorProof(ctx, roomId, requester);
+    const art = await ctx.db.get(artifactId);
+    if (!art || art.roomId !== roomId) return {};
+    const els = await ctx.db.query("elements").withIndex("by_artifact", (q) => q.eq("artifactId", artifactId)).collect();
+    const out: Record<string, { id: string; version: number; value: unknown; updatedAt: number; updatedBy: unknown }> = {};
+    for (const e of els) out[e.elementId] = { id: e.elementId, version: e.version, value: e.value, updatedAt: e.updatedAt, updatedBy: e.updatedBy };
+    return out;
+  },
+});
+
 export const resolveProposal = mutation({
   args: { proposalId: v.id("proposals"), approve: v.boolean(), requester: actorProofV },
   handler: async (ctx, { proposalId, approve, requester }) => {

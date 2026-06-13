@@ -1,0 +1,158 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T19:22:21.342Z",
+  "sourcePattern": "live-provider-path-calibration",
+  "providerRoute": "deepseek/deepseek-v4-flash",
+  "status": "calibrated",
+  "pass": true,
+  "thresholds": {
+    "minRuns": 5,
+    "maxUniqueFingerprints": 3,
+    "maxP95ToolCalls": 8,
+    "maxInvalidToolCalls": 0,
+    "maxMissingToolResults": 0
+  },
+  "summary": {
+    "caseId": "live-managed-write-path-n5",
+    "runs": 5,
+    "pass": true,
+    "uniqueFingerprintCount": 2,
+    "fingerprints": [
+      "read_range -> write_locked_cells -> read_range",
+      "read_range -> write_locked_cells -> say"
+    ],
+    "p95ModelCalls": 4,
+    "p95ToolCalls": 3,
+    "maxInvalidToolCalls": 0,
+    "maxMissingToolResults": 0,
+    "totalCompactionEvents": 0,
+    "totalCompactionCharsSaved": 0,
+    "totalCompactionElidedToolResults": 0,
+    "notes": [
+      "tool path drifted across repeated runs"
+    ]
+  },
+  "metrics": [
+    {
+      "caseId": "live-managed-write-path-n5",
+      "runIndex": 0,
+      "modelName": "deepseek/deepseek-v4-flash",
+      "stopReason": "done",
+      "exhausted": false,
+      "modelCalls": 4,
+      "toolCalls": 3,
+      "readCalls": 1,
+      "writeCalls": 1,
+      "modelVisibleCoordinationCalls": 0,
+      "invalidToolCalls": 0,
+      "compactionEvents": 0,
+      "compactionCharsSaved": 0,
+      "compactionElidedToolResults": 0,
+      "finalMessageChars": 3092,
+      "missingToolResults": 0,
+      "fingerprint": "read_range -> write_locked_cells -> say",
+      "traceTools": [
+        "read_range",
+        "write_locked_cells",
+        "say"
+      ]
+    },
+    {
+      "caseId": "live-managed-write-path-n5",
+      "runIndex": 1,
+      "modelName": "deepseek/deepseek-v4-flash",
+      "stopReason": "done",
+      "exhausted": false,
+      "modelCalls": 4,
+      "toolCalls": 3,
+      "readCalls": 2,
+      "writeCalls": 1,
+      "modelVisibleCoordinationCalls": 0,
+      "invalidToolCalls": 0,
+      "compactionEvents": 0,
+      "compactionCharsSaved": 0,
+      "compactionElidedToolResults": 0,
+      "finalMessageChars": 3228,
+      "missingToolResults": 0,
+      "fingerprint": "read_range -> write_locked_cells -> read_range",
+      "traceTools": [
+        "read_range",
+        "write_locked_cells",
+        "read_range"
+      ]
+    },
+    {
+      "caseId": "live-managed-write-path-n5",
+      "runIndex": 2,
+      "modelName": "deepseek/deepseek-v4-flash",
+      "stopReason": "done",
+      "exhausted": false,
+      "modelCalls": 4,
+      "toolCalls": 3,
+      "readCalls": 1,
+      "writeCalls": 1,
+      "modelVisibleCoordinationCalls": 0,
+      "invalidToolCalls": 0,
+      "compactionEvents": 0,
+      "compactionCharsSaved": 0,
+      "compactionElidedToolResults": 0,
+      "finalMessageChars": 3001,
+      "missingToolResults": 0,
+      "fingerprint": "read_range -> write_locked_cells -> say",
+      "traceTools": [
+        "read_range",
+        "write_locked_cells",
+        "say"
+      ]
+    },
+    {
+      "caseId": "live-managed-write-path-n5",
+      "runIndex": 3,
+      "modelName": "deepseek/deepseek-v4-flash",
+      "stopReason": "done",
+      "exhausted": false,
+      "modelCalls": 4,
+      "toolCalls": 3,
+      "readCalls": 1,
+      "writeCalls": 1,
+      "modelVisibleCoordinationCalls": 0,
+      "invalidToolCalls": 0,
+      "compactionEvents": 0,
+      "compactionCharsSaved": 0,
+      "compactionElidedToolResults": 0,
+      "finalMessageChars": 2997,
+      "missingToolResults": 0,
+      "fingerprint": "read_range -> write_locked_cells -> say",
+      "traceTools": [
+        "read_range",
+        "write_locked_cells",
+        "say"
+      ]
+    },
+    {
+      "caseId": "live-managed-write-path-n5",
+      "runIndex": 4,
+      "modelName": "deepseek/deepseek-v4-flash",
+      "stopReason": "done",
+      "exhausted": false,
+      "modelCalls": 4,
+      "toolCalls": 3,
+      "readCalls": 1,
+      "writeCalls": 1,
+      "modelVisibleCoordinationCalls": 0,
+      "invalidToolCalls": 0,
+      "compactionEvents": 0,
+      "compactionCharsSaved": 0,
+      "compactionElidedToolResults": 0,
+      "finalMessageChars": 3057,
+      "missingToolResults": 0,
+      "fingerprint": "read_range -> write_locked_cells -> say",
+      "traceTools": [
+        "read_range",
+        "write_locked_cells",
+        "say"
+      ]
+    }
+  ],
+  "recommendation": "This provider/path can be used as a calibrated live path baseline for this case."
+}

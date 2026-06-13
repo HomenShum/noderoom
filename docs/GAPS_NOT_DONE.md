@@ -171,21 +171,23 @@ artifact can rerun over room cells and commit only through managed lock/CAS.
 
 ## P1: HALO Self-Improvement Depth
 
-HALO now has a deterministic self-improvement smoke wired into
-`npm run agent:improve`: `npm run halo:self-improve:smoke` repeats two runtime
-cases N=5, fingerprints the non-compaction tool path, checks assistant/tool
-result pairing, records p95 model/tool calls, measures compaction savings, and
-writes meta-improvement proposals to
-`docs/eval/halo-self-improvement-smoke.json`. This closes the first path-drift
-and context-quality measurement gap without allowing arbitrary model-generated
-code execution.
+HALO now has the repo-controlled self-improvement loop wired into
+`npm run agent:improve`: `npm run halo:self-improve:smoke` repeats runtime
+cases N=5, `npm run halo:variant:select` scores competing harness variants and
+writes `selectedParent`, `npm run halo:convex-context:smoke` mirrors Convex
+`agentJobs.detail` into the same context metric shape, and
+`npm run halo:live-path:calibrate` records real-provider path thresholds. The
+checked artifacts are `docs/eval/halo-self-improvement-smoke.json`,
+`docs/eval/halo-variant-selection.json`,
+`docs/eval/halo-convex-context-telemetry.json`, and
+`docs/eval/halo-live-path-calibration.json`.
 
 | Gap | Current state | Needed proof | Acceptance gate |
 |---|---|---|---|
-| Harness variant selection | HALO emits candidate proposals but does not generate or score competing harness variants. | Add a declarative variant-selection lane that compares at least two prompt/tool/context-policy variants over the same case set. | A selected harness variant is recorded before Codex receives an implementation handoff. |
-| Live-provider path calibration | Deterministic N=5 path stability is blocking; live-provider variance is not yet calibrated. | Run N=5/N=10 live lanes for the same tasks by provider/model and record path, cost, fallback, and failure bands. | Live path drift has documented thresholds and only blocks once repeated evidence is stable enough. |
-| Convex job-context telemetry | The smoke uses in-memory runtime traces, not live Convex `agentJobs` context compaction telemetry. | Mirror context metrics from real job attempts, step journal rows, and operation events. | HALO can compare in-memory, Convex local, and deployed job context quality with the same metric schema. |
-| Sandboxed autonomous patching | Deliberately not implemented. | Only consider after process isolation, architecture-budget ownership, commit-message path coverage, and human review policy are proven. | No model-authored patch can execute or merge without sandbox and deterministic gate proof. |
+| Harness variant selection | Implemented. `halo-variant-selection.json` compares `explicit-agent-lock-v1` and `runtime-managed-lock-v1`; the selected parent is `runtime-managed-lock-v1`. | Keep adding variants as declarative candidates, never as directly executed model-authored code. | `npm run halo:variant:select` passes and records `selectedParent` plus safety boundary. |
+| Live-provider path calibration | Implemented for the managed-write path. `halo-live-path-calibration.json` records `deepseek/deepseek-v4-flash`, 5 live runs, 2 accepted fingerprints, p95 3 tool calls, p95 4 model calls. | Extend the same calibration to additional champion/free routes before promoting them. | `npm run halo:live-path:calibrate -- --real <route> --repeats 5` passes for any route promoted into README charts. |
+| Convex job-context telemetry | Implemented for local Convex runtime. `halo-convex-context-telemetry.json` is generated through `convex-test`, `agentJobs.detail`, attempts, operation events, model journal rows, hash-chained steps, and compacted cursor data. | Mirror the same report from deployed Convex once production telemetry export is enabled. | `npm run halo:convex-context:smoke` passes; deployed export becomes an additional live gate, not a missing local contract. |
+| Sandboxed autonomous patching | Deliberately constrained. HALO can select variants and hand off the selected patch target; arbitrary model-authored code still cannot execute as product truth. | Only add after process isolation, architecture-budget ownership, commit-message path coverage, and human review policy are proven. | No model-authored patch can execute or merge without sandbox and deterministic gate proof. |
 
 ## P1: Observability, Audit, And Retention
 

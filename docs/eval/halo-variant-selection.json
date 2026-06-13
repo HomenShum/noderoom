@@ -1,0 +1,73 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T19:23:02.612Z",
+  "sourcePattern": "hyperagents-inspired-meta-loop",
+  "pass": true,
+  "selectedParent": "runtime-managed-lock-v1",
+  "selectedVariantId": "runtime-managed-lock-v1",
+  "selectionPolicy": {
+    "minVariants": 2,
+    "requirePassingVariant": true,
+    "prefer": [
+      "stable tool fingerprint",
+      "lower p95 tool calls",
+      "lower p95 model calls",
+      "zero model-visible coordination calls",
+      "zero missing tool results"
+    ],
+    "hardReject": [
+      "failing deterministic case",
+      "invalid tool result",
+      "missing tool result",
+      "exhausted or non-done run"
+    ]
+  },
+  "variants": [
+    {
+      "variantId": "explicit-agent-lock-v1",
+      "parentId": "explicit-agent-lock-v1",
+      "description": "The model calls propose_lock/edit_cell/release_lock directly.",
+      "policy": "Agent-visible coordination tools remain available.",
+      "runs": 5,
+      "pass": true,
+      "selected": false,
+      "score": 673,
+      "uniqueFingerprintCount": 1,
+      "p95ModelCalls": 7,
+      "p95ToolCalls": 6,
+      "maxInvalidToolCalls": 0,
+      "maxMissingToolResults": 0,
+      "totalCompactionEvents": 0,
+      "totalCompactionCharsSaved": 0,
+      "rejectionReasons": [],
+      "fingerprints": [
+        "propose_lock -> read_range -> edit_cell -> read_range -> edit_cell -> release_lock"
+      ]
+    },
+    {
+      "variantId": "runtime-managed-lock-v1",
+      "parentId": "runtime-managed-lock-v1",
+      "description": "The model supplies target cells, values, and base versions; runtime acquires/releases locks.",
+      "policy": "Model-visible coordination tools are removed from the happy path.",
+      "runs": 5,
+      "pass": true,
+      "selected": true,
+      "score": 937,
+      "uniqueFingerprintCount": 1,
+      "p95ModelCalls": 3,
+      "p95ToolCalls": 2,
+      "maxInvalidToolCalls": 0,
+      "maxMissingToolResults": 0,
+      "totalCompactionEvents": 0,
+      "totalCompactionCharsSaved": 0,
+      "rejectionReasons": [],
+      "fingerprints": [
+        "read_range -> write_locked_cells"
+      ]
+    }
+  ],
+  "handoff": {
+    "implementOnlySelectedVariant": true,
+    "selectedSafetyBoundary": "Runtime owns acquire/write/draft/release and every write still passes CAS."
+  }
+}

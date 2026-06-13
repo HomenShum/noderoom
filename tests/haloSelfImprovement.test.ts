@@ -1,6 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  buildHaloConvexJobContextReport,
+  buildHaloLivePathCalibrationReport,
   buildHaloSelfImprovementReport,
+  buildHaloVariantSelectionReport,
   metricFromAgentResult,
   pathFingerprint,
   summarizeSelfImprovementCase,
@@ -73,6 +76,107 @@ describe("HALO self-improvement metrics", () => {
     expect(report.summary.pass).toBe(false);
     expect(report.summary.unstableCases).toEqual(["case"]);
     expect(report.cases[0].notes).toContain("tool path drifted across repeated runs");
+  });
+
+  it("selects the safer lower-tool harness variant and records selectedParent", () => {
+    const explicit = Array.from({ length: 5 }, (_, runIndex) => ({
+      ...baseMetric,
+      caseId: "explicit",
+      runIndex,
+      modelCalls: 5,
+      toolCalls: 5,
+      modelVisibleCoordinationCalls: 2,
+      fingerprint: "read_range -> propose_lock -> edit_cell -> release_lock",
+      traceTools: ["read_range", "propose_lock", "edit_cell", "release_lock"],
+    }));
+    const managed = Array.from({ length: 5 }, (_, runIndex) => ({
+      ...baseMetric,
+      caseId: "managed",
+      runIndex,
+      modelCalls: 3,
+      toolCalls: 2,
+      modelVisibleCoordinationCalls: 0,
+      fingerprint: "read_range -> write_locked_cells",
+      traceTools: ["read_range", "write_locked_cells"],
+    }));
+
+    const report = buildHaloVariantSelectionReport({
+      generatedAt: "2026-06-13T00:00:00.000Z",
+      variants: [
+        { variantId: "explicit-agent-lock-v1", parentId: "explicit-agent-lock-v1", description: "model-visible lock tools", policy: "agent coordinates locks", metrics: explicit, safetyBoundary: "runtime still validates CAS" },
+        { variantId: "runtime-managed-lock-v1", parentId: "runtime-managed-lock-v1", description: "runtime-managed lock tool", policy: "agent supplies values and base versions", metrics: managed, safetyBoundary: "runtime acquires/releases locks" },
+      ],
+    });
+
+    expect(report.pass).toBe(true);
+    expect(report.selectedParent).toBe("runtime-managed-lock-v1");
+    expect(report.selectedVariantId).toBe("runtime-managed-lock-v1");
+    expect(report.variants.find((variant) => variant.selected)?.p95ToolCalls).toBe(2);
+  });
+
+  it("calibrates a live path only after enough stable repeated runs", () => {
+    const metrics = Array.from({ length: 5 }, (_, runIndex) => ({
+      ...baseMetric,
+      caseId: "managed-live",
+      runIndex,
+      fingerprint: runIndex === 4 ? "read_range -> read_range -> write_locked_cells" : "read_range -> write_locked_cells",
+      traceTools: runIndex === 4 ? ["read_range", "read_range", "write_locked_cells"] : ["read_range", "write_locked_cells"],
+      toolCalls: runIndex === 4 ? 3 : 2,
+    }));
+
+    const report = buildHaloLivePathCalibrationReport({
+      generatedAt: "2026-06-13T00:00:00.000Z",
+      providerRoute: "deepseek/deepseek-v4-flash",
+      caseId: "managed-live",
+      metrics,
+      thresholds: { maxUniqueFingerprints: 2 },
+    });
+    const insufficient = buildHaloLivePathCalibrationReport({
+      providerRoute: "deepseek/deepseek-v4-flash",
+      caseId: "managed-live",
+      metrics: metrics.slice(0, 4),
+    });
+
+    expect(report.status).toBe("calibrated");
+    expect(report.pass).toBe(true);
+    expect(report.summary.uniqueFingerprintCount).toBe(2);
+    expect(insufficient.status).toBe("insufficient_runs");
+    expect(insufficient.pass).toBe(false);
+  });
+
+  it("mirrors Convex job detail into HALO context telemetry", () => {
+    const report = buildHaloConvexJobContextReport({
+      generatedAt: "2026-06-13T00:00:00.000Z",
+      jobs: [{
+        jobId: "job1",
+        runtime: "workflow",
+        status: "paused",
+        attempts: 1,
+        operations: [
+          { kind: "action", countDelta: 1 },
+          { kind: "model_call", countDelta: 2 },
+          { kind: "tool_call", countDelta: 3 },
+        ],
+        modelJournalRows: 2,
+        latestRun: { model: "test-model", toolCalls: 3, stopReason: "handoff", exhausted: false },
+        latestSteps: [
+          { tool: "read_range", status: "ok", recordHash: "h1", prevStepHash: "genesis" },
+          { tool: "write_locked_cells", status: "ok", recordHash: "h2", prevStepHash: "h1" },
+        ],
+        cursor: { compacted: true, elided: 4, remainingToolCalls: [] },
+      }],
+    });
+
+    expect(report.pass).toBe(true);
+    expect(report.jobs[0].metricMirror).toMatchObject({
+      modelName: "test-model",
+      toolCalls: 3,
+      compactionEvents: 1,
+      compactionElidedToolResults: 4,
+      fingerprint: "read_range -> write_locked_cells",
+      missingToolResults: 0,
+    });
+    expect(report.jobs[0].operationKinds).toMatchObject({ action: 1, model_call: 2, tool_call: 3 });
   });
 });
 

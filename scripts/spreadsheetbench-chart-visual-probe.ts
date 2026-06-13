@@ -1,3 +1,4 @@
+import "./benchmark/loadEnv";
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { runSpreadsheetBenchChartVisualProbe } from "../src/eval/spreadsheetBenchChartVisualProbe";

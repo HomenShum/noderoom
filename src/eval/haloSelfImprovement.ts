@@ -69,6 +69,129 @@ export type HaloSelfImprovementReport = {
   };
 };
 
+export type HaloHarnessVariantCandidate = {
+  variantId: string;
+  parentId: string;
+  description: string;
+  policy: string;
+  metrics: HaloSelfImprovementRunMetric[];
+  safetyBoundary: string;
+};
+
+export type HaloHarnessVariantSummary = {
+  variantId: string;
+  parentId: string;
+  description: string;
+  policy: string;
+  runs: number;
+  pass: boolean;
+  selected: boolean;
+  score: number;
+  uniqueFingerprintCount: number;
+  p95ModelCalls: number;
+  p95ToolCalls: number;
+  maxInvalidToolCalls: number;
+  maxMissingToolResults: number;
+  totalCompactionEvents: number;
+  totalCompactionCharsSaved: number;
+  rejectionReasons: string[];
+  fingerprints: string[];
+};
+
+export type HaloVariantSelectionReport = {
+  schema: 1;
+  generatedAt: string;
+  sourcePattern: "hyperagents-inspired-meta-loop";
+  pass: boolean;
+  selectedParent: string | null;
+  selectedVariantId: string | null;
+  selectionPolicy: {
+    minVariants: number;
+    requirePassingVariant: true;
+    prefer: string[];
+    hardReject: string[];
+  };
+  variants: HaloHarnessVariantSummary[];
+  handoff: {
+    implementOnlySelectedVariant: true;
+    selectedSafetyBoundary?: string;
+    blockedReason?: string;
+  };
+};
+
+export type HaloLivePathCalibrationThresholds = {
+  minRuns: number;
+  maxUniqueFingerprints: number;
+  maxP95ToolCalls: number;
+  maxInvalidToolCalls: number;
+  maxMissingToolResults: number;
+};
+
+export type HaloLivePathCalibrationReport = {
+  schema: 1;
+  generatedAt: string;
+  sourcePattern: "live-provider-path-calibration";
+  providerRoute: string;
+  status: "calibrated" | "insufficient_runs" | "path_unstable" | "tool_budget_exceeded" | "tool_errors";
+  pass: boolean;
+  thresholds: HaloLivePathCalibrationThresholds;
+  summary: HaloSelfImprovementCaseSummary;
+  metrics: HaloSelfImprovementRunMetric[];
+  recommendation: string;
+};
+
+export type HaloConvexJobContextInput = {
+  jobId: string;
+  runtime?: string;
+  status?: string;
+  attempts: number;
+  operations: Array<{ kind?: string; name?: string; status?: string; countDelta?: number }>;
+  modelJournalRows: number;
+  latestRun?: {
+    model?: string;
+    steps?: number;
+    toolCalls?: number;
+    stopReason?: string;
+    exhausted?: boolean;
+    handoff?: unknown;
+  };
+  latestSteps: Array<{ tool?: string; status?: string; recordHash?: string; prevStepHash?: string }>;
+  cursor?: unknown;
+};
+
+export type HaloConvexJobContextReport = {
+  schema: 1;
+  generatedAt: string;
+  sourcePattern: "convex-job-context-telemetry";
+  pass: boolean;
+  jobs: Array<{
+    jobId: string;
+    runtime?: string;
+    status?: string;
+    attempts: number;
+    operationKinds: Record<string, number>;
+    modelJournalRows: number;
+    metricMirror: {
+      modelName: string;
+      stopReason: string;
+      exhausted: boolean;
+      toolCalls: number;
+      compactionEvents: number;
+      compactionElidedToolResults: number;
+      fingerprint: string;
+      missingToolResults: number;
+    };
+    checks: {
+      attemptsRecorded: boolean;
+      operationLedgerPresent: boolean;
+      modelJournalPresent: boolean;
+      cursorCompactionRecorded: boolean;
+      stepHashChainPresent: boolean;
+      toolPathPresent: boolean;
+    };
+  }>;
+};
+
 const READ_TOOLS = new Set(["read_range", "search_sheet_context", "list_artifacts"]);
 const WRITE_TOOLS = new Set([
   "edit_cell",
@@ -186,13 +309,148 @@ export function buildHaloSelfImprovementReport(input: {
         "meta-improvement proposals with safety policy",
       ],
       stillMissing: [
-        "automatic competing harness variant generation",
-        "parent/variant selection across live provider runs",
+        "live-provider parent/variant selection after repeated provider calibration",
         "sandboxed patch application by a meta-agent",
-        "direct Convex job-context quality telemetry",
+        "deployed Convex job-context quality telemetry export",
       ],
       safetyBoundary: "HALO may propose harness changes, but code edits still go through tests, architecture budget, commit-message path coverage, and human/Codex review; arbitrary model-generated code remains disallowed.",
     },
+  };
+}
+
+export function buildHaloVariantSelectionReport(input: {
+  generatedAt?: string;
+  variants: HaloHarnessVariantCandidate[];
+}): HaloVariantSelectionReport {
+  const summaries = input.variants.map(summarizeVariant);
+  const ranked = [...summaries]
+    .filter((variant) => variant.pass)
+    .sort((a, b) => b.score - a.score || a.p95ToolCalls - b.p95ToolCalls || a.variantId.localeCompare(b.variantId));
+  const selected = ranked[0];
+  const variants = summaries.map((variant) => ({
+    ...variant,
+    selected: Boolean(selected && variant.variantId === selected.variantId),
+  }));
+  const enoughVariants = variants.length >= 2;
+  const pass = enoughVariants && Boolean(selected);
+  return {
+    schema: 1,
+    generatedAt: input.generatedAt ?? new Date().toISOString(),
+    sourcePattern: "hyperagents-inspired-meta-loop",
+    pass,
+    selectedParent: selected?.parentId ?? null,
+    selectedVariantId: selected?.variantId ?? null,
+    selectionPolicy: {
+      minVariants: 2,
+      requirePassingVariant: true,
+      prefer: [
+        "stable tool fingerprint",
+        "lower p95 tool calls",
+        "lower p95 model calls",
+        "zero model-visible coordination calls",
+        "zero missing tool results",
+      ],
+      hardReject: [
+        "failing deterministic case",
+        "invalid tool result",
+        "missing tool result",
+        "exhausted or non-done run",
+      ],
+    },
+    variants,
+    handoff: {
+      implementOnlySelectedVariant: true,
+      ...(selected
+        ? { selectedSafetyBoundary: input.variants.find((variant) => variant.variantId === selected.variantId)?.safetyBoundary }
+        : { blockedReason: enoughVariants ? "no passing variant" : "fewer than two variants" }),
+    },
+  };
+}
+
+export function buildHaloLivePathCalibrationReport(input: {
+  generatedAt?: string;
+  providerRoute: string;
+  caseId: string;
+  metrics: HaloSelfImprovementRunMetric[];
+  thresholds?: Partial<HaloLivePathCalibrationThresholds>;
+}): HaloLivePathCalibrationReport {
+  const thresholds: HaloLivePathCalibrationThresholds = {
+    minRuns: input.thresholds?.minRuns ?? 5,
+    maxUniqueFingerprints: input.thresholds?.maxUniqueFingerprints ?? 3,
+    maxP95ToolCalls: input.thresholds?.maxP95ToolCalls ?? 8,
+    maxInvalidToolCalls: input.thresholds?.maxInvalidToolCalls ?? 0,
+    maxMissingToolResults: input.thresholds?.maxMissingToolResults ?? 0,
+  };
+  const summary = summarizeSelfImprovementCase(input.caseId, input.metrics);
+  const status =
+    input.metrics.length < thresholds.minRuns ? "insufficient_runs" :
+    summary.uniqueFingerprintCount > thresholds.maxUniqueFingerprints ? "path_unstable" :
+    summary.p95ToolCalls > thresholds.maxP95ToolCalls ? "tool_budget_exceeded" :
+    summary.maxInvalidToolCalls > thresholds.maxInvalidToolCalls || summary.maxMissingToolResults > thresholds.maxMissingToolResults ? "tool_errors" :
+    "calibrated";
+  const pass = status === "calibrated";
+  return {
+    schema: 1,
+    generatedAt: input.generatedAt ?? new Date().toISOString(),
+    sourcePattern: "live-provider-path-calibration",
+    providerRoute: input.providerRoute,
+    status,
+    pass,
+    thresholds,
+    summary: { ...summary, pass },
+    metrics: input.metrics,
+    recommendation: status === "calibrated"
+      ? "This provider/path can be used as a calibrated live path baseline for this case."
+      : "Keep this provider/path out of blocking promotion until the recorded threshold failure is addressed.",
+  };
+}
+
+export function buildHaloConvexJobContextReport(input: {
+  generatedAt?: string;
+  jobs: HaloConvexJobContextInput[];
+}): HaloConvexJobContextReport {
+  const jobs = input.jobs.map((job) => {
+    const cursor = cursorTelemetry(job.cursor);
+    const operationKinds: Record<string, number> = {};
+    for (const operation of job.operations) {
+      const kind = operation.kind ?? "unknown";
+      operationKinds[kind] = (operationKinds[kind] ?? 0) + (operation.countDelta ?? 1);
+    }
+    const traceTools = job.latestSteps.map((step) => String(step.tool ?? "")).filter(Boolean);
+    const checks = {
+      attemptsRecorded: job.attempts > 0,
+      operationLedgerPresent: job.operations.length > 0,
+      modelJournalPresent: job.modelJournalRows > 0,
+      cursorCompactionRecorded: cursor.compactionEvents > 0,
+      stepHashChainPresent: job.latestSteps.length > 0 && job.latestSteps.every((step) => Boolean(step.recordHash && step.prevStepHash)),
+      toolPathPresent: traceTools.length > 0,
+    };
+    return {
+      jobId: job.jobId,
+      runtime: job.runtime,
+      status: job.status,
+      attempts: job.attempts,
+      operationKinds,
+      modelJournalRows: job.modelJournalRows,
+      metricMirror: {
+        modelName: job.latestRun?.model ?? "unknown",
+        stopReason: job.latestRun?.stopReason ?? "unknown",
+        exhausted: Boolean(job.latestRun?.exhausted),
+        toolCalls: Number(job.latestRun?.toolCalls ?? traceTools.length),
+        compactionEvents: cursor.compactionEvents,
+        compactionElidedToolResults: cursor.compactionElidedToolResults,
+        fingerprint: traceTools.join(" -> "),
+        missingToolResults: cursor.remainingToolCalls,
+      },
+      checks,
+    };
+  });
+  return {
+    schema: 1,
+    generatedAt: input.generatedAt ?? new Date().toISOString(),
+    sourcePattern: "convex-job-context-telemetry",
+    pass: jobs.length > 0 && jobs.every((job) => Object.values(job.checks).every(Boolean)),
+    jobs,
   };
 }
 
@@ -232,13 +490,59 @@ function buildHarnessImprovementProposals(cases: HaloSelfImprovementCaseSummary[
   proposals.push({
     id: "halo-variant-selection-v1",
     title: "Add explicit harness variant selection before autonomous patching",
-    trigger: "HyperAgents-style loops need parent/variant selection; HALO currently gates known lanes rather than generating alternatives.",
-    recommendedChange: "Next update should compare at least two harness variants over the same case set and write a selectedParent field before asking Codex to implement.",
-    expectedEval: "future: npm run halo:variant:select",
+    trigger: "HyperAgents-style loops need parent/variant selection; HALO now keeps that selection declarative and eval-gated.",
+    recommendedChange: "Compare at least two harness variants over the same case set and write a selectedParent field before asking Codex to implement.",
+    expectedEval: "npm run halo:variant:select",
     safetyPolicy: "Variant generation must stay declarative and sandboxed; no model-authored code is executed as product truth.",
-    status: "candidate",
+    status: "implemented",
   });
   return proposals;
+}
+
+function summarizeVariant(candidate: HaloHarnessVariantCandidate): HaloHarnessVariantSummary {
+  const summary = summarizeSelfImprovementCase(candidate.variantId, candidate.metrics);
+  const totalCoordinationCalls = candidate.metrics.reduce((sum, metric) => sum + metric.modelVisibleCoordinationCalls, 0);
+  const rejectionReasons = [
+    ...(summary.pass ? [] : summary.notes),
+    ...(summary.maxInvalidToolCalls > 0 ? ["invalid tool result"] : []),
+    ...(summary.maxMissingToolResults > 0 ? ["missing tool result"] : []),
+  ];
+  const score = summary.pass
+    ? 1_000
+      - summary.uniqueFingerprintCount * 25
+      - summary.p95ToolCalls * 10
+      - summary.p95ModelCalls * 6
+      - totalCoordinationCalls * 20
+      + Math.min(50, Math.floor(summary.totalCompactionCharsSaved / 1_000))
+    : -1_000 - rejectionReasons.length * 100;
+  return {
+    variantId: candidate.variantId,
+    parentId: candidate.parentId,
+    description: candidate.description,
+    policy: candidate.policy,
+    runs: candidate.metrics.length,
+    pass: summary.pass,
+    selected: false,
+    score,
+    uniqueFingerprintCount: summary.uniqueFingerprintCount,
+    p95ModelCalls: summary.p95ModelCalls,
+    p95ToolCalls: summary.p95ToolCalls,
+    maxInvalidToolCalls: summary.maxInvalidToolCalls,
+    maxMissingToolResults: summary.maxMissingToolResults,
+    totalCompactionEvents: summary.totalCompactionEvents,
+    totalCompactionCharsSaved: summary.totalCompactionCharsSaved,
+    rejectionReasons,
+    fingerprints: summary.fingerprints,
+  };
+}
+
+function cursorTelemetry(cursor: unknown): { compactionEvents: number; compactionElidedToolResults: number; remainingToolCalls: number } {
+  if (!cursor || typeof cursor !== "object") return { compactionEvents: 0, compactionElidedToolResults: 0, remainingToolCalls: 0 };
+  const value = cursor as Record<string, unknown>;
+  const compactionEvents = value.compacted === true ? 1 : 0;
+  const compactionElidedToolResults = typeof value.elided === "number" && Number.isFinite(value.elided) ? value.elided : 0;
+  const remainingToolCalls = Array.isArray(value.remainingToolCalls) ? value.remainingToolCalls.length : 0;
+  return { compactionEvents, compactionElidedToolResults, remainingToolCalls };
 }
 
 function toolPairing(messages: AgentMessage[]): { missingToolResults: number } {

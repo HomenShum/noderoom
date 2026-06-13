@@ -1,0 +1,40 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T19:23:04.012Z",
+  "sourcePattern": "convex-job-context-telemetry",
+  "pass": true,
+  "jobs": [
+    {
+      "jobId": "00000000000000000010003agentJobs",
+      "runtime": "inline",
+      "status": "paused",
+      "attempts": 1,
+      "operationKinds": {
+        "mutation": 1,
+        "action": 1,
+        "model_call": 1,
+        "tool_call": 2,
+        "checkpoint": 1
+      },
+      "modelJournalRows": 1,
+      "metricMirror": {
+        "modelName": "test-model",
+        "stopReason": "handoff",
+        "exhausted": false,
+        "toolCalls": 2,
+        "compactionEvents": 1,
+        "compactionElidedToolResults": 4,
+        "fingerprint": "read_range -> write_locked_cells",
+        "missingToolResults": 0
+      },
+      "checks": {
+        "attemptsRecorded": true,
+        "operationLedgerPresent": true,
+        "modelJournalPresent": true,
+        "cursorCompactionRecorded": true,
+        "stepHashChainPresent": true,
+        "toolPathPresent": true
+      }
+    }
+  ]
+}

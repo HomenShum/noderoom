@@ -125,6 +125,43 @@ export const full = query({
   },
 });
 
+// B1: the narrow companion to `full` — the room shell WITHOUT cell elements. Its read-set is the
+// rooms/members/artifacts/locks/sessions/drafts rows, none of which change on a cell edit, so a
+// keystroke does NOT re-run/re-ship this query. Clients pair it with `artifacts.elements(openArtifactId)`
+// so one edit re-ships only the edited artifact's cells, not the whole room (O(E·U) -> O(edited-artifact)).
+// `full` is kept for back-compat until the client migrates.
+export const meta = query({
+  args: { roomId: v.id("rooms"), requester: actorProofV },
+  handler: async (ctx, { roomId, requester }) => {
+    const room = await ctx.db.get(roomId);
+    if (!room) return null;
+    await requireActorProof(ctx, roomId, requester);
+    const members = (await ctx.db.query("members").withIndex("by_room", (q) => q.eq("roomId", roomId)).collect())
+      .map((m) => ({ id: m._id, roomId: m.roomId, name: m.name, role: m.role, anon: m.anon, color: m.color, lastSeenAt: m.lastSeenAt }));
+    const arts = await ctx.db.query("artifacts").withIndex("by_room", (q) => q.eq("roomId", roomId)).collect();
+    const artifacts = arts.map((a) => ({ id: a._id, roomId: a.roomId, kind: a.kind, title: a.title, version: a.version, order: a.order, updatedAt: a.updatedAt, meta: a.meta }));
+    const locks = (await ctx.db.query("locks").withIndex("by_room_status", (q) => q.eq("roomId", roomId).eq("status", "active")).collect())
+      .map((l) => ({ id: l._id, roomId: l.roomId, artifactId: l.artifactId, elementIds: l.elementIds, holder: l.holder, sessionId: l.sessionId, reason: l.reason, status: l.status, createdAt: l._creationTime }));
+    const sessions = (await ctx.db.query("agentSessions").withIndex("by_room", (q) => q.eq("roomId", roomId)).collect())
+      .map((s) => ({ id: s._id, roomId: s.roomId, agentId: s.agentId, agentName: s.agentName, scope: s.scope, ownerId: s.ownerId, status: s.status, heldLockId: s.heldLockId, lastAction: s.lastAction, updatedAt: s.updatedAt }));
+    const drafts = (await ctx.db.query("drafts").withIndex("by_room_status", (q) => q.eq("roomId", roomId).eq("status", "pending")).collect())
+      .map((d) => {
+        const redact = d.author.scope === "private" && !(d.author.ownerId !== undefined && d.author.ownerId === requester.actor.id);
+        return {
+          id: d._id, roomId: d.roomId, artifactId: d.artifactId, author: d.author,
+          ops: redact ? [] : d.ops,
+          opsRedacted: redact ? d.ops.length : undefined,
+          note: redact ? "[private draft]" : d.note,
+          blockedByLockId: d.blockedByLockId, status: d.status, createdAt: d.createdAt, resolvedAt: d.resolvedAt,
+        };
+      });
+    return {
+      room: { id: room._id, code: room.code, title: room.title, hostId: room.hostId, autoAllow: room.autoAllow, status: room.status, createdAt: room.createdAt },
+      members, artifacts, locks, sessions, drafts,
+    };
+  },
+});
+
 export const toggleAutoAllow = mutation({
   args: { roomId: v.id("rooms"), requester: actorProofV },
   handler: async (ctx, { roomId, requester }) => {

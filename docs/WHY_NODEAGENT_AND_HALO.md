@@ -169,12 +169,13 @@ Each entry: **the choice → the why → the trade-off → what it fixes vs a pa
   + hard gates, it's a flywheel.
 
 - **HyperAgents boundary.** HyperAgents-style systems add a meta-agent/task-agent generate loop and
-  parent/variant selection. NodeRoom now borrows the measurable part without borrowing the unsafe
-  part: `npm run halo:self-improve:smoke` repeats deterministic runtime cases N=5, fingerprints the
-  tool path, checks assistant/tool-result pairing, records p95 model/tool calls, and measures context
-  compaction savings. It writes `docs/eval/halo-self-improvement-smoke.json` with meta-improvement
-  proposals, but code edits still go through Codex, tests, the architecture budget, and commit review.
-  The missing next step is explicit harness variant selection before implementation handoff.
+  parent/variant selection. NodeRoom now borrows that measurable part without borrowing the unsafe
+  part: `npm run halo:self-improve:smoke` repeats deterministic runtime cases N=5, `npm run
+  halo:variant:select` scores competing harness variants and writes `selectedParent`, `npm run
+  halo:convex-context:smoke` mirrors real Convex job context into the same metric shape, and `npm run
+  halo:live-path:calibrate` records live provider path thresholds. Code edits still go through Codex,
+  tests, the architecture budget, commit-message path coverage, and review; arbitrary model-generated
+  code is not executed as product truth.
 
 ---
 

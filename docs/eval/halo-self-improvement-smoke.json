@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedAt": "2026-06-13T18:57:50.106Z",
+  "generatedAt": "2026-06-13T19:23:01.046Z",
   "sourcePattern": "hyperagents-inspired-meta-loop",
   "summary": {
     "cases": 2,
@@ -71,11 +71,11 @@
     {
       "id": "halo-variant-selection-v1",
       "title": "Add explicit harness variant selection before autonomous patching",
-      "trigger": "HyperAgents-style loops need parent/variant selection; HALO currently gates known lanes rather than generating alternatives.",
-      "recommendedChange": "Next update should compare at least two harness variants over the same case set and write a selectedParent field before asking Codex to implement.",
-      "expectedEval": "future: npm run halo:variant:select",
+      "trigger": "HyperAgents-style loops need parent/variant selection; HALO now keeps that selection declarative and eval-gated.",
+      "recommendedChange": "Compare at least two harness variants over the same case set and write a selectedParent field before asking Codex to implement.",
+      "expectedEval": "npm run halo:variant:select",
       "safetyPolicy": "Variant generation must stay declarative and sandboxed; no model-authored code is executed as product truth.",
-      "status": "candidate"
+      "status": "implemented"
     }
   ],
   "hyperAgentsDelta": {
@@ -93,10 +93,9 @@
       "meta-improvement proposals with safety policy"
     ],
     "stillMissing": [
-      "automatic competing harness variant generation",
-      "parent/variant selection across live provider runs",
+      "live-provider parent/variant selection after repeated provider calibration",
       "sandboxed patch application by a meta-agent",
-      "direct Convex job-context quality telemetry"
+      "deployed Convex job-context quality telemetry export"
     ],
     "safetyBoundary": "HALO may propose harness changes, but code edits still go through tests, architecture budget, commit-message path coverage, and human/Codex review; arbitrary model-generated code remains disallowed."
   }

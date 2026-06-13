@@ -1,7 +1,7 @@
 {
   "schema": 1,
-  "runId": "20260613T144901Z",
-  "generatedAt": "2026-06-13T14:49:41.080Z",
+  "runId": "20260613T144727Z",
+  "generatedAt": "2026-06-13T14:48:08.476Z",
   "cookbookSource": "https://developers.openai.com/cookbook/examples/agents_sdk/agent_improvement_loop",
   "mode": {
     "live": false,
@@ -270,9 +270,9 @@
       "lane": "deterministic",
       "command": "npm run eval:professional",
       "status": "pass",
-      "ms": 1408,
+      "ms": 1626,
       "exitCode": 0,
-      "stdoutTail": "\n> noderoom@0.1.0 eval:professional\n> vitest run tests/professionalWorkflows.test.ts\n\n\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/professionalWorkflows.test.ts (16 tests) 14ms\n\n Test Files  1 passed (1)\n      Tests  16 passed (16)\n   Start at  07:49:02\n   Duration  683ms (transform 72ms, setup 0ms, collect 164ms, tests 14ms, environment 0ms, prepare 101ms)\n\n",
+      "stdoutTail": "\n> noderoom@0.1.0 eval:professional\n> vitest run tests/professionalWorkflows.test.ts\n\n\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/professionalWorkflows.test.ts (16 tests) 16ms\n\n Test Files  1 passed (1)\n      Tests  16 passed (16)\n   Start at  07:47:28\n   Duration  779ms (transform 96ms, setup 0ms, collect 184ms, tests 16ms, environment 0ms, prepare 115ms)\n\n",
       "stderrTail": ""
     },
     {
@@ -281,7 +281,7 @@
       "lane": "deterministic",
       "command": "npm run eval:professional:catalog-proofs",
       "status": "pass",
-      "ms": 590,
+      "ms": 672,
       "exitCode": 0,
       "stdoutTail": "\n> noderoom@0.1.0 eval:professional:catalog-proofs\n> tsx evals/professionalCatalogProofs.ts --require-full\n\n{\n  \"total\": 21,\n  \"deterministicCatalog\": 21,\n  \"fullyProofed\": true,\n  \"failedCaseIds\": []\n}\nwrote docs\\eval\\professional-catalog-proofs.json\n",
       "stderrTail": ""
@@ -292,7 +292,7 @@
       "lane": "deterministic",
       "command": "npm run eval:professional:proofs",
       "status": "pass",
-      "ms": 780,
+      "ms": 921,
       "exitCode": 0,
       "stdoutTail": "\n> noderoom@0.1.0 eval:professional:proofs\n> tsx evals/professionalProofLedger.ts\n\n{\n  \"total\": 21,\n  \"liveProvider\": 5,\n  \"partialLiveProvider\": 16,\n  \"liveProviderCatalog\": 0,\n  \"liveProviderCatalogPassed\": 21,\n  \"liveProviderRuntimePassed\": 21,\n  \"deterministicRuntime\": 0,\n  \"deterministicCatalog\": 0,\n  \"contractShape\": 0,\n  \"runtimeManagedLock\": 21,\n  \"explicitAgentLock\": 0,\n  \"catalogOnlyLockMode\": 0,\n  \"allCatalogsProofed\": true,\n  \"allLiveCatalogProven\": true,\n  \"allLiveRuntimeExecuted\": true,\n  \"allLiveProven\": false,\n  \"blockedCaseIds\": [\n    \"gtm-pitchbook-company-match-enrich\",\n    \"gtm-healthtech-sector-classification\",\n    \"gtm-intent-classifier-golden\",\n    \"gtm-amo-signal-scorer\",\n    \"gtm-jpm-market-map-joins\",\n    \"gtm-sbb-one-column-extraction\",\n    \"gtm-company-deep-report\",\n    \"gtm-pii-masking-and-public-private-boundary\",\n    \"finance-cost-reconciliation\",\n    \"finance-three-statement-modeling-private-gold\",\n    \"finance-accountant-template-population\",\n    \"finance-timesheet-invoice-review\",\n    \"finance-transaction-activity-summary\",\n    \"analytics-weighted-ranking\",\n    \"analytics-workout-progress-dashboard\",\n    \"legacy-output-migration\"\n  ],\n  \"runtimeBlockedCaseIds\": [\n    \"gtm-pitchbook-company-match-enrich\",\n    \"gtm-healthtech-sector-classification\",\n    \"gtm-intent-classifier-golden\",\n    \"gtm-amo-signal-scorer\",\n    \"gtm-jpm-market-map-joins\",\n    \"gtm-sbb-one-column-extraction\",\n    \"gtm-company-deep-report\",\n    \"gtm-pii-masking-and-public-private-boundary\",\n    \"finance-cost-reconciliation\",\n    \"finance-three-statement-modeling-private-gold\",\n    \"finance-accountant-template-population\",\n    \"finance-timesheet-invoice-review\",\n    \"finance-transaction-activity-summary\",\n    \"analytics-weighted-ranking\",\n    \"analytics-workout-progress-dashboard\",\n    \"legacy-output-migration\"\n  ],\n  \"unproofedCaseIds\": []\n}\nwrote docs\\eval\\professional-proof-ledger.json\n",
       "stderrTail": ""
@@ -303,9 +303,9 @@
       "lane": "deterministic",
       "command": "npx vitest run tests/workflowEvals.test.ts",
       "status": "pass",
-      "ms": 2167,
+      "ms": 2392,
       "exitCode": 0,
-      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/workflowEvals.test.ts (5 tests) 20ms\n\n Test Files  1 passed (1)\n      Tests  5 passed (5)\n   Start at  07:49:05\n   Duration  1.07s (transform 139ms, setup 0ms, collect 541ms, tests 20ms, environment 0ms, prepare 103ms)\n\n",
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/workflowEvals.test.ts (5 tests) 21ms\n\n Test Files  1 passed (1)\n      Tests  5 passed (5)\n   Start at  07:47:32\n   Duration  1.19s (transform 166ms, setup 0ms, collect 568ms, tests 21ms, environment 0ms, prepare 113ms)\n\n",
       "stderrTail": ""
     },
     {
@@ -314,9 +314,9 @@
       "lane": "deterministic",
       "command": "npm run ladder -- --record",
       "status": "pass",
-      "ms": 1027,
+      "ms": 1142,
       "exitCode": 0,
-      "stdoutTail": "\n> noderoom@0.1.0 ladder\n> tsx evals/ladder.ts --record\n\n  scripted · L1_read ... PASS (1 tools, 0.0s, $0.0000, resolved=scripted-read)\n  scripted · L2_edit ... PASS (4 tools, 0.0s, $0.0000)\n  scripted · L3_conflict ... PASS (4 tools, 0.0s, $0.0000)\n  scripted · L4_blocked ... PASS (4 tools, 0.0s, $0.0000)\n  scripted · L5_large_range ... PASS (4 tools, 0.0s, $0.0000)\n  scripted · L6_long_horizon ... PASS (16 tools, 0.0s, $0.0000)\n  scripted · L7_resume ... PASS (12 tools, 0.0s, $0.0000, resolved=scripted-resume)\n\nFAILURE HEATMAP (model x level)\n------------------------------------------------------------------------\nmodel                         L1  L2  L3  L4  L5  L6  L7\nscripted                      OK  OK  OK  OK  OK  OK  OK\n------------------------------------------------------------------------\nlegend: L1=READ (no mutation) | L2=EDIT (single CAS) | L3=CONFLICT (no clobber) | L4=BLOCKED (must draft) | L5=LARGE RANGE (no full snapshot) | L6=LONG HORIZON (compaction + recovery) | L7=RESUME (slice death + cold continuation)\n\nrecorded 7 rung result(s) to docs/eval/eval-runs.jsonl (697a2dc+dirty.fa55b6bff972e7fb). Diff: npm run eval:diff\n",
+      "stdoutTail": "\n> noderoom@0.1.0 ladder\n> tsx evals/ladder.ts --record\n\n  scripted · L1_read ... PASS (1 tools, 0.0s, $0.0000, resolved=scripted-read)\n  scripted · L2_edit ... PASS (4 tools, 0.0s, $0.0000)\n  scripted · L3_conflict ... PASS (4 tools, 0.0s, $0.0000)\n  scripted · L4_blocked ... PASS (4 tools, 0.0s, $0.0000)\n  scripted · L5_large_range ... PASS (4 tools, 0.0s, $0.0000)\n  scripted · L6_long_horizon ... PASS (16 tools, 0.0s, $0.0000)\n  scripted · L7_resume ... PASS (12 tools, 0.0s, $0.0000, resolved=scripted-resume)\n\nFAILURE HEATMAP (model x level)\n------------------------------------------------------------------------\nmodel                         L1  L2  L3  L4  L5  L6  L7\nscripted                      OK  OK  OK  OK  OK  OK  OK\n------------------------------------------------------------------------\nlegend: L1=READ (no mutation) | L2=EDIT (single CAS) | L3=CONFLICT (no clobber) | L4=BLOCKED (must draft) | L5=LARGE RANGE (no full snapshot) | L6=LONG HORIZON (compaction + recovery) | L7=RESUME (slice death + cold continuation)\n\nrecorded 7 rung result(s) to docs/eval/eval-runs.jsonl (697a2dc+dirty.e700a3de09c8a4d2). Diff: npm run eval:diff\n",
       "stderrTail": ""
     },
     {
@@ -325,9 +325,9 @@
       "lane": "deterministic",
       "command": "npm run eval:credit -- --record",
       "status": "pass",
-      "ms": 825,
+      "ms": 873,
       "exitCode": 0,
-      "stdoutTail": "\n> noderoom@0.1.0 eval:credit\n> tsx evals/creditEval.ts --record\n\nPASS credit:cascade-healthy    expect=approve            +footsTieOut +dscrPass +leveragePass +ltvPass\nPASS credit:summit-stressed    expect=breach             +ratiosComputed +breachDetected\nPASS credit:delta-incomplete   expect=insufficient_data  +gapSurfaced\nPASS credit:mapping-correct    expect=compute+provenance +bindingsValid +dscrCorrect +leverageCorrect +provenanceCarried\nPASS credit:mapping-misbind    expect=mapping_rejected   +misbindDetected +notSilentlyComputed\n\nrecorded 5 credit case(s) to docs/eval/eval-runs.jsonl (697a2dc+dirty.e22dbc9734e393a9). Diff: npm run eval:diff\n",
+      "stdoutTail": "\n> noderoom@0.1.0 eval:credit\n> tsx evals/creditEval.ts --record\n\nPASS credit:cascade-healthy    expect=approve            +footsTieOut +dscrPass +leveragePass +ltvPass\nPASS credit:summit-stressed    expect=breach             +ratiosComputed +breachDetected\nPASS credit:delta-incomplete   expect=insufficient_data  +gapSurfaced\nPASS credit:mapping-correct    expect=compute+provenance +bindingsValid +dscrCorrect +leverageCorrect +provenanceCarried\nPASS credit:mapping-misbind    expect=mapping_rejected   +misbindDetected +notSilentlyComputed\n\nrecorded 5 credit case(s) to docs/eval/eval-runs.jsonl (697a2dc+dirty.03256b566da3e6db). Diff: npm run eval:diff\n",
       "stderrTail": ""
     },
     {
@@ -336,7 +336,7 @@
       "lane": "deterministic",
       "command": "npm run benchmark:official:readiness",
       "status": "pass",
-      "ms": 594,
+      "ms": 673,
       "exitCode": 0,
       "stdoutTail": "\n> noderoom@0.1.0 benchmark:official:readiness\n> tsx scripts/official-benchmark-readiness.ts\n\nwrote docs/eval/official-benchmark-readiness.json\nwrote docs/eval/OFFICIAL_BENCHMARK_READINESS.md\nofficial benchmark readiness: 0/3 ready\n",
       "stderrTail": ""
@@ -347,9 +347,9 @@
       "lane": "deterministic",
       "command": "npx vitest run tests/benchmarkContamination.test.ts",
       "status": "pass",
-      "ms": 1796,
+      "ms": 1885,
       "exitCode": 0,
-      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/benchmarkContamination.test.ts (2 tests) 16ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  07:49:10\n   Duration  607ms (transform 44ms, setup 0ms, collect 93ms, tests 16ms, environment 0ms, prepare 104ms)\n\n",
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/benchmarkContamination.test.ts (2 tests) 18ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  07:47:37\n   Duration  678ms (transform 50ms, setup 0ms, collect 92ms, tests 18ms, environment 0ms, prepare 133ms)\n\n",
       "stderrTail": ""
     },
     {
@@ -358,9 +358,9 @@
       "lane": "deterministic",
       "command": "npx vitest run tests/bankerToolBenchAdapter.test.ts",
       "status": "pass",
-      "ms": 1730,
+      "ms": 1932,
       "exitCode": 0,
-      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/bankerToolBenchAdapter.test.ts (1 test) 22ms\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  07:49:12\n   Duration  674ms (transform 58ms, setup 0ms, collect 108ms, tests 22ms, environment 0ms, prepare 126ms)\n\n",
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/bankerToolBenchAdapter.test.ts (1 test) 24ms\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  07:47:39\n   Duration  739ms (transform 57ms, setup 0ms, collect 121ms, tests 24ms, environment 0ms, prepare 134ms)\n\n",
       "stderrTail": ""
     },
     {
@@ -369,9 +369,9 @@
       "lane": "deterministic",
       "command": "npx vitest run tests/bankerToolBenchStage.test.ts",
       "status": "pass",
-      "ms": 1812,
+      "ms": 1994,
       "exitCode": 0,
-      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/bankerToolBenchStage.test.ts (1 test) 22ms\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  07:49:13\n   Duration  717ms (transform 56ms, setup 0ms, collect 133ms, tests 22ms, environment 0ms, prepare 120ms)\n\n",
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/bankerToolBenchStage.test.ts (1 test) 31ms\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  07:47:41\n   Duration  790ms (transform 60ms, setup 0ms, collect 152ms, tests 31ms, environment 0ms, prepare 130ms)\n\n",
       "stderrTail": ""
     },
     {
@@ -380,9 +380,9 @@
       "lane": "deterministic",
       "command": "npx vitest run tests/bankerToolBenchRunner.test.ts",
       "status": "pass",
-      "ms": 2418,
+      "ms": 2830,
       "exitCode": 0,
-      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/bankerToolBenchRunner.test.ts (4 tests) 255ms\n\n Test Files  1 passed (1)\n      Tests  4 passed (4)\n   Start at  07:49:15\n   Duration  1.35s (transform 95ms, setup 0ms, collect 578ms, tests 255ms, environment 0ms, prepare 112ms)\n\n",
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/bankerToolBenchRunner.test.ts (4 tests) 267ms\n\n Test Files  1 passed (1)\n      Tests  4 passed (4)\n   Start at  07:47:43\n   Duration  1.59s (transform 107ms, setup 0ms, collect 710ms, tests 267ms, environment 0ms, prepare 129ms)\n\n",
       "stderrTail": ""
     },
     {
@@ -391,7 +391,7 @@
       "lane": "deterministic",
       "command": "npm run benchmark:bankertoolbench:proof",
       "status": "pass",
-      "ms": 576,
+      "ms": 661,
       "exitCode": 0,
       "stdoutTail": "\n> noderoom@0.1.0 benchmark:bankertoolbench:proof\n> tsx scripts/bankertoolbench-proof-check.ts\n\nBankerToolBench proof check passed: stage=1/1 weightedRubric=6 run=0/1 pass positive=1/1 pass candidateBeforeEvaluator=true leaks=0/1+0/3+0/4\n",
       "stderrTail": ""
@@ -402,9 +402,9 @@
       "lane": "deterministic",
       "command": "npx vitest run tests/spreadsheetBenchAdapter.test.ts",
       "status": "pass",
-      "ms": 1714,
+      "ms": 1929,
       "exitCode": 0,
-      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/spreadsheetBenchAdapter.test.ts (2 tests) 26ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  07:49:18\n   Duration  632ms (transform 56ms, setup 0ms, collect 99ms, tests 26ms, environment 0ms, prepare 106ms)\n\n",
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/spreadsheetBenchAdapter.test.ts (2 tests) 26ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  07:47:46\n   Duration  736ms (transform 60ms, setup 0ms, collect 108ms, tests 26ms, environment 0ms, prepare 125ms)\n\n",
       "stderrTail": ""
     },
     {
@@ -413,9 +413,9 @@
       "lane": "deterministic",
       "command": "npx vitest run tests/spreadsheetBenchStage.test.ts",
       "status": "pass",
-      "ms": 1831,
+      "ms": 2103,
       "exitCode": 0,
-      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/spreadsheetBenchStage.test.ts (2 tests) 45ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  07:49:20\n   Duration  725ms (transform 52ms, setup 0ms, collect 123ms, tests 45ms, environment 0ms, prepare 111ms)\n\n",
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/spreadsheetBenchStage.test.ts (2 tests) 50ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  07:47:48\n   Duration  818ms (transform 63ms, setup 0ms, collect 161ms, tests 50ms, environment 0ms, prepare 113ms)\n\n",
       "stderrTail": ""
     },
     {
@@ -424,9 +424,9 @@
       "lane": "deterministic",
       "command": "npx vitest run tests/spreadsheetBenchScorer.test.ts",
       "status": "pass",
-      "ms": 2496,
+      "ms": 2589,
       "exitCode": 0,
-      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/spreadsheetBenchScorer.test.ts (6 tests) 222ms\n\n Test Files  1 passed (1)\n      Tests  6 passed (6)\n   Start at  07:49:22\n   Duration  1.40s (transform 82ms, setup 0ms, collect 641ms, tests 222ms, environment 0ms, prepare 112ms)\n\n",
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/spreadsheetBenchScorer.test.ts (6 tests) 230ms\n\n Test Files  1 passed (1)\n      Tests  6 passed (6)\n   Start at  07:47:50\n   Duration  1.36s (transform 82ms, setup 0ms, collect 494ms, tests 230ms, environment 0ms, prepare 130ms)\n\n",
       "stderrTail": ""
     },
     {
@@ -435,9 +435,9 @@
       "lane": "deterministic",
       "command": "npx vitest run tests/spreadsheetBenchChartScorer.test.ts",
       "status": "pass",
-      "ms": 2048,
+      "ms": 1894,
       "exitCode": 0,
-      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/spreadsheetBenchChartScorer.test.ts (2 tests) 24ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  07:49:24\n   Duration  774ms (transform 64ms, setup 0ms, collect 99ms, tests 24ms, environment 0ms, prepare 126ms)\n\n",
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/spreadsheetBenchChartScorer.test.ts (2 tests) 22ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  07:47:53\n   Duration  705ms (transform 53ms, setup 0ms, collect 102ms, tests 22ms, environment 0ms, prepare 105ms)\n\n",
       "stderrTail": ""
     },
     {
@@ -446,9 +446,9 @@
       "lane": "deterministic",
       "command": "npx vitest run tests/spreadsheetBenchRunner.test.ts",
       "status": "pass",
-      "ms": 4302,
+      "ms": 4234,
       "exitCode": 0,
-      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/spreadsheetBenchRunner.test.ts (17 tests) 1343ms\n\n Test Files  1 passed (1)\n      Tests  17 passed (17)\n   Start at  07:49:26\n   Duration  2.94s (transform 216ms, setup 0ms, collect 1.00s, tests 1.34s, environment 0ms, prepare 126ms)\n\n",
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/spreadsheetBenchRunner.test.ts (17 tests) 1338ms\n\n Test Files  1 passed (1)\n      Tests  17 passed (17)\n   Start at  07:47:55\n   Duration  2.94s (transform 208ms, setup 0ms, collect 982ms, tests 1.34s, environment 0ms, prepare 118ms)\n\n",
       "stderrTail": ""
     },
     {
@@ -457,7 +457,7 @@
       "lane": "deterministic",
       "command": "npm run benchmark:agent-sandbox -- --json-out docs/eval/agent-workspace-sandbox-smoke.json",
       "status": "pass",
-      "ms": 784,
+      "ms": 755,
       "exitCode": 0,
       "stdoutTail": "\n> noderoom@0.1.0 benchmark:agent-sandbox\n> tsx scripts/agent-workspace-sandbox-smoke.ts --json-out docs/eval/agent-workspace-sandbox-smoke.json\n\nwrote docs/eval/agent-workspace-sandbox-smoke.json\n",
       "stderrTail": ""
@@ -468,7 +468,7 @@
       "lane": "deterministic",
       "command": "npm run benchmark:docker-sandbox:probe",
       "status": "pass",
-      "ms": 1112,
+      "ms": 1052,
       "exitCode": 0,
       "stdoutTail": "\n> noderoom@0.1.0 benchmark:docker-sandbox:probe\n> tsx scripts/docker-sandbox-probe.ts --json-out docs/eval/docker-sandbox-probe.json\n\nwrote docs/eval/docker-sandbox-probe.json\n",
       "stderrTail": ""
@@ -479,9 +479,9 @@
       "lane": "deterministic",
       "command": "npm run benchmark:contamination -- --root .tmp/official-benchmarks/staged-v1 --strict",
       "status": "pass",
-      "ms": 704,
+      "ms": 659,
       "exitCode": 0,
-      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/staged-v1 --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T14:49:32.549Z\",\n  \"root\": \"staged-v1\",\n  \"checkedFiles\": 3,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 3 checked file(s)\n",
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/staged-v1 --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T14:48:00.697Z\",\n  \"root\": \"staged-v1\",\n  \"checkedFiles\": 3,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 3 checked file(s)\n",
       "stderrTail": ""
     },
     {
@@ -490,9 +490,9 @@
       "lane": "deterministic",
       "command": "npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v1-model-edit-n5 --strict",
       "status": "pass",
-      "ms": 670,
+      "ms": 675,
       "exitCode": 0,
-      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/run-v1-model-edit-n5 --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T14:49:33.221Z\",\n  \"root\": \"run-v1-model-edit-n5\",\n  \"checkedFiles\": 20,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 20 checked file(s)\n",
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/run-v1-model-edit-n5 --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T14:48:01.362Z\",\n  \"root\": \"run-v1-model-edit-n5\",\n  \"checkedFiles\": 20,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 20 checked file(s)\n",
       "stderrTail": ""
     },
     {
@@ -501,9 +501,9 @@
       "lane": "deterministic",
       "command": "npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v1-model-edit-3task-n5 --strict",
       "status": "pass",
-      "ms": 761,
+      "ms": 702,
       "exitCode": 0,
-      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/run-v1-model-edit-3task-n5 --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T14:49:33.965Z\",\n  \"root\": \"run-v1-model-edit-3task-n5\",\n  \"checkedFiles\": 60,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 60 checked file(s)\n",
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/run-v1-model-edit-3task-n5 --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T14:48:02.059Z\",\n  \"root\": \"run-v1-model-edit-3task-n5\",\n  \"checkedFiles\": 60,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 60 checked file(s)\n",
       "stderrTail": ""
     },
     {
@@ -512,7 +512,7 @@
       "lane": "deterministic",
       "command": "npm run benchmark:spreadsheetbench:proof",
       "status": "pass",
-      "ms": 712,
+      "ms": 671,
       "exitCode": 0,
       "stdoutTail": "\n> noderoom@0.1.0 benchmark:spreadsheetbench:proof\n> tsx scripts/spreadsheetbench-proof-check.ts\n\nSpreadsheetBench proof check passed: 15/15 attempts 3 case(s) x 5 repeat(s) p95=5080ms cost=$0.0462905 leaks=0/60\n",
       "stderrTail": ""
@@ -523,9 +523,9 @@
       "lane": "deterministic",
       "command": "npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v1-model-edit-retry --strict",
       "status": "pass",
-      "ms": 696,
+      "ms": 652,
       "exitCode": 0,
-      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/run-v1-model-edit-retry --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T14:49:35.393Z\",\n  \"root\": \"run-v1-model-edit-retry\",\n  \"checkedFiles\": 12,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 12 checked file(s)\n",
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/run-v1-model-edit-retry --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T14:48:03.396Z\",\n  \"root\": \"run-v1-model-edit-retry\",\n  \"checkedFiles\": 12,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 12 checked file(s)\n",
       "stderrTail": ""
     },
     {
@@ -534,9 +534,9 @@
       "lane": "deterministic",
       "command": "npm run benchmark:contamination -- --root .tmp/official-benchmarks/staged-v2 --strict",
       "status": "pass",
-      "ms": 688,
+      "ms": 659,
       "exitCode": 0,
-      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/staged-v2 --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T14:49:36.081Z\",\n  \"root\": \"staged-v2\",\n  \"checkedFiles\": 3,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 3 checked file(s)\n",
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/staged-v2 --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T14:48:04.055Z\",\n  \"root\": \"staged-v2\",\n  \"checkedFiles\": 3,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 3 checked file(s)\n",
       "stderrTail": ""
     },
     {
@@ -545,9 +545,9 @@
       "lane": "deterministic",
       "command": "npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v2 --strict",
       "status": "pass",
-      "ms": 694,
+      "ms": 674,
       "exitCode": 0,
-      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/run-v2 --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T14:49:36.776Z\",\n  \"root\": \"run-v2\",\n  \"checkedFiles\": 9,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 9 checked file(s)\n",
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/run-v2 --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T14:48:04.726Z\",\n  \"root\": \"run-v2\",\n  \"checkedFiles\": 9,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 9 checked file(s)\n",
       "stderrTail": ""
     },
     {
@@ -556,9 +556,9 @@
       "lane": "deterministic",
       "command": "npm run benchmark:contamination -- --root .tmp/official-benchmarks/staged-btb --strict",
       "status": "pass",
-      "ms": 710,
+      "ms": 660,
       "exitCode": 0,
-      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/staged-btb --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T14:49:37.480Z\",\n  \"root\": \"staged-btb\",\n  \"checkedFiles\": 2,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 2 checked file(s)\n",
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/staged-btb --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T14:48:05.392Z\",\n  \"root\": \"staged-btb\",\n  \"checkedFiles\": 2,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 2 checked file(s)\n",
       "stderrTail": ""
     },
     {
@@ -567,9 +567,9 @@
       "lane": "deterministic",
       "command": "npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-btb --strict",
       "status": "pass",
-      "ms": 676,
+      "ms": 616,
       "exitCode": 0,
-      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/run-btb --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T14:49:38.167Z\",\n  \"root\": \"run-btb\",\n  \"checkedFiles\": 3,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 3 checked file(s)\n",
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/run-btb --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T14:48:06.012Z\",\n  \"root\": \"run-btb\",\n  \"checkedFiles\": 3,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 3 checked file(s)\n",
       "stderrTail": ""
     },
     {
@@ -578,9 +578,9 @@
       "lane": "deterministic",
       "command": "npm run eval:diff",
       "status": "pass",
-      "ms": 752,
+      "ms": 664,
       "exitCode": 0,
-      "stdoutTail": "\n> noderoom@0.1.0 eval:diff\n> tsx evals/evalDiff.ts\n\nEval diff  697a2dc+dirty.fa55b6bff972e7fb -> 697a2dc+dirty.e22dbc9734e393a9   0 degraded · 0 removed · 0 improved · 5 new · 0 same\n\n    new       credit:cascade-healthy        \n    new       credit:delta-incomplete       \n    new       credit:mapping-correct        \n    new       credit:mapping-misbind        \n    new       credit:summit-stressed        \n",
+      "stdoutTail": "\n> noderoom@0.1.0 eval:diff\n> tsx evals/evalDiff.ts\n\nEval diff  697a2dc+dirty.e700a3de09c8a4d2 -> 697a2dc+dirty.03256b566da3e6db   0 degraded · 0 removed · 0 improved · 5 new · 0 same\n\n    new       credit:cascade-healthy        \n    new       credit:delta-incomplete       \n    new       credit:mapping-correct        \n    new       credit:mapping-misbind        \n    new       credit:summit-stressed        \n",
       "stderrTail": ""
     },
     {
@@ -589,7 +589,7 @@
       "lane": "deterministic",
       "command": "npm run convex:boundaries",
       "status": "pass",
-      "ms": 1313,
+      "ms": 1142,
       "exitCode": 0,
       "stdoutTail": "\n> noderoom@0.1.0 convex:boundaries\n> tsx scripts/convex-boundary-check.ts\n\nconvex boundaries: ok\n",
       "stderrTail": ""
@@ -600,9 +600,9 @@
       "lane": "deterministic",
       "command": "npm run architecture:budget",
       "status": "pass",
-      "ms": 814,
+      "ms": 628,
       "exitCode": 0,
-      "stdoutTail": "\n> noderoom@0.1.0 architecture:budget\n> tsx scripts/architecture-budget-check.ts\n\narchitecture budget: ok\n",
+      "stdoutTail": "\n> noderoom@0.1.0 architecture:budget\n> tsx scripts/architecture-budget-check.ts\n\narchitecture budget: review required\nunowned architecture surface: scripts/bankertoolbench-proof-check.ts\n",
       "stderrTail": ""
     },
     {
@@ -688,7 +688,7 @@
   ],
   "handoff": {
     "topRecommendations": [
-      "Implement scoped handoff for eval candidate research-validated-finance-reconcile.",
+      "Resolve architecture budget review items or rerun with explicit handoff evidence before implementation.",
       "Run skipped free-route-discovery once prerequisites are present: pass --live and set OPENROUTER_API_KEY to discover current free-auto candidates.",
       "Run skipped professional-live-catalog once prerequisites are present: pass --live and set OPENROUTER_API_KEY to prove the professional catalog with the cheap champion route.",
       "Run skipped chat-intake-live-runtime once prerequisites are present: pass --live and set OPENROUTER_API_KEY to run the chat-intake room runtime against a real route.",
@@ -921,14 +921,7 @@
         ]
       }
     ],
-    "implementationHandoffCandidates": [
-      {
-        "evalCandidateId": "research-validated-finance-reconcile",
-        "kind": "implementation",
-        "canBlockMerge": false,
-        "reasons": []
-      }
-    ],
+    "implementationHandoffCandidates": [],
     "blockedImplementationHandoffCandidates": [
       {
         "evalCandidateId": "candidate-gtm-pitchbook-match",
@@ -945,6 +938,14 @@
         "canBlockMerge": false,
         "reasons": [
           "contested claims must stay advisory until resolved or explicitly modeled"
+        ]
+      },
+      {
+        "evalCandidateId": "research-validated-finance-reconcile",
+        "kind": "implementation",
+        "canBlockMerge": false,
+        "reasons": [
+          "demoted: architecture budget is red (forbidden surfaces dirty / review required) — human approval before any implementation handoff"
         ]
       }
     ],

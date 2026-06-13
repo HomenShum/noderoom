@@ -1,0 +1,137 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T14:45:23.149Z",
+  "stageRoot": "staged-btb",
+  "outputRoot": "run-btb-positive",
+  "mode": "apply-agent-output",
+  "taskCount": 1,
+  "passCount": 1,
+  "passRate": 1,
+  "averageWeightedScore": 1,
+  "harness": {
+    "toolPolicy": "agent_workspace_until_candidate",
+    "evaluatorAccess": "after_candidate_emit_only",
+    "verifier": "local_exact_or_workbook_semantic_smoke",
+    "packagePolicy": "exact_expected_deliverables",
+    "supportedDeliverableExtensions": [
+      ".csv",
+      ".docx",
+      ".jpeg",
+      ".jpg",
+      ".pdf",
+      ".png",
+      ".pptx",
+      ".xlsm",
+      ".xlsx"
+    ]
+  },
+  "warnings": [],
+  "results": [
+    {
+      "taskId": "0fc7bc3c-a111-4222-8333-444455556666",
+      "harborTaskId": "btb-0fc7bc3c",
+      "mode": "apply-agent-output",
+      "taskDir": "tasks/btb-0fc7bc3c",
+      "agentManifest": "tasks/btb-0fc7bc3c/agent/task.json",
+      "evaluatorManifest": "tasks/btb-0fc7bc3c/evaluator/evaluator.json",
+      "candidateManifest": "btb-0fc7bc3c/candidate-manifest.json",
+      "score": {
+        "schema": 1,
+        "generatedAt": "2026-06-13T14:45:23.149Z",
+        "taskId": "0fc7bc3c-a111-4222-8333-444455556666",
+        "harborTaskId": "btb-0fc7bc3c",
+        "verifier": "local_exact_or_workbook_semantic_smoke",
+        "totals": {
+          "rubricCriteria": 2,
+          "weightedTotal": 6,
+          "awardedWeight": 6,
+          "exactMatchingGoldenFiles": 1,
+          "acceptedGoldenFiles": 1,
+          "workbookComparedGoldenFiles": 0,
+          "workbookSemanticMatches": 0,
+          "workbookSemanticMismatches": 0,
+          "missingGoldenFiles": 0,
+          "mismatchedGoldenFiles": 0,
+          "expectedDeliverables": 1,
+          "candidateDeliverables": 1,
+          "matchedExpectedDeliverables": 1,
+          "missingExpectedDeliverables": 0,
+          "extraCandidateDeliverables": 0,
+          "duplicateCandidateDeliverables": 0,
+          "unsupportedCandidateDeliverables": 0
+        },
+        "weightedScore": 1,
+        "pass": true,
+        "rubricResults": [
+          {
+            "criterion": "Uses revenue multiple correctly",
+            "weight": 5,
+            "category": "Excel",
+            "passed": true,
+            "reason": "candidate package matched evaluator expected deliverables and all golden files by exact hash or workbook semantic scoring"
+          },
+          {
+            "criterion": "Memo includes risks",
+            "weight": 1,
+            "category": "Memo",
+            "passed": true,
+            "reason": "candidate package matched evaluator expected deliverables and all golden files by exact hash or workbook semantic scoring"
+          }
+        ],
+        "deliverables": [
+          {
+            "path": "answer.xlsx",
+            "sha256": "5bd17a4a66c4126008a147278511f1fb55774b443fa32bf571a0ffd5a8efc073",
+            "bytes": 9,
+            "extension": ".xlsx",
+            "supported": true
+          }
+        ],
+        "expectedDeliverables": [
+          {
+            "name": "answer.xlsx",
+            "extension": ".xlsx",
+            "matchedCandidate": "answer.xlsx"
+          }
+        ],
+        "goldenFiles": [
+          {
+            "path": "golden-outputs/01-answer.xlsx",
+            "expectedDeliverable": "answer.xlsx",
+            "matchedCandidate": "answer.xlsx",
+            "exactMatch": true,
+            "accepted": true
+          }
+        ],
+        "warnings": [
+          "local_exact_or_workbook_semantic_smoke is a packaging/verifier-boundary smoke; it is not the official Harbor/Gandalf verifier."
+        ]
+      },
+      "timingsMs": {
+        "total": 48
+      },
+      "trajectory": [
+        {
+          "step": "read_agent_manifest",
+          "detail": "tasks/btb-0fc7bc3c/agent/task.json"
+        },
+        {
+          "step": "prepare_agent_workspace",
+          "detail": "btb-0fc7bc3c/agent-workspace/agent-workspace-manifest.json"
+        },
+        {
+          "step": "emit_candidate_deliverables",
+          "detail": "btb-0fc7bc3c/candidate-manifest.json"
+        },
+        {
+          "step": "read_evaluator_manifest",
+          "detail": "tasks/btb-0fc7bc3c/evaluator/evaluator.json"
+        },
+        {
+          "step": "score_candidate",
+          "detail": "6/6 weighted points"
+        }
+      ]
+    }
+  ]
+}

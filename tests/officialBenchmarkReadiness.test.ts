@@ -57,6 +57,7 @@ describe("official benchmark readiness", () => {
     });
     expect(runner?.blocker).toContain("agent workspaces");
     expect(runner?.blocker).toContain("semantic workbook scoring");
+    expect(runner?.blocker).toContain("positive apply-agent-output smoke");
     expect(runner?.blocker).toContain("Gandalf");
     expect(xlsx).toMatchObject({
       state: "partial",

@@ -45,6 +45,7 @@ type BankerToolBenchRunReport = {
         rubricCriteria?: number;
         weightedTotal?: number;
         awardedWeight?: number;
+        exactMatchingGoldenFiles?: number;
         acceptedGoldenFiles?: number;
         expectedDeliverables?: number;
         candidateDeliverables?: number;
@@ -81,15 +82,20 @@ type ContaminationReport = {
 const args = process.argv.slice(2);
 const stagePath = optionValue("--stage") ?? "docs/eval/bankertoolbench-stage-smoke.json";
 const runPath = optionValue("--run") ?? "docs/eval/bankertoolbench-run-smoke.json";
+const positiveRunPath = optionValue("--positive-run") ?? "docs/eval/bankertoolbench-run-positive-smoke.json";
 const stageContaminationPath = optionValue("--stage-contamination") ?? "docs/eval/bankertoolbench-stage-contamination-smoke.json";
 const runContaminationPath = optionValue("--run-contamination") ?? "docs/eval/bankertoolbench-run-contamination-smoke.json";
+const positiveRunContaminationPath = optionValue("--positive-run-contamination") ?? "docs/eval/bankertoolbench-run-positive-contamination-smoke.json";
 const minStageCheckedFiles = numberOption("--min-stage-checked-files") ?? 1;
 const minRunCheckedFiles = numberOption("--min-run-checked-files") ?? 3;
+const minPositiveRunCheckedFiles = numberOption("--min-positive-run-checked-files") ?? 4;
 
 const stage = readJson<BankerToolBenchStageReport>(stagePath);
 const run = readJson<BankerToolBenchRunReport>(runPath);
+const positiveRun = readJson<BankerToolBenchRunReport>(positiveRunPath);
 const stageContamination = readJson<ContaminationReport>(stageContaminationPath);
 const runContamination = readJson<ContaminationReport>(runContaminationPath);
+const positiveRunContamination = readJson<ContaminationReport>(positiveRunContaminationPath);
 const failures: string[] = [];
 
 expect(stage.schema === 1, `stage schema must be 1, got ${stage.schema}`);
@@ -157,8 +163,55 @@ if (result) {
   expect((result.score?.warnings ?? []).some((warning) => warning.includes("not the official Harbor/Gandalf verifier")), `${label} must preserve non-official verifier warning`);
 }
 
+expect(positiveRun.schema === 1, `positive run schema must be 1, got ${positiveRun.schema}`);
+expect(positiveRun.mode === "apply-agent-output", `positive run mode must be apply-agent-output, got ${positiveRun.mode}`);
+expect(positiveRun.taskCount === 1, `positive run taskCount must be 1, got ${positiveRun.taskCount}`);
+expect(positiveRun.passCount === 1, `positive run passCount must be 1, got ${positiveRun.passCount}`);
+expect(positiveRun.passRate === 1, `positive run passRate must be 1, got ${positiveRun.passRate}`);
+expect(positiveRun.averageWeightedScore === 1, `positive run averageWeightedScore must be 1, got ${positiveRun.averageWeightedScore}`);
+expect(positiveRun.harness?.toolPolicy === "agent_workspace_until_candidate", `positive run harness toolPolicy mismatch: ${positiveRun.harness?.toolPolicy}`);
+expect(positiveRun.harness?.evaluatorAccess === "after_candidate_emit_only", `positive run harness evaluatorAccess mismatch: ${positiveRun.harness?.evaluatorAccess}`);
+expect(positiveRun.harness?.verifier === "local_exact_or_workbook_semantic_smoke", `positive run harness verifier mismatch: ${positiveRun.harness?.verifier}`);
+expect(positiveRun.harness?.packagePolicy === "exact_expected_deliverables", `positive run harness packagePolicy mismatch: ${positiveRun.harness?.packagePolicy}`);
+expect(Array.isArray(positiveRun.results), "positive run results must be present");
+expect((positiveRun.results?.length ?? 0) === 1, `positive run results length ${positiveRun.results?.length ?? "missing"} must be 1`);
+const positiveResult = positiveRun.results?.[0];
+if (positiveResult) {
+  const label = positiveResult.taskId ?? "positive#1";
+  expect(!positiveResult.error, `${label} has error ${positiveResult.error?.message ?? "unknown"}`);
+  expect(Boolean(positiveResult.harborTaskId), `${label} must record harborTaskId`);
+  expect(Boolean(positiveResult.candidateManifest), `${label} must record candidateManifest`);
+  expect(JSON.stringify(positiveResult.trajectory?.map((step) => step.step)) === JSON.stringify([
+    "read_agent_manifest",
+    "prepare_agent_workspace",
+    "emit_candidate_deliverables",
+    "read_evaluator_manifest",
+    "score_candidate",
+  ]), `${label} trajectory must emit candidate before evaluator read, got ${JSON.stringify(positiveResult.trajectory?.map((step) => step.step))}`);
+  expect(positiveResult.score?.verifier === "local_exact_or_workbook_semantic_smoke", `${label} score verifier mismatch: ${positiveResult.score?.verifier}`);
+  expect(positiveResult.score?.pass === true, `${label} apply-agent-output score.pass must be true`);
+  expect(positiveResult.score?.weightedScore === 1, `${label} weightedScore must be 1, got ${positiveResult.score?.weightedScore}`);
+  expect(positiveResult.score?.totals?.rubricCriteria === 2, `${label} rubricCriteria must be 2, got ${positiveResult.score?.totals?.rubricCriteria}`);
+  expect(positiveResult.score?.totals?.weightedTotal === 6, `${label} weightedTotal must be 6, got ${positiveResult.score?.totals?.weightedTotal}`);
+  expect(positiveResult.score?.totals?.awardedWeight === 6, `${label} awardedWeight must be 6, got ${positiveResult.score?.totals?.awardedWeight}`);
+  expect(positiveResult.score?.totals?.exactMatchingGoldenFiles === 1, `${label} exactMatchingGoldenFiles must be 1, got ${positiveResult.score?.totals?.exactMatchingGoldenFiles}`);
+  expect(positiveResult.score?.totals?.acceptedGoldenFiles === 1, `${label} acceptedGoldenFiles must be 1, got ${positiveResult.score?.totals?.acceptedGoldenFiles}`);
+  expect(positiveResult.score?.totals?.expectedDeliverables === 1, `${label} expectedDeliverables must be 1, got ${positiveResult.score?.totals?.expectedDeliverables}`);
+  expect(positiveResult.score?.totals?.candidateDeliverables === 1, `${label} candidateDeliverables must be 1, got ${positiveResult.score?.totals?.candidateDeliverables}`);
+  expect(positiveResult.score?.totals?.matchedExpectedDeliverables === 1, `${label} matchedExpectedDeliverables must be 1, got ${positiveResult.score?.totals?.matchedExpectedDeliverables}`);
+  expect(positiveResult.score?.totals?.missingExpectedDeliverables === 0, `${label} missingExpectedDeliverables must be 0, got ${positiveResult.score?.totals?.missingExpectedDeliverables}`);
+  expect(positiveResult.score?.totals?.extraCandidateDeliverables === 0, `${label} extraCandidateDeliverables must be 0, got ${positiveResult.score?.totals?.extraCandidateDeliverables}`);
+  expect(positiveResult.score?.totals?.duplicateCandidateDeliverables === 0, `${label} duplicateCandidateDeliverables must be 0, got ${positiveResult.score?.totals?.duplicateCandidateDeliverables}`);
+  expect(positiveResult.score?.totals?.unsupportedCandidateDeliverables === 0, `${label} unsupportedCandidateDeliverables must be 0, got ${positiveResult.score?.totals?.unsupportedCandidateDeliverables}`);
+  const rubricWeight = (positiveResult.score?.rubricResults ?? []).reduce((sum, item) => sum + (item.weight ?? 0), 0);
+  expect(rubricWeight === 6, `${label} rubricResults weight sum must be 6, got ${rubricWeight}`);
+  expect((positiveResult.score?.rubricResults ?? []).every((item) => item.passed === true), `${label} apply-agent-output rubric results must all pass`);
+  expect((positiveResult.score?.warnings ?? []).some((warning) => warning.includes("not the official Harbor/Gandalf verifier")), `${label} must preserve non-official verifier warning`);
+}
+
 checkContamination(stageContamination, stageContaminationPath, minStageCheckedFiles);
 checkContamination(runContamination, runContaminationPath, minRunCheckedFiles);
+checkContamination(positiveRunContamination, positiveRunContaminationPath, minPositiveRunCheckedFiles);
 
 if (failures.length > 0) {
   console.error(`BankerToolBench proof check failed:`);
@@ -171,8 +224,9 @@ console.log([
   `stage=${stage.stagedTaskCount}/${stage.scannedTaskCount}`,
   `weightedRubric=${stage.weightedRubricTotal}`,
   `run=${run.passCount}/${run.taskCount} pass`,
+  `positive=${positiveRun.passCount}/${positiveRun.taskCount} pass`,
   `candidateBeforeEvaluator=${result?.trajectory?.[2]?.step === "emit_candidate_deliverables"}`,
-  `leaks=${stageContamination.leakCount}/${stageContamination.checkedFiles}+${runContamination.leakCount}/${runContamination.checkedFiles}`,
+  `leaks=${stageContamination.leakCount}/${stageContamination.checkedFiles}+${runContamination.leakCount}/${runContamination.checkedFiles}+${positiveRunContamination.leakCount}/${positiveRunContamination.checkedFiles}`,
 ].join(" "));
 
 function checkContamination(report: ContaminationReport, path: string, minCheckedFiles: number): void {

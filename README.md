@@ -1027,14 +1027,15 @@ The checked-in live smoke (`docs/eval/spreadsheetbench-model-edit-plan-live-smok
 staged task with `gpt-5.4-nano` and recorded trajectory, timing, and cost. These artifacts prove
 ingest, sandbox-staging, candidate-output, edit/export/reopen, model-planning, and diff plumbing.
 The official V1 smoke (`docs/eval/spreadsheetbench-v1-model-edit-plan-live-smoke.json`) deliberately
-shows the next harder truth: the model chose a missing sheet name on a real staged task, and the
-harness now counts that as a failed task with model call, tokens, cost, trajectory, and error instead
-of dropping it into a warning. The N=5 live smoke
+shows the next harder truth: the model can choose the wrong spreadsheet path on a real staged task,
+and the harness records the model call, tokens, cost, trajectory, parser repair, and score evidence
+instead of summarizing it away. The N=5 live smoke
 (`docs/eval/spreadsheetbench-v1-model-edit-plan-n5-live-smoke.json`) repeats that official task five
-times and records `taskCount: 5`, `caseCount: 1`, `passRate: 0`, p95 latency 4.462s,
-`providerCostUsd: 0.0078935`, three invalid-sheet candidate-generation failures, and two scored
-partial candidates. That is the agent-path drift signal: same task and model, different paths, all
-captured in the benchmark report instead of summarized away. The contamination gate
+times and now records `taskCount: 5`, `caseCount: 1`, `passRate: 0`, p95 latency 17.161s,
+`providerCostUsd: 0.018231`, zero candidate-generation failures, and five scored partial
+candidates with best overall `0.675`. That is the agent-path drift signal: same task and model,
+different edit paths and scores, all captured in the benchmark report instead of summarized away.
+The contamination gate
 (`npm run benchmark:contamination`) now scans agent-facing benchmark manifests, candidate manifests,
 agent-workspace manifests, and generated edit plans for evaluator-only gold/rubric/canary metadata; checked-in smokes show 0
 leaks for the staged V1 root, the N=5 V1 candidate output, the retry V1 candidate output, and the

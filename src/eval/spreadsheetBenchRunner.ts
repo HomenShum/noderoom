@@ -732,27 +732,47 @@ function isCellRef(value: string): boolean {
 
 function normalizeEditPlan(plan: AgentEditPlan, snapshot: WorkbookSnapshot): AgentEditPlan {
   const sheetNames = new Set(snapshot.sheets.map((sheet) => sheet.name));
+  const sheetNamesByLower = new Map(snapshot.sheets.map((sheet) => [sheet.name.toLowerCase(), sheet.name]));
+  const onlySheetName = snapshot.sheets.length === 1 ? snapshot.sheets[0]?.name : undefined;
   let lastKnownSheet: string | undefined;
   return {
     ...plan,
     operations: Array.isArray(plan.operations)
       ? plan.operations.map((operation) => {
           if (!operation || typeof operation.sheet !== "string") return operation;
-          if (sheetNames.has(operation.sheet)) {
-            lastKnownSheet = operation.sheet;
-            return operation;
+          const normalizedOperation = normalizeEditOperationShape(operation);
+          const sheetName = normalizedOperation.sheet.trim().replace(/^'|'$/g, "");
+          const canonicalSheet = sheetNames.has(sheetName) ? sheetName : sheetNamesByLower.get(sheetName.toLowerCase());
+          if (canonicalSheet) {
+            lastKnownSheet = canonicalSheet;
+            return canonicalSheet === normalizedOperation.sheet ? normalizedOperation : { ...normalizedOperation, sheet: canonicalSheet };
           }
-          if (lastKnownSheet && isCellRef(operation.sheet)) {
+          if (lastKnownSheet && isCellRef(normalizedOperation.sheet)) {
             return {
-              ...operation,
+              ...normalizedOperation,
               sheet: lastKnownSheet,
-              cell: typeof operation.cell === "string" && isCellRef(operation.cell) ? operation.cell : operation.sheet,
+              cell: typeof normalizedOperation.cell === "string" && isCellRef(normalizedOperation.cell) ? normalizedOperation.cell : normalizedOperation.sheet,
             };
           }
-          return operation;
+          if (onlySheetName && isGenericSheetAlias(sheetName)) {
+            lastKnownSheet = onlySheetName;
+            return { ...normalizedOperation, sheet: onlySheetName };
+          }
+          return normalizedOperation;
         })
       : plan.operations,
   };
+}
+
+function isGenericSheetAlias(value: string): boolean {
+  return /^(?:sheet|worksheet|tab)\s*\d+$/i.test(value);
+}
+
+function normalizeEditOperationShape(operation: AgentEditOperation): AgentEditOperation {
+  const normalized = { ...operation } as AgentEditOperation & { formula?: unknown; numFmt?: unknown };
+  if (normalized.formula === null) delete normalized.formula;
+  if (normalized.numFmt === null) delete normalized.numFmt;
+  return normalized as AgentEditOperation;
 }
 
 type WorkbookSnapshot = {
@@ -863,7 +883,34 @@ function parseEditPlanText(text: string, taskId: string): AgentEditPlan {
   const cleaned = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
   const jsonText = extractFirstJsonObject(cleaned, taskId);
   if (!jsonText.startsWith("{")) throw new Error(`model-edit-plan returned no JSON for ${taskId}`);
-  return JSON.parse(jsonText) as AgentEditPlan;
+  return parseEditPlanJson(jsonText);
+}
+
+function parseEditPlanJson(jsonText: string): AgentEditPlan {
+  try {
+    return JSON.parse(jsonText) as AgentEditPlan;
+  } catch (error) {
+    const repaired = repairCommonModelJsonDrift(jsonText);
+    if (repaired !== jsonText) {
+      try {
+        return JSON.parse(repaired) as AgentEditPlan;
+      } catch {
+        // Preserve the original parser error so failure taxonomy stays tied to the model output.
+      }
+    }
+    throw error;
+  }
+}
+
+function repairCommonModelJsonDrift(jsonText: string): string {
+  const withoutInvalidCommaEscapes = jsonText.replace(/\\,/g, ",");
+  const withoutTrailingCommas = withoutInvalidCommaEscapes.replace(/,\s*([}\]])/g, "$1");
+  const withoutUncertainNumberSuffixes = withoutTrailingCommas.replace(/("(?:value|result)"\s*:\s*-?\d+(?:\.\d+)?)\?(?=\s*[,}])/g, "$1");
+  return withoutUncertainNumberSuffixes.replace(/("value"\s*:\s*)([A-Za-z_][A-Za-z0-9_ -]*)(?=\s*[,}])/g, (_match, prefix: string, raw: string) => {
+    const value = raw.trim();
+    if (/^(?:true|false|null)$/i.test(value)) return `${prefix}${value.toLowerCase()}`;
+    return `${prefix}${JSON.stringify(value)}`;
+  });
 }
 
 function extractFirstJsonObject(text: string, taskId: string): string {

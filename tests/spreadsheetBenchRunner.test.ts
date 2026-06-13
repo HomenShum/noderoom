@@ -590,8 +590,8 @@ describe("SpreadsheetBench staged runner", () => {
         answer_sheet: "Actual",
       },
     ]);
-    await writeWorkbookWithSheet(join(source, "spreadsheet", "13-4", "1_13-4_init.xlsx"), "Actual", 1);
-    await writeWorkbookWithSheet(join(source, "spreadsheet", "13-4", "1_13-4_golden.xlsx"), "Actual", 2);
+    await writeWorkbookWithTwoSheets(join(source, "spreadsheet", "13-4", "1_13-4_init.xlsx"), "Actual", "Lookup", 1);
+    await writeWorkbookWithTwoSheets(join(source, "spreadsheet", "13-4", "1_13-4_golden.xlsx"), "Actual", "Lookup", 2);
     stageSpreadsheetBenchBundle(source, {
       track: "spreadsheetbench-v1",
       outputRoot: stage,
@@ -653,6 +653,108 @@ describe("SpreadsheetBench staged runner", () => {
     expect(readFileSync(join(out, "13-4", "model-edit-plan.json"), "utf8").toLowerCase()).not.toContain("gold");
   });
 
+  it("repairs generic Sheet1 aliases when the workbook has exactly one sheet", async () => {
+    const source = tempRoot("source");
+    const stage = tempRoot("stage");
+    const out = tempRoot("out");
+    mkdirSync(join(source, "spreadsheet", "13-11"), { recursive: true });
+    writeJson(join(source, "dataset.json"), [
+      {
+        id: "13-11",
+        instruction: "Change the workbook value to 2.",
+        spreadsheet_path: "spreadsheet/13-11",
+        answer_position: "Actual!B2:B2",
+        answer_sheet: "Actual",
+      },
+    ]);
+    await writeWorkbookWithSheet(join(source, "spreadsheet", "13-11", "1_13-11_init.xlsx"), "Actual", 1);
+    await writeWorkbookWithSheet(join(source, "spreadsheet", "13-11", "1_13-11_golden.xlsx"), "Actual", 2);
+    stageSpreadsheetBenchBundle(source, {
+      track: "spreadsheetbench-v1",
+      outputRoot: stage,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+    const planner: AgentModel = {
+      name: "single-sheet-alias-planner",
+      async next() {
+        return {
+          text: JSON.stringify({ schema: 1, operations: [{ sheet: "Sheet1", cell: "B2", value: 2 }] }),
+          toolCalls: [],
+          done: true,
+          usage: { inputTokens: 30, outputTokens: 8 },
+        };
+      },
+    };
+
+    const report = await runStagedSpreadsheetBench({
+      stageRoot: stage,
+      outputRoot: out,
+      mode: "model-edit-plan",
+      model: planner,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(report.passCount).toBe(1);
+    expect(report.results[0].score?.pass).toBe(true);
+    const normalizedPlan = readFileSync(join(out, "13-11", "model-edit-plan.json"), "utf8");
+    expect(normalizedPlan).toContain('"sheet": "Actual"');
+    expect(normalizedPlan).not.toContain('"sheet": "Sheet1"');
+  });
+
+  it("repairs common model JSON drift before applying edit plans", async () => {
+    const source = tempRoot("source");
+    const stage = tempRoot("stage");
+    const out = tempRoot("out");
+    mkdirSync(join(source, "spreadsheet", "13-12"), { recursive: true });
+    writeJson(join(source, "dataset.json"), [
+      {
+        id: "13-12",
+        instruction: "Change the workbook value to 2.",
+        spreadsheet_path: "spreadsheet/13-12",
+        answer_position: "Actual!B2:B2",
+        answer_sheet: "Actual",
+      },
+    ]);
+    await writeWorkbookWithSheet(join(source, "spreadsheet", "13-12", "1_13-12_init.xlsx"), "Actual", 1);
+    await writeWorkbookWithSheet(join(source, "spreadsheet", "13-12", "1_13-12_golden.xlsx"), "Actual", 2);
+    stageSpreadsheetBenchBundle(source, {
+      track: "spreadsheetbench-v1",
+      outputRoot: stage,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+    const planner: AgentModel = {
+      name: "json-drift-planner",
+      async next() {
+        return {
+          text: '{"schema":1,"operations":[{"sheet":"Actual","cell":"A1","value":TOTAL},{"sheet":"A2","formula":"1+1","result":2?,"numFmt":"#\\,##0.00"},{"sheet":"B2","value":2,"formula":null,}]}',
+          toolCalls: [],
+          done: true,
+          usage: { inputTokens: 31, outputTokens: 9 },
+        };
+      },
+    };
+
+    const report = await runStagedSpreadsheetBench({
+      stageRoot: stage,
+      outputRoot: out,
+      mode: "model-edit-plan",
+      model: planner,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(report.passCount).toBe(1);
+    expect(report.results[0].score?.pass).toBe(true);
+    const normalizedPlan = readFileSync(join(out, "13-12", "model-edit-plan.json"), "utf8");
+    expect(normalizedPlan).toContain('"value": "TOTAL"');
+    expect(normalizedPlan).toContain('"cell": "B2"');
+    expect(normalizedPlan).toContain('"result": 2');
+    expect(normalizedPlan).toContain('"numFmt": "#,##0.00"');
+  });
+
   it("retries retryable model edit failures and records case-level stop policy", async () => {
     const source = tempRoot("source");
     const stage = tempRoot("stage");
@@ -667,8 +769,8 @@ describe("SpreadsheetBench staged runner", () => {
         answer_sheet: "Actual",
       },
     ]);
-    await writeWorkbookWithSheet(join(source, "spreadsheet", "13-5", "1_13-5_init.xlsx"), "Actual", 1);
-    await writeWorkbookWithSheet(join(source, "spreadsheet", "13-5", "1_13-5_golden.xlsx"), "Actual", 2);
+    await writeWorkbookWithTwoSheets(join(source, "spreadsheet", "13-5", "1_13-5_init.xlsx"), "Actual", "Lookup", 1);
+    await writeWorkbookWithTwoSheets(join(source, "spreadsheet", "13-5", "1_13-5_golden.xlsx"), "Actual", "Lookup", 2);
     stageSpreadsheetBenchBundle(source, {
       track: "spreadsheetbench-v1",
       outputRoot: stage,
@@ -760,8 +862,8 @@ describe("SpreadsheetBench staged runner", () => {
         answer_sheet: "Actual",
       },
     ]);
-    await writeWorkbookWithSheet(join(source, "spreadsheet", "13-6", "1_13-6_init.xlsx"), "Actual", 1);
-    await writeWorkbookWithSheet(join(source, "spreadsheet", "13-6", "1_13-6_golden.xlsx"), "Actual", 2);
+    await writeWorkbookWithTwoSheets(join(source, "spreadsheet", "13-6", "1_13-6_init.xlsx"), "Actual", "Lookup", 1);
+    await writeWorkbookWithTwoSheets(join(source, "spreadsheet", "13-6", "1_13-6_golden.xlsx"), "Actual", "Lookup", 2);
     stageSpreadsheetBenchBundle(source, {
       track: "spreadsheetbench-v1",
       outputRoot: stage,
@@ -838,6 +940,15 @@ async function writeWorkbookWithSheet(path: string, sheetName: string, b2: numbe
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet(sheetName);
   sheet.getCell("B2").value = b2;
+  await workbook.xlsx.writeFile(path);
+}
+
+async function writeWorkbookWithTwoSheets(path: string, answerSheetName: string, otherSheetName: string, b2: number) {
+  const workbook = new ExcelJS.Workbook();
+  const answer = workbook.addWorksheet(answerSheetName);
+  answer.getCell("B2").value = b2;
+  const other = workbook.addWorksheet(otherSheetName);
+  other.getCell("A1").value = "context";
   await workbook.xlsx.writeFile(path);
 }
 

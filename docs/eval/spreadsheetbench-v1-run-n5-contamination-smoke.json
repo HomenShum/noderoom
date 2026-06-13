@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "generatedAt": "2026-06-13T11:07:27.283Z",
+  "generatedAt": "2026-06-13T13:20:23.050Z",
   "root": "run-v1-model-edit-n5",
-  "checkedFiles": 7,
+  "checkedFiles": 20,
   "leakCount": 0,
   "leaks": []
 }

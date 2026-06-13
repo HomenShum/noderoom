@@ -79,6 +79,7 @@
         "evals/**",
         ".tmp-qa/**",
         "scripts/agent-improvement-loop.ts",
+        "scripts/agent-workspace-sandbox-smoke.ts",
         "scripts/architecture-budget-check.ts",
         "scripts/bankertoolbench-run.ts",
         "scripts/benchmark-contamination-check.ts",

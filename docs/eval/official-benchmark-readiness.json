@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedAt": "2026-06-13T12:35:00.062Z",
+  "generatedAt": "2026-06-13T12:42:23.903Z",
   "summary": {
     "total": 3,
     "ready": 0,
@@ -52,7 +52,7 @@
           "capability": "official_gold_isolation",
           "state": "partial",
           "evidence": "src/eval/bankerToolBenchStage.ts",
-          "blocker": "BankerToolBench staging separates final prompts/input files from evaluator-only prompt context, formatting context, canary, weighted rubric, golden outputs, and expected deliverable package metadata; contamination checks cover staged agent manifests, but Harbor/Docker process isolation and verifier handoff are still missing."
+          "blocker": "BankerToolBench staging separates final prompts/input files from evaluator-only prompt context, formatting context, canary, weighted rubric, golden outputs, and expected deliverable package metadata; contamination checks cover staged agent manifests and a Node permission subprocess smoke proves evaluator-only reads are denied outside the agent workspace, but Harbor/Docker process isolation and verifier handoff are still missing."
         },
         {
           "capability": "official_runner_adapter",
@@ -107,7 +107,7 @@
       ],
       "ready": false,
       "blockers": [
-        "official_gold_isolation: BankerToolBench staging separates final prompts/input files from evaluator-only prompt context, formatting context, canary, weighted rubric, golden outputs, and expected deliverable package metadata; contamination checks cover staged agent manifests, but Harbor/Docker process isolation and verifier handoff are still missing.",
+        "official_gold_isolation: BankerToolBench staging separates final prompts/input files from evaluator-only prompt context, formatting context, canary, weighted rubric, golden outputs, and expected deliverable package metadata; contamination checks cover staged agent manifests and a Node permission subprocess smoke proves evaluator-only reads are denied outside the agent workspace, but Harbor/Docker process isolation and verifier handoff are still missing.",
         "official_runner_adapter: A local BankerToolBench runner now emits candidate deliverables from per-attempt agent workspaces before opening evaluator-only rubric/golden metadata, validates exact expected package shape for supported Excel/PowerPoint/Word/PDF-style deliverables, and records local exact-golden smoke scores, but Harbor/Docker execution, MCP financial tools, and Gandalf verifier replay are still missing.",
         "xlsx_import_export: Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.",
         "formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.",
@@ -147,13 +147,13 @@
           "capability": "official_gold_isolation",
           "state": "partial",
           "evidence": "src/eval/spreadsheetBenchStage.ts",
-          "blocker": "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; runner attempts now copy agent-visible files into an agent-workspace manifest before candidate generation, contamination checks cover staged and candidate metadata including those workspace manifests, and official V1 N=5/retry failed model smokes exist, but official full-bundle OS/Docker process isolation and output policy proof are still missing."
+          "blocker": "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; runner attempts now copy agent-visible files into an agent-workspace manifest before candidate generation, contamination checks cover staged and candidate metadata including those workspace manifests, a Node permission subprocess smoke proves evaluator-only reads are denied outside the agent workspace, and official V1 N=5/retry failed model smokes exist, but official full-bundle Docker/Harbor process isolation and output policy proof are still missing."
         },
         {
           "capability": "official_runner_adapter",
           "state": "partial",
           "evidence": "src/eval/spreadsheetBenchRunner.ts",
-          "blocker": "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; official V1 N=5 and retry-policy smokes now record fair larger workbook snapshots, raw model output, simple SUM result caching, pass rate, p95 latency, model usage/cost, workspace manifests, scored partial candidates, retry exhaustion, and failure taxonomy, but larger full-bundle runs, OS/Docker sandbox proof, and route selection remain incomplete."
+          "blocker": "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; official V1 N=5 and retry-policy smokes now record fair larger workbook snapshots, raw model output, simple SUM result caching, pass rate, p95 latency, model usage/cost, workspace manifests, scored partial candidates, retry exhaustion, failure taxonomy, and local Node permission sandbox proof, but larger full-bundle runs, Docker/Harbor sandbox proof, and route selection remain incomplete."
         },
         {
           "capability": "trajectory_capture",
@@ -185,8 +185,8 @@
       ],
       "ready": false,
       "blockers": [
-        "official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; runner attempts now copy agent-visible files into an agent-workspace manifest before candidate generation, contamination checks cover staged and candidate metadata including those workspace manifests, and official V1 N=5/retry failed model smokes exist, but official full-bundle OS/Docker process isolation and output policy proof are still missing.",
-        "official_runner_adapter: A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; official V1 N=5 and retry-policy smokes now record fair larger workbook snapshots, raw model output, simple SUM result caching, pass rate, p95 latency, model usage/cost, workspace manifests, scored partial candidates, retry exhaustion, and failure taxonomy, but larger full-bundle runs, OS/Docker sandbox proof, and route selection remain incomplete.",
+        "official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; runner attempts now copy agent-visible files into an agent-workspace manifest before candidate generation, contamination checks cover staged and candidate metadata including those workspace manifests, a Node permission subprocess smoke proves evaluator-only reads are denied outside the agent workspace, and official V1 N=5/retry failed model smokes exist, but official full-bundle Docker/Harbor process isolation and output policy proof are still missing.",
+        "official_runner_adapter: A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; official V1 N=5 and retry-policy smokes now record fair larger workbook snapshots, raw model output, simple SUM result caching, pass rate, p95 latency, model usage/cost, workspace manifests, scored partial candidates, retry exhaustion, failure taxonomy, and local Node permission sandbox proof, but larger full-bundle runs, Docker/Harbor sandbox proof, and route selection remain incomplete.",
         "formula_recompute: The SpreadsheetBench runner caches deterministic results for a local formula subset covering arithmetic, same-sheet cell refs/ranges, and SUM/AVERAGE/MIN/MAX/COUNT before export/reopen scoring; a full Excel-compatible recompute engine is not complete.",
         "format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy and full style coverage are not complete."
       ]
@@ -221,13 +221,13 @@
           "capability": "official_gold_isolation",
           "state": "partial",
           "evidence": "src/eval/spreadsheetBenchStage.ts",
-          "blocker": "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; runner attempts now copy agent-visible files into an agent-workspace manifest before candidate generation and V1 contamination/N=5/retry evidence exists, but V2 chart/visual grading, V2 official model runs, and OS/Docker process isolation are still missing."
+          "blocker": "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; runner attempts now copy agent-visible files into an agent-workspace manifest before candidate generation, a Node permission subprocess smoke proves evaluator-only reads are denied outside the agent workspace, and V1/V2 contamination evidence exists, but rendered V2 chart/visual grading, V2 official model runs, and Docker/Harbor process isolation are still missing."
         },
         {
           "capability": "official_runner_adapter",
           "state": "partial",
           "evidence": "src/eval/spreadsheetBenchRunner.ts",
-          "blocker": "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; V1 N=5 and retry-policy model smoke evidence exists with fair larger snapshots, raw model output, simple SUM result caching, and workspace manifests, but V2 official runs, OS/Docker sandbox proof, route selection, and chart lane remain incomplete."
+          "blocker": "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; V1 N=5 and retry-policy model smoke evidence exists with fair larger snapshots, raw model output, simple SUM result caching, workspace manifests, local Node permission sandbox proof, and static V2 chart-package scoring, but V2 official model runs, Docker/Harbor sandbox proof, route selection, and rendered/VLM chart grading remain incomplete."
         },
         {
           "capability": "trajectory_capture",
@@ -265,8 +265,8 @@
       ],
       "ready": false,
       "blockers": [
-        "official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; runner attempts now copy agent-visible files into an agent-workspace manifest before candidate generation and V1 contamination/N=5/retry evidence exists, but V2 chart/visual grading, V2 official model runs, and OS/Docker process isolation are still missing.",
-        "official_runner_adapter: A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; V1 N=5 and retry-policy model smoke evidence exists with fair larger snapshots, raw model output, simple SUM result caching, and workspace manifests, but V2 official runs, OS/Docker sandbox proof, route selection, and chart lane remain incomplete.",
+        "official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; runner attempts now copy agent-visible files into an agent-workspace manifest before candidate generation, a Node permission subprocess smoke proves evaluator-only reads are denied outside the agent workspace, and V1/V2 contamination evidence exists, but rendered V2 chart/visual grading, V2 official model runs, and Docker/Harbor process isolation are still missing.",
+        "official_runner_adapter: A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; V1 N=5 and retry-policy model smoke evidence exists with fair larger snapshots, raw model output, simple SUM result caching, workspace manifests, local Node permission sandbox proof, and static V2 chart-package scoring, but V2 official model runs, Docker/Harbor sandbox proof, route selection, and rendered/VLM chart grading remain incomplete.",
         "formula_recompute: The SpreadsheetBench runner caches deterministic results for a local formula subset covering arithmetic, same-sheet cell refs/ranges, and SUM/AVERAGE/MIN/MAX/COUNT before export/reopen scoring; full Excel-compatible recompute, chart formulas, external refs, and volatile functions are not complete.",
         "format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy, chart rendering, and visual grading are not complete.",
         "chart_visual_grade: SpreadsheetBench score/run reports can include a static XLSX chart-package comparison over chart and drawing XML parts; rendered chart screenshots and VLM visual quality grading are not wired."

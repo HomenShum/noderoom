@@ -1,0 +1,33 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T12:41:41.873Z",
+  "mode": "fixture",
+  "verifier": "node_permission_process",
+  "probe": {
+    "schema": 1,
+    "generatedAt": "2026-06-13T12:41:41.873Z",
+    "verifier": "node_permission_process",
+    "nodeVersion": "v22.22.2",
+    "allowedReadRoot": "agent-workspace",
+    "checks": {
+      "allowedRead": {
+        "path": ".tmp/agent-workspace-sandbox-smoke-fixture/agent-workspace/task.json",
+        "exitCode": 0,
+        "stdoutPreview": "{ \"taskId\": \"sandbox-smoke\", \"visible\": true }",
+        "stderrPreview": "",
+        "ok": true
+      },
+      "deniedRead": {
+        "path": ".tmp/agent-workspace-sandbox-smoke-fixture/evaluator/gold.json",
+        "exitCode": 1,
+        "stdoutPreview": "",
+        "stderrPreview": "node:fs:440 return binding.readFileUtf8(path, stringToFlags(options.flag)); ^ Error: Access to this API has been restricted. Use --allow-fs-read to manage permissions. at readFileSync (node:fs:440:20) at [eval]:1:97 at runScriptInThisContext (node:internal/vm:209:10) at node:internal/process/execution:446:12 at [eval]-wrapper:6:24 at runScriptInContext (node:internal/process/execution:444:60) at e",
+        "ok": true
+      }
+    },
+    "pass": true,
+    "warnings": [
+      "node_permission_process proves local subprocess fs permissions for an agent workspace; it is not Docker, Harbor, network isolation, or a resource sandbox."
+    ]
+  }
+}

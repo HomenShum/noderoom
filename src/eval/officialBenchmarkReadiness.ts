@@ -197,7 +197,7 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/bankerToolBenchStage.ts",
       blocker:
-        "BankerToolBench staging separates final prompts/input files from evaluator-only prompt context, formatting context, canary, weighted rubric, golden outputs, and expected deliverable package metadata; contamination checks cover staged agent manifests, but Harbor/Docker process isolation and verifier handoff are still missing.",
+        "BankerToolBench staging separates final prompts/input files from evaluator-only prompt context, formatting context, canary, weighted rubric, golden outputs, and expected deliverable package metadata; contamination checks cover staged agent manifests and a Node permission subprocess smoke proves evaluator-only reads are denied outside the agent workspace, but Harbor/Docker process isolation and verifier handoff are still missing.",
     },
     official_runner_adapter: {
       capability: "official_runner_adapter",
@@ -232,14 +232,14 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchStage.ts",
       blocker:
-        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; runner attempts now copy agent-visible files into an agent-workspace manifest before candidate generation, contamination checks cover staged and candidate metadata including those workspace manifests, and official V1 N=5/retry failed model smokes exist, but official full-bundle OS/Docker process isolation and output policy proof are still missing.",
+        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; runner attempts now copy agent-visible files into an agent-workspace manifest before candidate generation, contamination checks cover staged and candidate metadata including those workspace manifests, a Node permission subprocess smoke proves evaluator-only reads are denied outside the agent workspace, and official V1 N=5/retry failed model smokes exist, but official full-bundle Docker/Harbor process isolation and output policy proof are still missing.",
     },
     official_runner_adapter: {
       capability: "official_runner_adapter",
       state: "partial",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; official V1 N=5 and retry-policy smokes now record fair larger workbook snapshots, raw model output, simple SUM result caching, pass rate, p95 latency, model usage/cost, workspace manifests, scored partial candidates, retry exhaustion, and failure taxonomy, but larger full-bundle runs, OS/Docker sandbox proof, and route selection remain incomplete.",
+        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; official V1 N=5 and retry-policy smokes now record fair larger workbook snapshots, raw model output, simple SUM result caching, pass rate, p95 latency, model usage/cost, workspace manifests, scored partial candidates, retry exhaustion, failure taxonomy, and local Node permission sandbox proof, but larger full-bundle runs, Docker/Harbor sandbox proof, and route selection remain incomplete.",
     },
     xlsx_import_export: {
       capability: "xlsx_import_export",
@@ -272,14 +272,14 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchStage.ts",
       blocker:
-        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; runner attempts now copy agent-visible files into an agent-workspace manifest before candidate generation and V1 contamination/N=5/retry evidence exists, but V2 chart/visual grading, V2 official model runs, and OS/Docker process isolation are still missing.",
+        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; runner attempts now copy agent-visible files into an agent-workspace manifest before candidate generation, a Node permission subprocess smoke proves evaluator-only reads are denied outside the agent workspace, and V1/V2 contamination evidence exists, but rendered V2 chart/visual grading, V2 official model runs, and Docker/Harbor process isolation are still missing.",
     },
     official_runner_adapter: {
       capability: "official_runner_adapter",
       state: "partial",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; V1 N=5 and retry-policy model smoke evidence exists with fair larger snapshots, raw model output, simple SUM result caching, and workspace manifests, but V2 official runs, OS/Docker sandbox proof, route selection, and chart lane remain incomplete.",
+        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; V1 N=5 and retry-policy model smoke evidence exists with fair larger snapshots, raw model output, simple SUM result caching, workspace manifests, local Node permission sandbox proof, and static V2 chart-package scoring, but V2 official model runs, Docker/Harbor sandbox proof, route selection, and rendered/VLM chart grading remain incomplete.",
     },
     xlsx_import_export: {
       capability: "xlsx_import_export",

@@ -1048,8 +1048,11 @@ attempt saw the full 302-cell official workbook snapshot, simple `SUM(...)` form
 results on export/reopen, best overall was `0.616667`, p95 latency was 11.033s, spend was
 `$0.0095201`, and pass remained 0/3. That proves retry accounting, attempt-local workspace
 boundaries, fuller context capture, formula-result packaging, and leakage scanning while still
-surfacing the planner gap honestly. This is not OS/Docker process isolation, and these artifacts are
-not official benchmark scores until run across official bundles under the benchmark policy.
+surfacing the planner gap honestly. `npm run benchmark:agent-sandbox` now adds a local Node
+permission subprocess proof: an agent process can read its copied `agent-workspace/` file and is
+denied evaluator-only gold outside that root. This tightens the file-boundary story, but it is not
+Docker/Harbor isolation, network isolation, or a resource sandbox, and these artifacts are not
+official benchmark scores until run across official bundles under the benchmark policy.
 
 The deterministic formula-result lane has since moved beyond `SUM(...)`: `apply-agent-patch` and
 `model-edit-plan` candidate manifests now record `formulaResultPolicy:

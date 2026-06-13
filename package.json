@@ -34,6 +34,7 @@
     "benchmark:spreadsheetbench:stage": "tsx scripts/spreadsheetbench-stage.ts",
     "benchmark:spreadsheetbench:run": "tsx scripts/spreadsheetbench-run.ts",
     "benchmark:spreadsheetbench:score": "tsx scripts/spreadsheetbench-score.ts",
+    "benchmark:agent-sandbox": "tsx scripts/agent-workspace-sandbox-smoke.ts",
     "benchmark:free": "tsx scripts/benchmark/run.ts openrouter/free-auto --free-auto-top=5 --no-merge --model-timeout-ms=180000 --model-reserve-ms=15000 --row-hard-timeout-ms=210000",
     "benchmark:charts": "tsx scripts/benchmark/charts.ts",
     "eval:model-matrix": "tsx scripts/model-eval-matrix.ts",

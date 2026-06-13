@@ -115,7 +115,8 @@ describe("official benchmark readiness", () => {
       expect(runner?.blocker).toContain("raw model output");
       expect(runner?.blocker).toContain("SUM");
       expect(runner?.blocker).toContain("workspace");
-      expect(runner?.blocker).toContain("OS/Docker");
+      expect(runner?.blocker).toContain("Docker/Harbor");
+      expect(gold?.blocker).toContain("Node permission subprocess");
       expect(runner?.blocker).not.toContain("benchmark retry policy");
       expect(xlsx).toMatchObject({
         state: "implemented",

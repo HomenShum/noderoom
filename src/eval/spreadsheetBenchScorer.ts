@@ -1,5 +1,6 @@
 import ExcelJS from "exceljs";
 import { basename } from "node:path";
+import { scoreSpreadsheetBenchCharts, type SpreadsheetBenchChartScore } from "./spreadsheetBenchChartScorer";
 
 export type SpreadsheetBenchCellMismatchKind = "value" | "formula" | "style" | "missing_sheet";
 
@@ -18,6 +19,7 @@ export type SpreadsheetBenchScoreOptions = {
   answerPosition?: string;
   answerSheet?: string;
   compareStyles?: boolean;
+  compareCharts?: boolean;
   maxMismatches?: number;
   generatedAt?: string;
 };
@@ -44,11 +46,13 @@ export type SpreadsheetBenchWorkbookScore = {
     value: number;
     formula: number | null;
     style: number | null;
+    chartPackage: number | null;
     overall: number;
   };
   pass: boolean;
   warnings: string[];
   mismatches: SpreadsheetBenchCellMismatch[];
+  chartPackage?: SpreadsheetBenchChartScore;
 };
 
 type ParsedRange = {
@@ -74,6 +78,14 @@ export async function scoreSpreadsheetBenchWorkbook(options: SpreadsheetBenchSco
   const maxMismatches = options.maxMismatches ?? 50;
   const warnings: string[] = [];
   const mismatches: SpreadsheetBenchCellMismatch[] = [];
+  const chartPackage = options.compareCharts
+    ? scoreSpreadsheetBenchCharts({
+        taskId: options.taskId ?? "spreadsheetbench-workbook",
+        candidateWorkbookPath: options.candidateWorkbookPath,
+        goldWorkbookPath: options.goldWorkbookPath,
+        generatedAt: options.generatedAt,
+      })
+    : undefined;
   const ranges = parseAnswerPosition(options.answerPosition, options.answerSheet);
   const concreteRanges = ranges.length > 0 ? ranges : usedRangesFromGold(gold);
 
@@ -162,14 +174,22 @@ export async function scoreSpreadsheetBenchWorkbook(options: SpreadsheetBenchSco
   const valueScore = ratio(valueMatches, comparedCells);
   const formulaScore = formulaCells > 0 ? ratio(formulaMatches, formulaCells) : null;
   const styleScore = options.compareStyles && styleCells > 0 ? ratio(styleMatches, styleCells) : null;
+  const hasChartPackageEvidence = chartPackage
+    ? chartPackage.totals.goldChartParts > 0 || chartPackage.totals.candidateChartParts > 0
+    : false;
+  const chartPackageScore = chartPackage && hasChartPackageEvidence ? chartPackage.scores.package : null;
   const overallParts = [
     valueScore,
     ...(formulaScore === null ? [] : [formulaScore]),
     ...(styleScore === null ? [] : [styleScore]),
+    ...(chartPackageScore === null ? [] : [chartPackageScore]),
   ];
   const overall = overallParts.reduce((sum, item) => sum + item, 0) / Math.max(1, overallParts.length);
 
   if (mismatchCount > mismatches.length) warnings.push(`mismatch list capped at ${mismatches.length}/${mismatchCount}`);
+  if (chartPackage) {
+    warnings.push(...chartPackage.warnings.map((warning) => `chart_package: ${warning}`));
+  }
 
   return {
     schema: 1,
@@ -193,11 +213,13 @@ export async function scoreSpreadsheetBenchWorkbook(options: SpreadsheetBenchSco
       value: valueScore,
       formula: formulaScore,
       style: styleScore,
+      chartPackage: chartPackageScore,
       overall,
     },
-    pass: comparedCells > 0 && mismatchCount === 0 && missingSheets === 0,
+    pass: comparedCells > 0 && mismatchCount === 0 && missingSheets === 0 && (chartPackageScore === null || chartPackage?.pass === true),
     warnings,
     mismatches,
+    chartPackage,
   };
 }
 

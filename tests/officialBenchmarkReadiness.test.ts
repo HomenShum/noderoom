@@ -136,7 +136,7 @@ describe("official benchmark readiness", () => {
           state: "partial",
           evidence: "src/eval/spreadsheetBenchChartScorer.ts",
         });
-        expect(chart?.blocker).toContain("static XLSX chart-package scorer");
+        expect(chart?.blocker).toContain("static XLSX chart-package comparison");
         expect(chart?.blocker).toContain("VLM visual quality");
       }
       expect(item.ready).toBe(false);

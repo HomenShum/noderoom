@@ -1,12 +1,12 @@
 # Agent Improvement Loop
 
-Generated: 2026-06-13T12:24:41.135Z
+Generated: 2026-06-13T12:30:28.990Z
 
 Source pattern: https://developers.openai.com/cookbook/examples/agents_sdk/agent_improvement_loop
 
 NodeRoom adapts the cookbook loop as: traces -> human/model feedback -> reusable evals -> gate -> Codex handoff -> next harness change.
 
-Latest run artifact: `docs/eval/agent-improvement-loop/20260613T122410Z.json`
+Latest run artifact: `docs/eval/agent-improvement-loop/20260613T122957Z.json`
 
 Summary: 24 pass, 0 fail, 8 skip.
 
@@ -16,28 +16,28 @@ Summary: 24 pass, 0 fail, 8 skip.
 |---|---|---:|---:|---|
 | Professional workflow catalog shape | deterministic | PASS | 1.4s | `npm run eval:professional` |
 | Professional catalog proof gate | deterministic | PASS | 0.6s | `npm run eval:professional:catalog-proofs` |
-| Professional proof ledger | deterministic | PASS | 0.8s | `npm run eval:professional:proofs` |
-| GTM/finance workflow evals | deterministic | PASS | 2.1s | `npx vitest run tests/workflowEvals.test.ts` |
+| Professional proof ledger | deterministic | PASS | 0.7s | `npm run eval:professional:proofs` |
+| GTM/finance workflow evals | deterministic | PASS | 2.0s | `npx vitest run tests/workflowEvals.test.ts` |
 | Collaboration ladder L1-L6 | deterministic | PASS | 1.0s | `npm run ladder -- --record` |
-| MM-banking credit decision evals | deterministic | PASS | 0.8s | `npm run eval:credit -- --record` |
+| MM-banking credit decision evals | deterministic | PASS | 0.7s | `npm run eval:credit -- --record` |
 | Official benchmark readiness | deterministic | PASS | 0.6s | `npm run benchmark:official:readiness` |
-| Official benchmark contamination fixture | deterministic | PASS | 1.6s | `npx vitest run tests/benchmarkContamination.test.ts` |
-| BankerToolBench official ingest fixture | deterministic | PASS | 1.7s | `npx vitest run tests/bankerToolBenchAdapter.test.ts` |
-| BankerToolBench sandbox stage fixture | deterministic | PASS | 1.6s | `npx vitest run tests/bankerToolBenchStage.test.ts` |
+| Official benchmark contamination fixture | deterministic | PASS | 1.7s | `npx vitest run tests/benchmarkContamination.test.ts` |
+| BankerToolBench official ingest fixture | deterministic | PASS | 1.6s | `npx vitest run tests/bankerToolBenchAdapter.test.ts` |
+| BankerToolBench sandbox stage fixture | deterministic | PASS | 1.7s | `npx vitest run tests/bankerToolBenchStage.test.ts` |
 | BankerToolBench staged runner fixture | deterministic | PASS | 1.8s | `npx vitest run tests/bankerToolBenchRunner.test.ts` |
 | SpreadsheetBench official ingest fixture | deterministic | PASS | 1.6s | `npx vitest run tests/spreadsheetBenchAdapter.test.ts` |
-| SpreadsheetBench sandbox stage fixture | deterministic | PASS | 1.7s | `npx vitest run tests/spreadsheetBenchStage.test.ts` |
-| SpreadsheetBench workbook score fixture | deterministic | PASS | 2.0s | `npx vitest run tests/spreadsheetBenchScorer.test.ts` |
-| SpreadsheetBench chart package score fixture | deterministic | PASS | 1.6s | `npx vitest run tests/spreadsheetBenchChartScorer.test.ts` |
-| SpreadsheetBench staged runner fixture | deterministic | PASS | 3.0s | `npx vitest run tests/spreadsheetBenchRunner.test.ts` |
+| SpreadsheetBench sandbox stage fixture | deterministic | PASS | 1.8s | `npx vitest run tests/spreadsheetBenchStage.test.ts` |
+| SpreadsheetBench workbook score fixture | deterministic | PASS | 2.5s | `npx vitest run tests/spreadsheetBenchScorer.test.ts` |
+| SpreadsheetBench chart package score fixture | deterministic | PASS | 1.9s | `npx vitest run tests/spreadsheetBenchChartScorer.test.ts` |
+| SpreadsheetBench staged runner fixture | deterministic | PASS | 3.5s | `npx vitest run tests/spreadsheetBenchRunner.test.ts` |
 | SpreadsheetBench staged artifact contamination | deterministic | PASS | 0.6s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/staged-v1 --strict` |
-| SpreadsheetBench N5 run artifact contamination | deterministic | PASS | 0.8s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v1-model-edit-n5 --strict` |
-| SpreadsheetBench retry run artifact contamination | deterministic | PASS | 0.7s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v1-model-edit-retry --strict` |
-| BankerToolBench staged artifact contamination | deterministic | PASS | 0.6s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/staged-btb --strict` |
-| BankerToolBench run artifact contamination | deterministic | PASS | 0.7s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-btb --strict` |
+| SpreadsheetBench N5 run artifact contamination | deterministic | PASS | 0.6s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v1-model-edit-n5 --strict` |
+| SpreadsheetBench retry run artifact contamination | deterministic | PASS | 0.6s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v1-model-edit-retry --strict` |
+| BankerToolBench staged artifact contamination | deterministic | PASS | 0.7s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/staged-btb --strict` |
+| BankerToolBench run artifact contamination | deterministic | PASS | 0.6s | `npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-btb --strict` |
 | Eval regression diff | deterministic | PASS | 0.8s | `npm run eval:diff` |
 | Convex query/action/mutation boundaries | deterministic | PASS | 1.3s | `npm run convex:boundaries` |
-| Architecture budget review | deterministic | PASS | 0.7s | `npm run architecture:budget` |
+| Architecture budget review | deterministic | PASS | 0.8s | `npm run architecture:budget` |
 | OpenRouter free-auto discovery | live | SKIP | 0.0s | `npm run openrouter:free -- --limit=5` |
 | Professional live-provider catalog champion | live | SKIP | 0.0s | `npm run eval:professional:live-catalog -- --real deepseek/deepseek-v4-flash --require-full --retry-failed 2 --json-out docs/eval/professional-live-catalog.json` |
 | Chat-first GTM live runtime | live | SKIP | 0.0s | `npm run eval:chat-intake:live -- --json-out docs/eval/chat-intake-live.json --timeout-ms 240000` |

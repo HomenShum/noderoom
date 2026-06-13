@@ -1,5 +1,5 @@
 import ExcelJS from "exceljs";
-import { mkdtempSync, rmSync } from "node:fs";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
 import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it } from "vitest";
@@ -71,6 +71,46 @@ describe("SpreadsheetBench workbook scorer", () => {
     expect(score.mismatches.map((item) => item.kind)).toEqual(expect.arrayContaining(["value", "formula", "style"]));
     expect(score.scores.overall).toBeLessThan(1);
   });
+
+  it("includes optional static chart-package evidence in workbook scores", async () => {
+    const root = tempRoot();
+    const candidate = join(root, "candidate.xlsx");
+    const gold = join(root, "gold.xlsx");
+    await writeWorkbook(candidate, { value: 24, formula: "B2*2", bold: true, numFmt: "$#,##0" });
+    await writeWorkbook(gold, { value: 24, formula: "B2*2", bold: true, numFmt: "$#,##0" });
+    appendStoredZipEntries(candidate, [
+      ["xl/charts/chart1.xml", "<c:chartSpace><c:title><c:v>Revenue</c:v></c:title></c:chartSpace>"],
+      ["xl/drawings/drawing1.xml", "<xdr:wsDr><xdr:twoCellAnchor/></xdr:wsDr>"],
+    ]);
+    appendStoredZipEntries(gold, [
+      ["xl/charts/chart1.xml", "<c:chartSpace>\n<c:title><c:v>Revenue</c:v></c:title>\n</c:chartSpace>"],
+      ["xl/drawings/drawing1.xml", "<xdr:wsDr><xdr:twoCellAnchor/></xdr:wsDr>"],
+    ]);
+
+    const score = await scoreSpreadsheetBenchWorkbook({
+      taskId: "fixture/chart",
+      candidateWorkbookPath: candidate,
+      goldWorkbookPath: gold,
+      answerPosition: "'Model'!B2:C2",
+      compareCharts: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(score.pass).toBe(true);
+    expect(score.scores.chartPackage).toBe(1);
+    expect(score.chartPackage).toMatchObject({
+      verifier: "xlsx_chart_package_static",
+      pass: true,
+      totals: {
+        goldChartParts: 2,
+        candidateChartParts: 2,
+        matchedChartParts: 2,
+      },
+    });
+    expect(score.warnings).toEqual(expect.arrayContaining([
+      expect.stringContaining("not a rendered visual or VLM"),
+    ]));
+  });
 });
 
 function tempRoot(): string {
@@ -89,4 +129,89 @@ async function writeWorkbook(path: string, args: { value: number; formula: strin
   sheet.getCell("C2").numFmt = args.numFmt;
   sheet.getCell("C2").font = { bold: args.bold };
   await workbook.xlsx.writeFile(path);
+}
+
+function appendStoredZipEntries(path: string, entries: Array<[string, string]>) {
+  const buffer = readFileSync(path);
+  const eocdOffset = findEndOfCentralDirectory(buffer);
+  const oldEntryCount = buffer.readUInt16LE(eocdOffset + 10);
+  const centralDirectorySize = buffer.readUInt32LE(eocdOffset + 12);
+  const centralDirectoryOffset = buffer.readUInt32LE(eocdOffset + 16);
+  const prefix = buffer.subarray(0, centralDirectoryOffset);
+  const oldCentralDirectory = buffer.subarray(centralDirectoryOffset, centralDirectoryOffset + centralDirectorySize);
+  const localParts: Buffer[] = [];
+  const centralParts: Buffer[] = [];
+  let offset = prefix.length;
+
+  for (const [name, text] of entries) {
+    const nameBuffer = Buffer.from(name, "utf8");
+    const content = Buffer.from(text, "utf8");
+    const crc = crc32(content);
+
+    const local = Buffer.alloc(30);
+    local.writeUInt32LE(0x04034b50, 0);
+    local.writeUInt16LE(20, 4);
+    local.writeUInt16LE(0, 6);
+    local.writeUInt16LE(0, 8);
+    local.writeUInt32LE(0, 10);
+    local.writeUInt32LE(crc, 14);
+    local.writeUInt32LE(content.length, 18);
+    local.writeUInt32LE(content.length, 22);
+    local.writeUInt16LE(nameBuffer.length, 26);
+    local.writeUInt16LE(0, 28);
+    localParts.push(local, nameBuffer, content);
+
+    const central = Buffer.alloc(46);
+    central.writeUInt32LE(0x02014b50, 0);
+    central.writeUInt16LE(20, 4);
+    central.writeUInt16LE(20, 6);
+    central.writeUInt16LE(0, 8);
+    central.writeUInt16LE(0, 10);
+    central.writeUInt32LE(0, 12);
+    central.writeUInt32LE(crc, 16);
+    central.writeUInt32LE(content.length, 20);
+    central.writeUInt32LE(content.length, 24);
+    central.writeUInt16LE(nameBuffer.length, 28);
+    central.writeUInt16LE(0, 30);
+    central.writeUInt16LE(0, 32);
+    central.writeUInt16LE(0, 34);
+    central.writeUInt16LE(0, 36);
+    central.writeUInt32LE(0, 38);
+    central.writeUInt32LE(offset, 42);
+    centralParts.push(central, nameBuffer);
+    offset += local.length + nameBuffer.length + content.length;
+  }
+
+  const localData = Buffer.concat(localParts);
+  const centralDirectoryOffsetNew = prefix.length + localData.length;
+  const centralDirectory = Buffer.concat([oldCentralDirectory, ...centralParts]);
+  const eocd = Buffer.alloc(22);
+  eocd.writeUInt32LE(0x06054b50, 0);
+  eocd.writeUInt16LE(0, 4);
+  eocd.writeUInt16LE(0, 6);
+  eocd.writeUInt16LE(oldEntryCount + entries.length, 8);
+  eocd.writeUInt16LE(oldEntryCount + entries.length, 10);
+  eocd.writeUInt32LE(centralDirectory.length, 12);
+  eocd.writeUInt32LE(centralDirectoryOffsetNew, 16);
+  eocd.writeUInt16LE(0, 20);
+  writeFileSync(path, Buffer.concat([prefix, localData, centralDirectory, eocd]));
+}
+
+function findEndOfCentralDirectory(buffer: Buffer): number {
+  const min = Math.max(0, buffer.length - 0xffff - 22);
+  for (let offset = buffer.length - 22; offset >= min; offset -= 1) {
+    if (buffer.readUInt32LE(offset) === 0x06054b50) return offset;
+  }
+  throw new Error("ZIP end of central directory not found");
+}
+
+function crc32(buffer: Buffer): number {
+  let crc = 0xffffffff;
+  for (const byte of buffer) {
+    crc ^= byte;
+    for (let i = 0; i < 8; i += 1) {
+      crc = (crc >>> 1) ^ (0xedb88320 & -(crc & 1));
+    }
+  }
+  return (crc ^ 0xffffffff) >>> 0;
 }

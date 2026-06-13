@@ -24,6 +24,7 @@ export type SpreadsheetBenchRunnerOptions = {
   limit?: number;
   clean?: boolean;
   compareStyles?: boolean;
+  compareCharts?: boolean;
   maxMismatches?: number;
   generatedAt?: string;
 };
@@ -350,6 +351,7 @@ async function runTask(
       answerPosition: evaluator.answerPosition,
       answerSheet: evaluator.answerSheet,
       compareStyles: options.compareStyles,
+      compareCharts: options.compareCharts ?? agent.track === "spreadsheetbench-v2",
       maxMismatches: options.maxMismatches,
       generatedAt: options.generatedAt,
     });
@@ -375,7 +377,15 @@ async function runTask(
     });
   }
   const scoringMs = Date.now() - scoreStarted;
-  trajectory.push({ step: "score_candidate", detail: `${score.totals.mismatches} mismatch(es)` });
+  const chartMismatches = score.chartPackage
+    ? score.chartPackage.totals.missingChartParts + score.chartPackage.totals.extraChartParts + score.chartPackage.totals.mismatchedChartParts
+    : 0;
+  trajectory.push({
+    step: "score_candidate",
+    detail: chartMismatches
+      ? `${score.totals.mismatches} cell mismatch(es), ${chartMismatches} chart-package mismatch(es)`
+      : `${score.totals.mismatches} cell mismatch(es)`,
+  });
 
   return {
     taskId: agent.taskId,

@@ -305,7 +305,7 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchChartScorer.ts",
       blocker:
-        "A static XLSX chart-package scorer can compare chart and drawing XML parts after candidate emission; rendered chart screenshots and VLM visual quality grading are not wired.",
+        "SpreadsheetBench score/run reports can include a static XLSX chart-package comparison over chart and drawing XML parts; rendered chart screenshots and VLM visual quality grading are not wired.",
     },
   },
 };

@@ -15,6 +15,7 @@ const taskId = optionValue("--task-id");
 const limit = numberOption("--limit") ?? 3;
 const maxMismatches = numberOption("--max-mismatches") ?? 20;
 const compareStyles = args.includes("--compare-styles");
+const compareCharts = args.includes("--compare-charts");
 const generatedAt = new Date().toISOString();
 
 const report = candidate && gold
@@ -25,11 +26,12 @@ const report = candidate && gold
       answerPosition,
       answerSheet,
       compareStyles,
+      compareCharts,
       maxMismatches,
       generatedAt,
     })
   : root && track
-    ? await scoreBundleBaseline({ root, track, limit, compareStyles, maxMismatches, generatedAt })
+    ? await scoreBundleBaseline({ root, track, limit, compareStyles, compareCharts, maxMismatches, generatedAt })
     : usage();
 
 writeReport(report);
@@ -37,8 +39,8 @@ writeReport(report);
 function usage(): never {
   console.error([
     "Usage:",
-    "  npm run benchmark:spreadsheetbench:score -- --candidate <candidate.xlsx> --gold <golden.xlsx> [--answer-position \"'Sheet'!A1:B2\"] [--json-out <path>]",
-    "  npm run benchmark:spreadsheetbench:score -- --track spreadsheetbench-v1 --root <extracted-v1-root> [--limit 3] [--json-out <path>]",
+    "  npm run benchmark:spreadsheetbench:score -- --candidate <candidate.xlsx> --gold <golden.xlsx> [--answer-position \"'Sheet'!A1:B2\"] [--compare-charts] [--json-out <path>]",
+    "  npm run benchmark:spreadsheetbench:score -- --track spreadsheetbench-v1 --root <extracted-v1-root> [--limit 3] [--compare-charts] [--json-out <path>]",
     "",
     "Bundle mode scores the official input workbook as a candidate baseline against evaluator-only gold. It proves open/score wiring; it is not a model score.",
   ].join("\n"));
@@ -50,6 +52,7 @@ async function scoreBundleBaseline(options: {
   track: SpreadsheetBenchTrack;
   limit: number;
   compareStyles: boolean;
+  compareCharts: boolean;
   maxMismatches: number;
   generatedAt: string;
 }) {
@@ -91,6 +94,7 @@ async function scoreBundleBaseline(options: {
 
 async function scoreTask(rootPath: string, task: SpreadsheetBenchTask, options: {
   compareStyles: boolean;
+  compareCharts: boolean;
   maxMismatches: number;
   generatedAt: string;
 }): Promise<SpreadsheetBenchWorkbookScore> {
@@ -101,6 +105,7 @@ async function scoreTask(rootPath: string, task: SpreadsheetBenchTask, options: 
     answerPosition: task.evaluatorMetadata.answerPosition,
     answerSheet: task.evaluatorMetadata.answerSheet,
     compareStyles: options.compareStyles,
+    compareCharts: options.compareCharts || task.track === "spreadsheetbench-v2",
     maxMismatches: options.maxMismatches,
     generatedAt: options.generatedAt,
   });

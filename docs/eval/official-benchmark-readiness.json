@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedAt": "2026-06-13T12:25:43.853Z",
+  "generatedAt": "2026-06-13T12:31:17.359Z",
   "summary": {
     "total": 3,
     "ready": 0,
@@ -260,7 +260,7 @@
           "capability": "chart_visual_grade",
           "state": "partial",
           "evidence": "src/eval/spreadsheetBenchChartScorer.ts",
-          "blocker": "A static XLSX chart-package scorer can compare chart and drawing XML parts after candidate emission; rendered chart screenshots and VLM visual quality grading are not wired."
+          "blocker": "SpreadsheetBench score/run reports can include a static XLSX chart-package comparison over chart and drawing XML parts; rendered chart screenshots and VLM visual quality grading are not wired."
         }
       ],
       "ready": false,
@@ -269,7 +269,7 @@
         "official_runner_adapter: A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; V1 N=5 and retry-policy model smoke evidence exists with fair larger snapshots, raw model output, simple SUM result caching, and workspace manifests, but V2 official runs, OS/Docker sandbox proof, route selection, and chart lane remain incomplete.",
         "formula_recompute: The SpreadsheetBench runner caches deterministic results for a local formula subset covering arithmetic, same-sheet cell refs/ranges, and SUM/AVERAGE/MIN/MAX/COUNT before export/reopen scoring; full Excel-compatible recompute, chart formulas, external refs, and volatile functions are not complete.",
         "format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy, chart rendering, and visual grading are not complete.",
-        "chart_visual_grade: A static XLSX chart-package scorer can compare chart and drawing XML parts after candidate emission; rendered chart screenshots and VLM visual quality grading are not wired."
+        "chart_visual_grade: SpreadsheetBench score/run reports can include a static XLSX chart-package comparison over chart and drawing XML parts; rendered chart screenshots and VLM visual quality grading are not wired."
       ]
     }
   ]

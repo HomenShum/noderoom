@@ -1,17 +1,17 @@
 # HALO Status Snapshots
 
-Generated: 2026-06-10T09:00:48.278Z
+Generated: 2026-06-13T09:24:25.798Z
 Snapshot source: `docs/eval/halo-runs/status-snapshots.jsonl`
-Snapshots parsed: 66
+Snapshots parsed: 68
 
 ## Latest
 
-- Time: 2026-06-10T09:00:40.636Z
-- Run: 20260609T183814Z
-- Active PID: 149656 alive=false
-- Step: sleeping
-- Sleep until: 2026-06-10T09:24:31.052Z
-- Router ladder artifact: docs/eval/free-auto-router-ladder.json (12291 bytes)
+- Time: 2026-06-13T09:24:14.252Z
+- Run: unknown
+- Active PID: unknown alive=undefined
+- Step: unknown
+- Sleep until: n/a
+- Router ladder artifact: docs/eval/free-auto-router-ladder.json (12755 bytes)
 - Supervisors: 0
 - Freshness evidence: unknown
 - Active process tree: unknown
@@ -19,14 +19,12 @@ Snapshots parsed: 66
 ## Anomalies
 
 - Duplicate-supervisor snapshots: 1
-- Missing-supervisor snapshots: 4
+- Missing-supervisor snapshots: 6
 
 ## Recent Snapshots
 
 | generatedAt | runId | step | pidAlive | supervisors | routerJson | freshness | wakeIn | lockAge | runAge | deadlineIn |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2026-06-09T23:57:50.220Z | 20260609T183814Z | sleeping | yes | 1 | yes | process | 15m 20s | 14m 40s | 5h 19m | 17h 2m |
-| 2026-06-10T00:33:53.580Z | 20260609T183814Z | sleeping | yes | 1 | yes | process | 9m 48s | 20m 12s | 5h 55m | 16h 26m |
 | 2026-06-10T01:08:56.697Z | 20260609T183814Z | sleeping | yes | 1 | yes | process | 5m 10s | 24m 50s | 6h 30m | 15h 51m |
 | 2026-06-10T01:40:53.541Z | 20260609T183814Z | sleeping | yes | 1 | yes | process | 3m 48s | 26m 12s | 7h 2m | 15h 19m |
 | 2026-06-10T02:10:25.185Z | 20260609T183814Z | sleeping | yes | 1 | yes | process | 4m 41s | 25m 19s | 7h 32m | 14h 49m |
@@ -45,3 +43,5 @@ Snapshots parsed: 66
 | 2026-06-10T08:50:39.271Z | 20260609T183814Z | sleeping | yes | 1 | yes | process | 2m 47s | 27m 13s | 14h 12m | 8h 9m |
 | 2026-06-10T08:58:49.295Z | 20260609T183814Z | sleeping | no | 0 | yes |  | 25m 42s | 4m 18s | 14h 20m | 8h 1m |
 | 2026-06-10T09:00:40.636Z | 20260609T183814Z | sleeping | no | 0 | yes |  | 23m 50s | 6m 10s | 14h 22m | 7h 59m |
+| 2026-06-13T08:58:39.172Z | 20260609T183814Z | sleeping | no | 0 | yes |  | -71h 34m | 72h 4m | 86h 20m | -63h 58m |
+| 2026-06-13T09:24:14.252Z |  |  | no | 0 | yes |  |  |  |  |  |

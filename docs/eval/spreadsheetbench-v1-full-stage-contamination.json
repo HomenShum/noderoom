@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T15:28:23.397Z",
+  "root": "staged-v1-full",
+  "checkedFiles": 800,
+  "leakCount": 0,
+  "leaks": []
+}

@@ -1054,7 +1054,9 @@ chart grading, Docker/Harbor isolation, and route selection are still tracked as
 The contamination gate
 (`npm run benchmark:contamination`) now scans agent-facing benchmark manifests, candidate manifests,
 agent-workspace manifests, and generated edit plans for evaluator-only gold/rubric/canary metadata; checked-in smokes show 0
-leaks for the staged V1 root, the N=5 one-task V1 candidate output, the three-task N=5 V1 candidate
+leaks for the staged V1 root, the full verified-400 V1 stage (`400/400` tasks,
+800 agent-facing files, 400 evaluator gold files, 0 leaks across 800 checked
+files), the N=5 one-task V1 candidate output, the three-task N=5 V1 candidate
 output, the retry V1 candidate output, and the staged BTB fixture. The runner also has an explicit retry policy: `--retry-failed N` retries
 candidate-generation or scoring errors, `--retry-score-failures` opts into retrying
 scored-but-wrong candidates, and the report records case-level attempts, retry exhaustion,

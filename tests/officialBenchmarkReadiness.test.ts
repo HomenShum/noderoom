@@ -128,6 +128,7 @@ describe("official benchmark readiness", () => {
         evidence: "src/eval/spreadsheetBenchStage.ts",
       });
       expect(gold?.blocker).toContain("contamination");
+      if (item.id === "spreadsheetbench-v1") expect(gold?.blocker).toContain("verified-400");
       expect(runner).toMatchObject({
         state: "partial",
         evidence: "src/eval/spreadsheetBenchRunner.ts",

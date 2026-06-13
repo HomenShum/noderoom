@@ -236,6 +236,30 @@ const steps: StepSpec[] = [
     timeoutMs: 120_000,
   },
   {
+    id: "spreadsheetbench-v1-full-stage-proof",
+    label: "SpreadsheetBench V1 full-stage isolation proof",
+    lane: "deterministic",
+    command: "npm",
+    args: [
+      "run",
+      "benchmark:spreadsheetbench:stage-proof",
+      "--",
+      "--report",
+      "docs/eval/spreadsheetbench-v1-full-stage-smoke.json",
+      "--stage-root",
+      ".tmp/official-benchmarks/staged-v1-full",
+      "--track",
+      "spreadsheetbench-v1",
+      "--min-tasks",
+      "400",
+    ],
+    timeoutMs: 120_000,
+    includeWhen: () =>
+      existsSync(join(process.cwd(), "docs", "eval", "spreadsheetbench-v1-full-stage-smoke.json")) &&
+      existsSync(join(process.cwd(), ".tmp", "official-benchmarks", "staged-v1-full")),
+    skipReason: "local SpreadsheetBench V1 full-stage proof artifact is not present",
+  },
+  {
     id: "spreadsheetbench-score-fixture",
     label: "SpreadsheetBench workbook score fixture",
     lane: "deterministic",
@@ -296,6 +320,16 @@ const steps: StepSpec[] = [
     timeoutMs: 120_000,
     includeWhen: () => existsSync(join(process.cwd(), ".tmp", "official-benchmarks", "staged-v1")),
     skipReason: "local staged SpreadsheetBench V1 root is not present",
+  },
+  {
+    id: "spreadsheetbench-v1-full-stage-contamination",
+    label: "SpreadsheetBench V1 full-stage contamination",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "benchmark:contamination", "--", "--root", ".tmp/official-benchmarks/staged-v1-full", "--strict"],
+    timeoutMs: 120_000,
+    includeWhen: () => existsSync(join(process.cwd(), ".tmp", "official-benchmarks", "staged-v1-full")),
+    skipReason: "local SpreadsheetBench V1 full-stage root is not present",
   },
   {
     id: "spreadsheetbench-run-contamination",

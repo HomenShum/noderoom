@@ -439,10 +439,28 @@ describe("SpreadsheetBench staged runner", () => {
       name: "sheet-aware-spreadsheetbench-planner",
       async next({ messages }) {
         const payload = JSON.parse(messages[0]?.content ?? "{}") as {
-          workbook?: { sheets?: Array<{ name: string; truncated?: boolean; cells?: Array<{ address: string }> }> };
+          workbook?: {
+            sheets?: Array<{
+              name: string;
+              truncated?: boolean;
+              blocks?: Array<{ range: string; headerRow: number; headers: string[]; dataRowCount: number }>;
+              cells?: Array<{ address: string }>;
+            }>;
+          };
         };
         expect(payload.workbook?.sheets?.map((sheet) => sheet.name)).toEqual(["RANGES", "LISTS"]);
         expect(payload.workbook?.sheets?.[0]?.truncated).toBe(true);
+        expect(payload.workbook?.sheets?.[0]?.blocks?.[0]).toMatchObject({
+          range: "A1:D160",
+          headerRow: 1,
+          dataRowCount: 159,
+        });
+        expect(payload.workbook?.sheets?.[1]?.blocks?.[0]).toMatchObject({
+          range: "A1:B2",
+          title: "target",
+          headerRow: 2,
+          dataRowCount: 0,
+        });
         expect(payload.workbook?.sheets?.[1]?.cells?.map((cell) => cell.address)).toContain("B2");
         return {
           text: `Here is the edit plan:\n\`\`\`json\n${JSON.stringify({ schema: 1, operations: [{ sheet: "LISTS", cell: "B2", value: 2 }] })}\n\`\`\``,

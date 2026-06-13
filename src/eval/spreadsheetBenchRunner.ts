@@ -783,6 +783,13 @@ type WorkbookSnapshot = {
     actualRowCount: number;
     actualColumnCount: number;
     truncated: boolean;
+    blocks: Array<{
+      range: string;
+      title?: string;
+      headerRow: number;
+      headers: string[];
+      dataRowCount: number;
+    }>;
     cells: Array<{ address: string; value: string; formula?: string; numFmt?: string }>;
   }>;
   cellCount: number;
@@ -824,10 +831,60 @@ async function snapshotWorkbook(path: string, maxCells = DEFAULT_WORKBOOK_SNAPSH
       actualRowCount: sheet.actualRowCount,
       actualColumnCount: sheet.actualColumnCount,
       truncated: sheetTruncated,
+      blocks: detectSheetBlocks(sheet),
       cells,
     });
   }
   return { sheets, cellCount, truncated };
+}
+
+function detectSheetBlocks(sheet: ExcelJS.Worksheet) {
+  const blocks: WorkbookSnapshot["sheets"][number]["blocks"] = [];
+  const maxRow = sheet.rowCount;
+  const maxCol = Math.max(1, sheet.actualColumnCount || sheet.columnCount);
+  let startRow: number | undefined;
+  for (let rowNumber = 1; rowNumber <= maxRow + 1; rowNumber++) {
+    const rowHasValues = rowNumber <= maxRow && rowHasVisibleValues(sheet.getRow(rowNumber), maxCol);
+    if (rowHasValues && startRow === undefined) startRow = rowNumber;
+    if ((!rowHasValues || rowNumber > maxRow) && startRow !== undefined) {
+      const endRow = rowNumber - 1;
+      const firstValues = visibleRowValues(sheet.getRow(startRow), maxCol);
+      const firstNonEmpty = firstValues.filter(Boolean);
+      const firstLooksLikeTitle = firstNonEmpty.length === 1 && endRow > startRow;
+      const headerRow = firstLooksLikeTitle ? startRow + 1 : startRow;
+      const headers = visibleRowValues(sheet.getRow(headerRow), maxCol);
+      blocks.push({
+        range: `${columnNumberToName(1)}${startRow}:${columnNumberToName(maxCol)}${endRow}`,
+        ...(firstLooksLikeTitle ? { title: firstNonEmpty[0] } : {}),
+        headerRow,
+        headers,
+        dataRowCount: Math.max(0, endRow - headerRow),
+      });
+      startRow = undefined;
+    }
+  }
+  return blocks;
+}
+
+function rowHasVisibleValues(row: ExcelJS.Row, maxCol: number): boolean {
+  return visibleRowValues(row, maxCol).some(Boolean);
+}
+
+function visibleRowValues(row: ExcelJS.Row, maxCol: number): string[] {
+  const values: string[] = [];
+  for (let column = 1; column <= maxCol; column++) values.push(cellValueForPrompt(row.getCell(column).value));
+  return values;
+}
+
+function columnNumberToName(column: number): string {
+  let value = "";
+  let remaining = column;
+  while (remaining > 0) {
+    const modulo = (remaining - 1) % 26;
+    value = String.fromCharCode(65 + modulo) + value;
+    remaining = Math.floor((remaining - modulo) / 26);
+  }
+  return value;
 }
 
 function cellFormula(value: ExcelJS.CellValue): string | undefined {

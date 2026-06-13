@@ -1032,8 +1032,9 @@ and the harness records the model call, tokens, cost, trajectory, parser repair,
 instead of summarizing it away. The N=5 live smoke
 (`docs/eval/spreadsheetbench-v1-model-edit-plan-n5-live-smoke.json`) repeats that official task five
 times and now records `taskCount: 5`, `caseCount: 1`, `passRate: 0`, p95 latency 17.161s,
-`providerCostUsd: 0.018231`, zero candidate-generation failures, and five scored partial
-candidates with best overall `0.675`. That is the agent-path drift signal: same task and model,
+times and now records `taskCount: 5`, `caseCount: 1`, `passRate: 0`, p95 latency 7.51s,
+`providerCostUsd: 0.01079625`, zero candidate-generation failures, and five scored partial
+candidates with average overall `0.4` and best overall `0.675`. That is the agent-path drift signal: same task and model,
 different edit paths and scores, all captured in the benchmark report instead of summarized away.
 The contamination gate
 (`npm run benchmark:contamination`) now scans agent-facing benchmark manifests, candidate manifests,

@@ -8,6 +8,7 @@ export type OpenRouterConvexRoute = {
   suites: string[];
   notes?: string;
   evidence?: string;
+  sourceTags?: string[];
 };
 
 export type OpenRouterConvexCaseStatus = "pass" | "blocked" | "missing";
@@ -101,6 +102,8 @@ export type OpenRouterConvexBenchmarkReport = {
     routesWithManagedN5P95: number;
     routesWithSpreadsheetN5: number;
     routesInteractivePromoted: number;
+    topPaidOpenRouterRoutes: number;
+    topPaidRoutesWithManagedN5P95: number;
     harnessReady: boolean;
     officialStyleSuitesReady: boolean;
     officialPromotionReady: boolean;
@@ -136,6 +139,7 @@ export function buildOpenRouterConvexBenchmarkReport(args: {
     .filter((route) => route.provider === "openrouter" || route.provider === "internal_alias")
     .map((route) => routePlan(route, harnessReady));
   const routeScorecards = buildRouteScorecards(args.routes);
+  const topPaidRoutes = new Set(args.routes.filter(isTopPaidOpenRouterRoute).map((route) => route.route));
 
   return {
     schema: 1,
@@ -153,6 +157,8 @@ export function buildOpenRouterConvexBenchmarkReport(args: {
       routesWithManagedN5P95: routeScorecards.filter((item) => item.evidence.managedPathN5P95.status === "pass").length,
       routesWithSpreadsheetN5: routeScorecards.filter((item) => item.evidence.spreadsheetBenchN5.status === "pass").length,
       routesInteractivePromoted: routeScorecards.filter((item) => item.role === "interactive_promoted").length,
+      topPaidOpenRouterRoutes: topPaidRoutes.size,
+      topPaidRoutesWithManagedN5P95: routeScorecards.filter((item) => topPaidRoutes.has(item.route) && item.evidence.managedPathN5P95.status === "pass").length,
       harnessReady,
       officialStyleSuitesReady: officialStyleSuites.every((item) => item.status === "pass"),
       officialPromotionReady: officialCases.every((item) => item.status === "pass"),
@@ -162,7 +168,7 @@ export function buildOpenRouterConvexBenchmarkReport(args: {
       "Benchmark-shaped work is routed through deterministic tools first, then bounded model edit plans, then evidence-bearing writes.",
       "Free-auto is a long-running/background lane until ladder and p95 evidence prove it can meet interactive collaboration budgets.",
       "Official benchmark claims stay blocked until the external verifier path is wired; internal Convex benchmark readiness is separate.",
-      "The scorecard includes every configured agent LLM route from llmModelCatalog.agent plus the curated OpenRouter route set.",
+      "The scorecard includes every configured agent LLM route from llmModelCatalog.agent, curated OpenRouter routes, and the current top-paid OpenRouter tool-capable candidate set.",
     ],
     cases,
     officialStyleSuites,
@@ -487,6 +493,10 @@ function providerRank(provider: OpenRouterConvexRoute["provider"]): number {
   if (provider === "openrouter") return 0;
   if (provider === "internal_alias") return 1;
   return 2;
+}
+
+function isTopPaidOpenRouterRoute(route: OpenRouterConvexRoute): boolean {
+  return route.provider === "openrouter" && route.sourceTags?.includes("openrouter_top_paid_tools") === true;
 }
 
 type ResearchReport = {

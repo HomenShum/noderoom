@@ -15,6 +15,7 @@ export type SupportedModelRoute = {
   suites: ModelEvalSuite[];
   notes: string;
   evidence?: string;
+  sourceTags?: string[];
 };
 
 export type ModelEvalScenario = {
@@ -285,6 +286,46 @@ export const SUPPORTED_MODEL_ROUTES: SupportedModelRoute[] = [
   },
 ];
 
+const OPENROUTER_TOP_PAID_SOURCE =
+  "OpenRouter Models API, 2026-06-13, sort=top-weekly&supported_parameters=tools, paid routes only";
+
+export const OPENROUTER_TOP_PAID_AGENT_ROUTES: SupportedModelRoute[] = [
+  ["deepseek/deepseek-v4-flash", "DeepSeek V4 Flash"],
+  ["tencent/hy3-preview", "Tencent Hy3 Preview"],
+  ["minimax/minimax-m3", "MiniMax M3"],
+  ["xiaomi/mimo-v2.5", "Xiaomi MiMo V2.5"],
+  ["anthropic/claude-opus-4.7", "Claude Opus 4.7 via OpenRouter"],
+  ["anthropic/claude-sonnet-4.6", "Claude Sonnet 4.6 via OpenRouter"],
+  ["deepseek/deepseek-v4-pro", "DeepSeek V4 Pro"],
+  ["anthropic/claude-opus-4.8", "Claude Opus 4.8 via OpenRouter"],
+  ["deepseek/deepseek-v3.2", "DeepSeek V3.2"],
+  ["google/gemini-3-flash-preview", "Gemini 3 Flash Preview via OpenRouter"],
+  ["stepfun/step-3.7-flash", "StepFun Step 3.7 Flash"],
+  ["google/gemini-2.5-flash-lite", "Gemini 2.5 Flash Lite via OpenRouter"],
+  ["google/gemini-2.5-flash", "Gemini 2.5 Flash via OpenRouter"],
+  ["z-ai/glm-5.1", "GLM 5.1"],
+  ["xiaomi/mimo-v2.5-pro", "Xiaomi MiMo V2.5 Pro"],
+  ["google/gemini-3.5-flash", "Gemini 3.5 Flash via OpenRouter"],
+  ["openai/gpt-5.5", "GPT-5.5 via OpenRouter"],
+  ["openai/gpt-oss-120b", "GPT OSS 120B via OpenRouter"],
+  ["google/gemini-3.1-flash-lite", "Gemini 3.1 Flash Lite via OpenRouter"],
+  ["anthropic/claude-opus-4.6", "Claude Opus 4.6 via OpenRouter"],
+  ["moonshotai/kimi-k2.6", "Kimi K2.6"],
+  ["openai/gpt-4o-mini", "GPT-4o mini via OpenRouter"],
+  ["google/gemini-3.1-pro-preview", "Gemini 3.1 Pro Preview via OpenRouter"],
+  ["google/gemma-4-26b-a4b-it", "Gemma 4 26B A4B"],
+  ["openai/gpt-5.4", "GPT-5.4 via OpenRouter"],
+].map(([route, label]) => ({
+  route,
+  provider: "openrouter" as const,
+  label,
+  promotion: "candidate" as const,
+  suites: ["research", "collaboration"],
+  evidence: "docs/eval/openrouter-top-paid-tools-snapshot.json",
+  sourceTags: ["openrouter_top_paid_tools"],
+  notes: `${OPENROUTER_TOP_PAID_SOURCE}. Included in the scorecard and opt-in top-paid route set; not default-promoted until route-owned N=5/p95 and task-suite evidence pass.`,
+}));
+
 export const DEFAULT_RESEARCH_MODEL_ROUTES = [
   "nex-agi/nex-n2-pro:free",
   "ibm-granite/granite-4.1-8b",
@@ -295,6 +336,18 @@ export const DEFAULT_RESEARCH_MODEL_ROUTES = [
 export function allAgentLlmRoutes(): SupportedModelRoute[] {
   const byRoute = new Map<string, SupportedModelRoute>();
   for (const route of SUPPORTED_MODEL_ROUTES) byRoute.set(route.route, route);
+  for (const route of OPENROUTER_TOP_PAID_AGENT_ROUTES) {
+    const existing = byRoute.get(route.route);
+    if (!existing) {
+      byRoute.set(route.route, route);
+    } else {
+      byRoute.set(route.route, {
+        ...existing,
+        sourceTags: unique([...(existing.sourceTags ?? []), ...(route.sourceTags ?? [])]),
+        notes: `${existing.notes} ${route.notes}`,
+      });
+    }
+  }
 
   for (const provider of Object.keys(llmModelCatalog) as LlmProvider[]) {
     for (const rawModel of llmModelCatalog[provider].agent) {
@@ -342,6 +395,11 @@ export function resolveRouteSet(routeSet = "supported", suite: ModelEvalSuite | 
   if (selected === "free") {
     return SUPPORTED_MODEL_ROUTES
       .filter((route) => eligible(route) && route.promotion === "demo_only")
+      .map((route) => route.route);
+  }
+  if (selected === "top-paid" || selected === "openrouter-top-paid") {
+    return OPENROUTER_TOP_PAID_AGENT_ROUTES
+      .filter(eligible)
       .map((route) => route.route);
   }
   return unique(selected.split(",").map((route) => route.trim()).filter(Boolean));

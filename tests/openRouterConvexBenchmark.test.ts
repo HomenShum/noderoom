@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { buildOpenRouterConvexBenchmarkReport } from "../src/eval/openRouterConvexBenchmark";
-import { SUPPORTED_MODEL_ROUTES, allAgentLlmRoutes } from "../scripts/benchmark/modelEvalConfig";
+import { OPENROUTER_TOP_PAID_AGENT_ROUTES, SUPPORTED_MODEL_ROUTES, allAgentLlmRoutes, resolveRouteSet } from "../scripts/benchmark/modelEvalConfig";
 
 describe("OpenRouter-on-Convex benchmark contract", () => {
   it("separates harness readiness from official benchmark promotion", () => {
@@ -99,6 +99,22 @@ describe("OpenRouter-on-Convex benchmark contract", () => {
     ]));
     expect(report.summary.agentRouteCount).toBe(routes.length);
     expect(new Set(routes).size).toBe(routes.length);
+  });
+
+  it("includes current top-paid OpenRouter candidates without making them the default live sweep", () => {
+    const report = buildOpenRouterConvexBenchmarkReport({ routes: allAgentLlmRoutes() });
+    const routes = report.routeScorecards.map((item) => item.route);
+
+    expect(report.summary.topPaidOpenRouterRoutes).toBe(OPENROUTER_TOP_PAID_AGENT_ROUTES.length);
+    expect(routes).toEqual(expect.arrayContaining([
+      "anthropic/claude-opus-4.8",
+      "openai/gpt-5.5",
+      "google/gemini-3.5-flash",
+      "tencent/hy3-preview",
+      "z-ai/glm-5.1",
+    ]));
+    expect(resolveRouteSet("top-paid", "collaboration")).toContain("openai/gpt-5.5");
+    expect(resolveRouteSet("supported", "collaboration")).not.toContain("openai/gpt-5.5");
   });
 
   it("keeps route promotion tied to route-owned N=5/p95 evidence", () => {

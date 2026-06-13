@@ -178,12 +178,19 @@ are intentionally separate:
 - **Official-style route scorecard:** SpreadsheetBench-like N=5 workbook edits,
   BankerToolBench-like package/verifier tasks, multi-user conflict tasks, and
   provider-route N=5/p95 path stability are normalized route by route. The
-  latest report covers 35 agent LLM routes, with only routes that own repeated
-  live evidence eligible for interactive promotion.
+  latest report covers 53 agent LLM routes, including 41 OpenRouter/internal
+  alias routes and 25 current top-paid OpenRouter tool-capable candidates from
+  `npm run openrouter:paid`. Only routes that own repeated live evidence are
+  eligible for interactive promotion.
 - **Official benchmark promoted:** the external benchmark adapters have run
   official held-out tasks with verifier-owned scoring. BankerToolBench still
   needs Harbor/MCP/Gandalf execution before NodeRoom can claim an official
   score.
+- **Full task coverage:** `npm run benchmark:official:task-coverage` records
+  whether every published task has been staged and model-run. The current
+  ledger is intentionally red/yellow: SpreadsheetBench Verified has 400/400
+  staged, but full SpreadsheetBench V1, SpreadsheetBench 2, and BankerToolBench
+  are not complete official-task runs yet.
 
 Free and demo-only OpenRouter routes use the same Convex adapter, but stay on
 the background/long-running lane until N>=5 p95 ladder evidence proves they are

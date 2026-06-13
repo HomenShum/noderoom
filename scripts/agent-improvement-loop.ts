@@ -183,6 +183,14 @@ const steps: StepSpec[] = [
     timeoutMs: 120_000,
   },
   {
+    id: "official-benchmark-task-coverage",
+    label: "Official benchmark task coverage ledger",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "benchmark:official:task-coverage"],
+    timeoutMs: 120_000,
+  },
+  {
     id: "openrouter-convex-benchmark",
     label: "OpenRouter-on-Convex benchmark contract",
     lane: "deterministic",
@@ -199,6 +207,16 @@ const steps: StepSpec[] = [
     timeoutMs: 120_000,
     blockedExitCodes: [1],
     blockedReason: "official BankerToolBench/SpreadsheetBench readiness remains blocked by external benchmark prerequisites",
+  },
+  {
+    id: "official-benchmark-task-coverage-gate",
+    label: "Official benchmark full-task coverage gate",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "benchmark:official:task-coverage", "--", "--strict"],
+    timeoutMs: 120_000,
+    blockedExitCodes: [1],
+    blockedReason: "full official task coverage remains blocked until every published task is staged and model-run under the benchmark policy",
   },
   {
     id: "benchmark-contamination-fixture",

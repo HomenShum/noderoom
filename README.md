@@ -783,7 +783,7 @@ Professional proof state:
 - `npm run eval:professional:live-runtime -- --strict` proves **21/21** professional catalog cases execute through the real room runtime with `deepseek/deepseek-v4-flash`, `PRODUCTION_ROOM_TOOLS`, evidence payload writes, and runtime-managed lock coordination.
 
 - `npm run eval:professional:proofs` now records **5 live-provider**, **16 partial live-provider**, **0 live-provider catalog**, **0 deterministic runtime**, and **0 contract-shape** cases; its live runtime smoke is **21/21**, and lock-mode counts are **21 runtime-managed**, **0 explicit-agent-lock**, and **0 catalog-only**.
-- `npm run benchmark:openrouter-convex -- --strict` is the OpenRouter-on-Convex benchmark contract: **6/6** harness cases pass across durable `agentJobs`, model-step journaling, L1-L7 collaboration/resume, multi-user coordination, SpreadsheetBench route selection, rendered chart visual proof, and Docker workspace isolation. It now emits a closer official-style suite scorecard across **35 configured agent LLM routes** (**23** OpenRouter/internal-alias routes): SpreadsheetBench-like N=5, BankerToolBench-like package/verifier, multi-user conflict, and provider-route N=5/p95. Current state is **3/4** official-style suites passing; provider-route N=5/p95 remains blocked for routes without repeated live evidence. Official promotion stays separate: BankerToolBench still needs Harbor/MCP/Gandalf before any official-score claim.
+- `npm run benchmark:openrouter-convex -- --strict` is the OpenRouter-on-Convex benchmark contract: **6/6** harness cases pass across durable `agentJobs`, model-step journaling, L1-L7 collaboration/resume, multi-user coordination, SpreadsheetBench route selection, rendered chart visual proof, and Docker workspace isolation. It now emits a closer official-style suite scorecard across **53 configured agent LLM routes** (**41** OpenRouter/internal-alias routes), including **25 current top-paid OpenRouter tool-capable candidates** from the `top-weekly` Models API snapshot. SpreadsheetBench-like N=5, BankerToolBench-like package/verifier, multi-user conflict, and provider-route N=5/p95 are scored separately. Current state is **3/4** official-style suites passing; provider-route N=5/p95 remains blocked for routes without repeated live evidence. Official promotion stays separate: BankerToolBench still needs Harbor/MCP/Gandalf before any official-score claim.
 - **Context compaction** (`src/agent/compaction.ts`) — elides stale `read_range` results (Claude
   "context editing" pattern), preserves the turn structure (Hermes), keeps the latest state + recent turns.
 - **Library stack** (TipTap, dnd-kit, lucide, assistant-ui, the `@convex-dev/*` components) → [`docs/STACK.md`](docs/STACK.md).
@@ -1061,6 +1061,14 @@ Architecture ownership/budget gate: `npm run architecture:budget -- --strict`.
 Official benchmark posture: `npm run benchmark:official:readiness` is a reporting gate, and
 `npm run benchmark:official:readiness -- --strict` remains red until at least one official runner
 can execute, export, reopen, and score benchmark work products without hidden-gold access.
+`npm run benchmark:official:task-coverage` writes the stricter no-shorthand task ledger:
+[`docs/eval/OFFICIAL_BENCHMARK_TASK_COVERAGE.md`](docs/eval/OFFICIAL_BENCHMARK_TASK_COVERAGE.md).
+Current checked-in coverage is deliberately not green: **1/5** tracks complete, **409/1,738**
+declared task targets staged, **408** deterministic-run tasks, and **7** model-run cases. The
+important split is that SpreadsheetBench Verified has **400/400** staged and copy-baseline-run
+evidence, but only **3/400** verified cases have N=5 model-run evidence; SpreadsheetBench V1 full
+**912/912**, SpreadsheetBench 2 full **321/321**, and BankerToolBench full **100/100** remain
+blocked until their complete official bundles are staged and model-run under the benchmark policy.
 SpreadsheetBench V1/V2 now has a local official-bundle ingest adapter (`npm run
 benchmark:spreadsheetbench:ingest`) that separates agent-visible workbooks/prompts from
 evaluator-only golden files and scorer metadata, a staging adapter (`npm run
@@ -1231,11 +1239,12 @@ benchmark contract: `npm run benchmark:openrouter-convex -- --strict` writes
 checks whether OpenRouter/internal-alias routes can run benchmark-shaped work through Convex-owned
 `agentJobs`, `convexModel`, leases, model-step journals, mutation receipts, artifact evidence, and
 workspace isolation. The same report now includes the full configured agent LLM scorecard from
-`llmModelCatalog.agent` plus curated OpenRouter routes, with four closer official-style families:
-SpreadsheetBench-like workbook edits, BankerToolBench-like package/verifier tasks, multi-user
-conflict tasks, and provider route N=5/p95 stability. It is intentionally not an official
-SpreadsheetBench/BankerToolBench score; official promotion remains gated by the strict readiness
-report.
+`llmModelCatalog.agent` plus curated OpenRouter routes and the current top-paid OpenRouter
+tool-capable candidate set from `npm run openrouter:paid`, with four closer official-style
+families: SpreadsheetBench-like workbook edits, BankerToolBench-like package/verifier tasks,
+multi-user conflict tasks, and provider route N=5/p95 stability. It is intentionally not an
+official SpreadsheetBench/BankerToolBench score; official promotion remains gated by the strict
+readiness report and the strict full-task coverage ledger.
 
 **The charts are downstream of a real run — never hand-drawn.** `npm run benchmark` writes
 `docs/eval/results.json` (real $/latency/tokens from `agentRuns`, real pass% from deterministic

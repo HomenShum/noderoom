@@ -260,6 +260,30 @@ const steps: StepSpec[] = [
     skipReason: "local SpreadsheetBench V1 full-stage proof artifact is not present",
   },
   {
+    id: "spreadsheetbench-v2-stage-proof",
+    label: "SpreadsheetBench V2 public-example stage proof",
+    lane: "deterministic",
+    command: "npm",
+    args: [
+      "run",
+      "benchmark:spreadsheetbench:stage-proof",
+      "--",
+      "--report",
+      "docs/eval/spreadsheetbench-v2-stage-smoke.json",
+      "--stage-root",
+      ".tmp/official-benchmarks/staged-v2",
+      "--track",
+      "spreadsheetbench-v2",
+      "--min-tasks",
+      "3",
+    ],
+    timeoutMs: 120_000,
+    includeWhen: () =>
+      existsSync(join(process.cwd(), "docs", "eval", "spreadsheetbench-v2-stage-smoke.json")) &&
+      existsSync(join(process.cwd(), ".tmp", "official-benchmarks", "staged-v2")),
+    skipReason: "local SpreadsheetBench V2 public-example stage proof artifact is not present",
+  },
+  {
     id: "spreadsheetbench-score-fixture",
     label: "SpreadsheetBench workbook score fixture",
     lane: "deterministic",

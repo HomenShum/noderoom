@@ -129,6 +129,7 @@ describe("official benchmark readiness", () => {
       });
       expect(gold?.blocker).toContain("contamination");
       if (item.id === "spreadsheetbench-v1") expect(gold?.blocker).toContain("verified-400");
+      if (item.id === "spreadsheetbench-v2") expect(gold?.blocker).toContain("public-example");
       expect(runner).toMatchObject({
         state: "partial",
         evidence: "src/eval/spreadsheetBenchRunner.ts",

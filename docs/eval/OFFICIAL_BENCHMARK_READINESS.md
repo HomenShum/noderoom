@@ -1,6 +1,6 @@
 # Official Benchmark Readiness
 
-Generated: 2026-06-13T15:29:15.109Z
+Generated: 2026-06-13T15:33:43.830Z
 
 This is the benchmark-faithful gate for the public targets we care about most: BankerToolBench and SpreadsheetBench. It is deliberately stricter than NodeRoom's internal professional evals. Internal green runs do not imply an official benchmark claim.
 
@@ -97,7 +97,7 @@ Scoring shape: Workflow-level grading across exact cell values/formulas/formats 
 | `chart_visual_grade` | partial | `docs/eval/spreadsheetbench-chart-visual-probe.json` |
 
 Blockers:
-- official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; runner attempts now copy agent-visible files into an agent-workspace manifest before candidate generation, a Node permission subprocess smoke proves evaluator-only reads are denied outside the agent workspace, and V1/V2 contamination evidence exists, but rendered V2 chart/visual grading, V2 official model runs, and Docker/Harbor process isolation are still missing.
+- official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; runner attempts now copy agent-visible files into an agent-workspace manifest before candidate generation, the V2 public-example stage proof records 3/26 example tasks with paired input/gold workbooks staged, clean isolation counters, and contamination evidence, a Node permission subprocess smoke proves evaluator-only reads are denied outside the agent workspace, but rendered V2 chart/visual grading, V2 official model runs, and Docker/Harbor process isolation are still missing.
 - official_runner_adapter: A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; V1 N=5 live model evidence passes 5/5 and the broader locally staged V1 three-task N=5 smoke passes 15/15 with retry-policy accounting, raw model output, sidecar hashes, deterministic SUM total result packaging, visible aggregate_section/filter_rows/sort_unique_rows table operations, expected-formula-only scoring, workspace manifests, local Node permission sandbox proof, and static V2 chart-package scoring, but V2 official model runs, Docker/Harbor sandbox proof, route selection, and rendered/VLM chart grading remain incomplete.
 - formula_recompute: The SpreadsheetBench runner caches deterministic results for a local formula subset covering arithmetic, same-sheet cell refs/ranges, SUM/AVERAGE/MIN/MAX/COUNT/COUNTA, ABS, ROUND/ROUNDUP/ROUNDDOWN, IF/IFERROR, single-criteria SUMIF/COUNTIF/AVERAGEIF, multi-criteria SUMIFS/COUNTIFS/AVERAGEIFS, and exact MATCH/INDEX/VLOOKUP/XLOOKUP before export/reopen scoring, including basic wildcard criteria. Scalar-gold/formula-candidate equivalence is handled when values match; full Excel-compatible recompute, approximate lookup, array/dynamic formulas, chart formulas, external refs, and volatile functions are not complete.
 - format_diff: The scorer can diff stable ExcelJS cell style fingerprints plus answer-range column widths/hidden state, row heights/hidden state, and intersecting merge ranges when enabled; official format-grading policy, chart rendering, and visual grading are not complete.

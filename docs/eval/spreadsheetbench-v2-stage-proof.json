@@ -1,0 +1,12 @@
+{
+  "ok": true,
+  "reportPath": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\eval\\spreadsheetbench-v2-stage-smoke.json",
+  "stageRoot": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\.tmp\\official-benchmarks\\staged-v2",
+  "track": "spreadsheetbench-v2",
+  "stagedTaskCount": 3,
+  "scannedTaskCount": 26,
+  "agentFileCount": 3,
+  "evaluatorGoldFileCount": 3,
+  "checkedTaskDirectories": 3,
+  "failures": []
+}

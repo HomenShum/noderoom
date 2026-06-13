@@ -1056,8 +1056,10 @@ The contamination gate
 agent-workspace manifests, and generated edit plans for evaluator-only gold/rubric/canary metadata; checked-in smokes show 0
 leaks for the staged V1 root, the full verified-400 V1 stage (`400/400` tasks,
 800 agent-facing files, 400 evaluator gold files, 0 leaks across 800 checked
-files), the N=5 one-task V1 candidate output, the three-task N=5 V1 candidate
-output, the retry V1 candidate output, and the staged BTB fixture. The runner also has an explicit retry policy: `--retry-failed N` retries
+files), the V2 public-example stage (3 paired input/gold tasks from 26 example
+tasks with clean isolation), the N=5 one-task V1 candidate output, the
+three-task N=5 V1 candidate output, the retry V1 candidate output, and the
+staged BTB fixture. The runner also has an explicit retry policy: `--retry-failed N` retries
 candidate-generation or scoring errors, `--retry-score-failures` opts into retrying
 scored-but-wrong candidates, and the report records case-level attempts, retry exhaustion,
 pass-after-retry counts, p95 latency, tokens, and provider cost. The checked-in retry smoke

@@ -1,0 +1,4748 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T15:39:44.254Z",
+  "stageRoot": "staged-v1-full",
+  "taskCount": 400,
+  "routeCounts": {
+    "deterministic_table_transform": 41,
+    "model_formula_edit": 218,
+    "model_format_edit": 33,
+    "model_general_edit": 106,
+    "blocked_chart_visual": 2
+  },
+  "selections": [
+    {
+      "taskId": "10452",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/10452/agent/task.json"
+    },
+    {
+      "taskId": "105-24",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/105-24/agent/task.json"
+    },
+    {
+      "taskId": "10747",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/10747/agent/task.json"
+    },
+    {
+      "taskId": "108-24",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/108-24/agent/task.json"
+    },
+    {
+      "taskId": "109-21",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/109-21/agent/task.json"
+    },
+    {
+      "taskId": "11276",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/11276/agent/task.json"
+    },
+    {
+      "taskId": "118-50",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/118-50/agent/task.json"
+    },
+    {
+      "taskId": "11842",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/11842/agent/task.json"
+    },
+    {
+      "taskId": "120-24",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/120-24/agent/task.json"
+    },
+    {
+      "taskId": "12307",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/12307/agent/task.json"
+    },
+    {
+      "taskId": "12864",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/12864/agent/task.json"
+    },
+    {
+      "taskId": "13-1",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/13-1/agent/task.json"
+    },
+    {
+      "taskId": "130-9",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/130-9/agent/task.json"
+    },
+    {
+      "taskId": "13284",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/13284/agent/task.json"
+    },
+    {
+      "taskId": "141-20",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/141-20/agent/task.json"
+    },
+    {
+      "taskId": "142-12",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/142-12/agent/task.json"
+    },
+    {
+      "taskId": "142-19",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/142-19/agent/task.json"
+    },
+    {
+      "taskId": "14240",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/14240/agent/task.json"
+    },
+    {
+      "taskId": "146-49",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/146-49/agent/task.json"
+    },
+    {
+      "taskId": "147-48",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/147-48/agent/task.json"
+    },
+    {
+      "taskId": "15380",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/15380/agent/task.json"
+    },
+    {
+      "taskId": "15387",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/15387/agent/task.json"
+    },
+    {
+      "taskId": "156-14",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/156-14/agent/task.json"
+    },
+    {
+      "taskId": "1563",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/1563/agent/task.json"
+    },
+    {
+      "taskId": "15671",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/15671/agent/task.json"
+    },
+    {
+      "taskId": "157-4",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/157-4/agent/task.json"
+    },
+    {
+      "taskId": "160-6",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/160-6/agent/task.json"
+    },
+    {
+      "taskId": "165-23",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/165-23/agent/task.json"
+    },
+    {
+      "taskId": "16511",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/16511/agent/task.json"
+    },
+    {
+      "taskId": "168-17",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/168-17/agent/task.json"
+    },
+    {
+      "taskId": "17-35",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/17-35/agent/task.json"
+    },
+    {
+      "taskId": "170-13",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/170-13/agent/task.json"
+    },
+    {
+      "taskId": "17111",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/17111/agent/task.json"
+    },
+    {
+      "taskId": "177-6",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/177-6/agent/task.json"
+    },
+    {
+      "taskId": "178-22",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/178-22/agent/task.json"
+    },
+    {
+      "taskId": "1818",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/1818/agent/task.json"
+    },
+    {
+      "taskId": "183-8",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/183-8/agent/task.json"
+    },
+    {
+      "taskId": "18645",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/18645/agent/task.json"
+    },
+    {
+      "taskId": "188-39",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/188-39/agent/task.json"
+    },
+    {
+      "taskId": "18935",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/18935/agent/task.json"
+    },
+    {
+      "taskId": "191-40",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/191-40/agent/task.json"
+    },
+    {
+      "taskId": "192-22",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/192-22/agent/task.json"
+    },
+    {
+      "taskId": "1925",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/1925/agent/task.json"
+    },
+    {
+      "taskId": "194-19",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/194-19/agent/task.json"
+    },
+    {
+      "taskId": "203-15",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/203-15/agent/task.json"
+    },
+    {
+      "taskId": "208-20",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/208-20/agent/task.json"
+    },
+    {
+      "taskId": "209-30",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/209-30/agent/task.json"
+    },
+    {
+      "taskId": "22-47",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/22-47/agent/task.json"
+    },
+    {
+      "taskId": "227-40",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/227-40/agent/task.json"
+    },
+    {
+      "taskId": "23-24",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/23-24/agent/task.json"
+    },
+    {
+      "taskId": "230-16",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/230-16/agent/task.json"
+    },
+    {
+      "taskId": "236-22",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/236-22/agent/task.json"
+    },
+    {
+      "taskId": "24-23",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/24-23/agent/task.json"
+    },
+    {
+      "taskId": "247-24",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/247-24/agent/task.json"
+    },
+    {
+      "taskId": "250-20",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/250-20/agent/task.json"
+    },
+    {
+      "taskId": "254-34",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/254-34/agent/task.json"
+    },
+    {
+      "taskId": "262-17",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/262-17/agent/task.json"
+    },
+    {
+      "taskId": "263-1",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/263-1/agent/task.json"
+    },
+    {
+      "taskId": "267-18",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/267-18/agent/task.json"
+    },
+    {
+      "taskId": "267-21",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/267-21/agent/task.json"
+    },
+    {
+      "taskId": "269-43",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/269-43/agent/task.json"
+    },
+    {
+      "taskId": "269-44",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/269-44/agent/task.json"
+    },
+    {
+      "taskId": "2768",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/2768/agent/task.json"
+    },
+    {
+      "taskId": "279-23",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/279-23/agent/task.json"
+    },
+    {
+      "taskId": "28-7",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/28-7/agent/task.json"
+    },
+    {
+      "taskId": "280-17",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/280-17/agent/task.json"
+    },
+    {
+      "taskId": "283-32",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/283-32/agent/task.json"
+    },
+    {
+      "taskId": "290-1",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/290-1/agent/task.json"
+    },
+    {
+      "taskId": "290-27",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/290-27/agent/task.json"
+    },
+    {
+      "taskId": "297-42",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/297-42/agent/task.json"
+    },
+    {
+      "taskId": "3002",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/3002/agent/task.json"
+    },
+    {
+      "taskId": "302-1",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/302-1/agent/task.json"
+    },
+    {
+      "taskId": "304-35",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/304-35/agent/task.json"
+    },
+    {
+      "taskId": "30930",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/30930/agent/task.json"
+    },
+    {
+      "taskId": "31011",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/31011/agent/task.json"
+    },
+    {
+      "taskId": "31202",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/31202/agent/task.json"
+    },
+    {
+      "taskId": "31628",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/31628/agent/task.json"
+    },
+    {
+      "taskId": "31746",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/31746/agent/task.json"
+    },
+    {
+      "taskId": "31915",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/31915/agent/task.json"
+    },
+    {
+      "taskId": "32023",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/32023/agent/task.json"
+    },
+    {
+      "taskId": "32093",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/32093/agent/task.json"
+    },
+    {
+      "taskId": "32255",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/32255/agent/task.json"
+    },
+    {
+      "taskId": "32293",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/32293/agent/task.json"
+    },
+    {
+      "taskId": "32337",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/32337/agent/task.json"
+    },
+    {
+      "taskId": "32438",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/32438/agent/task.json"
+    },
+    {
+      "taskId": "325-44",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/325-44/agent/task.json"
+    },
+    {
+      "taskId": "32562",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/32562/agent/task.json"
+    },
+    {
+      "taskId": "32612",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/32612/agent/task.json"
+    },
+    {
+      "taskId": "32789",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/32789/agent/task.json"
+    },
+    {
+      "taskId": "32902",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/32902/agent/task.json"
+    },
+    {
+      "taskId": "33157",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/33157/agent/task.json"
+    },
+    {
+      "taskId": "333-29",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/333-29/agent/task.json"
+    },
+    {
+      "taskId": "334-11",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/334-11/agent/task.json"
+    },
+    {
+      "taskId": "33722",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/33722/agent/task.json"
+    },
+    {
+      "taskId": "34033",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/34033/agent/task.json"
+    },
+    {
+      "taskId": "341-14",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/341-14/agent/task.json"
+    },
+    {
+      "taskId": "341-40",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/341-40/agent/task.json"
+    },
+    {
+      "taskId": "3413",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/3413/agent/task.json"
+    },
+    {
+      "taskId": "34210",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/34210/agent/task.json"
+    },
+    {
+      "taskId": "343-20",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/343-20/agent/task.json"
+    },
+    {
+      "taskId": "353-29",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/353-29/agent/task.json"
+    },
+    {
+      "taskId": "353-6",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/353-6/agent/task.json"
+    },
+    {
+      "taskId": "35739",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/35739/agent/task.json"
+    },
+    {
+      "taskId": "35742",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/35742/agent/task.json"
+    },
+    {
+      "taskId": "35747",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/35747/agent/task.json"
+    },
+    {
+      "taskId": "359-21",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/359-21/agent/task.json"
+    },
+    {
+      "taskId": "36097",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/36097/agent/task.json"
+    },
+    {
+      "taskId": "36191",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/36191/agent/task.json"
+    },
+    {
+      "taskId": "36277",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/36277/agent/task.json"
+    },
+    {
+      "taskId": "367-23",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/367-23/agent/task.json"
+    },
+    {
+      "taskId": "36764",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/36764/agent/task.json"
+    },
+    {
+      "taskId": "370-43",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/370-43/agent/task.json"
+    },
+    {
+      "taskId": "37086",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/37086/agent/task.json"
+    },
+    {
+      "taskId": "37229",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/37229/agent/task.json"
+    },
+    {
+      "taskId": "37378",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/37378/agent/task.json"
+    },
+    {
+      "taskId": "374-18",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/374-18/agent/task.json"
+    },
+    {
+      "taskId": "374-31",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/374-31/agent/task.json"
+    },
+    {
+      "taskId": "37456",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/37456/agent/task.json"
+    },
+    {
+      "taskId": "37462",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/37462/agent/task.json"
+    },
+    {
+      "taskId": "37554",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/37554/agent/task.json"
+    },
+    {
+      "taskId": "379-36",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/379-36/agent/task.json"
+    },
+    {
+      "taskId": "37900",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/37900/agent/task.json"
+    },
+    {
+      "taskId": "38074",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/38074/agent/task.json"
+    },
+    {
+      "taskId": "382-10",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/382-10/agent/task.json"
+    },
+    {
+      "taskId": "382-29",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/382-29/agent/task.json"
+    },
+    {
+      "taskId": "384-4",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/384-4/agent/task.json"
+    },
+    {
+      "taskId": "38462",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/38462/agent/task.json"
+    },
+    {
+      "taskId": "38537",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/38537/agent/task.json"
+    },
+    {
+      "taskId": "387-16",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/387-16/agent/task.json"
+    },
+    {
+      "taskId": "38703",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/38703/agent/task.json"
+    },
+    {
+      "taskId": "388-47",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/388-47/agent/task.json"
+    },
+    {
+      "taskId": "38823",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/38823/agent/task.json"
+    },
+    {
+      "taskId": "38969",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/38969/agent/task.json"
+    },
+    {
+      "taskId": "38985",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/38985/agent/task.json"
+    },
+    {
+      "taskId": "39046",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/39046/agent/task.json"
+    },
+    {
+      "taskId": "3911",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/3911/agent/task.json"
+    },
+    {
+      "taskId": "39190",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/39190/agent/task.json"
+    },
+    {
+      "taskId": "39432",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/39432/agent/task.json"
+    },
+    {
+      "taskId": "395-36",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/395-36/agent/task.json"
+    },
+    {
+      "taskId": "39515",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/39515/agent/task.json"
+    },
+    {
+      "taskId": "39667",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/39667/agent/task.json"
+    },
+    {
+      "taskId": "398-14",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/398-14/agent/task.json"
+    },
+    {
+      "taskId": "399-14",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/399-14/agent/task.json"
+    },
+    {
+      "taskId": "39903",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/39903/agent/task.json"
+    },
+    {
+      "taskId": "39931",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/39931/agent/task.json"
+    },
+    {
+      "taskId": "402-43",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/402-43/agent/task.json"
+    },
+    {
+      "taskId": "40478",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/40478/agent/task.json"
+    },
+    {
+      "taskId": "40757",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/40757/agent/task.json"
+    },
+    {
+      "taskId": "408-39",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/408-39/agent/task.json"
+    },
+    {
+      "taskId": "408-5",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/408-5/agent/task.json"
+    },
+    {
+      "taskId": "40892",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/40892/agent/task.json"
+    },
+    {
+      "taskId": "409-45",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/409-45/agent/task.json"
+    },
+    {
+      "taskId": "40959",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/40959/agent/task.json"
+    },
+    {
+      "taskId": "41-47",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/41-47/agent/task.json"
+    },
+    {
+      "taskId": "41265",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/41265/agent/task.json"
+    },
+    {
+      "taskId": "41348",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/41348/agent/task.json"
+    },
+    {
+      "taskId": "414-20",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/414-20/agent/task.json"
+    },
+    {
+      "taskId": "41410",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/41410/agent/task.json"
+    },
+    {
+      "taskId": "41420",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/41420/agent/task.json"
+    },
+    {
+      "taskId": "41589",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/41589/agent/task.json"
+    },
+    {
+      "taskId": "416-15",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/416-15/agent/task.json"
+    },
+    {
+      "taskId": "416-27",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/416-27/agent/task.json"
+    },
+    {
+      "taskId": "41601",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/41601/agent/task.json"
+    },
+    {
+      "taskId": "41691",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/41691/agent/task.json"
+    },
+    {
+      "taskId": "41969",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/41969/agent/task.json"
+    },
+    {
+      "taskId": "41978",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/41978/agent/task.json"
+    },
+    {
+      "taskId": "42181",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/42181/agent/task.json"
+    },
+    {
+      "taskId": "42198",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/42198/agent/task.json"
+    },
+    {
+      "taskId": "42216",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/42216/agent/task.json"
+    },
+    {
+      "taskId": "423-16",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/423-16/agent/task.json"
+    },
+    {
+      "taskId": "42354",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/42354/agent/task.json"
+    },
+    {
+      "taskId": "42515",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/42515/agent/task.json"
+    },
+    {
+      "taskId": "42526",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/42526/agent/task.json"
+    },
+    {
+      "taskId": "42902",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/42902/agent/task.json"
+    },
+    {
+      "taskId": "42930",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/42930/agent/task.json"
+    },
+    {
+      "taskId": "43213",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/43213/agent/task.json"
+    },
+    {
+      "taskId": "433-47",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/433-47/agent/task.json"
+    },
+    {
+      "taskId": "43436",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/43436/agent/task.json"
+    },
+    {
+      "taskId": "43589",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/43589/agent/task.json"
+    },
+    {
+      "taskId": "43657",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/43657/agent/task.json"
+    },
+    {
+      "taskId": "438-18",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/438-18/agent/task.json"
+    },
+    {
+      "taskId": "440-24",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/440-24/agent/task.json"
+    },
+    {
+      "taskId": "44017",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/44017/agent/task.json"
+    },
+    {
+      "taskId": "44266",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/44266/agent/task.json"
+    },
+    {
+      "taskId": "44296",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/44296/agent/task.json"
+    },
+    {
+      "taskId": "44389",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/44389/agent/task.json"
+    },
+    {
+      "taskId": "44628",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/44628/agent/task.json"
+    },
+    {
+      "taskId": "448-11",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/448-11/agent/task.json"
+    },
+    {
+      "taskId": "44913",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/44913/agent/task.json"
+    },
+    {
+      "taskId": "45063",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/45063/agent/task.json"
+    },
+    {
+      "taskId": "45300",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/45300/agent/task.json"
+    },
+    {
+      "taskId": "45372",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/45372/agent/task.json"
+    },
+    {
+      "taskId": "455-35",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/455-35/agent/task.json"
+    },
+    {
+      "taskId": "45635",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/45635/agent/task.json"
+    },
+    {
+      "taskId": "45707",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/45707/agent/task.json"
+    },
+    {
+      "taskId": "45738",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/45738/agent/task.json"
+    },
+    {
+      "taskId": "45896",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/45896/agent/task.json"
+    },
+    {
+      "taskId": "45937",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/45937/agent/task.json"
+    },
+    {
+      "taskId": "45944",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/45944/agent/task.json"
+    },
+    {
+      "taskId": "46121",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/46121/agent/task.json"
+    },
+    {
+      "taskId": "46167",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/46167/agent/task.json"
+    },
+    {
+      "taskId": "46240",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/46240/agent/task.json"
+    },
+    {
+      "taskId": "463-17",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/463-17/agent/task.json"
+    },
+    {
+      "taskId": "46646",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/46646/agent/task.json"
+    },
+    {
+      "taskId": "46897",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/46897/agent/task.json"
+    },
+    {
+      "taskId": "469-9",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/469-9/agent/task.json"
+    },
+    {
+      "taskId": "4714",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/4714/agent/task.json"
+    },
+    {
+      "taskId": "472-15",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/472-15/agent/task.json"
+    },
+    {
+      "taskId": "477-45",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/477-45/agent/task.json"
+    },
+    {
+      "taskId": "47766",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/47766/agent/task.json"
+    },
+    {
+      "taskId": "47798",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/47798/agent/task.json"
+    },
+    {
+      "taskId": "47827",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/47827/agent/task.json"
+    },
+    {
+      "taskId": "47842",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/47842/agent/task.json"
+    },
+    {
+      "taskId": "47933",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/47933/agent/task.json"
+    },
+    {
+      "taskId": "48080",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/48080/agent/task.json"
+    },
+    {
+      "taskId": "48257",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/48257/agent/task.json"
+    },
+    {
+      "taskId": "48365",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/48365/agent/task.json"
+    },
+    {
+      "taskId": "48527",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/48527/agent/task.json"
+    },
+    {
+      "taskId": "48588",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/48588/agent/task.json"
+    },
+    {
+      "taskId": "486-17",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/486-17/agent/task.json"
+    },
+    {
+      "taskId": "48608",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/48608/agent/task.json"
+    },
+    {
+      "taskId": "48620",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/48620/agent/task.json"
+    },
+    {
+      "taskId": "48643",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/48643/agent/task.json"
+    },
+    {
+      "taskId": "48745",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/48745/agent/task.json"
+    },
+    {
+      "taskId": "488-14",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/488-14/agent/task.json"
+    },
+    {
+      "taskId": "48921",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/48921/agent/task.json"
+    },
+    {
+      "taskId": "48924",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/48924/agent/task.json"
+    },
+    {
+      "taskId": "48969",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/48969/agent/task.json"
+    },
+    {
+      "taskId": "48975",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/48975/agent/task.json"
+    },
+    {
+      "taskId": "48982",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/48982/agent/task.json"
+    },
+    {
+      "taskId": "48983",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/48983/agent/task.json"
+    },
+    {
+      "taskId": "49036",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/49036/agent/task.json"
+    },
+    {
+      "taskId": "49196",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/49196/agent/task.json"
+    },
+    {
+      "taskId": "49237",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/49237/agent/task.json"
+    },
+    {
+      "taskId": "493-18",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/493-18/agent/task.json"
+    },
+    {
+      "taskId": "493-5",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/493-5/agent/task.json"
+    },
+    {
+      "taskId": "49300",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/49300/agent/task.json"
+    },
+    {
+      "taskId": "49333",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/49333/agent/task.json"
+    },
+    {
+      "taskId": "496-15",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/496-15/agent/task.json"
+    },
+    {
+      "taskId": "496-34",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/496-34/agent/task.json"
+    },
+    {
+      "taskId": "49667",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/49667/agent/task.json"
+    },
+    {
+      "taskId": "49801",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/49801/agent/task.json"
+    },
+    {
+      "taskId": "49857",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/49857/agent/task.json"
+    },
+    {
+      "taskId": "49945",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/49945/agent/task.json"
+    },
+    {
+      "taskId": "50051",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/50051/agent/task.json"
+    },
+    {
+      "taskId": "50088",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/50088/agent/task.json"
+    },
+    {
+      "taskId": "50193",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/50193/agent/task.json"
+    },
+    {
+      "taskId": "50250",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/50250/agent/task.json"
+    },
+    {
+      "taskId": "50324",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/50324/agent/task.json"
+    },
+    {
+      "taskId": "50486",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/50486/agent/task.json"
+    },
+    {
+      "taskId": "50521",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/50521/agent/task.json"
+    },
+    {
+      "taskId": "50526",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/50526/agent/task.json"
+    },
+    {
+      "taskId": "50631",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/50631/agent/task.json"
+    },
+    {
+      "taskId": "50682",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/50682/agent/task.json"
+    },
+    {
+      "taskId": "50683",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/50683/agent/task.json"
+    },
+    {
+      "taskId": "50768",
+      "route": "blocked_chart_visual",
+      "rationale": [
+        "chart or visual wording requires rendered/VLM chart grading"
+      ],
+      "requiredCapabilities": [
+        "chart_visual_grade"
+      ],
+      "agentManifest": "tasks/50768/agent/task.json"
+    },
+    {
+      "taskId": "50796",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/50796/agent/task.json"
+    },
+    {
+      "taskId": "50811",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/50811/agent/task.json"
+    },
+    {
+      "taskId": "50916",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/50916/agent/task.json"
+    },
+    {
+      "taskId": "50952",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/50952/agent/task.json"
+    },
+    {
+      "taskId": "50971",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/50971/agent/task.json"
+    },
+    {
+      "taskId": "51-12",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/51-12/agent/task.json"
+    },
+    {
+      "taskId": "510-3",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/510-3/agent/task.json"
+    },
+    {
+      "taskId": "51090",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/51090/agent/task.json"
+    },
+    {
+      "taskId": "51249",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/51249/agent/task.json"
+    },
+    {
+      "taskId": "51262",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/51262/agent/task.json"
+    },
+    {
+      "taskId": "51289",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/51289/agent/task.json"
+    },
+    {
+      "taskId": "51354",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/51354/agent/task.json"
+    },
+    {
+      "taskId": "51359",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/51359/agent/task.json"
+    },
+    {
+      "taskId": "51431",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/51431/agent/task.json"
+    },
+    {
+      "taskId": "51556",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/51556/agent/task.json"
+    },
+    {
+      "taskId": "51586",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/51586/agent/task.json"
+    },
+    {
+      "taskId": "516-46",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/516-46/agent/task.json"
+    },
+    {
+      "taskId": "51680",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/51680/agent/task.json"
+    },
+    {
+      "taskId": "52050",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/52050/agent/task.json"
+    },
+    {
+      "taskId": "52216",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/52216/agent/task.json"
+    },
+    {
+      "taskId": "52220",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/52220/agent/task.json"
+    },
+    {
+      "taskId": "52233",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/52233/agent/task.json"
+    },
+    {
+      "taskId": "52305",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/52305/agent/task.json"
+    },
+    {
+      "taskId": "524-31",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/524-31/agent/task.json"
+    },
+    {
+      "taskId": "52532",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/52532/agent/task.json"
+    },
+    {
+      "taskId": "52541",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/52541/agent/task.json"
+    },
+    {
+      "taskId": "52575",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/52575/agent/task.json"
+    },
+    {
+      "taskId": "52807",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/52807/agent/task.json"
+    },
+    {
+      "taskId": "52917",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/52917/agent/task.json"
+    },
+    {
+      "taskId": "52964",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/52964/agent/task.json"
+    },
+    {
+      "taskId": "531-18",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/531-18/agent/task.json"
+    },
+    {
+      "taskId": "53117",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/53117/agent/task.json"
+    },
+    {
+      "taskId": "53161",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/53161/agent/task.json"
+    },
+    {
+      "taskId": "53167",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/53167/agent/task.json"
+    },
+    {
+      "taskId": "53383",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/53383/agent/task.json"
+    },
+    {
+      "taskId": "534-26",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/534-26/agent/task.json"
+    },
+    {
+      "taskId": "53449",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/53449/agent/task.json"
+    },
+    {
+      "taskId": "535-20",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/535-20/agent/task.json"
+    },
+    {
+      "taskId": "53647",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/53647/agent/task.json"
+    },
+    {
+      "taskId": "53994",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/53994/agent/task.json"
+    },
+    {
+      "taskId": "54085",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/54085/agent/task.json"
+    },
+    {
+      "taskId": "54144",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/54144/agent/task.json"
+    },
+    {
+      "taskId": "54196",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/54196/agent/task.json"
+    },
+    {
+      "taskId": "54242",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/54242/agent/task.json"
+    },
+    {
+      "taskId": "54274",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/54274/agent/task.json"
+    },
+    {
+      "taskId": "54474",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/54474/agent/task.json"
+    },
+    {
+      "taskId": "545-35",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/545-35/agent/task.json"
+    },
+    {
+      "taskId": "54513",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/54513/agent/task.json"
+    },
+    {
+      "taskId": "54590",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/54590/agent/task.json"
+    },
+    {
+      "taskId": "54638",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/54638/agent/task.json"
+    },
+    {
+      "taskId": "54667",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/54667/agent/task.json"
+    },
+    {
+      "taskId": "54675",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/54675/agent/task.json"
+    },
+    {
+      "taskId": "547-18",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/547-18/agent/task.json"
+    },
+    {
+      "taskId": "547-43",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/547-43/agent/task.json"
+    },
+    {
+      "taskId": "54717",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/54717/agent/task.json"
+    },
+    {
+      "taskId": "54925",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/54925/agent/task.json"
+    },
+    {
+      "taskId": "55049",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/55049/agent/task.json"
+    },
+    {
+      "taskId": "55060",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/55060/agent/task.json"
+    },
+    {
+      "taskId": "55085",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/55085/agent/task.json"
+    },
+    {
+      "taskId": "55260",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/55260/agent/task.json"
+    },
+    {
+      "taskId": "55421",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/55421/agent/task.json"
+    },
+    {
+      "taskId": "55427",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/55427/agent/task.json"
+    },
+    {
+      "taskId": "55468",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/55468/agent/task.json"
+    },
+    {
+      "taskId": "55708",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/55708/agent/task.json"
+    },
+    {
+      "taskId": "55817",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/55817/agent/task.json"
+    },
+    {
+      "taskId": "55965",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/55965/agent/task.json"
+    },
+    {
+      "taskId": "55976",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/55976/agent/task.json"
+    },
+    {
+      "taskId": "55977",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/55977/agent/task.json"
+    },
+    {
+      "taskId": "55979",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/55979/agent/task.json"
+    },
+    {
+      "taskId": "560-12",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/560-12/agent/task.json"
+    },
+    {
+      "taskId": "56225",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/56225/agent/task.json"
+    },
+    {
+      "taskId": "56274",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/56274/agent/task.json"
+    },
+    {
+      "taskId": "56378",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/56378/agent/task.json"
+    },
+    {
+      "taskId": "56419",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/56419/agent/task.json"
+    },
+    {
+      "taskId": "56427",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/56427/agent/task.json"
+    },
+    {
+      "taskId": "56563",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/56563/agent/task.json"
+    },
+    {
+      "taskId": "56599",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/56599/agent/task.json"
+    },
+    {
+      "taskId": "567-21",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/567-21/agent/task.json"
+    },
+    {
+      "taskId": "56786",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/56786/agent/task.json"
+    },
+    {
+      "taskId": "56915",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/56915/agent/task.json"
+    },
+    {
+      "taskId": "56920",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/56920/agent/task.json"
+    },
+    {
+      "taskId": "56921",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/56921/agent/task.json"
+    },
+    {
+      "taskId": "56953",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/56953/agent/task.json"
+    },
+    {
+      "taskId": "57033",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/57033/agent/task.json"
+    },
+    {
+      "taskId": "57113",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/57113/agent/task.json"
+    },
+    {
+      "taskId": "57117",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/57117/agent/task.json"
+    },
+    {
+      "taskId": "57232",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/57232/agent/task.json"
+    },
+    {
+      "taskId": "57262",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/57262/agent/task.json"
+    },
+    {
+      "taskId": "57354",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/57354/agent/task.json"
+    },
+    {
+      "taskId": "57445",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/57445/agent/task.json"
+    },
+    {
+      "taskId": "57558",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/57558/agent/task.json"
+    },
+    {
+      "taskId": "57590",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/57590/agent/task.json"
+    },
+    {
+      "taskId": "57612",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/57612/agent/task.json"
+    },
+    {
+      "taskId": "57693",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/57693/agent/task.json"
+    },
+    {
+      "taskId": "577-40",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/577-40/agent/task.json"
+    },
+    {
+      "taskId": "57743",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/57743/agent/task.json"
+    },
+    {
+      "taskId": "57989",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/57989/agent/task.json"
+    },
+    {
+      "taskId": "58032",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/58032/agent/task.json"
+    },
+    {
+      "taskId": "58109",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/58109/agent/task.json"
+    },
+    {
+      "taskId": "58147",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/58147/agent/task.json"
+    },
+    {
+      "taskId": "5835",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/5835/agent/task.json"
+    },
+    {
+      "taskId": "58484",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/58484/agent/task.json"
+    },
+    {
+      "taskId": "58499",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/58499/agent/task.json"
+    },
+    {
+      "taskId": "585-41",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/585-41/agent/task.json"
+    },
+    {
+      "taskId": "58687",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/58687/agent/task.json"
+    },
+    {
+      "taskId": "58701",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/58701/agent/task.json"
+    },
+    {
+      "taskId": "58723",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/58723/agent/task.json"
+    },
+    {
+      "taskId": "58904",
+      "route": "blocked_chart_visual",
+      "rationale": [
+        "chart or visual wording requires rendered/VLM chart grading"
+      ],
+      "requiredCapabilities": [
+        "chart_visual_grade"
+      ],
+      "agentManifest": "tasks/58904/agent/task.json"
+    },
+    {
+      "taskId": "58942",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/58942/agent/task.json"
+    },
+    {
+      "taskId": "58949",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/58949/agent/task.json"
+    },
+    {
+      "taskId": "59129",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/59129/agent/task.json"
+    },
+    {
+      "taskId": "59160",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/59160/agent/task.json"
+    },
+    {
+      "taskId": "59196",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/59196/agent/task.json"
+    },
+    {
+      "taskId": "59224",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/59224/agent/task.json"
+    },
+    {
+      "taskId": "59358",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/59358/agent/task.json"
+    },
+    {
+      "taskId": "59511",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/59511/agent/task.json"
+    },
+    {
+      "taskId": "59595",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/59595/agent/task.json"
+    },
+    {
+      "taskId": "59639",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/59639/agent/task.json"
+    },
+    {
+      "taskId": "59734",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/59734/agent/task.json"
+    },
+    {
+      "taskId": "59794",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/59794/agent/task.json"
+    },
+    {
+      "taskId": "59884",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/59884/agent/task.json"
+    },
+    {
+      "taskId": "599-9",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/599-9/agent/task.json"
+    },
+    {
+      "taskId": "59902",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/59902/agent/task.json"
+    },
+    {
+      "taskId": "60-7",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/60-7/agent/task.json"
+    },
+    {
+      "taskId": "61-4",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/61-4/agent/task.json"
+    },
+    {
+      "taskId": "6239",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/6239/agent/task.json"
+    },
+    {
+      "taskId": "66-24",
+      "route": "model_format_edit",
+      "rationale": [
+        "format/layout wording requires workbook style diff evidence"
+      ],
+      "requiredCapabilities": [
+        "format_diff",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/66-24/agent/task.json"
+    },
+    {
+      "taskId": "6698",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/6698/agent/task.json"
+    },
+    {
+      "taskId": "73-45",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/73-45/agent/task.json"
+    },
+    {
+      "taskId": "7665",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/7665/agent/task.json"
+    },
+    {
+      "taskId": "79-7",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/79-7/agent/task.json"
+    },
+    {
+      "taskId": "7902",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/7902/agent/task.json"
+    },
+    {
+      "taskId": "80-42",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/80-42/agent/task.json"
+    },
+    {
+      "taskId": "82-30",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/82-30/agent/task.json"
+    },
+    {
+      "taskId": "82-38",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/82-38/agent/task.json"
+    },
+    {
+      "taskId": "84-40",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/84-40/agent/task.json"
+    },
+    {
+      "taskId": "8942",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/8942/agent/task.json"
+    },
+    {
+      "taskId": "91-34",
+      "route": "deterministic_table_transform",
+      "rationale": [
+        "table-shape operation matches deterministic structural operators"
+      ],
+      "requiredCapabilities": [
+        "aggregate_section",
+        "filter_rows",
+        "sort_unique_rows"
+      ],
+      "agentManifest": "tasks/91-34/agent/task.json"
+    },
+    {
+      "taskId": "9111",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/9111/agent/task.json"
+    },
+    {
+      "taskId": "9391",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/9391/agent/task.json"
+    },
+    {
+      "taskId": "9448",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/9448/agent/task.json"
+    },
+    {
+      "taskId": "9569",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/9569/agent/task.json"
+    },
+    {
+      "taskId": "97-36",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/97-36/agent/task.json"
+    },
+    {
+      "taskId": "9726",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/9726/agent/task.json"
+    }
+  ]
+}

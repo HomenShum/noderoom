@@ -1,11 +1,11 @@
 {
   "schema": 1,
-  "generatedAt": "2026-06-13T15:34:08.568Z",
+  "generatedAt": "2026-06-13T15:39:54.951Z",
   "mode": "fixture",
   "verifier": "node_permission_process",
   "probe": {
     "schema": 1,
-    "generatedAt": "2026-06-13T15:34:08.568Z",
+    "generatedAt": "2026-06-13T15:39:54.951Z",
     "verifier": "node_permission_process",
     "nodeVersion": "v22.22.2",
     "allowedReadRoot": "agent-workspace",

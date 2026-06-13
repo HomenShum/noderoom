@@ -78,9 +78,14 @@ generated edit plan, and raw model output. `npm run
 benchmark:spreadsheetbench:proof` now enforces the recorded run/leak/sidecar
 thresholds and candidate-before-evaluator trajectory order, and is part of
 HALO. Remaining gap stays the same: run larger held-out official
-bundles and add Docker/Harbor isolation, route selection, V2 rendered chart
+bundles and add Docker/Harbor isolation, full route execution/scoring, V2 rendered chart
 grading, and BankerToolBench production verifier integration before claiming
-official benchmark readiness.
+official benchmark readiness. Route selection itself is now a checked artifact:
+`docs/eval/spreadsheetbench-v1-route-selection.json` classifies 400 staged V1
+tasks as 41 deterministic table transforms, 218 formula edits, 33 format edits,
+106 general edits, and 2 chart-visual blockers, while
+`docs/eval/spreadsheetbench-v2-route-selection.json` classifies the staged V2
+public examples as 2 formula edits and 1 general edit.
 
 Docker/Harbor addendum: `npm run benchmark:docker-sandbox:probe` now writes
 `docs/eval/docker-sandbox-probe.json` and is part of HALO. The current artifact

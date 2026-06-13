@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T15:39:44.968Z",
+  "stageRoot": "staged-v2",
+  "taskCount": 3,
+  "routeCounts": {
+    "deterministic_table_transform": 0,
+    "model_formula_edit": 2,
+    "model_format_edit": 0,
+    "model_general_edit": 1,
+    "blocked_chart_visual": 0
+  },
+  "selections": [
+    {
+      "taskId": "Debugging/01_01",
+      "category": "Debugging",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/Debugging_01_01/agent/task.json"
+    },
+    {
+      "taskId": "Debugging/02_01",
+      "category": "Debugging",
+      "route": "model_formula_edit",
+      "rationale": [
+        "formula or lookup wording requires model edit planning plus deterministic formula-result caching"
+      ],
+      "requiredCapabilities": [
+        "formula_recompute_subset",
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/Debugging_02_01/agent/task.json"
+    },
+    {
+      "taskId": "Debugging/03_01",
+      "category": "Debugging",
+      "route": "model_general_edit",
+      "rationale": [
+        "no deterministic structural pattern matched; use bounded model edit planning"
+      ],
+      "requiredCapabilities": [
+        "model_edit_plan"
+      ],
+      "agentManifest": "tasks/Debugging_03_01/agent/task.json"
+    }
+  ]
+}

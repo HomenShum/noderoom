@@ -1048,9 +1048,14 @@ outputs, and candidate-before-evaluator trajectory order. HALO runs that proof g
 `agent:improve`. That run exercises the next two spreadsheet-harness lessons
 repeatedly under live model variance: deterministic structural operators for visible date filters
 (`filter_rows`) and visible duplicate-removal/sort tables (`sort_unique_rows`) belong in the harness
-tool contract, not as fragile one-cell dynamic formulas or short prefix writes. This is a
-benchmark-path lesson, not a broad official-readiness claim: larger held-out V1 runs, V2 rendered
-chart grading, Docker/Harbor isolation, and route selection are still tracked as blockers below.
+tool contract, not as fragile one-cell dynamic formulas or short prefix writes. `npm run
+benchmark:spreadsheetbench:routes` now classifies staged SpreadsheetBench V1/V2 tasks into
+deterministic table transforms, model-planned formula edits, model-planned format/general edits, or
+blocked chart-visual work using only agent-visible manifests; the checked-in V1 report classifies
+400 tasks as 41 deterministic table transforms, 218 formula edits, 33 format edits, 106 general
+edits, and 2 chart-visual blockers. This is a benchmark-path lesson, not a broad
+official-readiness claim: larger held-out V1 runs, V2 rendered chart grading, Docker/Harbor
+isolation, and full route execution/scoring are still tracked as blockers below.
 The contamination gate
 (`npm run benchmark:contamination`) now scans agent-facing benchmark manifests, candidate manifests,
 agent-workspace manifests, and generated edit plans for evaluator-only gold/rubric/canary metadata; checked-in smokes show 0

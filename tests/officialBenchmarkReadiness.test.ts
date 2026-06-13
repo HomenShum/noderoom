@@ -140,7 +140,11 @@ describe("official benchmark readiness", () => {
       expect(runner?.blocker).toContain("raw model output");
       expect(runner?.blocker).toContain("SUM");
       expect(runner?.blocker).toContain("workspace");
+      expect(runner?.blocker).toContain("Route-selection reports");
+      expect(runner?.blocker).toContain("deterministic table transforms");
+      expect(runner?.blocker).toContain("route execution/scoring");
       expect(runner?.blocker).toContain("Docker/Harbor");
+      expect(runner?.blocker).not.toContain("route selection remain incomplete");
       expect(gold?.blocker).toContain("Node permission subprocess");
       expect(runner?.blocker).not.toContain("benchmark retry policy");
       expect(xlsx).toMatchObject({

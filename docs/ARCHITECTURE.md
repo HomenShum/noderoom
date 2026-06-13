@@ -145,6 +145,42 @@ the action/query/mutation operation ledger, leases, tool permissions, mutation
 receipts, and embedding sync, lives in
 [`docs/NODEAGENT_ARCHITECTURE.md`](NODEAGENT_ARCHITECTURE.md).
 
+## OpenRouter-on-Convex benchmark contract
+
+OpenRouter is the primary model marketplace for NodeRoom routes, but it is only
+a provider adapter. The durable benchmark runtime is still Convex:
+
+```text
+benchmark task / room goal
+  -> agentJobs.createOrReuse(idempotencyKey, modelPolicy)
+  -> Convex action slice
+  -> convexModel(modelPolicy) -> OpenRouter chat-completions compatible call
+  -> agentStepJournal(inputHash/outputHash)
+  -> RoomTools / internal mutations
+  -> mutationReceipts + agentOperationEvents + artifact evidence
+  -> checkpoint / handoff / resume, or terminal result
+```
+
+The contract is now executable as `npm run benchmark:openrouter-convex`. It is
+NodeRoom's benchmark, inspired by SpreadsheetBench, SpreadsheetBench 2, and
+BankerToolBench, for the product shape we actually ship: OpenRouter routes
+working through Convex-owned jobs, leases, journals, receipts, and artifact
+evidence. The strict gate may pass while official benchmark readiness remains
+blocked, because the two claims are intentionally separate:
+
+- **OpenRouter-on-Convex harness ready:** the runtime can safely run
+  benchmark-shaped spreadsheet/banker work through `agentJobs` and
+  `convexModel`, with CAS/no-clobber, L1-L7 resume, multi-user coordination,
+  route selection, chart visual evidence, and Docker workspace isolation.
+- **Official benchmark promoted:** the external benchmark adapters have run
+  official held-out tasks with verifier-owned scoring. BankerToolBench still
+  needs Harbor/MCP/Gandalf execution before NodeRoom can claim an official
+  score.
+
+Free and demo-only OpenRouter routes use the same Convex adapter, but stay on
+the background/long-running lane until N>=5 p95 ladder evidence proves they are
+fast and reliable enough for interactive writes.
+
 ## UI layer
 
 - **Runtime mirror:** `src/app/roomStore.ts` exposes the engine via `useEngineRev()` (a

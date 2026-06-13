@@ -1,0 +1,674 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T21:20:27.542Z",
+  "summary": {
+    "routeCount": 20,
+    "openRouterRouteCount": 19,
+    "harnessCases": 6,
+    "harnessCasesPassing": 6,
+    "officialPromotionCases": 1,
+    "officialPromotionCasesPassing": 0,
+    "harnessReady": true,
+    "officialPromotionReady": false
+  },
+  "designPrinciples": [
+    "OpenRouter is a provider adapter, not the runtime owner; Convex owns durable jobs, artifacts, leases, traces, and receipts.",
+    "Benchmark-shaped work is routed through deterministic tools first, then bounded model edit plans, then evidence-bearing writes.",
+    "Free-auto is a long-running/background lane until ladder and p95 evidence prove it can meet interactive collaboration budgets.",
+    "Official benchmark claims stay blocked until the external verifier path is wired; internal Convex benchmark readiness is separate."
+  ],
+  "cases": [
+    {
+      "id": "convex_job_journal_and_replay",
+      "title": "Durable model-step journaling before replay",
+      "inspiredBy": [
+        "NodeRoom",
+        "SpreadsheetBench",
+        "BankerToolBench"
+      ],
+      "scope": "openrouter_convex_harness",
+      "status": "pass",
+      "evidence": [
+        "tests/agentJobsRuntime.test.ts",
+        "convex/agentStepJournal.ts",
+        "convex/agentJobs.ts"
+      ],
+      "requiredConvexContract": [
+        "createOrReuse idempotency",
+        "model-step hash journal",
+        "operation events",
+        "attempt counters"
+      ],
+      "acceptance": "A duplicate model step replays the recorded result and cannot overwrite the first output hash.",
+      "blockers": []
+    },
+    {
+      "id": "convex_l1_l7_collaboration_ladder",
+      "title": "Lock/CAS/draft/large-range/resume ladder",
+      "inspiredBy": [
+        "NodeRoom",
+        "SpreadsheetBench"
+      ],
+      "scope": "openrouter_convex_harness",
+      "status": "pass",
+      "evidence": [
+        "docs/eval/agent-improvement-loop/latest.json",
+        "evals/ladder.ts"
+      ],
+      "requiredConvexContract": [
+        "read before write",
+        "baseVersion CAS",
+        "draft on blocked range",
+        "bounded large-range context",
+        "cold resume after slice death"
+      ],
+      "acceptance": "The latest improvement loop records the collaboration ladder as PASS through L7.",
+      "blockers": []
+    },
+    {
+      "id": "convex_multi_user_coordination",
+      "title": "Multi-user and human-vs-human coordination proof",
+      "inspiredBy": [
+        "NodeRoom",
+        "SpreadsheetBench"
+      ],
+      "scope": "openrouter_convex_harness",
+      "status": "pass",
+      "evidence": [
+        "docs/eval/multi-user-coordination-proof.json",
+        "evals/multiUserCoordinationProof.ts"
+      ],
+      "requiredConvexContract": [
+        "runtime-managed range locks",
+        "stale-write conflict data",
+        "draft then smart-merge",
+        "finally-release lock fencing"
+      ],
+      "acceptance": "All recorded multi-user coordination scenarios pass with zero active lock leaks.",
+      "blockers": []
+    },
+    {
+      "id": "spreadsheetbench_route_contract",
+      "title": "SpreadsheetBench-shaped tasks route to deterministic tools or bounded model edit plans",
+      "inspiredBy": [
+        "SpreadsheetBench",
+        "SpreadsheetBench 2"
+      ],
+      "scope": "openrouter_convex_harness",
+      "status": "pass",
+      "evidence": [
+        "docs/eval/spreadsheetbench-v1-route-selection.json",
+        "docs/eval/spreadsheetbench-v2-route-selection.json",
+        "src/eval/spreadsheetBenchRouteSelection.ts"
+      ],
+      "requiredConvexContract": [
+        "deterministic table transforms before model calls",
+        "formula edit plans with deterministic formula-result cache",
+        "format edit plans with workbook style diff evidence",
+        "chart routes require rendered/VLM grade evidence"
+      ],
+      "acceptance": "Staged route-selection reports have tasks, and blocked_chart_visual is zero.",
+      "blockers": []
+    },
+    {
+      "id": "spreadsheetbench_chart_visual_grade",
+      "title": "Rendered chart visual grading lane",
+      "inspiredBy": [
+        "SpreadsheetBench 2"
+      ],
+      "scope": "openrouter_convex_harness",
+      "status": "pass",
+      "evidence": [
+        "docs/eval/spreadsheetbench-chart-visual-probe.json",
+        "docs/eval/spreadsheetbench-chart-visual/task-126/vlm-report.json",
+        "scripts/spreadsheetbench-chart-visual-grade.ts"
+      ],
+      "requiredConvexContract": [
+        "workbook rendering is evaluator-side evidence",
+        "Gemini/VLM judge is separate from OpenRouter candidate generation",
+        "candidate/gold PNG hashes are recorded before visual acceptance"
+      ],
+      "acceptance": "The chart visual probe records chart_visual_grade_proven with an accepted positive candidate and rejected negative control.",
+      "blockers": []
+    },
+    {
+      "id": "docker_agent_workspace_isolation",
+      "title": "Agent workspace isolation for benchmark execution",
+      "inspiredBy": [
+        "SpreadsheetBench",
+        "BankerToolBench"
+      ],
+      "scope": "openrouter_convex_harness",
+      "status": "pass",
+      "evidence": [
+        "docs/eval/docker-sandbox-probe.json",
+        "src/eval/dockerSandboxProbe.ts"
+      ],
+      "requiredConvexContract": [
+        "candidate generation sees only agent workspace mounts",
+        "evaluator gold is denied until scoring phase",
+        "network policy is explicit"
+      ],
+      "acceptance": "Docker probe records container_isolation_proven with evaluator reads denied.",
+      "blockers": []
+    },
+    {
+      "id": "bankertoolbench_official_verifier_path",
+      "title": "BankerToolBench Harbor/MCP/Gandalf verifier path",
+      "inspiredBy": [
+        "BankerToolBench"
+      ],
+      "scope": "official_promotion",
+      "status": "blocked",
+      "evidence": [
+        "docs/eval/bankertoolbench-official-contract.json",
+        "src/eval/bankerToolBenchRunner.ts"
+      ],
+      "requiredConvexContract": [
+        "official dataset manifest lock",
+        "benchmark-defined MCP financial tools",
+        "Harbor/Docker execution",
+        "Gandalf score import"
+      ],
+      "acceptance": "Official BTB contract imports verifier scores from the real Harbor/Gandalf path.",
+      "blockers": [
+        "Record BankerToolBench dataset revision plus a manifest lockfile with per-file hashes.",
+        "Run each official task in Harbor/Docker with agent-only workspace mounts before verifier access.",
+        "Adapt required MCP financial tools: sec_filings, market_data, company_logo, document_search, web_research.",
+        "Import official Gandalf verifier scores instead of using the local smoke verifier."
+      ]
+    }
+  ],
+  "routePlans": [
+    {
+      "route": "nex-agi/nex-n2-pro:free",
+      "provider": "openrouter",
+      "label": "Nex AGI Nex-N2-Pro free",
+      "role": "background_long_running_only",
+      "adapter": "convexModel.openrouter_chat_completions",
+      "eligibleForConvexHarness": true,
+      "mustRunThroughAgentJobs": true,
+      "requiredContract": [
+        "agentJobs is the durable root for every benchmark run, including /ask and /free",
+        "Convex actions call providers; browser/client_action never calls OpenRouter directly",
+        "agentStepJournal records model input/output hashes before replay can skip duplicate provider calls",
+        "agentOperationEvents counts query/action/mutation/model/tool/scheduler steps",
+        "agentLeases fence slices and prevent duplicate workers from committing the same job",
+        "mutationReceipts tie every canonical cell write to a job, tool call, baseVersion, and result",
+        "artifact ids remain the system of record; provider file/cache ids are adapter metadata only",
+        "CAS conflicts return as data, not thrown errors, so OpenRouter models can re-read and recover"
+      ],
+      "evidence": [
+        "docs/eval/results.json",
+        "src/agent/convexModel.ts",
+        "convex/agentJobs.ts"
+      ],
+      "blockers": [
+        "route needs N>=5 p95 ladder evidence before interactive promotion"
+      ]
+    },
+    {
+      "route": "deepseek/deepseek-v4-flash",
+      "provider": "openrouter",
+      "label": "DeepSeek V4 Flash",
+      "role": "interactive_candidate",
+      "adapter": "convexModel.openrouter_chat_completions",
+      "eligibleForConvexHarness": true,
+      "mustRunThroughAgentJobs": true,
+      "requiredContract": [
+        "agentJobs is the durable root for every benchmark run, including /ask and /free",
+        "Convex actions call providers; browser/client_action never calls OpenRouter directly",
+        "agentStepJournal records model input/output hashes before replay can skip duplicate provider calls",
+        "agentOperationEvents counts query/action/mutation/model/tool/scheduler steps",
+        "agentLeases fence slices and prevent duplicate workers from committing the same job",
+        "mutationReceipts tie every canonical cell write to a job, tool call, baseVersion, and result",
+        "artifact ids remain the system of record; provider file/cache ids are adapter metadata only",
+        "CAS conflicts return as data, not thrown errors, so OpenRouter models can re-read and recover"
+      ],
+      "evidence": [
+        "docs/eval/results.json",
+        "src/agent/convexModel.ts",
+        "convex/agentJobs.ts"
+      ],
+      "blockers": []
+    },
+    {
+      "route": "ibm-granite/granite-4.1-8b",
+      "provider": "openrouter",
+      "label": "IBM Granite 4.1 8B",
+      "role": "interactive_candidate",
+      "adapter": "convexModel.openrouter_chat_completions",
+      "eligibleForConvexHarness": true,
+      "mustRunThroughAgentJobs": true,
+      "requiredContract": [
+        "agentJobs is the durable root for every benchmark run, including /ask and /free",
+        "Convex actions call providers; browser/client_action never calls OpenRouter directly",
+        "agentStepJournal records model input/output hashes before replay can skip duplicate provider calls",
+        "agentOperationEvents counts query/action/mutation/model/tool/scheduler steps",
+        "agentLeases fence slices and prevent duplicate workers from committing the same job",
+        "mutationReceipts tie every canonical cell write to a job, tool call, baseVersion, and result",
+        "artifact ids remain the system of record; provider file/cache ids are adapter metadata only",
+        "CAS conflicts return as data, not thrown errors, so OpenRouter models can re-read and recover"
+      ],
+      "evidence": [
+        "docs/eval/results.json",
+        "src/agent/convexModel.ts",
+        "convex/agentJobs.ts"
+      ],
+      "blockers": []
+    },
+    {
+      "route": "z-ai/glm-4.7-flash",
+      "provider": "openrouter",
+      "label": "GLM 4.7 Flash",
+      "role": "interactive_candidate",
+      "adapter": "convexModel.openrouter_chat_completions",
+      "eligibleForConvexHarness": true,
+      "mustRunThroughAgentJobs": true,
+      "requiredContract": [
+        "agentJobs is the durable root for every benchmark run, including /ask and /free",
+        "Convex actions call providers; browser/client_action never calls OpenRouter directly",
+        "agentStepJournal records model input/output hashes before replay can skip duplicate provider calls",
+        "agentOperationEvents counts query/action/mutation/model/tool/scheduler steps",
+        "agentLeases fence slices and prevent duplicate workers from committing the same job",
+        "mutationReceipts tie every canonical cell write to a job, tool call, baseVersion, and result",
+        "artifact ids remain the system of record; provider file/cache ids are adapter metadata only",
+        "CAS conflicts return as data, not thrown errors, so OpenRouter models can re-read and recover"
+      ],
+      "evidence": [
+        "docs/eval/results.json",
+        "src/agent/convexModel.ts",
+        "convex/agentJobs.ts"
+      ],
+      "blockers": []
+    },
+    {
+      "route": "inclusionai/ring-2.6-1t",
+      "provider": "openrouter",
+      "label": "inclusionAI Ring 2.6 1T",
+      "role": "interactive_candidate",
+      "adapter": "convexModel.openrouter_chat_completions",
+      "eligibleForConvexHarness": true,
+      "mustRunThroughAgentJobs": true,
+      "requiredContract": [
+        "agentJobs is the durable root for every benchmark run, including /ask and /free",
+        "Convex actions call providers; browser/client_action never calls OpenRouter directly",
+        "agentStepJournal records model input/output hashes before replay can skip duplicate provider calls",
+        "agentOperationEvents counts query/action/mutation/model/tool/scheduler steps",
+        "agentLeases fence slices and prevent duplicate workers from committing the same job",
+        "mutationReceipts tie every canonical cell write to a job, tool call, baseVersion, and result",
+        "artifact ids remain the system of record; provider file/cache ids are adapter metadata only",
+        "CAS conflicts return as data, not thrown errors, so OpenRouter models can re-read and recover"
+      ],
+      "evidence": [
+        "docs/eval/results.json",
+        "src/agent/convexModel.ts",
+        "convex/agentJobs.ts"
+      ],
+      "blockers": []
+    },
+    {
+      "route": "xiaomi/mimo-v2.5",
+      "provider": "openrouter",
+      "label": "Xiaomi MiMo V2.5",
+      "role": "interactive_candidate",
+      "adapter": "convexModel.openrouter_chat_completions",
+      "eligibleForConvexHarness": true,
+      "mustRunThroughAgentJobs": true,
+      "requiredContract": [
+        "agentJobs is the durable root for every benchmark run, including /ask and /free",
+        "Convex actions call providers; browser/client_action never calls OpenRouter directly",
+        "agentStepJournal records model input/output hashes before replay can skip duplicate provider calls",
+        "agentOperationEvents counts query/action/mutation/model/tool/scheduler steps",
+        "agentLeases fence slices and prevent duplicate workers from committing the same job",
+        "mutationReceipts tie every canonical cell write to a job, tool call, baseVersion, and result",
+        "artifact ids remain the system of record; provider file/cache ids are adapter metadata only",
+        "CAS conflicts return as data, not thrown errors, so OpenRouter models can re-read and recover"
+      ],
+      "evidence": [
+        "src/agent/convexModel.ts",
+        "convex/agentJobs.ts"
+      ],
+      "blockers": []
+    },
+    {
+      "route": "stepfun/step-3.7-flash",
+      "provider": "openrouter",
+      "label": "StepFun Step 3.7 Flash",
+      "role": "interactive_candidate",
+      "adapter": "convexModel.openrouter_chat_completions",
+      "eligibleForConvexHarness": true,
+      "mustRunThroughAgentJobs": true,
+      "requiredContract": [
+        "agentJobs is the durable root for every benchmark run, including /ask and /free",
+        "Convex actions call providers; browser/client_action never calls OpenRouter directly",
+        "agentStepJournal records model input/output hashes before replay can skip duplicate provider calls",
+        "agentOperationEvents counts query/action/mutation/model/tool/scheduler steps",
+        "agentLeases fence slices and prevent duplicate workers from committing the same job",
+        "mutationReceipts tie every canonical cell write to a job, tool call, baseVersion, and result",
+        "artifact ids remain the system of record; provider file/cache ids are adapter metadata only",
+        "CAS conflicts return as data, not thrown errors, so OpenRouter models can re-read and recover"
+      ],
+      "evidence": [
+        "docs/eval/results.json",
+        "src/agent/convexModel.ts",
+        "convex/agentJobs.ts"
+      ],
+      "blockers": []
+    },
+    {
+      "route": "minimax/minimax-m3",
+      "provider": "openrouter",
+      "label": "MiniMax M3",
+      "role": "interactive_candidate",
+      "adapter": "convexModel.openrouter_chat_completions",
+      "eligibleForConvexHarness": true,
+      "mustRunThroughAgentJobs": true,
+      "requiredContract": [
+        "agentJobs is the durable root for every benchmark run, including /ask and /free",
+        "Convex actions call providers; browser/client_action never calls OpenRouter directly",
+        "agentStepJournal records model input/output hashes before replay can skip duplicate provider calls",
+        "agentOperationEvents counts query/action/mutation/model/tool/scheduler steps",
+        "agentLeases fence slices and prevent duplicate workers from committing the same job",
+        "mutationReceipts tie every canonical cell write to a job, tool call, baseVersion, and result",
+        "artifact ids remain the system of record; provider file/cache ids are adapter metadata only",
+        "CAS conflicts return as data, not thrown errors, so OpenRouter models can re-read and recover"
+      ],
+      "evidence": [
+        "docs/eval/results.json",
+        "src/agent/convexModel.ts",
+        "convex/agentJobs.ts"
+      ],
+      "blockers": []
+    },
+    {
+      "route": "deepseek/deepseek-v4-pro",
+      "provider": "openrouter",
+      "label": "DeepSeek V4 Pro",
+      "role": "interactive_candidate",
+      "adapter": "convexModel.openrouter_chat_completions",
+      "eligibleForConvexHarness": true,
+      "mustRunThroughAgentJobs": true,
+      "requiredContract": [
+        "agentJobs is the durable root for every benchmark run, including /ask and /free",
+        "Convex actions call providers; browser/client_action never calls OpenRouter directly",
+        "agentStepJournal records model input/output hashes before replay can skip duplicate provider calls",
+        "agentOperationEvents counts query/action/mutation/model/tool/scheduler steps",
+        "agentLeases fence slices and prevent duplicate workers from committing the same job",
+        "mutationReceipts tie every canonical cell write to a job, tool call, baseVersion, and result",
+        "artifact ids remain the system of record; provider file/cache ids are adapter metadata only",
+        "CAS conflicts return as data, not thrown errors, so OpenRouter models can re-read and recover"
+      ],
+      "evidence": [
+        "docs/eval/results.json",
+        "src/agent/convexModel.ts",
+        "convex/agentJobs.ts"
+      ],
+      "blockers": []
+    },
+    {
+      "route": "google/gemini-3.1-flash-lite",
+      "provider": "openrouter",
+      "label": "Gemini 3.1 Flash Lite via OpenRouter",
+      "role": "research_only",
+      "adapter": "convexModel.openrouter_chat_completions",
+      "eligibleForConvexHarness": false,
+      "mustRunThroughAgentJobs": true,
+      "requiredContract": [
+        "agentJobs is the durable root for every benchmark run, including /ask and /free",
+        "Convex actions call providers; browser/client_action never calls OpenRouter directly",
+        "agentStepJournal records model input/output hashes before replay can skip duplicate provider calls",
+        "agentOperationEvents counts query/action/mutation/model/tool/scheduler steps",
+        "agentLeases fence slices and prevent duplicate workers from committing the same job",
+        "mutationReceipts tie every canonical cell write to a job, tool call, baseVersion, and result",
+        "artifact ids remain the system of record; provider file/cache ids are adapter metadata only",
+        "CAS conflicts return as data, not thrown errors, so OpenRouter models can re-read and recover"
+      ],
+      "evidence": [
+        "docs/eval/results.json",
+        "src/agent/convexModel.ts",
+        "convex/agentJobs.ts"
+      ],
+      "blockers": [
+        "route is not ladder-tested for collaboration writes"
+      ]
+    },
+    {
+      "route": "qwen/qwen3.7-plus",
+      "provider": "openrouter",
+      "label": "Qwen 3.7 Plus",
+      "role": "interactive_candidate",
+      "adapter": "convexModel.openrouter_chat_completions",
+      "eligibleForConvexHarness": true,
+      "mustRunThroughAgentJobs": true,
+      "requiredContract": [
+        "agentJobs is the durable root for every benchmark run, including /ask and /free",
+        "Convex actions call providers; browser/client_action never calls OpenRouter directly",
+        "agentStepJournal records model input/output hashes before replay can skip duplicate provider calls",
+        "agentOperationEvents counts query/action/mutation/model/tool/scheduler steps",
+        "agentLeases fence slices and prevent duplicate workers from committing the same job",
+        "mutationReceipts tie every canonical cell write to a job, tool call, baseVersion, and result",
+        "artifact ids remain the system of record; provider file/cache ids are adapter metadata only",
+        "CAS conflicts return as data, not thrown errors, so OpenRouter models can re-read and recover"
+      ],
+      "evidence": [
+        "src/agent/convexModel.ts",
+        "convex/agentJobs.ts"
+      ],
+      "blockers": []
+    },
+    {
+      "route": "nvidia/nemotron-3-ultra-550b-a55b",
+      "provider": "openrouter",
+      "label": "NVIDIA Nemotron 3 Ultra",
+      "role": "interactive_candidate",
+      "adapter": "convexModel.openrouter_chat_completions",
+      "eligibleForConvexHarness": true,
+      "mustRunThroughAgentJobs": true,
+      "requiredContract": [
+        "agentJobs is the durable root for every benchmark run, including /ask and /free",
+        "Convex actions call providers; browser/client_action never calls OpenRouter directly",
+        "agentStepJournal records model input/output hashes before replay can skip duplicate provider calls",
+        "agentOperationEvents counts query/action/mutation/model/tool/scheduler steps",
+        "agentLeases fence slices and prevent duplicate workers from committing the same job",
+        "mutationReceipts tie every canonical cell write to a job, tool call, baseVersion, and result",
+        "artifact ids remain the system of record; provider file/cache ids are adapter metadata only",
+        "CAS conflicts return as data, not thrown errors, so OpenRouter models can re-read and recover"
+      ],
+      "evidence": [
+        "src/agent/convexModel.ts",
+        "convex/agentJobs.ts"
+      ],
+      "blockers": []
+    },
+    {
+      "route": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "provider": "openrouter",
+      "label": "NVIDIA Nemotron 3 Ultra free",
+      "role": "background_long_running_only",
+      "adapter": "convexModel.openrouter_chat_completions",
+      "eligibleForConvexHarness": true,
+      "mustRunThroughAgentJobs": true,
+      "requiredContract": [
+        "agentJobs is the durable root for every benchmark run, including /ask and /free",
+        "Convex actions call providers; browser/client_action never calls OpenRouter directly",
+        "agentStepJournal records model input/output hashes before replay can skip duplicate provider calls",
+        "agentOperationEvents counts query/action/mutation/model/tool/scheduler steps",
+        "agentLeases fence slices and prevent duplicate workers from committing the same job",
+        "mutationReceipts tie every canonical cell write to a job, tool call, baseVersion, and result",
+        "artifact ids remain the system of record; provider file/cache ids are adapter metadata only",
+        "CAS conflicts return as data, not thrown errors, so OpenRouter models can re-read and recover"
+      ],
+      "evidence": [
+        "docs/eval/results.json",
+        "src/agent/convexModel.ts",
+        "convex/agentJobs.ts"
+      ],
+      "blockers": [
+        "route needs N>=5 p95 ladder evidence before interactive promotion"
+      ]
+    },
+    {
+      "route": "nvidia/nemotron-3-super-120b-a12b:free",
+      "provider": "openrouter",
+      "label": "NVIDIA Nemotron 3 Super free",
+      "role": "background_long_running_only",
+      "adapter": "convexModel.openrouter_chat_completions",
+      "eligibleForConvexHarness": true,
+      "mustRunThroughAgentJobs": true,
+      "requiredContract": [
+        "agentJobs is the durable root for every benchmark run, including /ask and /free",
+        "Convex actions call providers; browser/client_action never calls OpenRouter directly",
+        "agentStepJournal records model input/output hashes before replay can skip duplicate provider calls",
+        "agentOperationEvents counts query/action/mutation/model/tool/scheduler steps",
+        "agentLeases fence slices and prevent duplicate workers from committing the same job",
+        "mutationReceipts tie every canonical cell write to a job, tool call, baseVersion, and result",
+        "artifact ids remain the system of record; provider file/cache ids are adapter metadata only",
+        "CAS conflicts return as data, not thrown errors, so OpenRouter models can re-read and recover"
+      ],
+      "evidence": [
+        "docs/eval/free-auto-router-ladder.json",
+        "src/agent/convexModel.ts",
+        "convex/agentJobs.ts"
+      ],
+      "blockers": [
+        "route needs N>=5 p95 ladder evidence before interactive promotion"
+      ]
+    },
+    {
+      "route": "google/gemma-4-31b-it:free",
+      "provider": "openrouter",
+      "label": "Gemma 4 31B free",
+      "role": "research_only",
+      "adapter": "convexModel.openrouter_chat_completions",
+      "eligibleForConvexHarness": false,
+      "mustRunThroughAgentJobs": true,
+      "requiredContract": [
+        "agentJobs is the durable root for every benchmark run, including /ask and /free",
+        "Convex actions call providers; browser/client_action never calls OpenRouter directly",
+        "agentStepJournal records model input/output hashes before replay can skip duplicate provider calls",
+        "agentOperationEvents counts query/action/mutation/model/tool/scheduler steps",
+        "agentLeases fence slices and prevent duplicate workers from committing the same job",
+        "mutationReceipts tie every canonical cell write to a job, tool call, baseVersion, and result",
+        "artifact ids remain the system of record; provider file/cache ids are adapter metadata only",
+        "CAS conflicts return as data, not thrown errors, so OpenRouter models can re-read and recover"
+      ],
+      "evidence": [
+        "docs/eval/results.json",
+        "src/agent/convexModel.ts",
+        "convex/agentJobs.ts"
+      ],
+      "blockers": [
+        "route is not ladder-tested for collaboration writes"
+      ]
+    },
+    {
+      "route": "openai/gpt-oss-120b:free",
+      "provider": "openrouter",
+      "label": "GPT OSS 120B free",
+      "role": "research_only",
+      "adapter": "convexModel.openrouter_chat_completions",
+      "eligibleForConvexHarness": false,
+      "mustRunThroughAgentJobs": true,
+      "requiredContract": [
+        "agentJobs is the durable root for every benchmark run, including /ask and /free",
+        "Convex actions call providers; browser/client_action never calls OpenRouter directly",
+        "agentStepJournal records model input/output hashes before replay can skip duplicate provider calls",
+        "agentOperationEvents counts query/action/mutation/model/tool/scheduler steps",
+        "agentLeases fence slices and prevent duplicate workers from committing the same job",
+        "mutationReceipts tie every canonical cell write to a job, tool call, baseVersion, and result",
+        "artifact ids remain the system of record; provider file/cache ids are adapter metadata only",
+        "CAS conflicts return as data, not thrown errors, so OpenRouter models can re-read and recover"
+      ],
+      "evidence": [
+        "docs/eval/results.json",
+        "src/agent/convexModel.ts",
+        "convex/agentJobs.ts"
+      ],
+      "blockers": [
+        "route is not ladder-tested for collaboration writes"
+      ]
+    },
+    {
+      "route": "poolside/laguna-xs.2:free",
+      "provider": "openrouter",
+      "label": "Poolside Laguna XS.2 free",
+      "role": "research_only",
+      "adapter": "convexModel.openrouter_chat_completions",
+      "eligibleForConvexHarness": false,
+      "mustRunThroughAgentJobs": true,
+      "requiredContract": [
+        "agentJobs is the durable root for every benchmark run, including /ask and /free",
+        "Convex actions call providers; browser/client_action never calls OpenRouter directly",
+        "agentStepJournal records model input/output hashes before replay can skip duplicate provider calls",
+        "agentOperationEvents counts query/action/mutation/model/tool/scheduler steps",
+        "agentLeases fence slices and prevent duplicate workers from committing the same job",
+        "mutationReceipts tie every canonical cell write to a job, tool call, baseVersion, and result",
+        "artifact ids remain the system of record; provider file/cache ids are adapter metadata only",
+        "CAS conflicts return as data, not thrown errors, so OpenRouter models can re-read and recover"
+      ],
+      "evidence": [
+        "docs/eval/results.json",
+        "src/agent/convexModel.ts",
+        "convex/agentJobs.ts"
+      ],
+      "blockers": [
+        "route is not ladder-tested for collaboration writes"
+      ]
+    },
+    {
+      "route": "poolside/laguna-m.1:free",
+      "provider": "openrouter",
+      "label": "Poolside Laguna M.1 free",
+      "role": "research_only",
+      "adapter": "convexModel.openrouter_chat_completions",
+      "eligibleForConvexHarness": false,
+      "mustRunThroughAgentJobs": true,
+      "requiredContract": [
+        "agentJobs is the durable root for every benchmark run, including /ask and /free",
+        "Convex actions call providers; browser/client_action never calls OpenRouter directly",
+        "agentStepJournal records model input/output hashes before replay can skip duplicate provider calls",
+        "agentOperationEvents counts query/action/mutation/model/tool/scheduler steps",
+        "agentLeases fence slices and prevent duplicate workers from committing the same job",
+        "mutationReceipts tie every canonical cell write to a job, tool call, baseVersion, and result",
+        "artifact ids remain the system of record; provider file/cache ids are adapter metadata only",
+        "CAS conflicts return as data, not thrown errors, so OpenRouter models can re-read and recover"
+      ],
+      "evidence": [
+        "docs/eval/results.json",
+        "src/agent/convexModel.ts",
+        "convex/agentJobs.ts"
+      ],
+      "blockers": [
+        "route is not ladder-tested for collaboration writes"
+      ]
+    },
+    {
+      "route": "openrouter/free-auto",
+      "provider": "internal_alias",
+      "label": "OpenRouter free-auto alias",
+      "role": "background_long_running_only",
+      "adapter": "convexModel.openrouter_free_auto",
+      "eligibleForConvexHarness": true,
+      "mustRunThroughAgentJobs": true,
+      "requiredContract": [
+        "agentJobs is the durable root for every benchmark run, including /ask and /free",
+        "Convex actions call providers; browser/client_action never calls OpenRouter directly",
+        "agentStepJournal records model input/output hashes before replay can skip duplicate provider calls",
+        "agentOperationEvents counts query/action/mutation/model/tool/scheduler steps",
+        "agentLeases fence slices and prevent duplicate workers from committing the same job",
+        "mutationReceipts tie every canonical cell write to a job, tool call, baseVersion, and result",
+        "artifact ids remain the system of record; provider file/cache ids are adapter metadata only",
+        "CAS conflicts return as data, not thrown errors, so OpenRouter models can re-read and recover"
+      ],
+      "evidence": [
+        "docs/eval/free-auto-router-ladder.json",
+        "src/agent/convexModel.ts",
+        "convex/agentJobs.ts"
+      ],
+      "blockers": [
+        "route needs N>=5 p95 ladder evidence before interactive promotion"
+      ]
+    }
+  ]
+}

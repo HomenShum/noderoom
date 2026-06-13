@@ -1,7 +1,7 @@
 {
   "schema": 1,
   "ok": true,
-  "generatedAt": "2026-06-13T20:51:33.092Z",
+  "generatedAt": "2026-06-13T21:11:13.238Z",
   "ms": 14,
   "algorithmId": "revenue_variance_pct_v1",
   "artifactHash": "fnv1a32:0239470c",

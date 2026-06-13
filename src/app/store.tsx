@@ -9,7 +9,7 @@
  * App picks the provider based on whether VITE_CONVEX_URL is set.
  */
 
-import { createContext, useContext, useMemo, useRef, type ReactNode } from "react";
+import { createContext, useContext, useMemo, useRef, useState, useEffect, useLayoutEffect, useCallback, type ReactNode } from "react";
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { engine, demo, useEngineRev, runDemo } from "./roomStore";
@@ -387,19 +387,45 @@ const chanStr = (ch: Channel): string => (ch === "public" ? "public" : ch.privat
    times … replayed" on fresh server state while the mutation is in flight, so every
    update must recompute from current state and tolerate its own server echo. */
 
-/** Mirror of applyCellEditCore's apply step (convex/artifacts.ts): version bump, order
- *  handling for create/delete, updatedBy attribution. Shared by the hand-edit and the
- *  proposal-approve optimistic paths so both paint the exact server outcome. */
-function withCellApplied(artifacts: Artifact[], artifactId: string, elementId: string, kind: "set" | "create" | "delete", value: unknown, actor: Actor): Artifact[] {
-  return artifacts.map((a) => {
-    if (a.id !== artifactId) return a;
-    const prev = (a.elements[elementId] ?? { version: 0 }) as { version: number };
-    const elements = { ...a.elements };
-    const order = kind === "create" && !elements[elementId] ? [...a.order, elementId] : kind === "delete" ? a.order.filter((id) => id !== elementId) : a.order;
-    if (kind === "delete") delete elements[elementId];
-    else elements[elementId] = { id: elementId, value, version: prev.version + 1, updatedAt: Date.now(), updatedBy: actor } as Artifact["elements"][string];
-    return { ...a, version: a.version + 1, order, elements };
-  });
+/* ── B1 client split ───────────────────────────────────────────────────────────
+   The store no longer subscribes to rooms.full (which re-shipped the WHOLE room — ~90KB
+   on Q3DEMO — on every cell edit because its read-set includes every element). Instead it
+   pairs rooms.meta (the room shell: room/members/artifact-shells/locks/sessions/drafts, NO
+   cell elements) with one artifacts.elements subscription PER artifact. A cell edit changes
+   one elements row → only that artifact's query re-runs/re-ships; the other artifacts' element
+   queries don't, and rooms.meta re-ships only the small shell (the artifact-row version bump
+   the server does on every edit). Measured per-edit re-ship: ~64KB → 19–31KB. */
+type ElementsMap = Artifact["elements"];
+type MetaArtifact = Omit<Artifact, "elements">;
+
+/** Element-scoped mirror of applyCellEditCore's apply step (convex/artifacts.ts): version bump,
+ *  order handling for create/delete, updatedBy attribution — operates on ONE artifact's elements
+ *  map + order (cells live in artifacts.elements now, the shell in rooms.meta). Shared by the
+ *  hand-edit and proposal-approve optimistic paths so both paint the exact server outcome. */
+function applyCellToElements(elements: ElementsMap, order: string[], elementId: string, kind: "set" | "create" | "delete", value: unknown, actor: Actor): { elements: ElementsMap; order: string[] } {
+  const prev = (elements[elementId] ?? { version: 0 }) as { version: number };
+  const next = { ...elements };
+  const nextOrder = kind === "create" && !next[elementId] ? [...order, elementId] : kind === "delete" ? order.filter((id) => id !== elementId) : order;
+  if (kind === "delete") delete next[elementId];
+  else next[elementId] = { id: elementId, value, version: prev.version + 1, updatedAt: Date.now(), updatedBy: actor } as ElementsMap[string];
+  return { elements: next, order: nextOrder };
+}
+
+/** One of these mounts per room artifact (rendered by ConvexStoreProvider). Each subscribes to
+ *  its artifact's cells via api.artifacts.elements, so a cell edit re-runs ONLY the edited
+ *  artifact's query, not the whole room. It lifts the elements map into the provider via
+ *  useLayoutEffect (fires before paint → the optimistic-edit re-render lands flicker-free).
+ *  Renders nothing. Optimistic (opt-) artifact ids are filtered out by the caller — they aren't
+ *  valid Convex ids, so subscribing would throw; their cells fill in when the server confirms. */
+function ArtifactElementsSubscriber({ roomId, artifactId, proof, onElements, onUnmount }: {
+  roomId: string; artifactId: string; proof: ActorProof;
+  onElements: (artifactId: string, elements: ElementsMap) => void;
+  onUnmount: (artifactId: string) => void;
+}) {
+  const els = useQuery(api.artifacts.elements, { roomId: roomId as never, artifactId: artifactId as never, requester: proof });
+  useLayoutEffect(() => { if (els !== undefined) onElements(artifactId, els as unknown as ElementsMap); }, [artifactId, els, onElements]);
+  useEffect(() => () => onUnmount(artifactId), [artifactId, onUnmount]);
+  return null;
 }
 
 /* Client mirrors of convex/artifacts.ts research-row helpers — MUST stay in lockstep
@@ -453,7 +479,16 @@ function findExistingResearchRowClient(art: Artifact, row: ResearchRowInput): st
 export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: string; me: Actor; proof: ActorProof; children: ReactNode }) {
   const undoStack = useRef(new Map<string, UndoEntry[]>());
   const rid = roomId as never;
-  const data = useQuery(api.rooms.full, { roomId: rid, requester: proof });
+  const data = useQuery(api.rooms.meta, { roomId: rid, requester: proof });
+  const metaArtifacts = useMemo(() => (data?.artifacts ?? []) as unknown as MetaArtifact[], [data]);
+  // B1: per-artifact cell maps, lifted from the <ArtifactElementsSubscriber> children rendered below.
+  const [elementsByArtifact, setElementsByArtifact] = useState<Record<string, ElementsMap>>({});
+  const onArtifactElements = useCallback((artifactId: string, els: ElementsMap) => {
+    setElementsByArtifact((prev) => (prev[artifactId] === els ? prev : { ...prev, [artifactId]: els }));
+  }, []);
+  const onArtifactUnmount = useCallback((artifactId: string) => {
+    setElementsByArtifact((prev) => { if (!(artifactId in prev)) return prev; const next = { ...prev }; delete next[artifactId]; return next; });
+  }, []);
   const pubQuery = { roomId: rid, channel: "public", requester: proof };
   const privQuery = { roomId: rid, channel: me.id, requester: proof };
   const pub = useQuery(api.messages.list, pubQuery) ?? [];
@@ -467,10 +502,19 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
   const proposals = useQuery(api.artifacts.listProposals, { roomId: rid, requester: proof }) ?? [];
 
   const applyCellEdit = useMutation(api.artifacts.applyCellEdit).withOptimisticUpdate((local, args) => {
-    const cur = local.getQuery(api.rooms.full, { roomId: args.roomId, requester: args.proof });
-    if (!cur) return;
-    const artifacts = withCellApplied(cur.artifacts as unknown as Artifact[], args.artifactId as unknown as string, args.elementId, args.kind ?? "set", args.value, args.proof.actor);
-    local.setQuery(api.rooms.full, { roomId: args.roomId, requester: args.proof }, { ...cur, artifacts } as typeof cur);
+    const elementsQ = { roomId: args.roomId, artifactId: args.artifactId, requester: args.proof };
+    const curEls = local.getQuery(api.artifacts.elements, elementsQ);
+    if (curEls === undefined) return;
+    const metaQ = { roomId: args.roomId, requester: args.proof };
+    const curMeta = local.getQuery(api.rooms.meta, metaQ);
+    const rowMeta = curMeta?.artifacts.find((a) => String(a.id) === String(args.artifactId));
+    const { elements, order } = applyCellToElements(curEls as unknown as ElementsMap, (rowMeta?.order ?? []) as string[], args.elementId, args.kind ?? "set", args.value, args.proof.actor);
+    local.setQuery(api.artifacts.elements, elementsQ, elements as unknown as typeof curEls);
+    // Mirror the server's artifact-row bump (applyCellEditCore: version+updatedAt always, order on
+    // create/delete) so the optimistic→authoritative swap is shape-identical (no version flicker).
+    if (curMeta && rowMeta) {
+      local.setQuery(api.rooms.meta, metaQ, { ...curMeta, artifacts: curMeta.artifacts.map((a) => String(a.id) === String(args.artifactId) ? { ...a, order, version: a.version + 1, updatedAt: Date.now() } : a) } as typeof curMeta);
+    }
   });
   const sendMsg = useMutation(api.messages.send).withOptimisticUpdate((local, args) => {
     const q = { roomId: args.roomId, channel: args.channel, requester: args.proof };
@@ -484,9 +528,9 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
   // QA P1: the auto-allow switch flips instantly (server toggle reconciles) — matches applyCellEdit's pattern.
   const toggle = useMutation(api.rooms.toggleAutoAllow).withOptimisticUpdate((local, args) => {
     const q = { roomId: args.roomId, requester: args.requester };
-    const cur = local.getQuery(api.rooms.full, q);
+    const cur = local.getQuery(api.rooms.meta, q);
     if (!cur) return;
-    local.setQuery(api.rooms.full, q, { ...cur, room: { ...cur.room, autoAllow: !cur.room.autoAllow } } as typeof cur);
+    local.setQuery(api.rooms.meta, q, { ...cur, room: { ...cur.room, autoAllow: !cur.room.autoAllow } } as typeof cur);
   });
   // Optimistic edit: text is reversible + predictable (patch same _id) + author-authoritative → optimistic-safe.
   // Match by _id across every loaded messages.list ref (public + the actor's private channel); the editor only
@@ -510,95 +554,111 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
     local.setQuery(api.artifacts.listProposals, q, cur.filter((p) => String(p.id) !== String(args.proposalId)));
     if (!args.approve || !prop) return;
     const op = prop.op as { elementId: string; kind: "set" | "create" | "delete"; value: unknown };
-    const full = local.getQuery(api.rooms.full, q);
-    if (!full) return;
-    const artifacts = withCellApplied(full.artifacts as unknown as Artifact[], String(prop.artifactId), op.elementId, op.kind, op.value, prop.author as Actor);
-    local.setQuery(api.rooms.full, q, { ...full, artifacts } as typeof full);
+    const artifactId = String(prop.artifactId);
+    const elementsQ = { roomId: rid, artifactId: artifactId as never, requester: args.requester };
+    const curEls = local.getQuery(api.artifacts.elements, elementsQ);
+    if (curEls === undefined) return;
+    const curMeta = local.getQuery(api.rooms.meta, q);
+    const rowMeta = curMeta?.artifacts.find((a) => String(a.id) === artifactId);
+    const { elements, order } = applyCellToElements(curEls as unknown as ElementsMap, (rowMeta?.order ?? []) as string[], op.elementId, op.kind, op.value, prop.author as Actor);
+    local.setQuery(api.artifacts.elements, elementsQ, elements as unknown as typeof curEls);
+    if (curMeta && rowMeta) {
+      local.setQuery(api.rooms.meta, q, { ...curMeta, artifacts: curMeta.artifacts.map((a) => String(a.id) === artifactId ? { ...a, order, version: a.version + 1, updatedAt: Date.now() } : a) } as typeof curMeta);
+    }
   });
   // "Add accounts" paints instantly: an EXACT client mirror of the server's deterministic row
   // builder (same slugs, same suffix-dedup against order, same default column values), recomputed
   // from fresh state on every replay — so the authoritative swap is pixel-identical.
   const addResearchRowsMutation = useMutation(api.artifacts.addResearchRows).withOptimisticUpdate((local, args) => {
-    const q = { roomId: args.roomId, requester: args.requester };
-    const cur = local.getQuery(api.rooms.full, q);
-    if (!cur) return;
+    const artifactId = args.artifactId as unknown as string;
+    const elementsQ = { roomId: args.roomId, artifactId: args.artifactId, requester: args.requester };
+    const curEls = local.getQuery(api.artifacts.elements, elementsQ);
+    if (curEls === undefined) return;
+    const metaQ = { roomId: args.roomId, requester: args.requester };
+    const curMeta = local.getQuery(api.rooms.meta, metaQ);
+    const rowMeta = curMeta?.artifacts.find((a) => String(a.id) === artifactId);
+    if (!rowMeta) return;
     const now = Date.now();
-    const artifacts = (cur.artifacts as unknown as Artifact[]).map((a) => {
-      if (a.id !== (args.artifactId as unknown as string)) return a;
-      const nextOrder = [...a.order];
-      const elements = { ...a.elements };
-      let changed = false;
-      for (const row of args.rows as ResearchRowInput[]) {
-        const company = row.company.trim();
-        if (!company) continue;
-        let rowChanged = false;
-        const base = slugResearchRowClient(company);
-        const existing = findExistingResearchRowClient({ ...a, order: nextOrder, elements } as Artifact, row);
-        let rowId = existing ?? base, suffix = 1;
-        while (!existing && nextOrder.some((id) => id.startsWith(`${rowId}__`))) rowId = `${base}_${suffix++}`;
-        const vals: Record<(typeof RESEARCH_COLS)[number], string> = {
-          company,
-          website: row.website?.trim() || defaultWebsiteClient(company),
-          status: existing ? cellStringClient({ ...a, elements } as Artifact, rowId, "status") || "pending" : "pending",
-          tier: row.tier?.trim() || "B",
-          intent: row.intent?.trim() ?? "",
-          owner: row.owner?.trim() || args.requester.actor.name,
-          crm_status: row.crmStatus?.trim() || "Research",
-          summary: existing ? cellStringClient({ ...a, elements } as Artifact, rowId, "summary") : "",
-          funding: existing ? cellStringClient({ ...a, elements } as Artifact, rowId, "funding") : "",
-          headcount: existing ? cellStringClient({ ...a, elements } as Artifact, rowId, "headcount") : "",
-          recent_signal: existing ? cellStringClient({ ...a, elements } as Artifact, rowId, "recent_signal") : "",
-          source: existing ? cellStringClient({ ...a, elements } as Artifact, rowId, "source") : "",
-          source2: existing ? cellStringClient({ ...a, elements } as Artifact, rowId, "source2") : "",
-          last_researched: existing ? cellStringClient({ ...a, elements } as Artifact, rowId, "last_researched") : "",
-        };
-        const writableCols = existing ? ["company", "website", "tier", "intent", "owner", "crm_status"] as const : RESEARCH_COLS;
-        for (const col of writableCols) {
+    // Reconstruct a synthetic Artifact = {shell, cells} so the deterministic builder mirror stays
+    // byte-identical to the server (same slugs, suffix-dedup, default columns).
+    const synthetic = { ...(rowMeta as unknown as Artifact), elements: curEls as unknown as ElementsMap };
+    const nextOrder = [...synthetic.order];
+    const elements = { ...synthetic.elements };
+    let changed = false;
+    for (const row of args.rows as ResearchRowInput[]) {
+      const company = row.company.trim();
+      if (!company) continue;
+      let rowChanged = false;
+      const base = slugResearchRowClient(company);
+      const existing = findExistingResearchRowClient({ ...synthetic, order: nextOrder, elements } as Artifact, row);
+      let rowId = existing ?? base, suffix = 1;
+      while (!existing && nextOrder.some((id) => id.startsWith(`${rowId}__`))) rowId = `${base}_${suffix++}`;
+      const vals: Record<(typeof RESEARCH_COLS)[number], string> = {
+        company,
+        website: row.website?.trim() || defaultWebsiteClient(company),
+        status: existing ? cellStringClient({ ...synthetic, elements } as Artifact, rowId, "status") || "pending" : "pending",
+        tier: row.tier?.trim() || "B",
+        intent: row.intent?.trim() ?? "",
+        owner: row.owner?.trim() || args.requester.actor.name,
+        crm_status: row.crmStatus?.trim() || "Research",
+        summary: existing ? cellStringClient({ ...synthetic, elements } as Artifact, rowId, "summary") : "",
+        funding: existing ? cellStringClient({ ...synthetic, elements } as Artifact, rowId, "funding") : "",
+        headcount: existing ? cellStringClient({ ...synthetic, elements } as Artifact, rowId, "headcount") : "",
+        recent_signal: existing ? cellStringClient({ ...synthetic, elements } as Artifact, rowId, "recent_signal") : "",
+        source: existing ? cellStringClient({ ...synthetic, elements } as Artifact, rowId, "source") : "",
+        source2: existing ? cellStringClient({ ...synthetic, elements } as Artifact, rowId, "source2") : "",
+        last_researched: existing ? cellStringClient({ ...synthetic, elements } as Artifact, rowId, "last_researched") : "",
+      };
+      const writableCols = existing ? ["company", "website", "tier", "intent", "owner", "crm_status"] as const : RESEARCH_COLS;
+      for (const col of writableCols) {
+        const elementId = `${rowId}__${col}`;
+        const prev = elements[elementId];
+        if (prev) {
+          if (Object.is(prev.value, vals[col])) continue;
+          elements[elementId] = { ...prev, value: vals[col], version: prev.version + 1, updatedAt: now, updatedBy: args.requester.actor } as ElementsMap[string];
+        } else {
+          nextOrder.push(elementId);
+          elements[elementId] = { id: elementId, value: vals[col], version: 1, updatedAt: now, updatedBy: args.requester.actor } as ElementsMap[string];
+        }
+        rowChanged = true;
+      }
+      if (!existing) {
+        for (const col of RESEARCH_COLS) {
           const elementId = `${rowId}__${col}`;
-          const prev = elements[elementId];
-          if (prev) {
-            if (Object.is(prev.value, vals[col])) continue;
-            elements[elementId] = { ...prev, value: vals[col], version: prev.version + 1, updatedAt: now, updatedBy: args.requester.actor } as Artifact["elements"][string];
-          } else {
-            nextOrder.push(elementId);
-            elements[elementId] = { id: elementId, value: vals[col], version: 1, updatedAt: now, updatedBy: args.requester.actor } as Artifact["elements"][string];
-          }
+          if (elements[elementId]) continue;
+          nextOrder.push(elementId);
+          elements[elementId] = { id: elementId, value: vals[col], version: 1, updatedAt: now, updatedBy: args.requester.actor } as ElementsMap[string];
           rowChanged = true;
         }
-        if (!existing) {
-          for (const col of RESEARCH_COLS) {
-            const elementId = `${rowId}__${col}`;
-            if (elements[elementId]) continue;
-            nextOrder.push(elementId);
-            elements[elementId] = { id: elementId, value: vals[col], version: 1, updatedAt: now, updatedBy: args.requester.actor } as Artifact["elements"][string];
-            rowChanged = true;
-          }
-        }
-        changed = changed || rowChanged;
       }
-      return changed ? { ...a, order: nextOrder, elements, version: a.version + 1, updatedAt: now } : a;
-    });
-    local.setQuery(api.rooms.full, q, { ...cur, artifacts } as typeof cur);
+      changed = changed || rowChanged;
+    }
+    if (!changed) return;
+    // Write BOTH caches in this one callback so the row count (meta.order) and the cells
+    // (artifacts.elements) never momentarily disagree.
+    local.setQuery(api.artifacts.elements, elementsQ, elements as unknown as typeof curEls);
+    if (curMeta) {
+      local.setQuery(api.rooms.meta, metaQ, { ...curMeta, artifacts: curMeta.artifacts.map((a) => String(a.id) === artifactId ? { ...a, order: nextOrder, version: a.version + 1, updatedAt: now } : a) } as typeof curMeta);
+    }
   });
   // Upload/new-artifact paints instantly under a placeholder id; the authoritative id swaps in
   // atomically at completion (tab is labeled by title, selection happens post-await with the real
   // id — no visible jump). Echo guard: skip if this mutation's artifact already streamed in.
   const createArtifactMutation = useMutation(api.artifacts.createArtifact).withOptimisticUpdate((local, args) => {
-    const q = { roomId: args.roomId, requester: args.proof };
-    const cur = local.getQuery(api.rooms.full, q);
-    if (!cur) return;
-    const arts = cur.artifacts as unknown as Artifact[];
+    const metaQ = { roomId: args.roomId, requester: args.proof };
+    const curMeta = local.getQuery(api.rooms.meta, metaQ);
+    if (!curMeta) return;
+    const arts = curMeta.artifacts;
     if (arts.some((a) => a.title === args.title && a.kind === args.kind && a.order.length === args.seed.length)) return;
     const now = Date.now();
-    const elements: Artifact["elements"] = {};
-    for (const s of args.seed as Array<{ id: string; value: unknown }>) {
-      elements[s.id] = { id: s.id, value: s.value, version: 1, updatedAt: now, updatedBy: args.proof.actor } as Artifact["elements"][string];
-    }
-    const optimistic = {
+    // Append the elements-LESS shell to rooms.meta so the tab appears instantly. The cells fill in
+    // when the server confirms with the real id — opt- ids aren't valid Convex ids, so no
+    // ArtifactElementsSubscriber mounts for them (filtered in the provider's render).
+    const shell = {
       id: `opt-art-${args.kind}-${args.title}`, roomId: args.roomId as unknown as string, kind: args.kind, title: args.title,
-      version: 1, order: (args.seed as Array<{ id: string }>).map((s) => s.id), elements, updatedAt: now, meta: args.meta,
-    } as unknown as Artifact;
-    local.setQuery(api.rooms.full, q, { ...cur, artifacts: [...arts, optimistic] } as typeof cur);
+      version: 1, order: (args.seed as Array<{ id: string }>).map((s) => s.id), updatedAt: now, meta: args.meta,
+    };
+    local.setQuery(api.rooms.meta, metaQ, { ...curMeta, artifacts: [...arts, shell] } as unknown as typeof curMeta);
   });
   const runAgent = useAction(api.agent.runRoomAgent);
   const runPrivateAgent = useAction(api.agent.runPrivateAgent);
@@ -627,7 +687,7 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
   const store = useMemo<RoomStore>(() => {
     const room = (data?.room ?? undefined) as unknown as Room | undefined;
     const members = (data?.members ?? []) as unknown as Member[];
-    const artifacts = (data?.artifacts ?? []) as unknown as Artifact[];
+    const artifacts = metaArtifacts.map((a) => ({ ...a, elements: elementsByArtifact[a.id] ?? {} })) as unknown as Artifact[];
     const locks = (data?.locks ?? []) as unknown as Lock[];
     const sessions = (data?.sessions ?? []) as unknown as AgentSession[];
     const drafts = (data?.drafts ?? []) as unknown as Draft[];
@@ -852,7 +912,16 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
         catch (e) { return { ok: false, reason: e instanceof Error ? e.message : "retry_failed" }; }
       },
     };
-  }, [data, pub, priv, traces, runs, jobs, jobAttempts, jobDetail, proposals, applyCellEdit, sendMsg, toggle, editMsg, resolveProposalMutation, addResearchRowsMutation, createArtifactMutation, runAgent, runPrivateAgent, createPrivateReplyStream, startFreeAutoJob, cancelFreeAutoJob, retryFreeAutoJob, rid, roomId, proof, me.id, me.name]);
+  }, [data, metaArtifacts, elementsByArtifact, pub, priv, traces, runs, jobs, jobAttempts, jobDetail, proposals, applyCellEdit, sendMsg, toggle, editMsg, resolveProposalMutation, addResearchRowsMutation, createArtifactMutation, runAgent, runPrivateAgent, createPrivateReplyStream, startFreeAutoJob, cancelFreeAutoJob, retryFreeAutoJob, rid, roomId, proof, me.id, me.name]);
 
-  return <Ctx.Provider value={store}>{children}</Ctx.Provider>;
+  return (
+    <Ctx.Provider value={store}>
+      {/* B1: one elements subscription per real artifact — a cell edit re-ships only the edited
+          artifact's cells. opt- (optimistic) ids are skipped: they aren't valid Convex ids. */}
+      {metaArtifacts.filter((a) => !String(a.id).startsWith("opt-")).map((a) => (
+        <ArtifactElementsSubscriber key={a.id} roomId={roomId} artifactId={a.id} proof={proof} onElements={onArtifactElements} onUnmount={onArtifactUnmount} />
+      ))}
+      {children}
+    </Ctx.Provider>
+  );
 }

@@ -1,0 +1,88 @@
+import { mkdirSync, writeFileSync } from "node:fs";
+import { dirname, resolve } from "node:path";
+import { buildOpenRouterConvexBenchmarkReport, type OpenRouterConvexBenchmarkReport } from "../src/eval/openRouterConvexBenchmark";
+import { SUPPORTED_MODEL_ROUTES } from "./benchmark/modelEvalConfig";
+
+const args = process.argv.slice(2);
+const jsonOut = optionValue("--json-out") ?? "docs/eval/openrouter-convex-benchmark.json";
+const mdOut = optionValue("--md-out") ?? "docs/eval/OPENROUTER_CONVEX_BENCHMARK.md";
+const strict = args.includes("--strict");
+
+const report = buildOpenRouterConvexBenchmarkReport({
+  routes: SUPPORTED_MODEL_ROUTES,
+  generatedAt: new Date().toISOString(),
+});
+
+writeJson(jsonOut, report);
+writeText(mdOut, renderMarkdown(report));
+console.log(`wrote ${jsonOut}`);
+console.log(`wrote ${mdOut}`);
+console.log(
+  `OpenRouter Convex benchmark: harness=${report.summary.harnessCasesPassing}/${report.summary.harnessCases} ` +
+  `official=${report.summary.officialPromotionCasesPassing}/${report.summary.officialPromotionCases} ` +
+  `routes=${report.summary.openRouterRouteCount}`,
+);
+
+if (strict && !report.summary.harnessReady) process.exitCode = 1;
+
+function renderMarkdown(report: OpenRouterConvexBenchmarkReport): string {
+  const lines: string[] = [];
+  lines.push("# OpenRouter Convex Benchmark");
+  lines.push("");
+  lines.push(`Generated: ${report.generatedAt ?? "unknown"}`);
+  lines.push("");
+  lines.push("This is NodeRoom's own benchmark contract for the product shape we actually ship: OpenRouter models running through Convex-owned jobs, leases, journals, mutation receipts, and artifact evidence. It is inspired by SpreadsheetBench, SpreadsheetBench 2, and BankerToolBench, but it is not an official score for those benchmarks.");
+  lines.push("");
+  lines.push("## Summary");
+  lines.push("");
+  lines.push(`- OpenRouter routes evaluated: ${report.summary.openRouterRouteCount}/${report.summary.routeCount}`);
+  lines.push(`- OpenRouter-on-Convex harness cases: ${report.summary.harnessCasesPassing}/${report.summary.harnessCases} ${report.summary.harnessReady ? "PASS" : "BLOCKED"}`);
+  lines.push(`- Official-promotion cases: ${report.summary.officialPromotionCasesPassing}/${report.summary.officialPromotionCases} ${report.summary.officialPromotionReady ? "PASS" : "BLOCKED"}`);
+  lines.push("");
+  lines.push("## Design Principles");
+  lines.push("");
+  for (const item of report.designPrinciples) lines.push(`- ${item}`);
+  lines.push("");
+  lines.push("## Benchmark Cases");
+  lines.push("");
+  lines.push("| Case | Scope | Status | Inspired by | Acceptance |");
+  lines.push("|---|---|---:|---|---|");
+  for (const item of report.cases) {
+    lines.push(`| \`${item.id}\` | ${item.scope} | ${item.status} | ${item.inspiredBy.join(", ")} | ${item.acceptance} |`);
+  }
+  lines.push("");
+  lines.push("## OpenRouter Route Plan");
+  lines.push("");
+  lines.push("| Route | Role | Adapter | Eligible | Blockers |");
+  lines.push("|---|---|---|---:|---|");
+  for (const route of report.routePlans) {
+    lines.push(`| \`${route.route}\` | ${route.role} | ${route.adapter} | ${route.eligibleForConvexHarness ? "yes" : "no"} | ${route.blockers.join("; ") || "none"} |`);
+  }
+  lines.push("");
+  lines.push("## Promotion Rule");
+  lines.push("");
+  lines.push("A route may be used for benchmark-shaped Convex work only through `agentJobs` and `convexModel`. Interactive write promotion still requires live N>=5/p95 ladder evidence for that route. `/free` and other demo-only free routes remain background/long-running until they clear that bar.");
+  lines.push("");
+  lines.push("Official benchmark promotion remains separate: BankerToolBench still requires the official Harbor/MCP/Gandalf verifier path before any official score claim.");
+  lines.push("");
+  return `${lines.join("\n")}\n`;
+}
+
+function writeJson(path: string, value: unknown): void {
+  writeText(path, `${JSON.stringify(value, null, 2)}\n`);
+}
+
+function writeText(path: string, content: string): void {
+  const absolute = resolve(process.cwd(), path);
+  mkdirSync(dirname(absolute), { recursive: true });
+  writeFileSync(absolute, content);
+}
+
+function optionValue(name: string): string | undefined {
+  const inlinePrefix = `${name}=`;
+  const inline = args.find((arg) => arg.startsWith(inlinePrefix));
+  if (inline) return inline.slice(inlinePrefix.length);
+  const index = args.indexOf(name);
+  const next = args[index + 1];
+  return index >= 0 && next && !next.startsWith("--") ? next : undefined;
+}

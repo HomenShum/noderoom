@@ -183,6 +183,14 @@ const steps: StepSpec[] = [
     timeoutMs: 120_000,
   },
   {
+    id: "openrouter-convex-benchmark",
+    label: "OpenRouter-on-Convex benchmark contract",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "benchmark:openrouter-convex", "--", "--strict"],
+    timeoutMs: 120_000,
+  },
+  {
     id: "official-benchmark-promotion-gate",
     label: "Official benchmark promotion gate",
     lane: "deterministic",

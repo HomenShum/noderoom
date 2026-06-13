@@ -783,6 +783,7 @@ Professional proof state:
 - `npm run eval:professional:live-runtime -- --strict` proves **21/21** professional catalog cases execute through the real room runtime with `deepseek/deepseek-v4-flash`, `PRODUCTION_ROOM_TOOLS`, evidence payload writes, and runtime-managed lock coordination.
 
 - `npm run eval:professional:proofs` now records **5 live-provider**, **16 partial live-provider**, **0 live-provider catalog**, **0 deterministic runtime**, and **0 contract-shape** cases; its live runtime smoke is **21/21**, and lock-mode counts are **21 runtime-managed**, **0 explicit-agent-lock**, and **0 catalog-only**.
+- `npm run benchmark:openrouter-convex -- --strict` is the OpenRouter-on-Convex benchmark contract: **6/6** harness cases pass across durable `agentJobs`, model-step journaling, L1-L7 collaboration/resume, multi-user coordination, SpreadsheetBench route selection, rendered chart visual proof, and Docker workspace isolation. It evaluates 19 OpenRouter/internal-alias routes and keeps official promotion separate: BankerToolBench still needs Harbor/MCP/Gandalf before any official-score claim.
 - **Context compaction** (`src/agent/compaction.ts`) — elides stale `read_range` results (Claude
   "context editing" pattern), preserves the turn structure (Hermes), keeps the latest state + recent turns.
 - **Library stack** (TipTap, dnd-kit, lucide, assistant-ui, the `@convex-dev/*` components) → [`docs/STACK.md`](docs/STACK.md).
@@ -1223,6 +1224,14 @@ providers and the cheapest model that clears the **boolean gate** wins. Provider
 models through OpenRouter's OpenAI-compatible endpoint. The checked-in `docs/eval/results.json`
 is the latest verified run of the listed routes, not proof that all models and all scenarios were
 rerun.
+
+Because NodeRoom primarily targets OpenRouter routes, there is now a separate Convex-shaped
+benchmark contract: `npm run benchmark:openrouter-convex -- --strict` writes
+[`docs/eval/OPENROUTER_CONVEX_BENCHMARK.md`](docs/eval/OPENROUTER_CONVEX_BENCHMARK.md). That gate
+checks whether OpenRouter/internal-alias routes can run benchmark-shaped work through Convex-owned
+`agentJobs`, `convexModel`, leases, model-step journals, mutation receipts, artifact evidence, and
+workspace isolation. It is intentionally not an official SpreadsheetBench/BankerToolBench score;
+official promotion remains gated by the strict readiness report.
 
 **The charts are downstream of a real run — never hand-drawn.** `npm run benchmark` writes
 `docs/eval/results.json` (real $/latency/tokens from `agentRuns`, real pass% from deterministic

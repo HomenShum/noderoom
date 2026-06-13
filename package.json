@@ -45,6 +45,7 @@
     "benchmark:spreadsheetbench:chart-visual:probe": "tsx scripts/spreadsheetbench-chart-visual-probe.ts --json-out docs/eval/spreadsheetbench-chart-visual-probe.json",
     "benchmark:agent-sandbox": "tsx scripts/agent-workspace-sandbox-smoke.ts",
     "benchmark:docker-sandbox:probe": "tsx scripts/docker-sandbox-probe.ts --json-out docs/eval/docker-sandbox-probe.json",
+    "benchmark:openrouter-convex": "tsx scripts/openrouter-convex-benchmark.ts",
     "benchmark:free": "tsx scripts/benchmark/run.ts openrouter/free-auto --free-auto-top=5 --no-merge --model-timeout-ms=180000 --model-reserve-ms=15000 --row-hard-timeout-ms=210000",
     "benchmark:charts": "tsx scripts/benchmark/charts.ts",
     "eval:model-matrix": "tsx scripts/model-eval-matrix.ts",

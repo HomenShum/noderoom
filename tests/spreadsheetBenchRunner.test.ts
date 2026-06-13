@@ -63,6 +63,7 @@ describe("SpreadsheetBench staged runner", () => {
     const result = report.results[0];
     expect(result.trajectory.map((step) => step.step)).toEqual([
       "read_agent_manifest",
+      "prepare_agent_workspace",
       "emit_candidate_workbook",
       "read_evaluator_manifest",
       "score_candidate",
@@ -75,8 +76,14 @@ describe("SpreadsheetBench staged runner", () => {
     ]));
     expect(existsSync(join(out, result.candidateWorkbook!))).toBe(true);
     const candidateManifest = readFileSync(join(out, "13-1", "candidate-manifest.json"), "utf8");
+    expect(candidateManifest).toContain("agentWorkspaceManifest");
     expect(candidateManifest.toLowerCase()).not.toContain("gold");
     expect(candidateManifest).not.toContain("evaluator");
+    const workspaceManifest = JSON.parse(readFileSync(join(out, "13-1", "agent-workspace", "agent-workspace-manifest.json"), "utf8"));
+    expect(workspaceManifest.boundary).toBe("agent_visible_files_only");
+    expect(workspaceManifest.copiedFiles.map((file: { role: string }) => file.role)).toEqual(expect.arrayContaining(["manifest", "input", "prompt"]));
+    expect(JSON.stringify(workspaceManifest).toLowerCase()).not.toContain("gold");
+    expect(JSON.stringify(workspaceManifest)).not.toContain("evaluator");
   });
 
   it("applies an agent-side edit plan before opening evaluator-only gold", async () => {
@@ -132,6 +139,7 @@ describe("SpreadsheetBench staged runner", () => {
     const result = report.results[0];
     expect(result.trajectory.map((step) => step.step)).toEqual([
       "read_agent_manifest",
+      "prepare_agent_workspace",
       "read_agent_edit_plan",
       "emit_candidate_workbook",
       "read_evaluator_manifest",
@@ -141,8 +149,10 @@ describe("SpreadsheetBench staged runner", () => {
     expect(result.score!.pass).toBe(true);
     const candidateManifest = readFileSync(join(out, "13-2", "candidate-manifest.json"), "utf8");
     expect(candidateManifest).toContain("apply-agent-patch");
+    expect(candidateManifest).toContain("agentWorkspaceManifest");
     expect(candidateManifest.toLowerCase()).not.toContain("gold");
     expect(candidateManifest).not.toContain("evaluator");
+    expect(existsSync(join(out, "13-2", "agent-workspace", "agent", "edit-plan.json"))).toBe(true);
   });
 
   it("applies formula-looking values as formulas and preserves cells for format-only operations", async () => {
@@ -262,6 +272,7 @@ describe("SpreadsheetBench staged runner", () => {
     });
     expect(result.trajectory.map((step) => step.step)).toEqual([
       "read_agent_manifest",
+      "prepare_agent_workspace",
       "snapshot_agent_workbook",
       "call_model_for_edit_plan",
       "emit_candidate_workbook",
@@ -270,6 +281,8 @@ describe("SpreadsheetBench staged runner", () => {
     ]);
     const candidateManifest = readFileSync(join(out, "13-3", "candidate-manifest.json"), "utf8");
     expect(candidateManifest).toContain("model-edit-plan");
+    expect(candidateManifest).toContain("agentWorkspaceManifest");
+    expect(candidateManifest).toContain("rawModelOutput");
     expect(candidateManifest.toLowerCase()).not.toContain("gold");
     expect(candidateManifest).not.toContain("evaluator");
   });
@@ -507,6 +520,7 @@ describe("SpreadsheetBench staged runner", () => {
     });
     expect(result.trajectory.map((step) => step.step)).toEqual([
       "read_agent_manifest",
+      "prepare_agent_workspace",
       "snapshot_agent_workbook",
       "call_model_for_edit_plan",
     ]);
@@ -704,7 +718,7 @@ async function writeWorkbookWithSheet(path: string, sheetName: string, b2: numbe
 async function writeTwoSheetStarvationWorkbook(path: string, targetValue: number) {
   const workbook = new ExcelJS.Workbook();
   const ranges = workbook.addWorksheet("RANGES");
-  for (let row = 1; row <= 80; row++) {
+  for (let row = 1; row <= 160; row++) {
     for (let column = 1; column <= 4; column++) {
       ranges.getCell(row, column).value = `r${row}c${column}`;
     }
@@ -720,7 +734,7 @@ async function writeFormulaSemanticsWorkbook(path: string, completed: boolean) {
   const sheet = workbook.addWorksheet("Sheet1");
   sheet.getCell("A2").value = 1;
   sheet.getCell("A3").value = 1;
-  sheet.getCell("B2").value = completed ? { formula: "SUM(A2:A3)" } : "";
+  sheet.getCell("B2").value = completed ? { formula: "SUM(A2:A3)", result: 2 } : "";
   sheet.getCell("C2").value = 7;
   if (completed) sheet.getCell("C2").numFmt = "#,##0.00";
   await workbook.xlsx.writeFile(path);

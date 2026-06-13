@@ -1,5 +1,5 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
-import { basename, dirname, join, relative, resolve } from "node:path";
+import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import ExcelJS from "exceljs";
 import { scoreSpreadsheetBenchWorkbook, type SpreadsheetBenchWorkbookScore } from "./spreadsheetBenchScorer";
 import type { SpreadsheetBenchTrack } from "./spreadsheetBenchAdapter";
@@ -58,6 +58,7 @@ export type SpreadsheetBenchRunnerTaskResult = {
   trajectory: Array<{
     step:
       | "read_agent_manifest"
+      | "prepare_agent_workspace"
       | "read_agent_edit_plan"
       | "snapshot_agent_workbook"
       | "call_model_for_edit_plan"
@@ -155,6 +156,8 @@ type StagedTaskPaths = {
   agentManifestPath: string;
   evaluatorManifestPath: string;
 };
+
+const DEFAULT_WORKBOOK_SNAPSHOT_MAX_CELLS = 800;
 
 type AgentEditPlan = {
   schema: 1;
@@ -290,10 +293,13 @@ async function runTask(
     rel(join(stageRoot, "tasks"), task.taskDir),
     attempt.repeatCount > 1 || attempt.maxAttemptsPerRepeat > 1 ? `attempt-${String(attempt.attemptIndex).padStart(2, "0")}` : "",
   );
+  const agentWorkspace = prepareAgentWorkspace(stageRoot, task, taskOutDir, agent);
+  trajectory.push({ step: "prepare_agent_workspace", detail: rel(outputRoot, agentWorkspace.manifestPath) });
   const candidateWorkbook = emitCandidateWorkbook({
     stageRoot,
     taskDir: task.taskDir,
     taskOutDir,
+    agentWorkspace,
     agent,
     mode: options.mode,
     trajectory,
@@ -444,6 +450,7 @@ function emitCandidateWorkbook(args: {
   stageRoot: string;
   taskDir: string;
   taskOutDir: string;
+  agentWorkspace: AgentWorkspace;
   agent: AgentManifest;
   mode: SpreadsheetBenchRunnerMode;
   trajectory: SpreadsheetBenchRunnerTaskResult["trajectory"];
@@ -453,7 +460,7 @@ function emitCandidateWorkbook(args: {
 }): Promise<string | ModelCandidateEmission> | string {
   const firstInput = args.agent.inputFiles[0];
   if (!firstInput) throw new Error(`agent manifest has no input workbook: ${args.agent.taskId}`);
-  const source = resolveManifestPath(join(args.taskDir, "agent"), firstInput);
+  const source = resolveManifestPath(args.agentWorkspace.agentDir, firstInput);
   if (!existsSync(source)) throw new Error(`agent input workbook does not exist: ${source}`);
   mkdirSync(args.taskOutDir, { recursive: true });
   const target = join(args.taskOutDir, `candidate-${safeFileName(basename(source))}`);
@@ -466,6 +473,7 @@ function emitCandidateWorkbook(args: {
     taskId: args.agent.taskId,
     mode: args.mode,
     sourceAgentManifest: rel(args.stageRoot, join(args.taskDir, "agent", "task.json")),
+    agentWorkspaceManifest: rel(args.taskOutDir, args.agentWorkspace.manifestPath),
     candidateWorkbook: basename(target),
     note: "copy-input-baseline proves runner/export/scoring plumbing only; it is not a model score.",
   });
@@ -481,6 +489,12 @@ type ModelCandidateEmission = {
     usage: TokenUsage;
     costUsd: number;
   };
+};
+
+type AgentWorkspace = {
+  root: string;
+  agentDir: string;
+  manifestPath: string;
 };
 
 class ModelEditCandidateError extends Error {
@@ -500,21 +514,71 @@ function modelEditFailure(error: unknown): Pick<ModelCandidateEmission, "model" 
     : undefined;
 }
 
+function prepareAgentWorkspace(
+  stageRoot: string,
+  task: StagedTaskPaths,
+  taskOutDir: string,
+  agent: AgentManifest,
+): AgentWorkspace {
+  const root = join(taskOutDir, "agent-workspace");
+  const agentDir = join(root, "agent");
+  mkdirSync(agentDir, { recursive: true });
+  const sourceAgentDir = join(task.taskDir, "agent");
+  const copiedFiles: Array<{ role: "manifest" | "input" | "prompt" | "edit_plan"; path: string }> = [];
+
+  copyFileSync(task.agentManifestPath, join(agentDir, "task.json"));
+  copiedFiles.push({ role: "manifest", path: "agent/task.json" });
+  for (const file of agent.inputFiles) copiedFiles.push(copyAgentFile(sourceAgentDir, agentDir, file, "input"));
+  for (const file of agent.promptFiles) copiedFiles.push(copyAgentFile(sourceAgentDir, agentDir, file, "prompt"));
+  const sourceEditPlan = join(sourceAgentDir, "edit-plan.json");
+  if (existsSync(sourceEditPlan)) {
+    copyFileSync(sourceEditPlan, join(agentDir, "edit-plan.json"));
+    copiedFiles.push({ role: "edit_plan", path: "agent/edit-plan.json" });
+  }
+
+  const manifestPath = join(root, "agent-workspace-manifest.json");
+  writeJson(manifestPath, {
+    schema: 1,
+    taskId: agent.taskId,
+    boundary: "agent_visible_files_only",
+    sourceAgentManifest: rel(stageRoot, task.agentManifestPath),
+    workspaceAgentManifest: "agent/task.json",
+    copiedFiles,
+    policy: "candidate generation reads only this workspace; private scoring metadata is opened after candidate emission.",
+  });
+  return { root, agentDir, manifestPath };
+}
+
+function copyAgentFile(
+  sourceAgentDir: string,
+  workspaceAgentDir: string,
+  manifestPath: string,
+  role: "input" | "prompt",
+): { role: "input" | "prompt"; path: string } {
+  const source = resolveAgentPath(sourceAgentDir, manifestPath);
+  const normalized = manifestPath.replace(/\\/g, "/");
+  const target = resolveAgentPath(workspaceAgentDir, normalized);
+  mkdirSync(dirname(target), { recursive: true });
+  copyFileSync(source, target);
+  return { role, path: `agent/${normalized}` };
+}
+
 async function emitPatchedCandidateWorkbook(args: {
   stageRoot: string;
   taskDir: string;
   taskOutDir: string;
+  agentWorkspace: AgentWorkspace;
   agent: AgentManifest;
   mode: SpreadsheetBenchRunnerMode;
   trajectory: SpreadsheetBenchRunnerTaskResult["trajectory"];
   source: string;
   target: string;
 }): Promise<string> {
-  const editPlanPath = join(args.taskDir, "agent", "edit-plan.json");
+  const editPlanPath = join(args.agentWorkspace.agentDir, "edit-plan.json");
   if (!existsSync(editPlanPath)) throw new Error(`apply-agent-patch requires agent/edit-plan.json: ${args.agent.taskId}`);
   const plan = readJson<AgentEditPlan>(editPlanPath);
   validateEditPlan(plan, args.agent.taskId);
-  args.trajectory.push({ step: "read_agent_edit_plan", detail: rel(args.stageRoot, editPlanPath) });
+  args.trajectory.push({ step: "read_agent_edit_plan", detail: rel(args.taskOutDir, editPlanPath) });
 
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.readFile(args.source);
@@ -525,7 +589,8 @@ async function emitPatchedCandidateWorkbook(args: {
     taskId: args.agent.taskId,
     mode: args.mode,
     sourceAgentManifest: rel(args.stageRoot, join(args.taskDir, "agent", "task.json")),
-    sourceEditPlan: rel(args.stageRoot, editPlanPath),
+    agentWorkspaceManifest: rel(args.taskOutDir, args.agentWorkspace.manifestPath),
+    sourceEditPlan: rel(args.taskOutDir, editPlanPath),
     candidateWorkbook: basename(args.target),
     appliedOperationCount: plan.operations.length,
     note: "apply-agent-patch proves agent-side workbook edit/export/reopen plumbing; it is not an official model score.",
@@ -537,6 +602,7 @@ async function emitModelEditCandidateWorkbook(args: {
   stageRoot: string;
   taskDir: string;
   taskOutDir: string;
+  agentWorkspace: AgentWorkspace;
   agent: AgentManifest;
   mode: SpreadsheetBenchRunnerMode;
   trajectory: SpreadsheetBenchRunnerTaskResult["trajectory"];
@@ -549,7 +615,7 @@ async function emitModelEditCandidateWorkbook(args: {
   if (!args.model) throw new Error(`model-edit-plan requires options.model: ${args.agent.taskId}`);
   const snapshot = await snapshotWorkbook(args.source);
   args.trajectory.push({ step: "snapshot_agent_workbook", detail: `${snapshot.sheets.length} sheet(s), ${snapshot.cellCount} cell(s)` });
-  const promptFiles = readPromptFiles(join(args.taskDir, "agent"), args.agent.promptFiles);
+  const promptFiles = readPromptFiles(args.agentWorkspace.agentDir, args.agent.promptFiles);
   const planningStarted = Date.now();
   const step = await args.model.next({
     system: spreadsheetBenchPlannerSystem(),
@@ -588,6 +654,7 @@ async function emitModelEditCandidateWorkbook(args: {
       mode: args.mode,
       model: modelName,
       sourceAgentManifest: rel(args.stageRoot, join(args.taskDir, "agent", "task.json")),
+      agentWorkspaceManifest: rel(args.taskOutDir, args.agentWorkspace.manifestPath),
       generatedEditPlan: basename(editPlanPath),
       rawModelOutput: basename(rawModelOutputPath),
       candidateWorkbook: basename(args.target),
@@ -667,7 +734,7 @@ type WorkbookSnapshot = {
   truncated: boolean;
 };
 
-async function snapshotWorkbook(path: string, maxCells = 240): Promise<WorkbookSnapshot> {
+async function snapshotWorkbook(path: string, maxCells = DEFAULT_WORKBOOK_SNAPSHOT_MAX_CELLS): Promise<WorkbookSnapshot> {
   const workbook = new ExcelJS.Workbook();
   await workbook.xlsx.readFile(path);
   const sheets: WorkbookSnapshot["sheets"] = [];
@@ -740,7 +807,8 @@ function spreadsheetBenchPlannerSystem(): string {
     "{\"schema\":1,\"operations\":[{\"sheet\":\"Sheet1\",\"cell\":\"B2\",\"value\":2}]}",
     "Use value for literal values, or formula plus optional result for formulas.",
     "Use exactly one of the sheet names shown in workbook.sheets[].name; do not invent Sheet1 unless Sheet1 exists.",
-    "If the task requires many cells, emit every required cell operation explicitly. Do not use placeholders.",
+    "If the task requires many cells, emit every required cell operation explicitly. Do not use placeholders, spill ranges, or one-cell dynamic-array shortcuts.",
+    "When a visible example/reference table shows the desired output shape, infer the repeated operation from that reference and write the concrete target cells.",
     "The JSON must be valid strict JSON: double-quoted keys/strings, no comments, no trailing commas.",
     "Do not include markdown, prose, comments, evaluator metadata, or hidden answers.",
   ].join("\n");
@@ -797,12 +865,86 @@ function applyOperation(workbook: ExcelJS.Workbook, operation: AgentEditOperatio
   const sheet = workbook.getWorksheet(operation.sheet);
   if (!sheet) throw new Error(`edit-plan references missing sheet: ${operation.sheet}`);
   const cell = sheet.getCell(operation.cell);
-  if (operation.formula !== undefined) cell.value = { formula: operation.formula, result: operation.result ?? undefined };
+  if (operation.formula !== undefined) {
+    cell.value = {
+      formula: operation.formula,
+      result: operation.result ?? evaluateSimpleFormula(workbook, sheet, operation.formula),
+    };
+  }
   else if (typeof operation.value === "string" && operation.value.trim().startsWith("=")) {
-    cell.value = { formula: operation.value.trim().slice(1), result: operation.result ?? undefined };
+    const formula = operation.value.trim().slice(1);
+    cell.value = {
+      formula,
+      result: operation.result ?? evaluateSimpleFormula(workbook, sheet, formula),
+    };
   }
   else if ("value" in operation) cell.value = operation.value ?? null;
   if (operation.numFmt) cell.numFmt = operation.numFmt;
+}
+
+function evaluateSimpleFormula(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  formula: string,
+): number | undefined {
+  const match = formula.trim().replace(/^=/, "").match(/^SUM\((.+)\)$/i);
+  if (!match) return undefined;
+  const values = match[1].split(",").flatMap((part) => valuesForFormulaRef(workbook, currentSheet, part.trim()));
+  if (values.length === 0 || values.some((value) => value === undefined)) return undefined;
+  const numericValues = values.filter((value): value is number => value !== undefined);
+  return Number(numericValues.reduce((sum, value) => sum + value, 0).toFixed(12));
+}
+
+function valuesForFormulaRef(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  ref: string,
+): Array<number | undefined> {
+  const { sheet, range } = parseFormulaRef(workbook, currentSheet, ref);
+  if (!sheet || !range) return [undefined];
+  const start = parseA1(range.start);
+  const end = parseA1(range.end);
+  if (!start || !end) return [undefined];
+  const values: Array<number | undefined> = [];
+  for (let row = Math.min(start.row, end.row); row <= Math.max(start.row, end.row); row += 1) {
+    for (let col = Math.min(start.col, end.col); col <= Math.max(start.col, end.col); col += 1) {
+      values.push(numericCellValue(sheet.getCell(row, col).value));
+    }
+  }
+  return values;
+}
+
+function parseFormulaRef(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  raw: string,
+): { sheet: ExcelJS.Worksheet | undefined; range: { start: string; end: string } | undefined } {
+  const bang = raw.lastIndexOf("!");
+  const sheetName = bang >= 0 ? raw.slice(0, bang).replace(/^'|'$/g, "").replace(/''/g, "'") : currentSheet.name;
+  const sheet = workbook.getWorksheet(sheetName);
+  const rangeText = (bang >= 0 ? raw.slice(bang + 1) : raw).replace(/\$/g, "");
+  const [start, end = start] = rangeText.split(":").map((part) => part.trim().toUpperCase());
+  return { sheet, range: { start, end } };
+}
+
+function parseA1(ref: string): { row: number; col: number } | undefined {
+  const match = ref.match(/^([A-Z]{1,3})([1-9][0-9]*)$/);
+  if (!match) return undefined;
+  return {
+    row: Number(match[2]),
+    col: match[1].split("").reduce((sum, char) => sum * 26 + char.charCodeAt(0) - 64, 0),
+  };
+}
+
+function numericCellValue(value: ExcelJS.CellValue): number | undefined {
+  if (typeof value === "number") return value;
+  if (typeof value === "string" && value.trim() !== "") {
+    const parsed = Number(value);
+    return Number.isFinite(parsed) ? parsed : undefined;
+  }
+  if (value && typeof value === "object" && "result" in value) return numericCellValue(value.result as ExcelJS.CellValue);
+  if (value === null || value === undefined || value === "") return 0;
+  return undefined;
 }
 
 function aggregateUsage(results: SpreadsheetBenchRunnerTaskResult[]) {
@@ -913,6 +1055,16 @@ function percentile(values: number[], quantile: number): number {
 function resolveManifestPath(base: string, manifestPath: string | undefined): string {
   if (!manifestPath) throw new Error("manifest path is missing");
   return resolve(base, manifestPath.replace(/\\/g, "/"));
+}
+
+function resolveAgentPath(base: string, manifestPath: string): string {
+  const root = resolve(base);
+  const resolved = resolveManifestPath(root, manifestPath);
+  const relPath = relative(root, resolved);
+  if (!relPath || relPath.startsWith("..") || isAbsolute(relPath)) {
+    throw new Error(`agent manifest path escapes agent workspace: ${manifestPath}`);
+  }
+  return resolved;
 }
 
 function walkDirs(root: string): string[] {

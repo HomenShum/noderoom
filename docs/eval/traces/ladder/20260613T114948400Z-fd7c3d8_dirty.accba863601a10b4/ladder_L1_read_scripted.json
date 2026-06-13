@@ -1,0 +1,57 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T11:49:48.400Z",
+  "commitSha": "fd7c3d8",
+  "worktreeHash": "accba863601a10b4",
+  "gitDirty": true,
+  "suite": "ladder",
+  "caseId": "ladder:L1_read:scripted",
+  "score": 1,
+  "checks": {
+    "readTarget": true,
+    "noMutation": true,
+    "notExhausted": true
+  },
+  "checkDetails": {},
+  "result": {
+    "pass": true,
+    "checkDetails": {},
+    "requestedModel": "scripted",
+    "resolvedModel": "scripted-read",
+    "resolvedModels": [
+      "scripted-read"
+    ],
+    "rung": "L1_read",
+    "level": 1,
+    "ms": 2,
+    "tools": 1,
+    "cost": 0,
+    "stopReason": "done",
+    "reason": "",
+    "checks": {
+      "readTarget": true,
+      "noMutation": true,
+      "notExhausted": true
+    }
+  },
+  "trace": [
+    {
+      "step": 0,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "r_ni__variance"
+        ]
+      },
+      "result": [
+        {
+          "id": "r_ni__variance",
+          "value": "",
+          "version": 1,
+          "locked": null
+        }
+      ],
+      "ms": 1
+    }
+  ]
+}

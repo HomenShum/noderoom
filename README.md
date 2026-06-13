@@ -1035,7 +1035,7 @@ times and records `taskCount: 5`, `caseCount: 1`, `passRate: 0`, p95 latency 4.4
 partial candidates. That is the agent-path drift signal: same task and model, different paths, all
 captured in the benchmark report instead of summarized away. The contamination gate
 (`npm run benchmark:contamination`) now scans agent-facing benchmark manifests, candidate manifests,
-and generated edit plans for evaluator-only gold/rubric/canary metadata; checked-in smokes show 0
+agent-workspace manifests, and generated edit plans for evaluator-only gold/rubric/canary metadata; checked-in smokes show 0
 leaks for the staged V1 root, the N=5 V1 candidate output, the retry V1 candidate output, and the
 staged BTB fixture. The runner also has an explicit retry policy: `--retry-failed N` retries
 candidate-generation or scoring errors, `--retry-score-failures` opts into retrying
@@ -1043,10 +1043,13 @@ scored-but-wrong candidates, and the report records case-level attempts, retry e
 pass-after-retry counts, p95 latency, tokens, and provider cost. The checked-in retry smoke
 (`docs/eval/spreadsheetbench-v1-model-edit-plan-retry-live-smoke.json`) ran one official V1 task
 with `gpt-5.4-nano`, `--retry-failed 2`, and `--retry-score-failures`: all 3 attempts reached
-scoring, best overall was `0.6`, p95 latency was 7.609s, spend was `$0.00661755`, and pass remained
-0/3. That proves the adapter now gets past JSON/sheet-name failure modes while still surfacing the
-planner gap honestly. These artifacts are not official benchmark scores until run across official
-bundles under the benchmark policy.
+scoring, each attempt created an agent-only workspace manifest before candidate generation, each
+attempt saw the full 302-cell official workbook snapshot, simple `SUM(...)` formulas get cached
+results on export/reopen, best overall was `0.616667`, p95 latency was 11.033s, spend was
+`$0.0095201`, and pass remained 0/3. That proves retry accounting, attempt-local workspace
+boundaries, fuller context capture, formula-result packaging, and leakage scanning while still
+surfacing the planner gap honestly. This is not OS/Docker process isolation, and these artifacts are
+not official benchmark scores until run across official bundles under the benchmark policy.
 
 BankerToolBench now has the same first boundary in place: `npm run
 benchmark:bankertoolbench:ingest` scans an already-downloaded BTB bundle (`tasks.jsonl`,

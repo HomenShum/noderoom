@@ -231,7 +231,7 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; official V1 N=5 and retry-policy smokes now record pass rate, p95 latency, model usage/cost, scored partial candidates, retry exhaustion, and failure taxonomy, but larger full-bundle runs, process sandbox proof, and route selection remain incomplete.",
+        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; official V1 N=5 and retry-policy smokes now record fair per-sheet snapshots, raw model output, pass rate, p95 latency, model usage/cost, scored partial candidates, retry exhaustion, and failure taxonomy, but larger full-bundle runs, process sandbox proof, and route selection remain incomplete.",
     },
     xlsx_import_export: {
       capability: "xlsx_import_export",
@@ -264,7 +264,7 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; V1 N=5 and retry-policy model smoke evidence exists, but V2 official runs, process sandbox proof, route selection, and chart lane remain incomplete.",
+        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; V1 N=5 and retry-policy model smoke evidence exists with fair per-sheet snapshots and raw model output, but V2 official runs, process sandbox proof, route selection, and chart lane remain incomplete.",
     },
     xlsx_import_export: {
       capability: "xlsx_import_export",

@@ -145,6 +145,54 @@ describe("SpreadsheetBench staged runner", () => {
     expect(candidateManifest).not.toContain("evaluator");
   });
 
+  it("applies formula-looking values as formulas and preserves cells for format-only operations", async () => {
+    const source = tempRoot("source");
+    const stage = tempRoot("stage");
+    const out = tempRoot("out");
+    mkdirSync(join(source, "spreadsheet", "13-10"), { recursive: true });
+    await writeFormulaSemanticsWorkbook(join(source, "spreadsheet", "13-10", "1_13-10_init.xlsx"), false);
+    await writeFormulaSemanticsWorkbook(join(source, "spreadsheet", "13-10", "1_13-10_golden.xlsx"), true);
+    writeJson(join(source, "dataset.json"), [
+      {
+        id: "13-10",
+        instruction: "Write the formula in B2 and format C2.",
+        spreadsheet_path: "spreadsheet/13-10",
+        answer_position: "Sheet1!B2:C2",
+        answer_sheet: "Sheet1",
+      },
+    ]);
+    stageSpreadsheetBenchBundle(source, {
+      track: "spreadsheetbench-v1",
+      outputRoot: stage,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+    writeJson(join(stage, "tasks", "13-10", "agent", "edit-plan.json"), {
+      schema: 1,
+      operations: [
+        { sheet: "Sheet1", cell: "B2", value: "=SUM(A2:A3)" },
+        { sheet: "Sheet1", cell: "C2", numFmt: "#,##0.00" },
+      ],
+    });
+
+    const report = await runStagedSpreadsheetBench({
+      stageRoot: stage,
+      outputRoot: out,
+      mode: "apply-agent-patch",
+      clean: true,
+      compareStyles: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(report.passCount).toBe(1);
+    const candidate = new ExcelJS.Workbook();
+    await candidate.xlsx.readFile(join(out, report.results[0].candidateWorkbook!));
+    const sheet = candidate.getWorksheet("Sheet1")!;
+    expect(sheet.getCell("B2").value).toMatchObject({ formula: "SUM(A2:A3)" });
+    expect(sheet.getCell("C2").value).toBe(7);
+    expect(sheet.getCell("C2").numFmt).toBe("#,##0.00");
+  });
+
   it("asks a model for an edit plan and records usage before evaluator scoring", async () => {
     const source = tempRoot("source");
     const stage = tempRoot("stage");
@@ -224,6 +272,119 @@ describe("SpreadsheetBench staged runner", () => {
     expect(candidateManifest).toContain("model-edit-plan");
     expect(candidateManifest.toLowerCase()).not.toContain("gold");
     expect(candidateManifest).not.toContain("evaluator");
+  });
+
+  it("shows every worksheet to the model even when the first sheet exceeds the snapshot cap", async () => {
+    const source = tempRoot("source");
+    const stage = tempRoot("stage");
+    const out = tempRoot("out");
+    mkdirSync(join(source, "spreadsheet", "13-9"), { recursive: true });
+    await writeTwoSheetStarvationWorkbook(join(source, "spreadsheet", "13-9", "1_13-9_init.xlsx"), 1);
+    await writeTwoSheetStarvationWorkbook(join(source, "spreadsheet", "13-9", "1_13-9_golden.xlsx"), 2);
+    writeJson(join(source, "dataset.json"), [
+      {
+        id: "13-9",
+        instruction: "Change the target cell on LISTS to 2.",
+        spreadsheet_path: "spreadsheet/13-9",
+        answer_position: "LISTS!B2:B2",
+        answer_sheet: "LISTS",
+      },
+    ]);
+    stageSpreadsheetBenchBundle(source, {
+      track: "spreadsheetbench-v1",
+      outputRoot: stage,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+    const planner: AgentModel = {
+      name: "sheet-aware-spreadsheetbench-planner",
+      async next({ messages }) {
+        const payload = JSON.parse(messages[0]?.content ?? "{}") as {
+          workbook?: { sheets?: Array<{ name: string; truncated?: boolean; cells?: Array<{ address: string }> }> };
+        };
+        expect(payload.workbook?.sheets?.map((sheet) => sheet.name)).toEqual(["RANGES", "LISTS"]);
+        expect(payload.workbook?.sheets?.[0]?.truncated).toBe(true);
+        expect(payload.workbook?.sheets?.[1]?.cells?.map((cell) => cell.address)).toContain("B2");
+        return {
+          text: `Here is the edit plan:\n\`\`\`json\n${JSON.stringify({ schema: 1, operations: [{ sheet: "LISTS", cell: "B2", value: 2 }] })}\n\`\`\``,
+          toolCalls: [],
+          done: true,
+          usage: { inputTokens: 120, outputTokens: 30 },
+        };
+      },
+    };
+
+    const report = await runStagedSpreadsheetBench({
+      stageRoot: stage,
+      outputRoot: out,
+      mode: "model-edit-plan",
+      model: planner,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(report.passCount).toBe(1);
+    expect(report.results[0].score?.pass).toBe(true);
+    expect(readFileSync(join(out, "13-9", "model-output.txt"), "utf8")).toContain("Here is the edit plan");
+    expect(readFileSync(join(out, "13-9", "model-edit-plan.json"), "utf8")).toContain("\"sheet\": \"LISTS\"");
+  });
+
+  it("normalizes cell refs that the model accidentally emits in the sheet field", async () => {
+    const source = tempRoot("source");
+    const stage = tempRoot("stage");
+    const out = tempRoot("out");
+    mkdirSync(join(source, "spreadsheet", "13-11"), { recursive: true });
+    await writeWorkbookWithSheet(join(source, "spreadsheet", "13-11", "1_13-11_init.xlsx"), "Actual", 1);
+    await writeWorkbookWithSheet(join(source, "spreadsheet", "13-11", "1_13-11_golden.xlsx"), "Actual", 2);
+    writeJson(join(source, "dataset.json"), [
+      {
+        id: "13-11",
+        instruction: "Change Actual B2 to 2.",
+        spreadsheet_path: "spreadsheet/13-11",
+        answer_position: "Actual!B2:B2",
+        answer_sheet: "Actual",
+      },
+    ]);
+    stageSpreadsheetBenchBundle(source, {
+      track: "spreadsheetbench-v1",
+      outputRoot: stage,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+    const planner: AgentModel = {
+      name: "cell-ref-in-sheet-field-planner",
+      async next() {
+        return {
+          text: JSON.stringify({
+            schema: 1,
+            operations: [
+              { sheet: "Actual", cell: "A1", value: "anchor" },
+              { sheet: "B2", value: 2 },
+            ],
+          }),
+          toolCalls: [],
+          done: true,
+          usage: { inputTokens: 30, outputTokens: 10 },
+        };
+      },
+    };
+
+    const report = await runStagedSpreadsheetBench({
+      stageRoot: stage,
+      outputRoot: out,
+      mode: "model-edit-plan",
+      model: planner,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(report.passCount).toBe(1);
+    expect(readFileSync(join(out, "13-11", "model-output.txt"), "utf8")).toContain("\"sheet\":\"B2\"");
+    expect(JSON.parse(readFileSync(join(out, "13-11", "model-edit-plan.json"), "utf8")).operations[1]).toMatchObject({
+      sheet: "Actual",
+      cell: "B2",
+      value: 2,
+    });
   });
 
   it("keeps attempt indices globally unique across staged tasks", async () => {
@@ -537,5 +698,30 @@ async function writeWorkbookWithSheet(path: string, sheetName: string, b2: numbe
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet(sheetName);
   sheet.getCell("B2").value = b2;
+  await workbook.xlsx.writeFile(path);
+}
+
+async function writeTwoSheetStarvationWorkbook(path: string, targetValue: number) {
+  const workbook = new ExcelJS.Workbook();
+  const ranges = workbook.addWorksheet("RANGES");
+  for (let row = 1; row <= 80; row++) {
+    for (let column = 1; column <= 4; column++) {
+      ranges.getCell(row, column).value = `r${row}c${column}`;
+    }
+  }
+  const lists = workbook.addWorksheet("LISTS");
+  lists.getCell("A1").value = "target";
+  lists.getCell("B2").value = targetValue;
+  await workbook.xlsx.writeFile(path);
+}
+
+async function writeFormulaSemanticsWorkbook(path: string, completed: boolean) {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Sheet1");
+  sheet.getCell("A2").value = 1;
+  sheet.getCell("A3").value = 1;
+  sheet.getCell("B2").value = completed ? { formula: "SUM(A2:A3)" } : "";
+  sheet.getCell("C2").value = 7;
+  if (completed) sheet.getCell("C2").numFmt = "#,##0.00";
   await workbook.xlsx.writeFile(path);
 }

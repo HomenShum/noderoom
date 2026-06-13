@@ -1037,14 +1037,16 @@ captured in the benchmark report instead of summarized away. The contamination g
 (`npm run benchmark:contamination`) now scans agent-facing benchmark manifests, candidate manifests,
 and generated edit plans for evaluator-only gold/rubric/canary metadata; checked-in smokes show 0
 leaks for the staged V1 root, the N=5 V1 candidate output, the retry V1 candidate output, and the
-staged BTB fixture. The runner also has an explicit retry policy: `--retry-failed N` retries candidate-generation or
-scoring errors, `--retry-score-failures` opts into retrying scored-but-wrong candidates, and the
-report records case-level attempts, retry exhaustion, pass-after-retry counts, p95 latency, tokens,
-and provider cost. The checked-in retry smoke
-(`docs/eval/spreadsheetbench-v1-model-edit-plan-retry-live-smoke.json`) exhausted three attempts on
-one official V1 task with `gpt-5.4-nano`, proving the retry accounting and the current planner gap at
-the same time. These artifacts are not official benchmark scores until run across official bundles
-under the benchmark policy.
+staged BTB fixture. The runner also has an explicit retry policy: `--retry-failed N` retries
+candidate-generation or scoring errors, `--retry-score-failures` opts into retrying
+scored-but-wrong candidates, and the report records case-level attempts, retry exhaustion,
+pass-after-retry counts, p95 latency, tokens, and provider cost. The checked-in retry smoke
+(`docs/eval/spreadsheetbench-v1-model-edit-plan-retry-live-smoke.json`) ran one official V1 task
+with `gpt-5.4-nano`, `--retry-failed 2`, and `--retry-score-failures`: all 3 attempts reached
+scoring, best overall was `0.6`, p95 latency was 7.609s, spend was `$0.00661755`, and pass remained
+0/3. That proves the adapter now gets past JSON/sheet-name failure modes while still surfacing the
+planner gap honestly. These artifacts are not official benchmark scores until run across official
+bundles under the benchmark policy.
 
 BankerToolBench now has the same first boundary in place: `npm run
 benchmark:bankertoolbench:ingest` scans an already-downloaded BTB bundle (`tasks.jsonl`,

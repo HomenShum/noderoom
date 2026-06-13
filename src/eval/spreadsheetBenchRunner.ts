@@ -568,9 +568,11 @@ async function emitModelEditCandidateWorkbook(args: {
     usage,
     costUsd,
   };
+  const rawModelOutputPath = join(args.taskOutDir, "model-output.txt");
+  writeFileSync(rawModelOutputPath, step.text ?? "");
   try {
     if (step.toolCalls.length) throw new Error(`model-edit-plan expected JSON text, got ${step.toolCalls.length} tool call(s)`);
-    const plan = parseEditPlanText(step.text ?? "", args.agent.taskId);
+    const plan = normalizeEditPlan(parseEditPlanText(step.text ?? "", args.agent.taskId), snapshot);
     validateEditPlan(plan, args.agent.taskId);
     const editPlanPath = join(args.taskOutDir, "model-edit-plan.json");
     writeJson(editPlanPath, plan);
@@ -587,6 +589,7 @@ async function emitModelEditCandidateWorkbook(args: {
       model: modelName,
       sourceAgentManifest: rel(args.stageRoot, join(args.taskDir, "agent", "task.json")),
       generatedEditPlan: basename(editPlanPath),
+      rawModelOutput: basename(rawModelOutputPath),
       candidateWorkbook: basename(args.target),
       appliedOperationCount: plan.operations.length,
       modelUsage: usage,
@@ -612,18 +615,52 @@ function validateEditPlan(plan: AgentEditPlan, taskId: string) {
     if (!operation || typeof operation.sheet !== "string" || !operation.sheet.trim()) {
       throw new Error(`edit-plan operation ${index + 1} is missing sheet`);
     }
-    if (!/^[A-Z]{1,3}[1-9][0-9]*$/i.test(operation.cell)) {
+    if (!isCellRef(operation.cell)) {
       throw new Error(`edit-plan operation ${index + 1} has invalid cell: ${operation.cell}`);
     }
-    if (operation.formula === undefined && !("value" in operation)) {
-      throw new Error(`edit-plan operation ${index + 1} must set value or formula`);
+    if (operation.formula === undefined && !("value" in operation) && !operation.numFmt) {
+      throw new Error(`edit-plan operation ${index + 1} must set value, formula, or numFmt`);
     }
   }
+}
+
+function isCellRef(value: string): boolean {
+  return /^[A-Z]{1,3}[1-9][0-9]*$/i.test(value);
+}
+
+function normalizeEditPlan(plan: AgentEditPlan, snapshot: WorkbookSnapshot): AgentEditPlan {
+  const sheetNames = new Set(snapshot.sheets.map((sheet) => sheet.name));
+  let lastKnownSheet: string | undefined;
+  return {
+    ...plan,
+    operations: Array.isArray(plan.operations)
+      ? plan.operations.map((operation) => {
+          if (!operation || typeof operation.sheet !== "string") return operation;
+          if (sheetNames.has(operation.sheet)) {
+            lastKnownSheet = operation.sheet;
+            return operation;
+          }
+          if (lastKnownSheet && isCellRef(operation.sheet)) {
+            return {
+              ...operation,
+              sheet: lastKnownSheet,
+              cell: typeof operation.cell === "string" && isCellRef(operation.cell) ? operation.cell : operation.sheet,
+            };
+          }
+          return operation;
+        })
+      : plan.operations,
+  };
 }
 
 type WorkbookSnapshot = {
   sheets: Array<{
     name: string;
+    rowCount: number;
+    columnCount: number;
+    actualRowCount: number;
+    actualColumnCount: number;
+    truncated: boolean;
     cells: Array<{ address: string; value: string; formula?: string; numFmt?: string }>;
   }>;
   cellCount: number;
@@ -636,11 +673,15 @@ async function snapshotWorkbook(path: string, maxCells = 240): Promise<WorkbookS
   const sheets: WorkbookSnapshot["sheets"] = [];
   let cellCount = 0;
   let truncated = false;
+  const perSheetLimit = workbook.worksheets.length > 0 ? Math.max(24, Math.floor(maxCells / workbook.worksheets.length)) : maxCells;
   for (const sheet of workbook.worksheets) {
     const cells: WorkbookSnapshot["sheets"][number]["cells"] = [];
+    let sheetCellCount = 0;
+    let sheetTruncated = false;
     sheet.eachRow({ includeEmpty: false }, (row) => {
       row.eachCell({ includeEmpty: false }, (cell) => {
-        if (cellCount >= maxCells) {
+        if (sheetCellCount >= perSheetLimit) {
+          sheetTruncated = true;
           truncated = true;
           return;
         }
@@ -650,10 +691,19 @@ async function snapshotWorkbook(path: string, maxCells = 240): Promise<WorkbookS
           ...(cellFormula(cell.value) ? { formula: cellFormula(cell.value) } : {}),
           ...(cell.numFmt ? { numFmt: cell.numFmt } : {}),
         });
+        sheetCellCount += 1;
         cellCount += 1;
       });
     });
-    if (cells.length) sheets.push({ name: sheet.name, cells });
+    sheets.push({
+      name: sheet.name,
+      rowCount: sheet.rowCount,
+      columnCount: sheet.columnCount,
+      actualRowCount: sheet.actualRowCount,
+      actualColumnCount: sheet.actualColumnCount,
+      truncated: sheetTruncated,
+      cells,
+    });
   }
   return { sheets, cellCount, truncated };
 }
@@ -689,6 +739,9 @@ function spreadsheetBenchPlannerSystem(): string {
     "Return only JSON matching this schema:",
     "{\"schema\":1,\"operations\":[{\"sheet\":\"Sheet1\",\"cell\":\"B2\",\"value\":2}]}",
     "Use value for literal values, or formula plus optional result for formulas.",
+    "Use exactly one of the sheet names shown in workbook.sheets[].name; do not invent Sheet1 unless Sheet1 exists.",
+    "If the task requires many cells, emit every required cell operation explicitly. Do not use placeholders.",
+    "The JSON must be valid strict JSON: double-quoted keys/strings, no comments, no trailing commas.",
     "Do not include markdown, prose, comments, evaluator metadata, or hidden answers.",
   ].join("\n");
 }
@@ -705,9 +758,39 @@ function spreadsheetBenchPlannerPrompt(agent: AgentManifest, snapshot: WorkbookS
 
 function parseEditPlanText(text: string, taskId: string): AgentEditPlan {
   const cleaned = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
-  const jsonText = cleaned.startsWith("{") ? cleaned : cleaned.slice(cleaned.indexOf("{"), cleaned.lastIndexOf("}") + 1);
+  const jsonText = extractFirstJsonObject(cleaned, taskId);
   if (!jsonText.startsWith("{")) throw new Error(`model-edit-plan returned no JSON for ${taskId}`);
   return JSON.parse(jsonText) as AgentEditPlan;
+}
+
+function extractFirstJsonObject(text: string, taskId: string): string {
+  const start = text.indexOf("{");
+  if (start < 0) throw new Error(`model-edit-plan returned no JSON for ${taskId}`);
+  let depth = 0;
+  let inString = false;
+  let escaped = false;
+  for (let index = start; index < text.length; index++) {
+    const char = text[index];
+    if (escaped) {
+      escaped = false;
+      continue;
+    }
+    if (char === "\\") {
+      escaped = true;
+      continue;
+    }
+    if (char === "\"") {
+      inString = !inString;
+      continue;
+    }
+    if (inString) continue;
+    if (char === "{") depth += 1;
+    else if (char === "}") {
+      depth -= 1;
+      if (depth === 0) return text.slice(start, index + 1);
+    }
+  }
+  throw new Error(`model-edit-plan returned unterminated JSON for ${taskId}`);
 }
 
 function applyOperation(workbook: ExcelJS.Workbook, operation: AgentEditOperation) {
@@ -715,7 +798,10 @@ function applyOperation(workbook: ExcelJS.Workbook, operation: AgentEditOperatio
   if (!sheet) throw new Error(`edit-plan references missing sheet: ${operation.sheet}`);
   const cell = sheet.getCell(operation.cell);
   if (operation.formula !== undefined) cell.value = { formula: operation.formula, result: operation.result ?? undefined };
-  else cell.value = operation.value ?? null;
+  else if (typeof operation.value === "string" && operation.value.trim().startsWith("=")) {
+    cell.value = { formula: operation.value.trim().slice(1), result: operation.result ?? undefined };
+  }
+  else if ("value" in operation) cell.value = operation.value ?? null;
   if (operation.numFmt) cell.numFmt = operation.numFmt;
 }
 

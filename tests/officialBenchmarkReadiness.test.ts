@@ -33,6 +33,7 @@ describe("official benchmark readiness", () => {
     const gold = btb?.capabilities.find((capability) => capability.capability === "official_gold_isolation");
     const rubric = btb?.capabilities.find((capability) => capability.capability === "rubric_weighted_scoring");
     const runner = btb?.capabilities.find((capability) => capability.capability === "official_runner_adapter");
+    const documentOutputs = btb?.capabilities.find((capability) => capability.capability === "pptx_docx_pdf_outputs");
 
     expect(ingest).toMatchObject({
       state: "implemented",
@@ -42,7 +43,8 @@ describe("official benchmark readiness", () => {
       state: "partial",
       evidence: "src/eval/bankerToolBenchStage.ts",
     });
-    expect(gold?.blocker).toContain("contamination checker");
+    expect(gold?.blocker).toContain("contamination checks");
+    expect(gold?.blocker).toContain("expected deliverable package metadata");
     expect(rubric).toMatchObject({
       state: "partial",
       evidence: "src/eval/bankerToolBenchRunner.ts",
@@ -53,6 +55,12 @@ describe("official benchmark readiness", () => {
     });
     expect(runner?.blocker).toContain("agent workspaces");
     expect(runner?.blocker).toContain("Gandalf");
+    expect(documentOutputs).toMatchObject({
+      state: "partial",
+      evidence: "src/eval/bankerToolBenchRunner.ts",
+    });
+    expect(documentOutputs?.blocker).toContain("multi-file candidate packages");
+    expect(documentOutputs?.blocker).toContain("official verifier");
     expect(btb?.ready).toBe(false);
     expect(btb?.blockers).toEqual(expect.arrayContaining([
       expect.stringContaining("official_runner_adapter"),

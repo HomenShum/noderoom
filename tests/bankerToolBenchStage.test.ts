@@ -57,6 +57,13 @@ describe("BankerToolBench sandbox staging", () => {
       canary: "CANARY-BTB-456",
       weightedRubricTotal: 10,
       goldenFiles: ["golden-outputs/01-golden-deck.pptx"],
+      expectedDeliverables: [
+        {
+          name: "golden-deck.pptx",
+          extension: ".pptx",
+          goldenFile: "golden-outputs/01-golden-deck.pptx",
+        },
+      ],
     });
   });
 });

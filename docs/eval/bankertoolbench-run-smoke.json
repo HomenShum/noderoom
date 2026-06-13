@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedAt": "2026-06-13T11:57:48.452Z",
+  "generatedAt": "2026-06-13T12:06:45.584Z",
   "stageRoot": "staged-btb",
   "outputRoot": "run-btb",
   "mode": "copy-input-baseline",
@@ -11,7 +11,19 @@
   "harness": {
     "toolPolicy": "agent_workspace_until_candidate",
     "evaluatorAccess": "after_candidate_emit_only",
-    "verifier": "local_exact_golden_smoke"
+    "verifier": "local_exact_golden_smoke",
+    "packagePolicy": "exact_expected_deliverables",
+    "supportedDeliverableExtensions": [
+      ".csv",
+      ".docx",
+      ".jpeg",
+      ".jpg",
+      ".pdf",
+      ".png",
+      ".pptx",
+      ".xlsm",
+      ".xlsx"
+    ]
   },
   "warnings": [],
   "results": [
@@ -25,7 +37,7 @@
       "candidateManifest": "btb-0fc7bc3c/candidate-manifest.json",
       "score": {
         "schema": 1,
-        "generatedAt": "2026-06-13T11:57:48.452Z",
+        "generatedAt": "2026-06-13T12:06:45.584Z",
         "taskId": "0fc7bc3c-a111-4222-8333-444455556666",
         "harborTaskId": "btb-0fc7bc3c",
         "verifier": "local_exact_golden_smoke",
@@ -35,7 +47,14 @@
           "awardedWeight": 0,
           "exactMatchingGoldenFiles": 0,
           "missingGoldenFiles": 1,
-          "mismatchedGoldenFiles": 0
+          "mismatchedGoldenFiles": 0,
+          "expectedDeliverables": 1,
+          "candidateDeliverables": 2,
+          "matchedExpectedDeliverables": 0,
+          "missingExpectedDeliverables": 1,
+          "extraCandidateDeliverables": 2,
+          "duplicateCandidateDeliverables": 0,
+          "unsupportedCandidateDeliverables": 0
         },
         "weightedScore": 0,
         "pass": false,
@@ -45,40 +64,52 @@
             "weight": 5,
             "category": "Excel",
             "passed": false,
-            "reason": "candidate deliverables did not exactly match evaluator golden files"
+            "reason": "candidate package did not exactly match evaluator expected deliverables and golden files"
           },
           {
             "criterion": "Memo includes risks",
             "weight": 1,
             "category": "Memo",
             "passed": false,
-            "reason": "candidate deliverables did not exactly match evaluator golden files"
+            "reason": "candidate package did not exactly match evaluator expected deliverables and golden files"
           }
         ],
         "deliverables": [
           {
             "path": "01-01-model.xlsx",
             "sha256": "5bd17a4a66c4126008a147278511f1fb55774b443fa32bf571a0ffd5a8efc073",
-            "bytes": 9
+            "bytes": 9,
+            "extension": ".xlsx",
+            "supported": true
           },
           {
             "path": "02-02-source.pdf",
             "sha256": "5bd17a4a66c4126008a147278511f1fb55774b443fa32bf571a0ffd5a8efc073",
-            "bytes": 9
+            "bytes": 9,
+            "extension": ".pdf",
+            "supported": true
+          }
+        ],
+        "expectedDeliverables": [
+          {
+            "name": "answer.xlsx",
+            "extension": ".xlsx"
           }
         ],
         "goldenFiles": [
           {
             "path": "golden-outputs/01-answer.xlsx",
+            "expectedDeliverable": "answer.xlsx",
             "exactMatch": false
           }
         ],
         "warnings": [
-          "local_exact_golden_smoke is a packaging/verifier-boundary smoke; it is not the official Harbor/Gandalf verifier."
+          "local_exact_golden_smoke is a packaging/verifier-boundary smoke; it is not the official Harbor/Gandalf verifier.",
+          "candidate package includes extra deliverables not present in evaluator expected outputs"
         ]
       },
       "timingsMs": {
-        "total": 32
+        "total": 20
       },
       "trajectory": [
         {

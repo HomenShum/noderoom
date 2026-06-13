@@ -197,21 +197,28 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/bankerToolBenchStage.ts",
       blocker:
-        "BankerToolBench staging separates final prompts/input files from evaluator-only prompt context, formatting context, canary, weighted rubric, and golden outputs; a contamination checker covers staged agent manifests, but Harbor/Docker process isolation and verifier handoff are still missing.",
+        "BankerToolBench staging separates final prompts/input files from evaluator-only prompt context, formatting context, canary, weighted rubric, golden outputs, and expected deliverable package metadata; contamination checks cover staged agent manifests, but Harbor/Docker process isolation and verifier handoff are still missing.",
     },
     official_runner_adapter: {
       capability: "official_runner_adapter",
       state: "partial",
       evidence: "src/eval/bankerToolBenchRunner.ts",
       blocker:
-        "A local BankerToolBench runner now emits candidate deliverables from per-attempt agent workspaces before opening evaluator-only rubric/golden metadata and records local exact-golden smoke scores, but Harbor/Docker execution, MCP financial tools, Gandalf verifier replay, and multi-file deliverable packaging are still missing.",
+        "A local BankerToolBench runner now emits candidate deliverables from per-attempt agent workspaces before opening evaluator-only rubric/golden metadata, validates exact expected package shape for supported Excel/PowerPoint/Word/PDF-style deliverables, and records local exact-golden smoke scores, but Harbor/Docker execution, MCP financial tools, and Gandalf verifier replay are still missing.",
+    },
+    pptx_docx_pdf_outputs: {
+      capability: "pptx_docx_pdf_outputs",
+      state: "partial",
+      evidence: "src/eval/bankerToolBenchRunner.ts",
+      blocker:
+        "The local BTB runner validates multi-file candidate packages and supported .pptx/.docx/.pdf deliverable extensions after candidate emission; actual pitch-deck/report generation and official verifier handoff are not wired.",
     },
     rubric_weighted_scoring: {
       capability: "rubric_weighted_scoring",
       state: "partial",
       evidence: "src/eval/bankerToolBenchRunner.ts",
       blocker:
-        "Weighted rubric metadata is parsed, isolated for the evaluator, and consumed by a local exact-golden smoke scorer, but Gandalf/Harbor verifier execution and score import are not wired.",
+        "Weighted rubric metadata is parsed, isolated for the evaluator, and consumed by a local exact-package/exact-golden smoke scorer, but Gandalf/Harbor verifier execution and score import are not wired.",
     },
   },
   "spreadsheetbench-v1": {

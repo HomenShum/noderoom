@@ -1061,11 +1061,12 @@ holds prompt context, formatting context, canary, weighted rubric, and golden ou
 smoke artifacts and the contamination gate prove that boundary on a local BTB-shaped fixture.
 `npm run benchmark:bankertoolbench:run` now adds the next boundary: it copies each attempt into an
 agent-only workspace, emits candidate deliverables before opening evaluator-only rubric/golden
-metadata, records a trajectory, and runs a local exact-golden weighted-rubric smoke verifier. The
-checked-in run smoke is deliberately 0/6 because copy-input is not a solution, but it proves the
-runner/verifier handoff and 0-leak artifact path. This is still not a BTB score: Harbor/Docker
-process isolation, MCP financial tools, Gandalf verifier replay, and multi-file deliverable
-packaging remain red gates.
+metadata, validates the exact expected output package shape for supported spreadsheet, deck,
+document, PDF, CSV, and image deliverables, records a trajectory, and runs a local exact-package /
+exact-golden weighted-rubric smoke verifier. The checked-in run smoke is deliberately 0/6 because
+copy-input is not a solution, but it proves the runner/verifier handoff, multi-file package
+accounting, and 0-leak artifact path. This is still not a BTB score: Harbor/Docker process
+isolation, MCP financial tools, and Gandalf verifier replay remain red gates.
 
 ## Benchmark Harness / v3 Composite-Synthesis Run
 

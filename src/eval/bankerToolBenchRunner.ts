@@ -13,6 +13,8 @@ import { createHash } from "node:crypto";
 
 export type BankerToolBenchRunnerMode = "copy-input-baseline" | "apply-agent-output";
 
+const supportedDeliverableExtensions = new Set([".xlsx", ".xlsm", ".pptx", ".docx", ".pdf", ".csv", ".png", ".jpg", ".jpeg"]);
+
 export type BankerToolBenchRunnerOptions = {
   stageRoot: string;
   outputRoot: string;
@@ -63,6 +65,8 @@ export type BankerToolBenchRunnerReport = {
     toolPolicy: "agent_workspace_until_candidate";
     evaluatorAccess: "after_candidate_emit_only";
     verifier: "local_exact_golden_smoke";
+    packagePolicy: "exact_expected_deliverables";
+    supportedDeliverableExtensions: string[];
   };
   warnings: string[];
   results: BankerToolBenchRunnerTaskResult[];
@@ -81,6 +85,13 @@ export type BankerToolBenchScore = {
     exactMatchingGoldenFiles: number;
     missingGoldenFiles: number;
     mismatchedGoldenFiles: number;
+    expectedDeliverables: number;
+    candidateDeliverables: number;
+    matchedExpectedDeliverables: number;
+    missingExpectedDeliverables: number;
+    extraCandidateDeliverables: number;
+    duplicateCandidateDeliverables: number;
+    unsupportedCandidateDeliverables: number;
   };
   weightedScore: number;
   pass: boolean;
@@ -95,9 +106,17 @@ export type BankerToolBenchScore = {
     path: string;
     sha256: string;
     bytes: number;
+    extension: string;
+    supported: boolean;
+  }>;
+  expectedDeliverables: Array<{
+    name: string;
+    extension: string;
+    matchedCandidate?: string;
   }>;
   goldenFiles: Array<{
     path: string;
+    expectedDeliverable: string;
     matchedCandidate?: string;
     exactMatch: boolean;
   }>;
@@ -127,6 +146,11 @@ type EvaluatorManifest = {
   rubricItems: Array<{ criterion: string; weight: number; category?: string }>;
   weightedRubricTotal: number;
   goldenFiles: string[];
+  expectedDeliverables?: Array<{
+    name: string;
+    extension: string;
+    goldenFile: string;
+  }>;
 };
 
 type AgentOutputManifest = {
@@ -183,6 +207,8 @@ export function runStagedBankerToolBench(options: BankerToolBenchRunnerOptions):
       toolPolicy: "agent_workspace_until_candidate",
       evaluatorAccess: "after_candidate_emit_only",
       verifier: "local_exact_golden_smoke",
+      packagePolicy: "exact_expected_deliverables",
+      supportedDeliverableExtensions: [...supportedDeliverableExtensions].sort(),
     },
     warnings,
     results,
@@ -367,15 +393,42 @@ function scoreCandidate(args: {
   const candidate = readJson<{
     taskId: string;
     harborTaskId: string;
-    candidateDeliverables: Array<{ path: string; sha256: string; bytes: number }>;
+    candidateDeliverables: Array<{ path: string; sha256: string; bytes: number; extension?: string; supported?: boolean }>;
   }>(args.candidateManifestPath);
-  const candidateByName = new Map(candidate.candidateDeliverables.map((deliverable) => [normalizedOutputName(deliverable.path), deliverable]));
+  const expectedDeliverables = evaluatorExpectedDeliverables(args.evaluator);
+  const candidateNameCounts = countBy(candidate.candidateDeliverables.map((deliverable) => normalizedOutputName(deliverable.path)));
+  const duplicateCandidateDeliverables = [...candidateNameCounts.values()].filter((count) => count > 1).reduce((sum, count) => sum + count - 1, 0);
+  const candidateByName = new Map<string, { path: string; sha256: string; bytes: number; extension: string; supported: boolean }>();
+  for (const deliverable of candidate.candidateDeliverables) {
+    const key = normalizedOutputName(deliverable.path);
+    if (!candidateByName.has(key)) {
+      candidateByName.set(key, {
+        ...deliverable,
+        extension: deliverable.extension ?? extensionOf(deliverable.path),
+        supported: deliverable.supported ?? isSupportedDeliverable(deliverable.path),
+      });
+    }
+  }
+  const expectedByName = new Set(expectedDeliverables.map((deliverable) => normalizedOutputName(deliverable.name)));
+  const unsupportedCandidateDeliverables = candidate.candidateDeliverables.filter((deliverable) => !isSupportedDeliverable(deliverable.path)).length;
+  const extraCandidateDeliverables = candidate.candidateDeliverables.filter((deliverable) => !expectedByName.has(normalizedOutputName(deliverable.path))).length;
+  const expectedResults = expectedDeliverables.map((expected) => ({
+    name: expected.name,
+    extension: expected.extension,
+    matchedCandidate: candidateByName.get(normalizedOutputName(expected.name))?.path,
+  }));
   const goldenFiles = args.evaluator.goldenFiles.map((goldenFile) => {
     const goldenPath = resolveManifestPath(dirname(args.evaluatorManifestPath), goldenFile);
-    const candidateDeliverable = candidateByName.get(normalizedOutputName(goldenFile));
+    const expected = expectedDeliverables.find((deliverable) => deliverable.goldenFile === goldenFile) ?? {
+      name: outputName(goldenFile),
+      extension: extensionOf(goldenFile),
+      goldenFile,
+    };
+    const candidateDeliverable = candidateByName.get(normalizedOutputName(expected.name));
     const exactMatch = !!candidateDeliverable && sha256(goldenPath) === candidateDeliverable.sha256;
     return {
       path: goldenFile,
+      expectedDeliverable: expected.name,
       matchedCandidate: candidateDeliverable?.path,
       exactMatch,
     };
@@ -383,11 +436,23 @@ function scoreCandidate(args: {
   const missingGoldenFiles = goldenFiles.filter((file) => !file.matchedCandidate).length;
   const mismatchedGoldenFiles = goldenFiles.filter((file) => file.matchedCandidate && !file.exactMatch).length;
   const exactMatchingGoldenFiles = goldenFiles.filter((file) => file.exactMatch).length;
+  const missingExpectedDeliverables = expectedResults.filter((deliverable) => !deliverable.matchedCandidate).length;
+  const matchedExpectedDeliverables = expectedResults.length - missingExpectedDeliverables;
+  const exactPackage =
+    expectedResults.length > 0 &&
+    missingExpectedDeliverables === 0 &&
+    extraCandidateDeliverables === 0 &&
+    duplicateCandidateDeliverables === 0 &&
+    unsupportedCandidateDeliverables === 0;
   const allGoldenFilesMatch = goldenFiles.length > 0 && missingGoldenFiles === 0 && mismatchedGoldenFiles === 0;
-  const awardedWeight = allGoldenFilesMatch ? args.evaluator.weightedRubricTotal : 0;
+  const packageAndFilesMatch = exactPackage && allGoldenFilesMatch;
+  const awardedWeight = packageAndFilesMatch ? args.evaluator.weightedRubricTotal : 0;
   const warnings = [
     "local_exact_golden_smoke is a packaging/verifier-boundary smoke; it is not the official Harbor/Gandalf verifier.",
     ...(goldenFiles.length === 0 ? ["no evaluator golden files were available"] : []),
+    ...(unsupportedCandidateDeliverables > 0 ? ["candidate package includes unsupported deliverable extensions"] : []),
+    ...(extraCandidateDeliverables > 0 ? ["candidate package includes extra deliverables not present in evaluator expected outputs"] : []),
+    ...(duplicateCandidateDeliverables > 0 ? ["candidate package includes duplicate deliverable names"] : []),
   ];
   return {
     schema: 1,
@@ -402,17 +467,29 @@ function scoreCandidate(args: {
       exactMatchingGoldenFiles,
       missingGoldenFiles,
       mismatchedGoldenFiles,
+      expectedDeliverables: expectedResults.length,
+      candidateDeliverables: candidate.candidateDeliverables.length,
+      matchedExpectedDeliverables,
+      missingExpectedDeliverables,
+      extraCandidateDeliverables,
+      duplicateCandidateDeliverables,
+      unsupportedCandidateDeliverables,
     },
     weightedScore: ratio(awardedWeight, args.evaluator.weightedRubricTotal),
     pass: args.evaluator.weightedRubricTotal > 0 && awardedWeight === args.evaluator.weightedRubricTotal,
     rubricResults: args.evaluator.rubricItems.map((item) => ({
       ...item,
-      passed: allGoldenFilesMatch,
-      reason: allGoldenFilesMatch
-        ? "all evaluator golden files exactly matched candidate deliverables"
-        : "candidate deliverables did not exactly match evaluator golden files",
+      passed: packageAndFilesMatch,
+      reason: packageAndFilesMatch
+        ? "candidate package exactly matched evaluator expected deliverables and golden files"
+        : "candidate package did not exactly match evaluator expected deliverables and golden files",
     })),
-    deliverables: candidate.candidateDeliverables,
+    deliverables: candidate.candidateDeliverables.map((deliverable) => ({
+      ...deliverable,
+      extension: deliverable.extension ?? extensionOf(deliverable.path),
+      supported: deliverable.supported ?? isSupportedDeliverable(deliverable.path),
+    })),
+    expectedDeliverables: expectedResults,
     goldenFiles,
     warnings,
   };
@@ -438,6 +515,8 @@ function deliverableRecord(root: string, path: string) {
     path: rel(root, path),
     sha256: sha256(path),
     bytes,
+    extension: extensionOf(path),
+    supported: isSupportedDeliverable(path),
   };
 }
 
@@ -457,11 +536,45 @@ function resolveAgentPath(base: string, manifestPath: string): string {
 }
 
 function normalizedOutputName(path: string): string {
-  return basename(path).replace(/^\d{2}-/, "").toLowerCase();
+  return outputName(path).toLowerCase();
 }
 
 function safeFileName(value: string): string {
   return value.replace(/[<>:"/\\|?*\x00-\x1F]+/g, "_");
+}
+
+function evaluatorExpectedDeliverables(evaluator: EvaluatorManifest): Array<{ name: string; extension: string; goldenFile: string }> {
+  if (evaluator.expectedDeliverables?.length) {
+    return evaluator.expectedDeliverables.map((deliverable) => ({
+      name: outputName(deliverable.name),
+      extension: deliverable.extension || extensionOf(deliverable.name),
+      goldenFile: deliverable.goldenFile,
+    }));
+  }
+  return evaluator.goldenFiles.map((goldenFile) => ({
+    name: outputName(goldenFile),
+    extension: extensionOf(goldenFile),
+    goldenFile,
+  }));
+}
+
+function outputName(path: string): string {
+  return basename(path).replace(/^\d{2}-/, "");
+}
+
+function extensionOf(path: string): string {
+  const match = basename(path).match(/\.[^.]+$/);
+  return match ? match[0].toLowerCase() : "";
+}
+
+function isSupportedDeliverable(path: string): boolean {
+  return supportedDeliverableExtensions.has(extensionOf(path));
+}
+
+function countBy(values: string[]): Map<string, number> {
+  const counts = new Map<string, number>();
+  for (const value of values) counts.set(value, (counts.get(value) ?? 0) + 1);
+  return counts;
 }
 
 function readJson<T>(path: string): T {

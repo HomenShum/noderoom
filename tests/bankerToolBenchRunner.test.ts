@@ -48,6 +48,7 @@ describe("BankerToolBench staged runner", () => {
         toolPolicy: "agent_workspace_until_candidate",
         evaluatorAccess: "after_candidate_emit_only",
         verifier: "local_exact_golden_smoke",
+        packagePolicy: "exact_expected_deliverables",
       },
     });
     const result = report.results[0];
@@ -64,6 +65,10 @@ describe("BankerToolBench staged runner", () => {
       awardedWeight: 0,
       exactMatchingGoldenFiles: 0,
       missingGoldenFiles: 1,
+      expectedDeliverables: 1,
+      candidateDeliverables: 1,
+      missingExpectedDeliverables: 1,
+      extraCandidateDeliverables: 1,
     });
     const candidateManifest = readFileSync(join(out, "btb-1b253d04", "candidate-manifest.json"), "utf8");
     expect(candidateManifest).toContain("agentWorkspaceManifest");
@@ -113,6 +118,12 @@ describe("BankerToolBench staged runner", () => {
         weightedTotal: 10,
         awardedWeight: 10,
         exactMatchingGoldenFiles: 1,
+        expectedDeliverables: 1,
+        candidateDeliverables: 1,
+        matchedExpectedDeliverables: 1,
+        missingExpectedDeliverables: 0,
+        extraCandidateDeliverables: 0,
+        unsupportedCandidateDeliverables: 0,
       },
     });
     expect(report.results[0].score?.rubricResults[0]).toMatchObject({
@@ -125,6 +136,72 @@ describe("BankerToolBench staged runner", () => {
       checkedFiles: 4,
       leakCount: 0,
     });
+  });
+
+  it("records package-level failures for missing, extra, duplicate, and unsupported deliverables", () => {
+    const source = tempRoot("source");
+    const stage = tempRoot("stage");
+    const out = tempRoot("out");
+    const taskId = "2aa7bc3c-a111-4222-8333-444455556666";
+    writeTask(source, taskId);
+    mkdirSync(join(source, "task-data", taskId, "Input"), { recursive: true });
+    writeFileSync(join(source, "task-data", taskId, "Input", "company.xlsx"), "source workbook");
+    mkdirSync(join(source, "golden-outputs", taskId), { recursive: true });
+    writeFileSync(join(source, "golden-outputs", taskId, "answer.pptx"), "finished deck");
+    writeFileSync(join(source, "golden-outputs", taskId, "memo.docx"), "finished memo");
+    stageBankerToolBenchBundle(source, {
+      outputRoot: stage,
+      limit: 1,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+    writeJson(join(stage, "tasks", "btb-2aa7bc3c", "agent", "output-manifest.json"), {
+      schema: 1,
+      deliverables: [
+        { path: "answer.pptx", text: "finished deck" },
+        { path: "nested/answer.pptx", text: "duplicate deck" },
+        { path: "notes.txt", text: "unsupported extra notes" },
+      ],
+    });
+
+    const report = runStagedBankerToolBench({
+      stageRoot: stage,
+      outputRoot: out,
+      mode: "apply-agent-output",
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(report.passCount).toBe(0);
+    expect(report.averageWeightedScore).toBe(0);
+    expect(report.results[0].score).toMatchObject({
+      pass: false,
+      weightedScore: 0,
+      totals: {
+        expectedDeliverables: 2,
+        candidateDeliverables: 3,
+        matchedExpectedDeliverables: 1,
+        missingExpectedDeliverables: 1,
+        extraCandidateDeliverables: 1,
+        duplicateCandidateDeliverables: 1,
+        unsupportedCandidateDeliverables: 1,
+        exactMatchingGoldenFiles: 1,
+        missingGoldenFiles: 1,
+      },
+    });
+    expect(report.results[0].score?.expectedDeliverables).toEqual([
+      { name: "answer.pptx", extension: ".pptx", matchedCandidate: "answer.pptx" },
+      { name: "memo.docx", extension: ".docx", matchedCandidate: undefined },
+    ]);
+    expect(report.results[0].score?.warnings).toEqual(expect.arrayContaining([
+      "candidate package includes unsupported deliverable extensions",
+      "candidate package includes extra deliverables not present in evaluator expected outputs",
+      "candidate package includes duplicate deliverable names",
+    ]));
+    const candidateManifest = readFileSync(join(out, "btb-2aa7bc3c", "candidate-manifest.json"), "utf8");
+    expect(candidateManifest.toLowerCase()).not.toContain("golden");
+    expect(candidateManifest.toLowerCase()).not.toContain("expected");
+    expect(candidateManifest.toLowerCase()).not.toContain("rubric");
   });
 });
 

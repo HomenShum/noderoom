@@ -66,6 +66,11 @@ type EvaluatorManifest = {
   rubricItems: Array<{ criterion: string; weight: number; category?: string }>;
   weightedRubricTotal: number;
   goldenFiles: string[];
+  expectedDeliverables: Array<{
+    name: string;
+    extension: string;
+    goldenFile: string;
+  }>;
 };
 
 export function stageBankerToolBenchBundle(rootDir: string, options: BankerToolBenchStageOptions): BankerToolBenchStageReport {
@@ -156,6 +161,14 @@ function stageTask(sourceRoot: string, outputRoot: string, task: BankerToolBench
     rubricItems: task.evaluatorMetadata.rubricItems,
     weightedRubricTotal: task.evaluatorMetadata.weightedRubricTotal,
     goldenFiles: evaluatorGoldenFiles.map((file) => rel(join(outputRoot, taskDir, "evaluator"), join(outputRoot, file))),
+    expectedDeliverables: evaluatorGoldenFiles.map((file) => {
+      const evaluatorPath = rel(join(outputRoot, taskDir, "evaluator"), join(outputRoot, file));
+      return {
+        name: outputName(evaluatorPath),
+        extension: extensionOf(evaluatorPath),
+        goldenFile: evaluatorPath,
+      };
+    }),
   };
   const agentManifestPath = join(agentDir, "task.json");
   const evaluatorManifestPath = join(evaluatorDir, "evaluator.json");
@@ -219,6 +232,15 @@ function safeId(value: string): string {
 
 function safeFileName(value: string): string {
   return value.replace(/[<>:"/\\|?*\x00-\x1F]+/g, "_");
+}
+
+function outputName(path: string): string {
+  return basename(path).replace(/^\d{2}-/, "");
+}
+
+function extensionOf(path: string): string {
+  const match = basename(path).match(/\.[^.]+$/);
+  return match ? match[0].toLowerCase() : "";
 }
 
 function rel(root: string, file: string): string {

@@ -429,6 +429,7 @@
       "liveChecks": [
         "missing: npm run benchmark:official:readiness -- --strict",
         "missing: official BankerToolBench Harbor/Docker smoke",
+        "npm run benchmark:bankertoolbench:stage -- --root .tmp/official-benchmarks/btb-fixture --output-root .tmp/official-benchmarks/staged-btb --limit 1 --clean --json-out docs/eval/bankertoolbench-stage-smoke.json",
         "npm run benchmark:bankertoolbench:run -- --stage-root .tmp/official-benchmarks/staged-btb --output-root .tmp/official-benchmarks/run-btb --mode copy-input-baseline --limit 1 --clean --json-out docs/eval/bankertoolbench-run-smoke.json",
         "npm run benchmark:spreadsheetbench:run -- --stage-root .tmp/official-benchmarks/staged-edit --output-root .tmp/official-benchmarks/run-model-edit --mode model-edit-plan --model gpt-5.4-nano --limit 1 --clean --json-out docs/eval/spreadsheetbench-model-edit-plan-live-smoke.json",
         "npm run benchmark:spreadsheetbench:run -- --stage-root .tmp/official-benchmarks/staged-v1 --output-root .tmp/official-benchmarks/run-v1-model-edit --mode model-edit-plan --model gpt-5.4-nano --limit 1 --clean --json-out docs/eval/spreadsheetbench-v1-model-edit-plan-live-smoke.json",
@@ -493,7 +494,7 @@
         { "type": "test", "ref": "tests/spreadsheetBenchRunner.test.ts" },
         { "type": "test", "ref": "tests/spreadsheetBenchScorer.test.ts" }
       ],
-      "nextReview": "Next official slice: run model-edit-plan across larger official SpreadsheetBench bundles, harden structured edit-plan generation until retries recover real tasks, add OS/Docker process isolation proof, and replace the BTB local exact-golden smoke with Harbor/Docker plus Gandalf verifier import without exposing rubric/canary/golden files to the agent."
+      "nextReview": "Next official slice: run model-edit-plan across larger official SpreadsheetBench bundles, harden structured edit-plan generation until retries recover real tasks, add OS/Docker process isolation proof, wire BTB MCP financial tools, and replace the BTB local exact-package/exact-golden smoke with Harbor/Docker plus Gandalf verifier import without exposing rubric/canary/golden files to the agent."
     },
     {
       "id": "unified_nodeagent_jobs",

@@ -1,6 +1,6 @@
 # Official Benchmark Readiness
 
-Generated: 2026-06-13T12:17:37.893Z
+Generated: 2026-06-13T12:25:43.853Z
 
 This is the benchmark-faithful gate for the public targets we care about most: BankerToolBench and SpreadsheetBench. It is deliberately stricter than NodeRoom's internal professional evals. Internal green runs do not imply an official benchmark claim.
 
@@ -94,14 +94,14 @@ Scoring shape: Workflow-level grading across exact cell values/formulas/formats 
 | `xlsx_import_export` | implemented | `src/eval/spreadsheetBenchRunner.ts` |
 | `formula_recompute` | partial | `src/eval/spreadsheetBenchRunner.ts` |
 | `format_diff` | partial | `src/eval/spreadsheetBenchScorer.ts` |
-| `chart_visual_grade` | missing | No VLM/chart-visual evaluator is wired into benchmark-faithful mode. |
+| `chart_visual_grade` | partial | `src/eval/spreadsheetBenchChartScorer.ts` |
 
 Blockers:
 - official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; runner attempts now copy agent-visible files into an agent-workspace manifest before candidate generation and V1 contamination/N=5/retry evidence exists, but V2 chart/visual grading, V2 official model runs, and OS/Docker process isolation are still missing.
 - official_runner_adapter: A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; V1 N=5 and retry-policy model smoke evidence exists with fair larger snapshots, raw model output, simple SUM result caching, and workspace manifests, but V2 official runs, OS/Docker sandbox proof, route selection, and chart lane remain incomplete.
 - formula_recompute: The SpreadsheetBench runner caches deterministic results for a local formula subset covering arithmetic, same-sheet cell refs/ranges, and SUM/AVERAGE/MIN/MAX/COUNT before export/reopen scoring; full Excel-compatible recompute, chart formulas, external refs, and volatile functions are not complete.
 - format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy, chart rendering, and visual grading are not complete.
-- chart_visual_grade: No VLM/chart-visual evaluator is wired into benchmark-faithful mode.
+- chart_visual_grade: A static XLSX chart-package scorer can compare chart and drawing XML parts after candidate emission; rendered chart screenshots and VLM visual quality grading are not wired.
 
 ## Promotion Rule
 

@@ -94,6 +94,7 @@ describe("official benchmark readiness", () => {
       const format = item.capabilities.find((capability) => capability.capability === "format_diff");
       const xlsx = item.capabilities.find((capability) => capability.capability === "xlsx_import_export");
       const formula = item.capabilities.find((capability) => capability.capability === "formula_recompute");
+      const chart = item.capabilities.find((capability) => capability.capability === "chart_visual_grade");
 
       expect(ingest).toMatchObject({
         state: "implemented",
@@ -130,6 +131,14 @@ describe("official benchmark readiness", () => {
         state: "partial",
         evidence: "src/eval/spreadsheetBenchScorer.ts",
       });
+      if (item.id === "spreadsheetbench-v2") {
+        expect(chart).toMatchObject({
+          state: "partial",
+          evidence: "src/eval/spreadsheetBenchChartScorer.ts",
+        });
+        expect(chart?.blocker).toContain("static XLSX chart-package scorer");
+        expect(chart?.blocker).toContain("VLM visual quality");
+      }
       expect(item.ready).toBe(false);
       expect(item.blockers).toEqual(expect.arrayContaining([
         expect.stringContaining("official_runner_adapter"),

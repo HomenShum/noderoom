@@ -300,6 +300,13 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       blocker:
         "The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy, chart rendering, and visual grading are not complete.",
     },
+    chart_visual_grade: {
+      capability: "chart_visual_grade",
+      state: "partial",
+      evidence: "src/eval/spreadsheetBenchChartScorer.ts",
+      blocker:
+        "A static XLSX chart-package scorer can compare chart and drawing XML parts after candidate emission; rendered chart screenshots and VLM visual quality grading are not wired.",
+    },
   },
 };
 

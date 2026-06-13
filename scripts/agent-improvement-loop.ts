@@ -204,6 +204,14 @@ const steps: StepSpec[] = [
     timeoutMs: 120_000,
   },
   {
+    id: "spreadsheetbench-chart-score-fixture",
+    label: "SpreadsheetBench chart package score fixture",
+    lane: "deterministic",
+    command: "npx",
+    args: ["vitest", "run", "tests/spreadsheetBenchChartScorer.test.ts"],
+    timeoutMs: 120_000,
+  },
+  {
     id: "spreadsheetbench-runner-fixture",
     label: "SpreadsheetBench staged runner fixture",
     lane: "deterministic",

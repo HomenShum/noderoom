@@ -1057,6 +1057,12 @@ deterministic_local_subset`, covering arithmetic, same-sheet cell refs/ranges, a
 `SUM`/`AVERAGE`/`MIN`/`MAX`/`COUNT` before export/reopen scoring. That is useful for SpreadsheetBench
 smokes, but still not a complete Excel calculation engine.
 
+SpreadsheetBench V2 chart evidence now has a narrow static lane too:
+`src/eval/spreadsheetBenchChartScorer.ts` compares candidate and golden `.xlsx` chart packages by
+normalizing and hashing `xl/charts/*.xml` plus `xl/drawings/*.xml`, then reports matched, missing,
+extra, and mismatched chart parts. That closes one blind spot in workbook packaging, but it is not a
+rendered screenshot grade, a layout-quality judge, or a Gemini/VLM visual grade.
+
 BankerToolBench now has the same first boundary in place: `npm run
 benchmark:bankertoolbench:ingest` scans an already-downloaded BTB bundle (`tasks.jsonl`,
 `task-data/`, optional `golden-outputs/`) and parses input files plus weighted rubric metadata

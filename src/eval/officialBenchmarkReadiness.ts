@@ -262,7 +262,7 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "The SpreadsheetBench runner caches deterministic results for a local formula subset covering arithmetic, same-sheet cell refs/ranges, SUM/AVERAGE/MIN/MAX/COUNT/COUNTA, ABS, ROUND/ROUNDUP/ROUNDDOWN, IF/IFERROR, single-criteria SUMIF/COUNTIF/AVERAGEIF, multi-criteria SUMIFS/COUNTIFS/AVERAGEIFS, and exact MATCH/INDEX/VLOOKUP/XLOOKUP before export/reopen scoring, including basic wildcard criteria. The scorer no longer penalizes value-equivalent candidate formulas when gold stores only scalar results. A full Excel-compatible recompute engine, approximate lookup, and array/dynamic formulas are not complete.",
+        "The SpreadsheetBench runner caches deterministic results for a local formula subset covering arithmetic, same-sheet cell refs/ranges, SUM/AVERAGE/MIN/MAX/COUNT/COUNTA, ABS, ROUND/ROUNDUP/ROUNDDOWN, IF/IFERROR, single-criteria SUMIF/COUNTIF/AVERAGEIF, multi-criteria SUMIFS/COUNTIFS/AVERAGEIFS, exact MATCH/INDEX/VLOOKUP/XLOOKUP, SUMPRODUCT, LEFT/RIGHT/MID/LEN, FIND/SEARCH/REPLACE, TEXT/DATE, VALUE, CONCATENATE, and TRIM before export/reopen scoring, including basic wildcard criteria. The scorer no longer penalizes value-equivalent candidate formulas when gold stores only scalar results. A full Excel-compatible recompute engine, approximate lookup, and array/dynamic formulas are not complete.",
     },
     format_diff: {
       capability: "format_diff",
@@ -302,7 +302,7 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "The SpreadsheetBench runner caches deterministic results for a local formula subset covering arithmetic, same-sheet cell refs/ranges, SUM/AVERAGE/MIN/MAX/COUNT/COUNTA, ABS, ROUND/ROUNDUP/ROUNDDOWN, IF/IFERROR, single-criteria SUMIF/COUNTIF/AVERAGEIF, multi-criteria SUMIFS/COUNTIFS/AVERAGEIFS, and exact MATCH/INDEX/VLOOKUP/XLOOKUP before export/reopen scoring, including basic wildcard criteria. Scalar-gold/formula-candidate equivalence is handled when values match; full Excel-compatible recompute, approximate lookup, array/dynamic formulas, chart formulas, external refs, and volatile functions are not complete.",
+        "The SpreadsheetBench runner caches deterministic results for a local formula subset covering arithmetic, same-sheet cell refs/ranges, SUM/AVERAGE/MIN/MAX/COUNT/COUNTA, ABS, ROUND/ROUNDUP/ROUNDDOWN, IF/IFERROR, single-criteria SUMIF/COUNTIF/AVERAGEIF, multi-criteria SUMIFS/COUNTIFS/AVERAGEIFS, exact MATCH/INDEX/VLOOKUP/XLOOKUP, SUMPRODUCT, LEFT/RIGHT/MID/LEN, FIND/SEARCH/REPLACE, TEXT/DATE, VALUE, CONCATENATE, and TRIM before export/reopen scoring, including basic wildcard criteria. Scalar-gold/formula-candidate equivalence is handled when values match; full Excel-compatible recompute, approximate lookup, array/dynamic formulas, chart formulas, external refs, and volatile functions are not complete.",
     },
     format_diff: {
       capability: "format_diff",

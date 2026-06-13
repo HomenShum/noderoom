@@ -33,6 +33,19 @@ const SUPPORTED_FORMULA_FUNCTIONS = [
   "INDEX",
   "VLOOKUP",
   "XLOOKUP",
+  "SUMPRODUCT",
+  "LEFT",
+  "RIGHT",
+  "MID",
+  "LEN",
+  "FIND",
+  "SEARCH",
+  "REPLACE",
+  "TEXT",
+  "DATE",
+  "VALUE",
+  "CONCATENATE",
+  "TRIM",
 ] as const;
 
 export type SpreadsheetBenchRunnerOptions = {
@@ -1816,6 +1829,15 @@ function evaluateFormulaFunction(
   if (fn === "INDEX") return evaluateIndexFunction(workbook, currentSheet, args);
   if (fn === "VLOOKUP") return evaluateVLookupFunction(workbook, currentSheet, args);
   if (fn === "XLOOKUP") return evaluateXLookupFunction(workbook, currentSheet, args);
+  if (fn === "SUMPRODUCT") return evaluateSumProductFunction(workbook, currentSheet, args);
+  if (fn === "LEFT" || fn === "RIGHT" || fn === "MID" || fn === "LEN") return evaluateTextSliceFunction(workbook, currentSheet, fn, args);
+  if (fn === "FIND" || fn === "SEARCH") return evaluateTextSearchFunction(workbook, currentSheet, fn, args);
+  if (fn === "REPLACE") return evaluateReplaceFunction(workbook, currentSheet, args);
+  if (fn === "TEXT") return evaluateTextFormatFunction(workbook, currentSheet, args);
+  if (fn === "DATE") return evaluateDateFunction(workbook, currentSheet, args);
+  if (fn === "VALUE") return evaluateValueFunction(workbook, currentSheet, args);
+  if (fn === "CONCATENATE") return evaluateConcatenateFunction(workbook, currentSheet, args);
+  if (fn === "TRIM") return evaluateTrimFunction(workbook, currentSheet, args);
   if (fn === "COUNTA") return args.flatMap((part) => rawValuesForFormulaArg(workbook, currentSheet, part.trim())).filter(isNonBlankFormulaValue).length;
 
   const values = args.flatMap((part) => valuesForFormulaArg(workbook, currentSheet, part.trim()));
@@ -2095,6 +2117,145 @@ function evaluateXLookupFunction(
   return args[3] === undefined ? undefined : lookupFormulaArg(workbook, currentSheet, args[3]);
 }
 
+function evaluateSumProductFunction(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  args: string[],
+): number | undefined {
+  if (args.length === 0) return undefined;
+  const vectors = args.map((arg) => valuesForFormulaArg(workbook, currentSheet, arg.trim()));
+  if (vectors.some((vector) => vector.length === 0 || vector.some((value) => value === undefined))) return undefined;
+  const length = Math.max(...vectors.map((vector) => vector.length));
+  if (vectors.some((vector) => vector.length !== 1 && vector.length !== length)) return undefined;
+  let total = 0;
+  for (let index = 0; index < length; index += 1) {
+    total += vectors.reduce((product, vector) => product * (vector[vector.length === 1 ? 0 : index] ?? 0), 1);
+  }
+  return roundFormulaNumber(total);
+}
+
+function evaluateTextSliceFunction(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  fn: string,
+  args: string[],
+): FormulaResult | undefined {
+  if (fn === "LEN") {
+    if (args.length !== 1) return undefined;
+    return textFormulaArg(workbook, currentSheet, args[0])?.length;
+  }
+  const text = textFormulaArg(workbook, currentSheet, args[0]);
+  if (text === undefined) return undefined;
+  if (fn === "LEFT" || fn === "RIGHT") {
+    if (args.length < 1 || args.length > 2) return undefined;
+    const count = args[1] === undefined ? 1 : numericFormulaArg(workbook, currentSheet, args[1]);
+    if (count === undefined || count < 0) return undefined;
+    const chars = Math.trunc(count);
+    return fn === "LEFT" ? text.slice(0, chars) : text.slice(Math.max(0, text.length - chars));
+  }
+  if (fn === "MID") {
+    if (args.length !== 3) return undefined;
+    const start = numericFormulaArg(workbook, currentSheet, args[1]);
+    const count = numericFormulaArg(workbook, currentSheet, args[2]);
+    if (start === undefined || count === undefined || start < 1 || count < 0) return undefined;
+    return text.slice(Math.trunc(start) - 1, Math.trunc(start) - 1 + Math.trunc(count));
+  }
+  return undefined;
+}
+
+function evaluateTextSearchFunction(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  fn: string,
+  args: string[],
+): number | undefined {
+  if (args.length < 2 || args.length > 3) return undefined;
+  const needle = textFormulaArg(workbook, currentSheet, args[0]);
+  const haystack = textFormulaArg(workbook, currentSheet, args[1]);
+  const start = args[2] === undefined ? 1 : numericFormulaArg(workbook, currentSheet, args[2]);
+  if (needle === undefined || haystack === undefined || start === undefined || start < 1) return undefined;
+  const offset = Math.trunc(start) - 1;
+  const searchNeedle = fn === "SEARCH" ? needle.toUpperCase() : needle;
+  const searchHaystack = fn === "SEARCH" ? haystack.toUpperCase() : haystack;
+  const index = searchHaystack.indexOf(searchNeedle, offset);
+  return index >= 0 ? index + 1 : undefined;
+}
+
+function evaluateReplaceFunction(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  args: string[],
+): string | undefined {
+  if (args.length !== 4) return undefined;
+  const text = textFormulaArg(workbook, currentSheet, args[0]);
+  const start = numericFormulaArg(workbook, currentSheet, args[1]);
+  const count = numericFormulaArg(workbook, currentSheet, args[2]);
+  const replacement = textFormulaArg(workbook, currentSheet, args[3]);
+  if (text === undefined || start === undefined || count === undefined || replacement === undefined || start < 1 || count < 0) return undefined;
+  const index = Math.trunc(start) - 1;
+  return `${text.slice(0, index)}${replacement}${text.slice(index + Math.trunc(count))}`;
+}
+
+function evaluateTextFormatFunction(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  args: string[],
+): string | undefined {
+  if (args.length !== 2) return undefined;
+  const value = lookupFormulaArg(workbook, currentSheet, args[0]);
+  const format = textFormulaArg(workbook, currentSheet, args[1]);
+  if (value === undefined || format === undefined) return undefined;
+  const numeric = numericComparableValue(value);
+  if (numeric !== undefined) return formatExcelNumber(numeric, format);
+  return String(value);
+}
+
+function evaluateDateFunction(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  args: string[],
+): number | undefined {
+  if (args.length !== 3) return undefined;
+  const year = numericFormulaArg(workbook, currentSheet, args[0]);
+  const month = numericFormulaArg(workbook, currentSheet, args[1]);
+  const day = numericFormulaArg(workbook, currentSheet, args[2]);
+  if (year === undefined || month === undefined || day === undefined) return undefined;
+  const date = new Date(Date.UTC(Math.trunc(year), Math.trunc(month) - 1, Math.trunc(day)));
+  return dateToExcelSerial(date);
+}
+
+function evaluateValueFunction(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  args: string[],
+): number | undefined {
+  if (args.length !== 1) return undefined;
+  const text = textFormulaArg(workbook, currentSheet, args[0]);
+  if (text === undefined) return undefined;
+  const parsed = Number(text.replace(/[$,%\s]/g, ""));
+  if (!Number.isFinite(parsed)) return undefined;
+  return text.includes("%") ? parsed / 100 : parsed;
+}
+
+function evaluateConcatenateFunction(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  args: string[],
+): string | undefined {
+  const parts = args.map((arg) => textFormulaArg(workbook, currentSheet, arg));
+  if (parts.some((part) => part === undefined)) return undefined;
+  return parts.join("");
+}
+
+function evaluateTrimFunction(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  args: string[],
+): string | undefined {
+  if (args.length !== 1) return undefined;
+  return textFormulaArg(workbook, currentSheet, args[0])?.trim().replace(/\s+/g, " ");
+}
+
 function formulaRangeShape(cells: Array<{ row: number; col: number; value: FormulaCellValue }>): { startRow: number; startCol: number; rowCount: number; colCount: number } {
   const rows = cells.map((cell) => cell.row);
   const cols = cells.map((cell) => cell.col);
@@ -2123,6 +2284,18 @@ function numericFormulaArg(
   arg: string,
 ): number | undefined {
   return numericComparableValue(lookupFormulaArg(workbook, currentSheet, arg));
+}
+
+function textFormulaArg(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  arg: string,
+): string | undefined {
+  const value = lookupFormulaArg(workbook, currentSheet, arg);
+  if (value === undefined || value === null) return undefined;
+  if (typeof value === "number" && Number.isInteger(value)) return String(value);
+  if (typeof value === "number") return String(roundFormulaNumber(value));
+  return String(value);
 }
 
 function formulaArgRequestsExactLookup(
@@ -2230,7 +2403,7 @@ function replaceFormulaFunctionCalls(
   let current = expression;
   for (let pass = 0; pass < 20; pass += 1) {
     let changed = false;
-    current = current.replace(/\b(SUM|AVERAGE|MIN|MAX|COUNT|COUNTA|ABS|ROUND|ROUNDUP|ROUNDDOWN|IF|IFERROR|SUMIF|COUNTIF|AVERAGEIF|SUMIFS|COUNTIFS|AVERAGEIFS|MATCH|INDEX|VLOOKUP|XLOOKUP)\(([^()]+)\)/gi, (match) => {
+    current = current.replace(/\b(SUM|AVERAGE|MIN|MAX|COUNT|COUNTA|ABS|ROUND|ROUNDUP|ROUNDDOWN|IF|IFERROR|SUMIF|COUNTIF|AVERAGEIF|SUMIFS|COUNTIFS|AVERAGEIFS|MATCH|INDEX|VLOOKUP|XLOOKUP|SUMPRODUCT|LEN|FIND|SEARCH|DATE|VALUE)\(([^()]+)\)/gi, (match) => {
       const result = evaluateFormulaFunction(workbook, currentSheet, match);
       if (typeof result !== "number") {
         failed = true;
@@ -2441,6 +2614,7 @@ function isNonBlankFormulaValue(value: FormulaCellValue): boolean {
 
 function comparableFormulaValue(value: ExcelJS.CellValue): FormulaCellValue {
   if (typeof value === "number" || typeof value === "string" || typeof value === "boolean") return value;
+  if (value instanceof Date) return dateToExcelSerial(value);
   if (value && typeof value === "object" && "result" in value) return comparableFormulaValue(value.result as ExcelJS.CellValue);
   if (value === null || value === undefined) return null;
   return String(value);
@@ -2468,6 +2642,47 @@ function roundWithMode(value: number, digits: number, mode: "ROUND" | "ROUNDUP" 
 
 function roundFormulaNumber(value: number): number {
   return Number(value.toFixed(12));
+}
+
+const EXCEL_EPOCH_UTC = Date.UTC(1899, 11, 30);
+const MS_PER_DAY = 24 * 60 * 60 * 1000;
+
+function dateToExcelSerial(date: Date): number {
+  return Math.round((Date.UTC(date.getUTCFullYear(), date.getUTCMonth(), date.getUTCDate()) - EXCEL_EPOCH_UTC) / MS_PER_DAY);
+}
+
+function excelSerialToDate(serial: number): Date {
+  return new Date(EXCEL_EPOCH_UTC + Math.trunc(serial) * MS_PER_DAY);
+}
+
+function formatExcelNumber(value: number, format: string): string {
+  const lower = format.toLowerCase();
+  if (/[dmy]/.test(lower)) return formatExcelDate(value, lower);
+  if (lower.includes("%")) return `${roundFormulaNumber(value * 100)}%`;
+  const decimals = (format.match(/\.([0#]+)/)?.[1].length) ?? 0;
+  return decimals > 0 ? value.toFixed(decimals) : String(roundFormulaNumber(value));
+}
+
+function formatExcelDate(serial: number, lowerFormat: string): string {
+  const date = excelSerialToDate(serial);
+  const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  const yyyy = String(date.getUTCFullYear());
+  const yy = yyyy.slice(-2);
+  const month = date.getUTCMonth() + 1;
+  const day = date.getUTCDate();
+  return lowerFormat.replace(/dddd|ddd|mmmm|mmm|yyyy|yy|mm|m|dd|d/g, (token) => {
+    if (token === "dddd") return weekdays[date.getUTCDay()];
+    if (token === "ddd") return weekdays[date.getUTCDay()].slice(0, 3);
+    if (token === "mmmm") return months[date.getUTCMonth()];
+    if (token === "mmm") return months[date.getUTCMonth()].slice(0, 3);
+    if (token === "yyyy") return yyyy;
+    if (token === "yy") return yy;
+    if (token === "mm") return String(month).padStart(2, "0");
+    if (token === "m") return String(month);
+    if (token === "dd") return String(day).padStart(2, "0");
+    return String(day);
+  });
 }
 
 class FormulaMathParser {

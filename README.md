@@ -1092,10 +1092,13 @@ deterministic_local_subset`, covering arithmetic, same-sheet cell refs/ranges,
 `ROUND`/`ROUNDUP`/`ROUNDDOWN`, `IF`/`IFERROR`, single-criteria
 `SUMIF`/`COUNTIF`/`AVERAGEIF`, and multi-criteria
 `SUMIFS`/`COUNTIFS`/`AVERAGEIFS`, plus exact
-`MATCH`/`INDEX`/`VLOOKUP`/`XLOOKUP` before export/reopen scoring, including
-basic wildcard criteria. That is useful for SpreadsheetBench smokes, but still
-not a complete Excel calculation engine; approximate lookup, array formulas, and
-dynamic Excel functions remain outside the local deterministic subset.
+`MATCH`/`INDEX`/`VLOOKUP`/`XLOOKUP`, `SUMPRODUCT`, text extraction/search
+(`LEFT`/`RIGHT`/`MID`/`LEN`/`FIND`/`SEARCH`/`REPLACE`), `TEXT`/`DATE`, `VALUE`,
+`CONCATENATE`, and `TRIM` before export/reopen scoring, including basic wildcard
+criteria. That is useful for SpreadsheetBench smokes, but still not a complete
+Excel calculation engine; approximate lookup, array formulas, volatile
+functions, external refs, and dynamic Excel functions remain outside the local
+deterministic subset.
 
 SpreadsheetBench format evidence now goes beyond individual cell style hashes when
 `--compare-styles` is enabled: the scorer also checks answer-range column widths/hidden state,

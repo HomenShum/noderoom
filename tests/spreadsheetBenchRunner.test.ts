@@ -415,6 +415,81 @@ describe("SpreadsheetBench staged runner", () => {
     expect(candidateManifest).toContain("MATCH");
   });
 
+  it("caches deterministic results for text, date, and SUMPRODUCT formulas", async () => {
+    const source = tempRoot("source");
+    const stage = tempRoot("stage");
+    const out = tempRoot("out");
+    mkdirSync(join(source, "spreadsheet", "13-15"), { recursive: true });
+    await writeTextDateFormulaWorkbook(join(source, "spreadsheet", "13-15", "1_13-15_init.xlsx"), false);
+    await writeTextDateFormulaWorkbook(join(source, "spreadsheet", "13-15", "1_13-15_golden.xlsx"), true);
+    writeJson(join(source, "dataset.json"), [
+      {
+        id: "13-15",
+        instruction: "Write text extraction, date text, value conversion, concatenation, and SUMPRODUCT formulas.",
+        spreadsheet_path: "spreadsheet/13-15",
+        answer_position: "Sheet1!D2:N2",
+        answer_sheet: "Sheet1",
+      },
+    ]);
+    stageSpreadsheetBenchBundle(source, {
+      track: "spreadsheetbench-v1",
+      outputRoot: stage,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+    writeJson(join(stage, "tasks", "13-15", "agent", "edit-plan.json"), {
+      schema: 1,
+      operations: [
+        { sheet: "Sheet1", cell: "D2", formula: "LEFT(A2,3)" },
+        { sheet: "Sheet1", cell: "E2", formula: "RIGHT(A2,4)" },
+        { sheet: "Sheet1", cell: "F2", formula: "MID(A2,5,3)" },
+        { sheet: "Sheet1", cell: "G2", formula: "LEN(A2)" },
+        { sheet: "Sheet1", cell: "H2", formula: "FIND(\"-\",A2)" },
+        { sheet: "Sheet1", cell: "I2", formula: "SEARCH(\"west\",B2)" },
+        { sheet: "Sheet1", cell: "J2", formula: "REPLACE(A2,5,3,\"999\")" },
+        { sheet: "Sheet1", cell: "K2", formula: "TEXT(DATE(2024,1,1),\"dddd\")" },
+        { sheet: "Sheet1", cell: "L2", formula: "SUMPRODUCT(B5:B6,C5:C6)" },
+        { sheet: "Sheet1", cell: "M2", formula: "VALUE(\"12.5%\")" },
+        { sheet: "Sheet1", cell: "N2", formula: "TRIM(CONCATENATE(\"  \",B2,\" \",C2,\"  \"))" },
+      ],
+    });
+
+    const report = await runStagedSpreadsheetBench({
+      stageRoot: stage,
+      outputRoot: out,
+      mode: "apply-agent-patch",
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(report.passCount).toBe(1);
+    expect(report.results[0].score?.totals).toMatchObject({
+      comparedCells: 11,
+      valueMatches: 11,
+      formulaCells: 11,
+      formulaMatches: 11,
+      mismatches: 0,
+    });
+    const candidate = new ExcelJS.Workbook();
+    await candidate.xlsx.readFile(join(out, report.results[0].candidateWorkbook!));
+    const sheet = candidate.getWorksheet("Sheet1")!;
+    expect(sheet.getCell("D2").value).toMatchObject({ formula: "LEFT(A2,3)", result: "ABC" });
+    expect(sheet.getCell("E2").value).toMatchObject({ formula: "RIGHT(A2,4)", result: "1234" });
+    expect(sheet.getCell("F2").value).toMatchObject({ formula: "MID(A2,5,3)", result: "XYZ" });
+    expect(sheet.getCell("G2").value).toMatchObject({ formula: "LEN(A2)", result: 12 });
+    expect(sheet.getCell("H2").value).toMatchObject({ formula: "FIND(\"-\",A2)", result: 4 });
+    expect(sheet.getCell("I2").value).toMatchObject({ formula: "SEARCH(\"west\",B2)", result: 1 });
+    expect(sheet.getCell("J2").value).toMatchObject({ formula: "REPLACE(A2,5,3,\"999\")", result: "ABC-999-1234" });
+    expect(sheet.getCell("K2").value).toMatchObject({ formula: "TEXT(DATE(2024,1,1),\"dddd\")", result: "Monday" });
+    expect(sheet.getCell("L2").value).toMatchObject({ formula: "SUMPRODUCT(B5:B6,C5:C6)", result: 32 });
+    expect(sheet.getCell("M2").value).toMatchObject({ formula: "VALUE(\"12.5%\")", result: 0.125 });
+    expect(sheet.getCell("N2").value).toMatchObject({ formula: "TRIM(CONCATENATE(\"  \",B2,\" \",C2,\"  \"))", result: "West 7" });
+    const candidateManifest = readFileSync(join(out, "13-15", "candidate-manifest.json"), "utf8");
+    expect(candidateManifest).toContain("SUMPRODUCT");
+    expect(candidateManifest).toContain("TEXT");
+    expect(candidateManifest).toContain("CONCATENATE");
+  });
+
   it("asks a model for an edit plan and records usage before evaluator scoring", async () => {
     const source = tempRoot("source");
     const stage = tempRoot("stage");
@@ -1470,5 +1545,33 @@ async function writeLookupFormulaWorkbook(path: string, completed: boolean) {
   sheet.getCell("F2").value = completed ? { formula: "VLOOKUP(\"SKU3\",A2:C4,3,FALSE)", result: 30 } : "";
   sheet.getCell("G2").value = completed ? { formula: "XLOOKUP(\"SKU1\",A2:A4,C2:C4)", result: 10 } : "";
   sheet.getCell("H2").value = completed ? { formula: "INDEX(C2:C4,MATCH(\"SKU3\",A2:A4,0),1)", result: 30 } : "";
+  await workbook.xlsx.writeFile(path);
+}
+
+async function writeTextDateFormulaWorkbook(path: string, completed: boolean) {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Sheet1");
+  sheet.getCell("A1").value = "Code";
+  sheet.getCell("B1").value = "Region";
+  sheet.getCell("C1").value = "Rank";
+  sheet.getCell("A2").value = "ABC-XYZ-1234";
+  sheet.getCell("B2").value = "West";
+  sheet.getCell("C2").value = 7;
+  sheet.getCell("A5").value = "Units";
+  sheet.getCell("B5").value = 2;
+  sheet.getCell("C5").value = 10;
+  sheet.getCell("B6").value = 3;
+  sheet.getCell("C6").value = 4;
+  sheet.getCell("D2").value = completed ? { formula: "LEFT(A2,3)", result: "ABC" } : "";
+  sheet.getCell("E2").value = completed ? { formula: "RIGHT(A2,4)", result: "1234" } : "";
+  sheet.getCell("F2").value = completed ? { formula: "MID(A2,5,3)", result: "XYZ" } : "";
+  sheet.getCell("G2").value = completed ? { formula: "LEN(A2)", result: 12 } : "";
+  sheet.getCell("H2").value = completed ? { formula: "FIND(\"-\",A2)", result: 4 } : "";
+  sheet.getCell("I2").value = completed ? { formula: "SEARCH(\"west\",B2)", result: 1 } : "";
+  sheet.getCell("J2").value = completed ? { formula: "REPLACE(A2,5,3,\"999\")", result: "ABC-999-1234" } : "";
+  sheet.getCell("K2").value = completed ? { formula: "TEXT(DATE(2024,1,1),\"dddd\")", result: "Monday" } : "";
+  sheet.getCell("L2").value = completed ? { formula: "SUMPRODUCT(B5:B6,C5:C6)", result: 32 } : "";
+  sheet.getCell("M2").value = completed ? { formula: "VALUE(\"12.5%\")", result: 0.125 } : "";
+  sheet.getCell("N2").value = completed ? { formula: "TRIM(CONCATENATE(\"  \",B2,\" \",C2,\"  \"))", result: "West 7" } : "";
   await workbook.xlsx.writeFile(path);
 }

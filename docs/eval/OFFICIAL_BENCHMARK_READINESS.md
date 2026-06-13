@@ -1,6 +1,6 @@
 # Official Benchmark Readiness
 
-Generated: 2026-06-13T09:19:04.248Z
+Generated: 2026-06-13T09:30:00.645Z
 
 This is the benchmark-faithful gate for the public targets we care about most: BankerToolBench and SpreadsheetBench. It is deliberately stricter than NodeRoom's internal professional evals. Internal green runs do not imply an official benchmark claim.
 
@@ -64,19 +64,19 @@ Scoring shape: Online-judge style multi-test-case evaluation; the agent must pro
 |---|---|---|
 | `official_task_ingest` | implemented | `src/eval/spreadsheetBenchAdapter.ts` |
 | `official_gold_isolation` | partial | `src/eval/spreadsheetBenchAdapter.ts` |
-| `official_runner_adapter` | missing | No Harbor/BankerToolBench or SpreadsheetBench runner adapter exists in this repo. |
+| `official_runner_adapter` | partial | `src/eval/spreadsheetBenchScorer.ts` |
 | `trajectory_capture` | implemented | `evals/evalStore.ts` |
 | `cost_latency_retries` | implemented | `evals/financeModelLive.ts` |
 | `xlsx_import_export` | partial | `src/app/spreadsheetParser.ts` |
 | `formula_recompute` | partial | `evals/financeModelLive.ts` |
-| `format_diff` | missing | No official cell-format/style diff grader is wired. |
+| `format_diff` | partial | `src/eval/spreadsheetBenchScorer.ts` |
 
 Blockers:
 - official_gold_isolation: Agent-facing SpreadsheetBench tasks redact golden workbook paths and scorer metadata; runner-level sandboxing and output diff enforcement are still missing.
-- official_runner_adapter: No Harbor/BankerToolBench or SpreadsheetBench runner adapter exists in this repo.
+- official_runner_adapter: A local workbook scorer can compare candidate workbooks to evaluator-only gold, but no model execution/export sandbox is wired yet.
 - xlsx_import_export: Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.
 - formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.
-- format_diff: No official cell-format/style diff grader is wired.
+- format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy and full style coverage are not complete.
 
 ### SpreadsheetBench 2
 
@@ -90,20 +90,20 @@ Scoring shape: Workflow-level grading across exact cell values/formulas/formats 
 |---|---|---|
 | `official_task_ingest` | implemented | `src/eval/spreadsheetBenchAdapter.ts` |
 | `official_gold_isolation` | partial | `src/eval/spreadsheetBenchAdapter.ts` |
-| `official_runner_adapter` | missing | No Harbor/BankerToolBench or SpreadsheetBench runner adapter exists in this repo. |
+| `official_runner_adapter` | partial | `src/eval/spreadsheetBenchScorer.ts` |
 | `trajectory_capture` | implemented | `evals/evalStore.ts` |
 | `cost_latency_retries` | implemented | `evals/financeModelLive.ts` |
 | `xlsx_import_export` | partial | `src/app/spreadsheetParser.ts` |
 | `formula_recompute` | partial | `evals/financeModelLive.ts` |
-| `format_diff` | missing | No official cell-format/style diff grader is wired. |
+| `format_diff` | partial | `src/eval/spreadsheetBenchScorer.ts` |
 | `chart_visual_grade` | missing | No VLM/chart-visual evaluator is wired into benchmark-faithful mode. |
 
 Blockers:
 - official_gold_isolation: Agent-facing SpreadsheetBench tasks redact golden workbook paths and scorer metadata; chart/visual grading and runner-level sandboxing are still missing.
-- official_runner_adapter: No Harbor/BankerToolBench or SpreadsheetBench runner adapter exists in this repo.
+- official_runner_adapter: A local workbook scorer can compare candidate workbooks to evaluator-only gold, but no model execution/export sandbox or chart lane is wired yet.
 - xlsx_import_export: Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.
 - formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.
-- format_diff: No official cell-format/style diff grader is wired.
+- format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy, chart rendering, and visual grading are not complete.
 - chart_visual_grade: No VLM/chart-visual evaluator is wired into benchmark-faithful mode.
 
 ## Promotion Rule

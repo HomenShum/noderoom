@@ -1,0 +1,176 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T09:28:02.194Z",
+  "mode": "input-vs-gold-baseline",
+  "track": "spreadsheetbench-v2",
+  "sourceRoot": "data_example_05_11",
+  "taskCount": 26,
+  "scoredTaskCount": 2,
+  "passCount": 0,
+  "averageOverall": 0.993716,
+  "warningCount": 4,
+  "warnings": [
+    "Visualization/Task 96: no input workbook files found",
+    "Visualization/Task 96: no evaluator gold workbook files found",
+    "Debugging/01_01: mismatch list capped at 5/34",
+    "Debugging/02_01: mismatch list capped at 5/48"
+  ],
+  "results": [
+    {
+      "schema": 1,
+      "generatedAt": "2026-06-13T09:28:02.194Z",
+      "taskId": "Debugging/01_01",
+      "candidateWorkbook": "Double Counting_input.xlsx",
+      "goldWorkbook": "01_golden.xlsx",
+      "answerPosition": "'Ex 1 - LBO'!B1:AK95,'Ex 2 - Valuation Bridge'!B2:C36,'Ex 3 - PF P&L'!B1:I30,'Ex 4 - Organic Operating Model'!B1:AF41,'Ex 5 - M&A'!B1:AB81,'Ex 6 - Amdocs Historical M&A'!B2:J19,'Ex 7 - SOFR'!B2:E79,'Ex 8 - Public Comps'!B2:F37,'Ex 9 - Transaction Comps'!B2:G24,'Ex 10 - Balance Sheet'!B2:F33,'Ex 11 - Income Statement'!B2:K28,'Ex 12 - Cash Flow Statement'!B2:G44",
+      "ranges": [
+        "'Ex 1 - LBO'!B1:AK95",
+        "'Ex 2 - Valuation Bridge'!B2:C36",
+        "'Ex 3 - PF P&L'!B1:I30",
+        "'Ex 4 - Organic Operating Model'!B1:AF41",
+        "'Ex 5 - M&A'!B1:AB81",
+        "'Ex 6 - Amdocs Historical M&A'!B2:J19",
+        "'Ex 7 - SOFR'!B2:E79",
+        "'Ex 8 - Public Comps'!B2:F37",
+        "'Ex 9 - Transaction Comps'!B2:G24",
+        "'Ex 10 - Balance Sheet'!B2:F33",
+        "'Ex 11 - Income Statement'!B2:K28",
+        "'Ex 12 - Cash Flow Statement'!B2:G44"
+      ],
+      "totals": {
+        "comparedCells": 8668,
+        "valueMatches": 8656,
+        "formulaCells": 1933,
+        "formulaMatches": 1911,
+        "styleCells": 0,
+        "styleMatches": 0,
+        "mismatches": 34,
+        "missingSheets": 0
+      },
+      "scores": {
+        "value": 0.998616,
+        "formula": 0.988619,
+        "style": null,
+        "overall": 0.9936175
+      },
+      "pass": false,
+      "warnings": [
+        "mismatch list capped at 5/34"
+      ],
+      "mismatches": [
+        {
+          "kind": "value",
+          "sheet": "Ex 1 - LBO",
+          "cell": "AF17",
+          "expected": "2.4x/19%",
+          "actual": "2.4x/20%"
+        },
+        {
+          "kind": "formula",
+          "sheet": "Ex 1 - LBO",
+          "cell": "X20",
+          "expected": "=+P65+P76+P85",
+          "actual": "=P91"
+        },
+        {
+          "kind": "formula",
+          "sheet": "Ex 1 - LBO",
+          "cell": "Y20",
+          "expected": "=+Q65+Q76+Q85",
+          "actual": "=Q91"
+        },
+        {
+          "kind": "formula",
+          "sheet": "Ex 1 - LBO",
+          "cell": "Z20",
+          "expected": "=+R65+R76+R85",
+          "actual": "=R91"
+        },
+        {
+          "kind": "formula",
+          "sheet": "Ex 1 - LBO",
+          "cell": "AA20",
+          "expected": "=+S65+S76+S85",
+          "actual": "=S91"
+        }
+      ]
+    },
+    {
+      "schema": 1,
+      "generatedAt": "2026-06-13T09:28:02.194Z",
+      "taskId": "Debugging/02_01",
+      "candidateWorkbook": "Embedded Hardcode_input.xlsx",
+      "goldWorkbook": "01_golden.xlsx",
+      "answerPosition": "'Ex 1 - LBO'!B1:AK95,'Ex 2 - Valuation Bridge'!B2:C36,'Ex 3 - PF P&L'!B1:I30,'Ex 4 - Organic Operating Model'!B1:AF41,'Ex 5 - M&A'!B1:AB81,'Ex 6 - Amdocs Historical M&A'!B2:J19,'Ex 7 - SOFR'!B2:E79,'Ex 8 - Public Comps'!B2:F37,'Ex 9 - Transaction Comps'!B2:G24,'Ex 10 - Balance Sheet'!B2:F33,'Ex 11 - Income Statement'!B2:K28,'Ex 12 - Cash Flow Statement'!B2:G44",
+      "ranges": [
+        "'Ex 1 - LBO'!B1:AK95",
+        "'Ex 2 - Valuation Bridge'!B2:C36",
+        "'Ex 3 - PF P&L'!B1:I30",
+        "'Ex 4 - Organic Operating Model'!B1:AF41",
+        "'Ex 5 - M&A'!B1:AB81",
+        "'Ex 6 - Amdocs Historical M&A'!B2:J19",
+        "'Ex 7 - SOFR'!B2:E79",
+        "'Ex 8 - Public Comps'!B2:F37",
+        "'Ex 9 - Transaction Comps'!B2:G24",
+        "'Ex 10 - Balance Sheet'!B2:F33",
+        "'Ex 11 - Income Statement'!B2:K28",
+        "'Ex 12 - Cash Flow Statement'!B2:G44"
+      ],
+      "totals": {
+        "comparedCells": 8668,
+        "valueMatches": 8637,
+        "formulaCells": 1933,
+        "formulaMatches": 1916,
+        "styleCells": 0,
+        "styleMatches": 0,
+        "mismatches": 48,
+        "missingSheets": 0
+      },
+      "scores": {
+        "value": 0.996424,
+        "formula": 0.991205,
+        "style": null,
+        "overall": 0.9938145
+      },
+      "pass": false,
+      "warnings": [
+        "mismatch list capped at 5/48"
+      ],
+      "mismatches": [
+        {
+          "kind": "value",
+          "sheet": "Ex 1 - LBO",
+          "cell": "X18",
+          "expected": "14.2033949536391",
+          "actual": "14.2"
+        },
+        {
+          "kind": "formula",
+          "sheet": "Ex 1 - LBO",
+          "cell": "X18",
+          "expected": "=C18"
+        },
+        {
+          "kind": "value",
+          "sheet": "Ex 1 - LBO",
+          "cell": "Y18",
+          "expected": "14.2033949536391",
+          "actual": "14.2"
+        },
+        {
+          "kind": "formula",
+          "sheet": "Ex 1 - LBO",
+          "cell": "Y18",
+          "expected": "=$C$20"
+        },
+        {
+          "kind": "value",
+          "sheet": "Ex 1 - LBO",
+          "cell": "Z18",
+          "expected": "14.2033949536391",
+          "actual": "14.2"
+        }
+      ]
+    }
+  ]
+}

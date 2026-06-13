@@ -199,6 +199,20 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       blocker:
         "Agent-facing SpreadsheetBench tasks redact golden workbook paths and scorer metadata; runner-level sandboxing and output diff enforcement are still missing.",
     },
+    official_runner_adapter: {
+      capability: "official_runner_adapter",
+      state: "partial",
+      evidence: "src/eval/spreadsheetBenchScorer.ts",
+      blocker:
+        "A local workbook scorer can compare candidate workbooks to evaluator-only gold, but no model execution/export sandbox is wired yet.",
+    },
+    format_diff: {
+      capability: "format_diff",
+      state: "partial",
+      evidence: "src/eval/spreadsheetBenchScorer.ts",
+      blocker:
+        "The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy and full style coverage are not complete.",
+    },
   },
   "spreadsheetbench-v2": {
     official_task_ingest: {
@@ -212,6 +226,20 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       evidence: "src/eval/spreadsheetBenchAdapter.ts",
       blocker:
         "Agent-facing SpreadsheetBench tasks redact golden workbook paths and scorer metadata; chart/visual grading and runner-level sandboxing are still missing.",
+    },
+    official_runner_adapter: {
+      capability: "official_runner_adapter",
+      state: "partial",
+      evidence: "src/eval/spreadsheetBenchScorer.ts",
+      blocker:
+        "A local workbook scorer can compare candidate workbooks to evaluator-only gold, but no model execution/export sandbox or chart lane is wired yet.",
+    },
+    format_diff: {
+      capability: "format_diff",
+      state: "partial",
+      evidence: "src/eval/spreadsheetBenchScorer.ts",
+      blocker:
+        "The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy, chart rendering, and visual grading are not complete.",
     },
   },
 };

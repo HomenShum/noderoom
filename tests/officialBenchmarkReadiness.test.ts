@@ -49,6 +49,8 @@ describe("official benchmark readiness", () => {
     for (const item of spreadsheet) {
       const ingest = item.capabilities.find((capability) => capability.capability === "official_task_ingest");
       const gold = item.capabilities.find((capability) => capability.capability === "official_gold_isolation");
+      const runner = item.capabilities.find((capability) => capability.capability === "official_runner_adapter");
+      const format = item.capabilities.find((capability) => capability.capability === "format_diff");
 
       expect(ingest).toMatchObject({
         state: "implemented",
@@ -57,6 +59,14 @@ describe("official benchmark readiness", () => {
       expect(gold).toMatchObject({
         state: "partial",
         evidence: "src/eval/spreadsheetBenchAdapter.ts",
+      });
+      expect(runner).toMatchObject({
+        state: "partial",
+        evidence: "src/eval/spreadsheetBenchScorer.ts",
+      });
+      expect(format).toMatchObject({
+        state: "partial",
+        evidence: "src/eval/spreadsheetBenchScorer.ts",
       });
       expect(item.ready).toBe(false);
       expect(item.blockers).toEqual(expect.arrayContaining([

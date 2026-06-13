@@ -5,7 +5,7 @@ import { join } from "node:path";
 import { readGitIdentity } from "../evals/gitIdentity";
 
 type Lane = "deterministic" | "live" | "full-live" | "ui";
-type StepStatus = "pass" | "fail" | "skip";
+type StepStatus = "pass" | "fail" | "skip" | "blocked";
 
 type StepSpec = {
   id: string;
@@ -18,6 +18,8 @@ type StepSpec = {
   requiresAnyEnv?: string[];
   includeWhen?: () => boolean;
   skipReason?: string;
+  blockedExitCodes?: number[];
+  blockedReason?: string;
 };
 
 type StepEvent = {
@@ -128,12 +130,14 @@ const steps: StepSpec[] = [
     timeoutMs: 25 * 60_000,
   },
   {
-    id: "official-benchmark-readiness",
-    label: "Official benchmark readiness",
+    id: "official-benchmark-promotion-gate",
+    label: "Official benchmark promotion gate",
     lane: "deterministic",
     command: "npm",
-    args: ["run", "benchmark:official:readiness"],
+    args: ["run", "benchmark:official:readiness", "--", "--strict"],
     timeoutMs: 10 * 60_000,
+    blockedExitCodes: [1],
+    blockedReason: "official BankerToolBench/SpreadsheetBench readiness remains blocked by external benchmark prerequisites",
   },
   {
     id: "eval-diff",
@@ -449,7 +453,13 @@ async function runStep(step: StepSpec, cycle: number): Promise<StepEvent> {
       const completedAt = new Date().toISOString();
       const ms = Date.parse(completedAt) - Date.parse(startedAt);
       const exitCode = typeof code === "number" ? code : null;
-      const failed = timedOut || Boolean(errorMessage) || exitCode !== 0;
+      const blocked =
+        !timedOut &&
+        !errorMessage &&
+        typeof exitCode === "number" &&
+        exitCode !== 0 &&
+        (step.blockedExitCodes ?? []).includes(exitCode);
+      const failed = timedOut || Boolean(errorMessage) || (exitCode !== 0 && !blocked);
       const footer = [
         "",
         "--- result ---",
@@ -467,13 +477,13 @@ async function runStep(step: StepSpec, cycle: number): Promise<StepEvent> {
         stepId: step.id,
         label: step.label,
         lane: step.lane,
-        status: failed ? "fail" : "pass",
+        status: failed ? "fail" : blocked ? "blocked" : "pass",
         startedAt,
         completedAt,
         ms,
         exitCode,
         logPath,
-        reason: errorMessage,
+        reason: blocked ? step.blockedReason : errorMessage,
         stdoutTail: tail(stdoutTail),
         stderrTail: tail(stderrTail),
       });

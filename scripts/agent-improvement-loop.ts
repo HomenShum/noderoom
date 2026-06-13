@@ -18,7 +18,7 @@ import {
 import { readEvalRuns, runKey, type EvalRunRecord } from "../evals/evalStore";
 
 type Lane = "deterministic" | "live" | "ui" | "full-live";
-type StepStatus = "pass" | "fail" | "skip";
+type StepStatus = "pass" | "fail" | "skip" | "blocked";
 
 type StepSpec = {
   id: string;
@@ -30,6 +30,8 @@ type StepSpec = {
   requiredEnv?: string[];
   includeWhen?: () => boolean;
   skipReason?: string;
+  blockedExitCodes?: number[];
+  blockedReason?: string;
 };
 
 type StepResult = {
@@ -141,11 +143,21 @@ const steps: StepSpec[] = [
   },
   {
     id: "official-benchmark-readiness",
-    label: "Official benchmark readiness",
+    label: "Official benchmark readiness report",
     lane: "deterministic",
     command: "npm",
     args: ["run", "benchmark:official:readiness"],
     timeoutMs: 120_000,
+  },
+  {
+    id: "official-benchmark-promotion-gate",
+    label: "Official benchmark promotion gate",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "benchmark:official:readiness", "--", "--strict"],
+    timeoutMs: 120_000,
+    blockedExitCodes: [1],
+    blockedReason: "official BankerToolBench/SpreadsheetBench readiness remains blocked by external benchmark prerequisites",
   },
   {
     id: "benchmark-contamination-fixture",
@@ -188,6 +200,16 @@ const steps: StepSpec[] = [
     timeoutMs: 120_000,
   },
   {
+    id: "bankertoolbench-official-contract",
+    label: "BankerToolBench official execution contract",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "benchmark:bankertoolbench:official-contract", "--", "--strict"],
+    timeoutMs: 120_000,
+    blockedExitCodes: [1],
+    blockedReason: "BTB official contract is missing external Docker/MCP/Gandalf/provenance evidence",
+  },
+  {
     id: "spreadsheetbench-ingest-fixture",
     label: "SpreadsheetBench official ingest fixture",
     lane: "deterministic",
@@ -220,6 +242,16 @@ const steps: StepSpec[] = [
     timeoutMs: 120_000,
   },
   {
+    id: "spreadsheetbench-chart-visual-probe",
+    label: "SpreadsheetBench rendered/VLM chart visual probe",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "benchmark:spreadsheetbench:chart-visual:probe", "--", "--strict"],
+    timeoutMs: 120_000,
+    blockedExitCodes: [1],
+    blockedReason: "SpreadsheetBench V2 rendered/VLM chart grading prerequisites are not proven",
+  },
+  {
     id: "spreadsheetbench-runner-fixture",
     label: "SpreadsheetBench staged runner fixture",
     lane: "deterministic",
@@ -240,8 +272,10 @@ const steps: StepSpec[] = [
     label: "Docker/Harbor availability probe",
     lane: "deterministic",
     command: "npm",
-    args: ["run", "benchmark:docker-sandbox:probe"],
+    args: ["run", "benchmark:docker-sandbox:probe", "--", "--require-pass"],
     timeoutMs: 120_000,
+    blockedExitCodes: [1],
+    blockedReason: "Docker/Harbor process isolation is not proven in this environment",
   },
   {
     id: "spreadsheetbench-stage-contamination",
@@ -477,7 +511,7 @@ console.log(`wrote ${rel(timestampedJson)}`);
 console.log(`wrote ${rel(summaryMd)}`);
 console.log(`wrote ${rel(summarySvg)}`);
 
-if (strict && results.some((result) => result.status === "fail")) process.exitCode = 1;
+if (strict && results.some((result) => result.status === "fail" || result.status === "blocked")) process.exitCode = 1;
 
 function runStep(step: StepSpec): StepResult {
   const commandText = [step.command, ...step.args].join(" ");
@@ -508,7 +542,12 @@ function runStep(step: StepSpec): StepResult {
   });
   const ms = Date.now() - started;
   const timedOut = child.error?.message?.toLowerCase().includes("timed out");
-  const status: StepStatus = child.status === 0 && !timedOut ? "pass" : "fail";
+  const blocked =
+    !timedOut &&
+    typeof child.status === "number" &&
+    child.status !== 0 &&
+    (step.blockedExitCodes ?? []).includes(child.status);
+  const status: StepStatus = child.status === 0 && !timedOut ? "pass" : blocked ? "blocked" : "fail";
   console.log(`${status.toUpperCase()} ${step.id} ${(ms / 1000).toFixed(1)}s`);
   return {
     id: step.id,
@@ -518,7 +557,7 @@ function runStep(step: StepSpec): StepResult {
     status,
     ms,
     exitCode: child.status,
-    reason: child.error?.message,
+    reason: blocked ? step.blockedReason : child.error?.message,
     stdoutTail: tail(stripAnsi(child.stdout ?? ""), 5000),
     stderrTail: tail(stripAnsi(child.stderr ?? ""), 5000),
   };
@@ -550,6 +589,7 @@ function workflowCoverage() {
 
 function buildHandoff(results: StepResult[]): LoopRun["handoff"] {
   const failed = results.filter((step) => step.status === "fail");
+  const blocked = results.filter((step) => step.status === "blocked");
   const skipped = results.filter((step) => step.status === "skip");
   const architectureBudgetStep = results.find((step) => step.id === "architecture-budget");
   const generatedEvalIdeas = buildGeneratedEvalIdeas();
@@ -574,6 +614,7 @@ function buildHandoff(results: StepResult[]): LoopRun["handoff"] {
   ];
   const topRecommendations = [
     ...failed.map((step) => `Fix failing loop step ${step.id}: ${step.reason ?? "see captured output"}.`),
+    ...blocked.map((step) => `Unblock benchmark promotion step ${step.id}: ${step.reason ?? "external evidence missing"}.`),
     ...(architectureBudgetStep?.stdoutTail?.includes("architecture budget: review required")
       ? ["Resolve architecture budget review items or rerun with explicit handoff evidence before implementation."]
       : []),
@@ -749,6 +790,7 @@ function buildGeneratedEvalIdeas(): EvalCandidate[] {
 function renderMarkdown(run: LoopRun, timestampedJson: string): string {
   const pass = run.steps.filter((step) => step.status === "pass").length;
   const fail = run.steps.filter((step) => step.status === "fail").length;
+  const blocked = run.steps.filter((step) => step.status === "blocked").length;
   const skip = run.steps.filter((step) => step.status === "skip").length;
   const lines: string[] = [];
   lines.push("# Agent Improvement Loop");
@@ -761,7 +803,7 @@ function renderMarkdown(run: LoopRun, timestampedJson: string): string {
   lines.push("");
   lines.push(`Latest run artifact: \`${rel(timestampedJson)}\``);
   lines.push("");
-  lines.push(`Summary: ${pass} pass, ${fail} fail, ${skip} skip.`);
+  lines.push(`Summary: ${pass} pass, ${blocked} blocked, ${fail} fail, ${skip} skip.`);
   lines.push("");
   lines.push("## Step Results");
   lines.push("");
@@ -841,7 +883,7 @@ function renderSvg(run: LoopRun): string {
   const width = 980;
   const rowH = 38;
   const height = 104 + run.steps.length * rowH + 74;
-  const colors: Record<StepStatus, string> = { pass: "#3FB37F", fail: "#E0564E", skip: "#D9A441" };
+  const colors: Record<StepStatus, string> = { pass: "#3FB37F", blocked: "#D9A441", fail: "#E0564E", skip: "#8B93A1" };
   const esc = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
   const out: string[] = [];
   out.push(`<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}" font-family="ui-monospace, 'JetBrains Mono', monospace">`);

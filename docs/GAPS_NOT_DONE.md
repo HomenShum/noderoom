@@ -67,7 +67,7 @@ SpreadsheetBench addendum: the harness now has a broader official V1 three-task
 repeated live smoke on the locally staged corpus. `gpt-5.4-nano` records 15/15
 pass across 3 cases and 5 repeats, average overall 1.0, p95 5.080s,
 $0.0462905 spend, zero failure counts, zero retry attempts, and
-0 candidate-output leaks across 60 checked files in
+0 candidate-output leaks across 75 checked files in
 `docs/eval/spreadsheetbench-v1-model-edit-plan-3task-n5-live-smoke.json` plus
 `docs/eval/spreadsheetbench-v1-run-3task-n5-contamination-smoke.json`. The new
 `filter_rows` and `sort_unique_rows` structural operators cover visible date
@@ -88,6 +88,22 @@ records Docker CLI present but Docker daemon unavailable, so it is blocker
 evidence, not readiness proof. Acceptance remains a
 `container_isolation_proven` artifact, then Harbor/Gandalf-backed official runs
 that keep raw agent workspaces separate from evaluator-only gold/rubrics.
+
+BankerToolBench official-contract addendum: `npm run
+benchmark:bankertoolbench:official-contract` now writes
+`docs/eval/bankertoolbench-official-contract.json` and is part of HALO. The
+current artifact is `blocked_external_requirements`: it requires dataset
+revision and manifest-lock hashes, Harbor/Docker execution evidence, SEC /
+market-data / logo / document / web MCP adapters, and Gandalf verifier score
+import before any BTB readiness claim can turn green.
+
+SpreadsheetBench V2 rendered-chart addendum: `npm run
+benchmark:spreadsheetbench:chart-visual:probe` now writes
+`docs/eval/spreadsheetbench-chart-visual-probe.json` and is part of HALO. The
+current artifact records `renderer_unavailable`, no candidate/gold screenshot
+pair, and no accepted VLM report, so it is blocker evidence, not visual
+readiness proof. Acceptance remains a passing probe tied to rendered
+candidate/gold chart screenshots and a recorded VLM chart-grade report.
 
 ## P1: UI Operations
 

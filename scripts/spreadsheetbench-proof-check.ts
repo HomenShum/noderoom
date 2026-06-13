@@ -96,7 +96,7 @@ const minAverageOverall = numberOption("--min-average-overall") ?? 1;
 const maxP95Ms = numberOption("--max-p95-ms") ?? 10_000;
 const maxCostUsd = numberOption("--max-cost-usd") ?? 0.06;
 const maxRetries = numberOption("--max-retries") ?? 0;
-const minCheckedFiles = numberOption("--min-checked-files") ?? 60;
+const minCheckedFiles = numberOption("--min-checked-files") ?? 75;
 
 const run = readJson<SpreadsheetBenchRunReport>(runPath);
 const contamination = readJson<ContaminationReport>(contaminationPath);

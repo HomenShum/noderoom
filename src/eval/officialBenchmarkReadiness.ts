@@ -168,11 +168,13 @@ const CAPABILITY_STATUS: Record<BenchmarkCapability, CapabilityReadiness> = {
     state: "missing",
     blocker: "No official pitch-deck/report deliverable generation and verifier handoff is wired.",
   },
-  mcp_financial_tools: {
-    capability: "mcp_financial_tools",
-    state: "missing",
-    blocker: "BTB SEC/market-data/logo MCP tool servers are not adapted into NodeRoom's tool registry.",
-  },
+    mcp_financial_tools: {
+      capability: "mcp_financial_tools",
+      state: "external",
+      evidence: "docs/eval/bankertoolbench-official-contract.json",
+      blocker:
+        "The BTB official execution contract names the required SEC filings, market data, company logo, document search, and web research MCP tools, but those benchmark tool servers are not adapted into NodeRoom's tool registry yet.",
+    },
   docker_sandbox: {
     capability: "docker_sandbox",
     state: "external",
@@ -225,9 +227,9 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
     rubric_weighted_scoring: {
       capability: "rubric_weighted_scoring",
       state: "partial",
-      evidence: "src/eval/bankerToolBenchRunner.ts",
+      evidence: "docs/eval/bankertoolbench-official-contract.json",
       blocker:
-        "Weighted rubric metadata is parsed, isolated for the evaluator, consumed by a local exact-package/exact-or-workbook-semantic-golden smoke scorer, and guarded by npm run benchmark:bankertoolbench:proof across both a failing copy-input baseline and a passing apply-agent-output smoke; Gandalf/Harbor verifier execution and score import are not wired.",
+        "Weighted rubric metadata is parsed, isolated for the evaluator, consumed by a local exact-package/exact-or-workbook-semantic-golden smoke scorer, and guarded by npm run benchmark:bankertoolbench:proof across both a failing copy-input baseline and a passing apply-agent-output smoke. The BTB official execution contract now defines the Gandalf score-import schema, but Gandalf/Harbor verifier execution and score import are not wired.",
     },
   },
   "spreadsheetbench-v1": {
@@ -241,14 +243,14 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchStage.ts",
       blocker:
-        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; runner attempts now copy agent-visible files into an agent-workspace manifest before candidate generation, result rows carry sidecar hashes for candidate manifests, agent-workspace manifests, generated edit plans, and raw model output, contamination checks cover staged and candidate metadata including those workspace manifests, a Node permission subprocess smoke proves evaluator-only reads are denied outside the agent workspace, an official V1 N=5 live model smoke passes 5/5 with 0 candidate-output leaks, and a broader locally staged official V1 three-task N=5 live smoke passes 15/15 with 0 candidate-output leaks across 60 checked files, but official full-bundle Docker/Harbor process isolation and output policy proof are still missing.",
+        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; runner attempts now copy agent-visible files into an agent-workspace manifest before candidate generation, result rows carry sidecar hashes for candidate manifests, agent-workspace manifests, generated edit plans, and raw model output, contamination checks cover staged and candidate metadata including those workspace manifests plus agent-facing text/csv/md/xml sidecars, a Node permission subprocess smoke proves evaluator-only reads are denied outside the agent workspace, an official V1 N=5 live model smoke passes 5/5 with 0 candidate-output leaks, and a broader locally staged official V1 three-task N=5 live smoke passes 15/15 with 0 candidate-output leaks across 75 checked files, but official full-bundle Docker/Harbor process isolation and output policy proof are still missing.",
     },
     official_runner_adapter: {
       capability: "official_runner_adapter",
       state: "partial",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; official V1 N=5 records 5/5 pass, average overall 1.0, p95 4.593s, $0.01059125 spend, zero failure counts, retry-policy accounting, workspace manifests, raw model output, sidecar hashes, visible aggregate_section table operations, deterministic SUM total result packaging, unsupported-op repair, expected-formula-only scoring, candidate-output contamination proof, and local Node permission sandbox proof. The broader locally staged official V1 three-task N=5 live smoke now records 15/15 pass across 3 cases and 5 repeats, average overall 1.0, p95 5.080s, $0.0462905 spend, zero failure counts, zero retry attempts, 0 candidate-output leaks across 60 checked files, result-level sidecar hashes for candidate manifests/workspace manifests/edit plans/raw model outputs, and structural filter_rows/sort_unique_rows repair for visible date filters and duplicate-removal/sort tables; npm run benchmark:spreadsheetbench:proof enforces those checked-in artifact thresholds and trajectory order in HALO. Larger full-bundle runs, Docker/Harbor sandbox proof, and route selection remain incomplete.",
+        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; official V1 N=5 records 5/5 pass, average overall 1.0, p95 4.593s, $0.01059125 spend, zero failure counts, retry-policy accounting, workspace manifests, raw model output, sidecar hashes, visible aggregate_section table operations, deterministic SUM total result packaging, unsupported-op repair, expected-formula-only scoring, candidate-output contamination proof, and local Node permission sandbox proof. The broader locally staged official V1 three-task N=5 live smoke now records 15/15 pass across 3 cases and 5 repeats, average overall 1.0, p95 5.080s, $0.0462905 spend, zero failure counts, zero retry attempts, 0 candidate-output leaks across 75 checked files, result-level sidecar hashes for candidate manifests/workspace manifests/edit plans/raw model outputs, and structural filter_rows/sort_unique_rows repair for visible date filters and duplicate-removal/sort tables; npm run benchmark:spreadsheetbench:proof enforces those checked-in artifact thresholds and trajectory order in HALO. Larger full-bundle runs, Docker/Harbor sandbox proof, and route selection remain incomplete.",
     },
     xlsx_import_export: {
       capability: "xlsx_import_export",
@@ -312,9 +314,9 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
     chart_visual_grade: {
       capability: "chart_visual_grade",
       state: "partial",
-      evidence: "src/eval/spreadsheetBenchChartScorer.ts",
+      evidence: "docs/eval/spreadsheetbench-chart-visual-probe.json",
       blocker:
-        "SpreadsheetBench score/run reports can include a static XLSX chart-package comparison over chart and drawing XML parts; rendered chart screenshots and VLM visual quality grading are not wired.",
+        "SpreadsheetBench score/run reports can include a static XLSX chart-package comparison over chart and drawing XML parts, and npm run benchmark:spreadsheetbench:chart-visual:probe now records whether a LibreOffice/soffice renderer, candidate/gold chart screenshot pair, Gemini/VLM key, and accepted visual-grade report are present. The current probe is not passing, so rendered chart screenshots and VLM visual quality grading remain incomplete.",
     },
   },
 };

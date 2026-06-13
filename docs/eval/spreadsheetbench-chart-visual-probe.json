@@ -1,0 +1,49 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T15:01:00.943Z",
+  "verifier": "spreadsheetbench_chart_visual_probe",
+  "status": "renderer_unavailable",
+  "pass": false,
+  "renderer": {
+    "required": true,
+    "candidates": [
+      {
+        "command": "soffice --version",
+        "exitCode": null,
+        "stdoutPreview": "",
+        "stderrPreview": "spawnSync soffice ENOENT",
+        "ok": false
+      },
+      {
+        "command": "libreoffice --version",
+        "exitCode": null,
+        "stdoutPreview": "",
+        "stderrPreview": "spawnSync libreoffice ENOENT",
+        "ok": false
+      },
+      {
+        "command": "soffice.exe --version",
+        "exitCode": null,
+        "stdoutPreview": "",
+        "stderrPreview": "spawnSync soffice.exe ENOENT",
+        "ok": false
+      }
+    ]
+  },
+  "imagePair": {
+    "required": true,
+    "available": false
+  },
+  "vlm": {
+    "required": true,
+    "model": "gemini-3.5-flash",
+    "apiKeyPresent": true,
+    "reportAccepted": false
+  },
+  "warnings": [
+    "Rendered/VLM SpreadsheetBench V2 chart grading is not proven; official benchmark readiness must remain red.",
+    "No LibreOffice/soffice renderer command is available to render workbook charts into judgeable images.",
+    "Candidate and gold chart screenshots are not both present for visual comparison.",
+    "No passing VLM chart-grade report is attached to this probe."
+  ]
+}

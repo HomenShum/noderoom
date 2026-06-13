@@ -77,6 +77,34 @@ describe("benchmark contamination checker", () => {
       expect.objectContaining({ kind: "forbidden_path_or_metadata_value", file: "tasks/13-1/agent/task.json", location: "$.inputFiles[0]" }),
     ]));
   });
+
+  it("scans agent-facing sidecar text, but ignores evaluator-only directories", () => {
+    const root = tempRoot("sidecar");
+    mkdirSync(join(root, "tasks", "13-1", "agent"), { recursive: true });
+    mkdirSync(join(root, "tasks", "13-1", "evaluator"), { recursive: true });
+    mkdirSync(join(root, "13-1", "attempt-01"), { recursive: true });
+    writeJson(join(root, "tasks", "13-1", "agent", "task.json"), {
+      schema: 1,
+      taskId: "13-1",
+      inputFiles: ["inputs/01-init.xlsx"],
+    });
+    writeFileSync(join(root, "13-1", "attempt-01", "raw-model-output.txt"), "The model saw CANARY-BTB-456");
+    writeJson(join(root, "tasks", "13-1", "evaluator", "evaluator.json"), {
+      rubricItems: [{ criterion: "hidden", weight: 1 }],
+      canary: "CANARY-BTB-456",
+    });
+
+    const report = scanBenchmarkContamination(root);
+
+    expect(report.leaks).toEqual([
+      expect.objectContaining({
+        file: "13-1/attempt-01/raw-model-output.txt",
+        kind: "forbidden_path_or_metadata_value",
+        location: "$text",
+      }),
+    ]);
+    expect(report.checkedFiles).toBe(2);
+  });
 });
 
 function tempRoot(prefix: string): string {

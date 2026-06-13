@@ -1,8 +1,8 @@
 {
   "schema": 1,
-  "generatedAt": "2026-06-13T12:06:45.458Z",
+  "generatedAt": "2026-06-13T14:58:40.814Z",
   "root": "staged-btb",
-  "checkedFiles": 1,
+  "checkedFiles": 2,
   "leakCount": 0,
   "leaks": []
 }

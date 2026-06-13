@@ -86,7 +86,7 @@ const positiveRunPath = optionValue("--positive-run") ?? "docs/eval/bankertoolbe
 const stageContaminationPath = optionValue("--stage-contamination") ?? "docs/eval/bankertoolbench-stage-contamination-smoke.json";
 const runContaminationPath = optionValue("--run-contamination") ?? "docs/eval/bankertoolbench-run-contamination-smoke.json";
 const positiveRunContaminationPath = optionValue("--positive-run-contamination") ?? "docs/eval/bankertoolbench-run-positive-contamination-smoke.json";
-const minStageCheckedFiles = numberOption("--min-stage-checked-files") ?? 1;
+const minStageCheckedFiles = numberOption("--min-stage-checked-files") ?? 2;
 const minRunCheckedFiles = numberOption("--min-run-checked-files") ?? 3;
 const minPositiveRunCheckedFiles = numberOption("--min-positive-run-checked-files") ?? 4;
 

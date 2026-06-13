@@ -49,8 +49,15 @@ describe("official benchmark readiness", () => {
     expect(gold?.blocker).toContain("expected deliverable package metadata");
     expect(rubric).toMatchObject({
       state: "partial",
-      evidence: "src/eval/bankerToolBenchRunner.ts",
+      evidence: "docs/eval/bankertoolbench-official-contract.json",
     });
+    const mcp = btb?.capabilities.find((capability) => capability.capability === "mcp_financial_tools");
+    expect(mcp).toMatchObject({
+      state: "external",
+      evidence: "docs/eval/bankertoolbench-official-contract.json",
+    });
+    expect(mcp?.blocker).toContain("SEC filings");
+    expect(mcp?.blocker).toContain("not adapted");
     expect(runner).toMatchObject({
       state: "partial",
       evidence: "src/eval/bankerToolBenchRunner.ts",
@@ -75,6 +82,7 @@ describe("official benchmark readiness", () => {
       state: "external",
       evidence: "docs/eval/docker-sandbox-probe.json",
     });
+    expect(rubric?.blocker).toContain("Gandalf score-import schema");
     expect(docker?.blocker).toContain("container_isolation_proven");
     expect(btb?.ready).toBe(false);
     expect(btb?.blockers).toEqual(expect.arrayContaining([
@@ -152,9 +160,11 @@ describe("official benchmark readiness", () => {
       if (item.id === "spreadsheetbench-v2") {
         expect(chart).toMatchObject({
           state: "partial",
-          evidence: "src/eval/spreadsheetBenchChartScorer.ts",
+          evidence: "docs/eval/spreadsheetbench-chart-visual-probe.json",
         });
         expect(chart?.blocker).toContain("static XLSX chart-package comparison");
+        expect(chart?.blocker).toContain("benchmark:spreadsheetbench:chart-visual:probe");
+        expect(chart?.blocker).toContain("LibreOffice/soffice");
         expect(chart?.blocker).toContain("VLM visual quality");
       }
       expect(item.ready).toBe(false);

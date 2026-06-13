@@ -1,0 +1,94 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T15:00:52.312Z",
+  "verifier": "bankertoolbench_official_execution_contract",
+  "status": "blocked_external_requirements",
+  "pass": false,
+  "bundleProvenance": {
+    "required": true,
+    "dataset": "handshake-ai-research/bankertoolbench",
+    "sourceUrls": [
+      "https://github.com/Handshake-AI-Research/bankertoolbench",
+      "https://huggingface.co/datasets/handshake-ai-research/bankertoolbench"
+    ],
+    "requiredFields": [
+      "datasetRevision",
+      "tasksJsonlSha256",
+      "taskDataManifestSha256",
+      "goldenOutputsManifestSha256"
+    ],
+    "recorded": false
+  },
+  "dockerRunPlan": {
+    "required": true,
+    "runtime": "Harbor/Docker",
+    "networkPolicy": "benchmark_defined_tools_only",
+    "mounts": {
+      "agentWorkspace": "read_write",
+      "evaluatorWorkspace": "not_mounted_until_verifier",
+      "providerSecrets": "env_only"
+    },
+    "requiredEvidence": [
+      "container image or Harbor environment id",
+      "no evaluator mount during candidate generation",
+      "network/tool policy",
+      "stdout/stderr logs",
+      "exit code",
+      "candidate manifest hash"
+    ],
+    "proven": false
+  },
+  "mcpTools": {
+    "required": true,
+    "requiredToolNames": [
+      "sec_filings",
+      "market_data",
+      "company_logo",
+      "document_search",
+      "web_research"
+    ],
+    "adaptedToolNames": [],
+    "complete": false
+  },
+  "gandalfScoreImport": {
+    "required": true,
+    "schemaFields": [
+      "taskId",
+      "harborTaskId",
+      "verifierRunId",
+      "weightedScore",
+      "pass",
+      "criterionResults[]",
+      "deliverables[]",
+      "trajectory[]",
+      "costLatencyRetries"
+    ],
+    "source": "official_gandalf_verifier",
+    "imported": false
+  },
+  "contaminationScope": {
+    "required": true,
+    "scanner": "benchmark_contamination_v2",
+    "checks": [
+      "agent task manifests",
+      "agent workspace manifests",
+      "candidate manifests",
+      "agent output manifests",
+      "model edit plans",
+      "raw model output text",
+      "agent-visible text/csv/md/xml sidecars",
+      "agent-facing file paths"
+    ],
+    "excludes": [
+      "evaluator directories before candidate emission",
+      "binary workbook/PDF/image contents until dedicated parsers are wired"
+    ],
+    "completeForLocalArtifacts": true
+  },
+  "blockers": [
+    "Record BankerToolBench dataset revision plus a manifest lockfile with per-file hashes.",
+    "Run each official task in Harbor/Docker with agent-only workspace mounts before verifier access.",
+    "Adapt required MCP financial tools: sec_filings, market_data, company_logo, document_search, web_research.",
+    "Import official Gandalf verifier scores instead of using the local smoke verifier."
+  ]
+}

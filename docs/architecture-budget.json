@@ -83,6 +83,7 @@
         "scripts/agent-workspace-sandbox-smoke.ts",
         "scripts/architecture-budget-check.ts",
         "scripts/bankertoolbench-run.ts",
+        "scripts/bankertoolbench-official-contract.ts",
         "scripts/bankertoolbench-proof-check.ts",
         "scripts/benchmark-contamination-check.ts",
         "scripts/docker-sandbox-probe.ts",

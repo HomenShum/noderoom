@@ -1040,7 +1040,7 @@ actually contains a formula. A broader official V1 three-task stability smoke
 (`docs/eval/spreadsheetbench-v1-model-edit-plan-3task-n5-live-smoke.json`) now repeats all three
 locally staged official tasks five times each: `taskCount: 15`, `caseCount: 3`, `repeatCount: 5`,
 `passRate: 1`, average overall `1`, p95 latency 5.080s, `$0.0462905` spend, zero failure counts,
-zero retry attempts, and 0 candidate-output leaks across 60 checked files
+zero retry attempts, and 0 candidate-output leaks across 75 checked files
 (`docs/eval/spreadsheetbench-v1-run-3task-n5-contamination-smoke.json`). `npm run
 benchmark:spreadsheetbench:proof` now enforces those run metrics, leak bounds, result-level
 sidecar hashes for candidate manifests, agent-workspace manifests, generated edit plans, raw model
@@ -1097,10 +1097,13 @@ normalizing and hashing `xl/charts/*.xml` plus `xl/drawings/*.xml`, then reports
 extra, and mismatched chart parts. The workbook scorer and staged runner can carry that evidence in
 score reports, so V2 chart-package drift is no longer invisible. That closes one blind spot in
 workbook packaging, but it is not a rendered screenshot grade, a layout-quality judge, or a
-Gemini/VLM visual grade. The refreshed V2 score/run smokes now show the signal explicitly:
-copy-input candidates miss two evaluator-only chart/drawing package parts per sampled task, dropping
-runner best-overall scores from workbook-only near-passes to chart-aware failures while the V2
-staged/run contamination smokes stay at 0 leaks.
+Gemini/VLM visual grade. `npm run benchmark:spreadsheetbench:chart-visual:probe` now records that
+remaining blocker in `docs/eval/spreadsheetbench-chart-visual-probe.json`: the checked-in artifact
+is `renderer_unavailable`, with no LibreOffice/soffice renderer, no candidate/gold screenshot pair,
+no Gemini key, and no accepted VLM report. The refreshed V2 score/run smokes still show the static
+signal explicitly: copy-input candidates miss two evaluator-only chart/drawing package parts per
+sampled task, dropping runner best-overall scores from workbook-only near-passes to chart-aware
+failures while the V2 staged/run contamination smokes stay at 0 leaks.
 
 BankerToolBench now has the same first boundary in place: `npm run
 benchmark:bankertoolbench:ingest` scans an already-downloaded BTB bundle (`tasks.jsonl`,
@@ -1125,9 +1128,12 @@ benchmark:bankertoolbench:proof` now enforces both local BTB harness boundaries 
 isolation, candidate-before-evaluator trajectory, negative baseline accounting, positive
 weighted-rubric/package scoring, supported deliverable policy, and 0-leak artifacts. This is
 still not a BTB score: Harbor/Docker process isolation, MCP financial tools, and Gandalf verifier
-replay remain red gates. The Docker availability probe makes that blocker executable instead of
-hand-wavy: it must pass with `container_isolation_proven` before any public BTB readiness claim can
-move out of red.
+replay remain red gates. `npm run benchmark:bankertoolbench:official-contract` makes that external
+contract explicit in `docs/eval/bankertoolbench-official-contract.json`: dataset revision and
+manifest-lock hashes, Harbor/Docker mount policy, required SEC/market-data/logo/document/web MCP
+tools, and the Gandalf score-import schema. The Docker availability probe makes the process-isolation
+blocker executable instead of hand-wavy: it must pass with `container_isolation_proven` before any
+public BTB readiness claim can move out of red.
 
 ## Benchmark Harness / v3 Composite-Synthesis Run
 

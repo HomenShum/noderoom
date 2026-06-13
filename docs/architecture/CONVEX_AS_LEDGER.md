@@ -335,7 +335,8 @@ Sequenced by leverage and dependency. Size = S/M/L. Each tagged already-have vs 
 
 | # | Step | Size | Status |
 |---|---|---|---|
-| 1 | **Paginate first** — `messages.list`, `collab.traces`, job attempts, op events → `.paginate()` + `usePaginatedQuery` | S | **NET-NEW code, zero schema** (B2). Pure win, native, reactive. |
+| 1 | **Bound the reactive history reads** — `collab.traces` → recent 200, `messages.list` → recent 500 | S | **B2 — ✅ SHIPPED + verified** (`convex/collab.ts`, `convex/messages.ts`; array shape preserved → zero consumer breakage, durable history intact; proven by `tests/historyFeedWindow.test.ts`, 3 convex-test cases). |
+| 1b | **Load-older cursor** — `usePaginatedQuery` for scroll-back beyond the window (job attempts/op events too) | M | **Follow-on / NET-NEW** (B2). Shape change → store-interface migration + Chat consumer; needs a live Convex backend (`E2E_CONVEX_URL`) to prove reactivity, so deferred from the window-bound. |
 | 2 | **Split `rooms.full`** → `room.meta` / `members` / `artifact.list`-without-elements / `locks` / `sessions` / `drafts` | M | **NET-NEW queries on existing indexes** (B1). Highest single-move leverage. |
 | 3 | **Branch / patch-bundle / publish-time rebase layer** — generalize `mergeBlockedDrafts` to publish-triggered; **wire** the `agentDraftOperations` + `needs_rebase` producer | L | **NET-NEW** (B5/B6); CAS spine (`elements.version`, `drafts.baseVersion`, `agentMutationReceipts`) already exists as the foundation. |
 | 4 | **Generalize streams** — only if cross-member shared narration is wanted (a public stream distinct from the owner-scoped private reply) | M | **NET-NEW** (Section 5); owner-scoped path already shipped. |

@@ -1,0 +1,103 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T18:57:50.106Z",
+  "sourcePattern": "hyperagents-inspired-meta-loop",
+  "summary": {
+    "cases": 2,
+    "runs": 10,
+    "pass": true,
+    "unstableCases": [],
+    "contextCasesWithCompaction": [
+      "context-compaction-quality-n5"
+    ]
+  },
+  "cases": [
+    {
+      "caseId": "managed-write-path-stability-n5",
+      "runs": 5,
+      "pass": true,
+      "uniqueFingerprintCount": 1,
+      "fingerprints": [
+        "read_range -> write_locked_cells"
+      ],
+      "p95ModelCalls": 3,
+      "p95ToolCalls": 2,
+      "maxInvalidToolCalls": 0,
+      "maxMissingToolResults": 0,
+      "totalCompactionEvents": 0,
+      "totalCompactionCharsSaved": 0,
+      "totalCompactionElidedToolResults": 0,
+      "notes": []
+    },
+    {
+      "caseId": "context-compaction-quality-n5",
+      "runs": 5,
+      "pass": true,
+      "uniqueFingerprintCount": 1,
+      "fingerprints": [
+        "read_range -> read_range -> read_range -> read_range -> read_range -> read_range -> write_locked_cells"
+      ],
+      "p95ModelCalls": 8,
+      "p95ToolCalls": 7,
+      "maxInvalidToolCalls": 0,
+      "maxMissingToolResults": 0,
+      "totalCompactionEvents": 25,
+      "totalCompactionCharsSaved": 21600,
+      "totalCompactionElidedToolResults": 75,
+      "notes": [
+        "context compaction executed and recorded saved chars"
+      ]
+    }
+  ],
+  "proposals": [
+    {
+      "id": "halo-path-stability-gate-v1",
+      "title": "Promote tool-sequence fingerprinting to the HALO gate",
+      "trigger": "all deterministic N=5 cases have one tool-sequence fingerprint",
+      "recommendedChange": "Keep path fingerprints, p95 model/tool calls, invalid tool calls, and missing tool-result counts in every HALO run before promoting new harness tools.",
+      "expectedEval": "npm run halo:self-improve:smoke",
+      "safetyPolicy": "Advisory metrics may become blocking only for deterministic lanes; live-provider variance remains recorded but non-blocking until thresholds are calibrated.",
+      "status": "implemented"
+    },
+    {
+      "id": "halo-context-quality-gate-v1",
+      "title": "Track context compaction and stale-read savings",
+      "trigger": "1 case(s) recorded compaction savings",
+      "recommendedChange": "Treat compaction events, saved chars, elided stale reads, and tool-call/result pairing as first-class context-management telemetry.",
+      "expectedEval": "npm run halo:self-improve:smoke",
+      "safetyPolicy": "The gate measures context hygiene without changing the model-visible history envelope or deleting audit messages.",
+      "status": "implemented"
+    },
+    {
+      "id": "halo-variant-selection-v1",
+      "title": "Add explicit harness variant selection before autonomous patching",
+      "trigger": "HyperAgents-style loops need parent/variant selection; HALO currently gates known lanes rather than generating alternatives.",
+      "recommendedChange": "Next update should compare at least two harness variants over the same case set and write a selectedParent field before asking Codex to implement.",
+      "expectedEval": "future: npm run halo:variant:select",
+      "safetyPolicy": "Variant generation must stay declarative and sandboxed; no model-authored code is executed as product truth.",
+      "status": "candidate"
+    }
+  ],
+  "hyperAgentsDelta": {
+    "alreadyPresent": [
+      "trace/eval store",
+      "deterministic HALO gate",
+      "root-cause categories",
+      "Codex handoff with failing evidence",
+      "architecture budget guard"
+    ],
+    "addedByThisGate": [
+      "N=5 tool-path fingerprint stability",
+      "context compaction savings as a recorded metric",
+      "tool-call/result pairing checks",
+      "meta-improvement proposals with safety policy"
+    ],
+    "stillMissing": [
+      "automatic competing harness variant generation",
+      "parent/variant selection across live provider runs",
+      "sandboxed patch application by a meta-agent",
+      "direct Convex job-context quality telemetry"
+    ],
+    "safetyBoundary": "HALO may propose harness changes, but code edits still go through tests, architecture budget, commit-message path coverage, and human/Codex review; arbitrary model-generated code remains disallowed."
+  }
+}

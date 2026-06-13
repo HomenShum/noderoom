@@ -169,6 +169,24 @@ artifact can rerun over room cells and commit only through managed lock/CAS.
 | Wider calculation coverage | Runner supports safe numeric formula DSL only. | Add workbook-range/table transforms, formula-preservation checks, source extraction rules, and benchmark-backed route selection before sandboxed code. | Finance/SpreadsheetBench cases use reusable artifacts where deterministic logic beats one-off model edits. |
 | Sandboxed code lane | Not implemented by design. | Only add after process isolation, resource limits, network denial, package policy, and promotion review are proven. | No arbitrary LLM-authored code can become product truth without sandbox and promotion proof. |
 
+## P1: HALO Self-Improvement Depth
+
+HALO now has a deterministic self-improvement smoke wired into
+`npm run agent:improve`: `npm run halo:self-improve:smoke` repeats two runtime
+cases N=5, fingerprints the non-compaction tool path, checks assistant/tool
+result pairing, records p95 model/tool calls, measures compaction savings, and
+writes meta-improvement proposals to
+`docs/eval/halo-self-improvement-smoke.json`. This closes the first path-drift
+and context-quality measurement gap without allowing arbitrary model-generated
+code execution.
+
+| Gap | Current state | Needed proof | Acceptance gate |
+|---|---|---|---|
+| Harness variant selection | HALO emits candidate proposals but does not generate or score competing harness variants. | Add a declarative variant-selection lane that compares at least two prompt/tool/context-policy variants over the same case set. | A selected harness variant is recorded before Codex receives an implementation handoff. |
+| Live-provider path calibration | Deterministic N=5 path stability is blocking; live-provider variance is not yet calibrated. | Run N=5/N=10 live lanes for the same tasks by provider/model and record path, cost, fallback, and failure bands. | Live path drift has documented thresholds and only blocks once repeated evidence is stable enough. |
+| Convex job-context telemetry | The smoke uses in-memory runtime traces, not live Convex `agentJobs` context compaction telemetry. | Mirror context metrics from real job attempts, step journal rows, and operation events. | HALO can compare in-memory, Convex local, and deployed job context quality with the same metric schema. |
+| Sandboxed autonomous patching | Deliberately not implemented. | Only consider after process isolation, architecture-budget ownership, commit-message path coverage, and human review policy are proven. | No model-authored patch can execute or merge without sandbox and deterministic gate proof. |
+
 ## P1: Observability, Audit, And Retention
 
 | Gap | Current state | Needed proof | Acceptance gate |

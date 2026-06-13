@@ -52,6 +52,7 @@
     "provider-parser:smoke": "tsx scripts/provider-parser-smoke.ts",
     "algorithm-artifact:smoke": "tsx scripts/algorithm-artifact-smoke.ts",
     "agent:improve": "tsx scripts/agent-improvement-loop.ts",
+    "halo:self-improve:smoke": "tsx scripts/halo-self-improvement-smoke.ts --strict",
     "halo:status": "tsx scripts/halo-status.ts",
     "halo:snapshots": "tsx scripts/halo-snapshot-report.ts",
     "halo:overnight": "tsx scripts/halo-overnight.ts",

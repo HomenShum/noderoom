@@ -168,6 +168,14 @@ Each entry: **the choice → the why → the trade-off → what it fixes vs a pa
 - **Trade-off.** A self-modifying agent is a footgun without guardrails (§5). With the regression gate
   + hard gates, it's a flywheel.
 
+- **HyperAgents boundary.** HyperAgents-style systems add a meta-agent/task-agent generate loop and
+  parent/variant selection. NodeRoom now borrows the measurable part without borrowing the unsafe
+  part: `npm run halo:self-improve:smoke` repeats deterministic runtime cases N=5, fingerprints the
+  tool path, checks assistant/tool-result pairing, records p95 model/tool calls, and measures context
+  compaction savings. It writes `docs/eval/halo-self-improvement-smoke.json` with meta-improvement
+  proposals, but code edits still go through Codex, tests, the architecture budget, and commit review.
+  The missing next step is explicit harness variant selection before implementation handoff.
+
 ---
 
 ## 3. Live collaboration: NodeRoom (Convex) vs the past projects

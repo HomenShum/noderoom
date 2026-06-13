@@ -992,10 +992,23 @@ The repo-owned runner is:
 
 ```bash
 npm run agent:improve              # deterministic workflow + ladder evidence
+npm run halo:self-improve:smoke    # N=5 path fingerprints + context quality
 npm run agent:improve -- --live    # add provider parser, free route discovery, Convex /free smoke
 npm run agent:improve -- --full-live
 npm run agent:improve -- --ui-media=docs/eval/ui-recordings/<recording-or-screenshot>
 ```
+
+The self-improvement smoke is the HyperAgents-inspired part of HALO, kept at a
+safe altitude: it does not execute model-generated code. It repeats two
+deterministic runtime cases five times each, fingerprints the tool path, checks
+assistant/tool-result pairing, records p95 model/tool calls, and measures context
+compaction savings. The checked artifact
+[`docs/eval/halo-self-improvement-smoke.json`](docs/eval/halo-self-improvement-smoke.json)
+currently records 2 cases / 10 runs, one fingerprint per case, zero missing tool
+results, 25 compaction events, 21,600 saved chars, and three meta-improvement
+proposals. The remaining HyperAgents-style step is explicit variant selection:
+generate competing harness variants, score them against the same case set, then
+ask Codex to implement only the selected safe variant.
 
 Run the whole loop continuously until a clock deadline. Deterministic-only is the default safe overnight
 shape; full-live adds provider spend, the current benchmark contract, and the free-auto router ladder:

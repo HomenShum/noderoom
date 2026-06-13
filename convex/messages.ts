@@ -52,12 +52,18 @@ export const postPrivateAgentReply = internalMutation({
   },
 });
 
+// Bound the channel feed to a recent window (B2). An unbounded .collect() re-ships the whole channel
+// history to every subscriber on each new message. The window is generous; full history stays durable.
+// TODO(load-older): cursor pagination (usePaginatedQuery) for scroll-back beyond this window.
+const MESSAGE_FEED_WINDOW = 500;
+
 export const list = query({
   args: { roomId: v.id("rooms"), channel: v.string(), requester: actorProofV },
   handler: async (ctx, { roomId, channel, requester }) => {
     const actor = await requireActorProof(ctx, roomId, requester);
     await requireActorCanUseChannel(ctx, roomId, actor, channel);
-    return ctx.db.query("messages").withIndex("by_room_channel", (q) => q.eq("roomId", roomId).eq("channel", channel)).collect();
+    const recent = await ctx.db.query("messages").withIndex("by_room_channel", (q) => q.eq("roomId", roomId).eq("channel", channel)).order("desc").take(MESSAGE_FEED_WINDOW);
+    return recent.reverse();
   },
 });
 

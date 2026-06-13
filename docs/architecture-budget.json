@@ -95,6 +95,7 @@
         "scripts/spreadsheetbench-*.ts",
         "scripts/convex-boundary-check.ts",
         "scripts/gemini-ui-review.ts",
+        "scripts/halo-self-improvement-smoke.ts",
         "scripts/halo-overnight.ts",
         "scripts/content-fluency-check.ts",
         "scripts/render-workflow-preview.ts",

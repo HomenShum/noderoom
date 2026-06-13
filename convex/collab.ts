@@ -44,10 +44,17 @@ export const updateSession = internalMutation({
   handler: async (ctx, { sessionId, ...patch }) => { await ctx.db.patch(sessionId, { ...patch, updatedAt: Date.now() }); },
 });
 
+// Bound the UI trace feed to a recent window (B2). A trace is appended on EVERY edit, so an unbounded
+// .collect() re-ships the whole room history to every subscriber on each new row. The UI only renders
+// recent traces (Signal Tape <=60, TraceStrip <=40); full history stays durable for audit/export.
+// TODO(load-older): cursor pagination (usePaginatedQuery) for scroll-back beyond this window.
+const TRACE_FEED_WINDOW = 200;
+
 export const traces = query({
   args: { roomId: v.id("rooms"), requester: actorProofV },
   handler: async (ctx, { roomId, requester }) => {
     await requireActorProof(ctx, roomId, requester);
-    return ctx.db.query("traces").withIndex("by_room", (q) => q.eq("roomId", roomId)).collect();
+    const recent = await ctx.db.query("traces").withIndex("by_room", (q) => q.eq("roomId", roomId)).order("desc").take(TRACE_FEED_WINDOW);
+    return recent.reverse();
   },
 });

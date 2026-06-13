@@ -134,6 +134,14 @@ const steps: StepSpec[] = [
     timeoutMs: 120_000,
   },
   {
+    id: "halo-self-improvement-smoke",
+    label: "HALO context/path self-improvement smoke",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "halo:self-improve:smoke"],
+    timeoutMs: 120_000,
+  },
+  {
     id: "collaboration-ladder",
     label: "Collaboration ladder L1-L6",
     lane: "deterministic",

@@ -33,6 +33,7 @@ describe("official benchmark readiness", () => {
     const gold = btb?.capabilities.find((capability) => capability.capability === "official_gold_isolation");
     const rubric = btb?.capabilities.find((capability) => capability.capability === "rubric_weighted_scoring");
     const runner = btb?.capabilities.find((capability) => capability.capability === "official_runner_adapter");
+    const xlsx = btb?.capabilities.find((capability) => capability.capability === "xlsx_import_export");
     const documentOutputs = btb?.capabilities.find((capability) => capability.capability === "pptx_docx_pdf_outputs");
 
     expect(ingest).toMatchObject({
@@ -54,7 +55,14 @@ describe("official benchmark readiness", () => {
       evidence: "src/eval/bankerToolBenchRunner.ts",
     });
     expect(runner?.blocker).toContain("agent workspaces");
+    expect(runner?.blocker).toContain("semantic workbook scoring");
     expect(runner?.blocker).toContain("Gandalf");
+    expect(xlsx).toMatchObject({
+      state: "partial",
+      evidence: "src/eval/bankerToolBenchRunner.ts",
+    });
+    expect(xlsx?.blocker).toContain("semantically matching workbooks");
+    expect(xlsx?.blocker).toContain("Gandalf");
     expect(documentOutputs).toMatchObject({
       state: "partial",
       evidence: "src/eval/bankerToolBenchRunner.ts",

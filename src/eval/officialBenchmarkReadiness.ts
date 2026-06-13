@@ -204,7 +204,14 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/bankerToolBenchRunner.ts",
       blocker:
-        "A local BankerToolBench runner now emits candidate deliverables from per-attempt agent workspaces before opening evaluator-only rubric/golden metadata, validates exact expected package shape for supported Excel/PowerPoint/Word/PDF-style deliverables, and records local exact-golden smoke scores, but Harbor/Docker execution, MCP financial tools, and Gandalf verifier replay are still missing.",
+        "A local BankerToolBench runner now emits candidate deliverables from per-attempt agent workspaces before opening evaluator-only rubric/golden metadata, validates exact expected package shape for supported Excel/PowerPoint/Word/PDF-style deliverables, reopens Excel deliverables for semantic workbook scoring when hashes drift, and records local exact/semantic-golden smoke scores, but Harbor/Docker execution, MCP financial tools, and Gandalf verifier replay are still missing.",
+    },
+    xlsx_import_export: {
+      capability: "xlsx_import_export",
+      state: "partial",
+      evidence: "src/eval/bankerToolBenchRunner.ts",
+      blocker:
+        "The local BTB runner can emit workbook deliverables, reopen candidate/golden .xlsx/.xlsm files, and accept semantically matching workbooks even when package hashes differ; official workbook-level answer packaging, Harbor execution, and Gandalf verifier handoff are still missing.",
     },
     pptx_docx_pdf_outputs: {
       capability: "pptx_docx_pdf_outputs",
@@ -218,7 +225,7 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/bankerToolBenchRunner.ts",
       blocker:
-        "Weighted rubric metadata is parsed, isolated for the evaluator, and consumed by a local exact-package/exact-golden smoke scorer, but Gandalf/Harbor verifier execution and score import are not wired.",
+        "Weighted rubric metadata is parsed, isolated for the evaluator, and consumed by a local exact-package/exact-or-workbook-semantic-golden smoke scorer, but Gandalf/Harbor verifier execution and score import are not wired.",
     },
   },
   "spreadsheetbench-v1": {

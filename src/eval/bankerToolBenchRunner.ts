@@ -10,10 +10,12 @@ import {
 } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
 import { createHash } from "node:crypto";
+import { scoreSpreadsheetBenchWorkbook, type SpreadsheetBenchWorkbookScore } from "./spreadsheetBenchScorer";
 
 export type BankerToolBenchRunnerMode = "copy-input-baseline" | "apply-agent-output";
 
 const supportedDeliverableExtensions = new Set([".xlsx", ".xlsm", ".pptx", ".docx", ".pdf", ".csv", ".png", ".jpg", ".jpeg"]);
+const runnerVerifier = "local_exact_or_workbook_semantic_smoke" as const;
 
 export type BankerToolBenchRunnerOptions = {
   stageRoot: string;
@@ -64,7 +66,7 @@ export type BankerToolBenchRunnerReport = {
   harness: {
     toolPolicy: "agent_workspace_until_candidate";
     evaluatorAccess: "after_candidate_emit_only";
-    verifier: "local_exact_golden_smoke";
+    verifier: typeof runnerVerifier;
     packagePolicy: "exact_expected_deliverables";
     supportedDeliverableExtensions: string[];
   };
@@ -77,12 +79,16 @@ export type BankerToolBenchScore = {
   generatedAt?: string;
   taskId: string;
   harborTaskId: string;
-  verifier: "local_exact_golden_smoke";
+  verifier: typeof runnerVerifier;
   totals: {
     rubricCriteria: number;
     weightedTotal: number;
     awardedWeight: number;
     exactMatchingGoldenFiles: number;
+    acceptedGoldenFiles: number;
+    workbookComparedGoldenFiles: number;
+    workbookSemanticMatches: number;
+    workbookSemanticMismatches: number;
     missingGoldenFiles: number;
     mismatchedGoldenFiles: number;
     expectedDeliverables: number;
@@ -119,6 +125,9 @@ export type BankerToolBenchScore = {
     expectedDeliverable: string;
     matchedCandidate?: string;
     exactMatch: boolean;
+    accepted: boolean;
+    semanticMatch?: boolean;
+    workbookScore?: SpreadsheetBenchWorkbookScore;
   }>;
   warnings: string[];
 };
@@ -173,7 +182,7 @@ type AgentWorkspace = {
   manifestPath: string;
 };
 
-export function runStagedBankerToolBench(options: BankerToolBenchRunnerOptions): BankerToolBenchRunnerReport {
+export async function runStagedBankerToolBench(options: BankerToolBenchRunnerOptions): Promise<BankerToolBenchRunnerReport> {
   const stageRoot = resolve(options.stageRoot);
   const outputRoot = resolve(options.outputRoot);
   if (!existsSync(stageRoot)) throw new Error(`BankerToolBench stage root does not exist: ${options.stageRoot}`);
@@ -182,11 +191,12 @@ export function runStagedBankerToolBench(options: BankerToolBenchRunnerOptions):
 
   const tasks = findStagedTasks(stageRoot).slice(0, options.limit ?? Number.POSITIVE_INFINITY);
   const warnings: string[] = [];
-  const results = tasks.map((task) => {
-    const result = runTask(stageRoot, outputRoot, task, options);
+  const results: BankerToolBenchRunnerTaskResult[] = [];
+  for (const task of tasks) {
+    const result = await runTask(stageRoot, outputRoot, task, options);
     if (result.error) warnings.push(`${result.taskDir}: ${result.error.message}`);
-    return result;
-  });
+    results.push(result);
+  }
   const passCount = results.filter((result) => result.score?.pass).length;
   const averageWeightedScore = ratio(
     results.reduce((sum, result) => sum + (result.score?.weightedScore ?? 0), 0),
@@ -206,7 +216,7 @@ export function runStagedBankerToolBench(options: BankerToolBenchRunnerOptions):
     harness: {
       toolPolicy: "agent_workspace_until_candidate",
       evaluatorAccess: "after_candidate_emit_only",
-      verifier: "local_exact_golden_smoke",
+      verifier: runnerVerifier,
       packagePolicy: "exact_expected_deliverables",
       supportedDeliverableExtensions: [...supportedDeliverableExtensions].sort(),
     },
@@ -215,12 +225,12 @@ export function runStagedBankerToolBench(options: BankerToolBenchRunnerOptions):
   };
 }
 
-function runTask(
+async function runTask(
   stageRoot: string,
   outputRoot: string,
   task: StagedTaskPaths,
   options: BankerToolBenchRunnerOptions,
-): BankerToolBenchRunnerTaskResult {
+): Promise<BankerToolBenchRunnerTaskResult> {
   const started = Date.now();
   const trajectory: BankerToolBenchRunnerTaskResult["trajectory"] = [];
   const agent = readJson<AgentManifest>(task.agentManifestPath);
@@ -241,7 +251,7 @@ function runTask(
 
     const evaluator = readJson<EvaluatorManifest>(task.evaluatorManifestPath);
     trajectory.push({ step: "read_evaluator_manifest", detail: rel(stageRoot, task.evaluatorManifestPath) });
-    const score = scoreCandidate({
+    const score = await scoreCandidate({
       generatedAt: options.generatedAt,
       taskOutDir,
       candidateManifestPath: candidateManifest,
@@ -352,7 +362,7 @@ function emitCandidateDeliverables(args: {
     sourceAgentManifest: rel(args.stageRoot, args.task.agentManifestPath),
     agentWorkspaceManifest: rel(args.taskOutDir, args.agentWorkspace.manifestPath),
     candidateDeliverables: deliverables,
-    note: "Candidate package emitted before private scoring metadata is opened; local exact-file verifier smoke is not a Harbor/Gandalf score.",
+    note: "Candidate package emitted before private scoring metadata is opened; local exact-or-workbook-semantic verifier smoke is not a Harbor/Gandalf score.",
   });
   return candidateManifestPath;
 }
@@ -383,13 +393,13 @@ function applyAgentOutputManifest(agentDir: string, deliverableDir: string) {
   });
 }
 
-function scoreCandidate(args: {
+async function scoreCandidate(args: {
   generatedAt?: string;
   taskOutDir: string;
   candidateManifestPath: string;
   evaluatorManifestPath: string;
   evaluator: EvaluatorManifest;
-}): BankerToolBenchScore {
+}): Promise<BankerToolBenchScore> {
   const candidate = readJson<{
     taskId: string;
     harborTaskId: string;
@@ -417,7 +427,7 @@ function scoreCandidate(args: {
     extension: expected.extension,
     matchedCandidate: candidateByName.get(normalizedOutputName(expected.name))?.path,
   }));
-  const goldenFiles = args.evaluator.goldenFiles.map((goldenFile) => {
+  const goldenFiles = await Promise.all(args.evaluator.goldenFiles.map(async (goldenFile) => {
     const goldenPath = resolveManifestPath(dirname(args.evaluatorManifestPath), goldenFile);
     const expected = expectedDeliverables.find((deliverable) => deliverable.goldenFile === goldenFile) ?? {
       name: outputName(goldenFile),
@@ -425,17 +435,34 @@ function scoreCandidate(args: {
       goldenFile,
     };
     const candidateDeliverable = candidateByName.get(normalizedOutputName(expected.name));
+    const candidatePath = candidateDeliverable ? resolveManifestPath(join(args.taskOutDir, "deliverables"), candidateDeliverable.path) : undefined;
     const exactMatch = !!candidateDeliverable && sha256(goldenPath) === candidateDeliverable.sha256;
+    const workbookScore = candidatePath && isWorkbookDeliverable(expected.name)
+      ? await scoreWorkbookDeliverable({
+          taskId: candidate.taskId,
+          generatedAt: args.generatedAt,
+          candidateWorkbookPath: candidatePath,
+          goldWorkbookPath: goldenPath,
+        })
+      : undefined;
+    const semanticMatch = workbookScore?.pass;
     return {
       path: goldenFile,
       expectedDeliverable: expected.name,
       matchedCandidate: candidateDeliverable?.path,
       exactMatch,
+      accepted: exactMatch || semanticMatch === true,
+      ...(semanticMatch === undefined ? {} : { semanticMatch }),
+      ...(workbookScore ? { workbookScore } : {}),
     };
-  });
+  }));
   const missingGoldenFiles = goldenFiles.filter((file) => !file.matchedCandidate).length;
   const mismatchedGoldenFiles = goldenFiles.filter((file) => file.matchedCandidate && !file.exactMatch).length;
   const exactMatchingGoldenFiles = goldenFiles.filter((file) => file.exactMatch).length;
+  const acceptedGoldenFiles = goldenFiles.filter((file) => file.accepted).length;
+  const workbookComparedGoldenFiles = goldenFiles.filter((file) => file.workbookScore).length;
+  const workbookSemanticMatches = goldenFiles.filter((file) => file.workbookScore?.pass).length;
+  const workbookSemanticMismatches = goldenFiles.filter((file) => file.workbookScore && !file.workbookScore.pass).length;
   const missingExpectedDeliverables = expectedResults.filter((deliverable) => !deliverable.matchedCandidate).length;
   const matchedExpectedDeliverables = expectedResults.length - missingExpectedDeliverables;
   const exactPackage =
@@ -444,27 +471,33 @@ function scoreCandidate(args: {
     extraCandidateDeliverables === 0 &&
     duplicateCandidateDeliverables === 0 &&
     unsupportedCandidateDeliverables === 0;
-  const allGoldenFilesMatch = goldenFiles.length > 0 && missingGoldenFiles === 0 && mismatchedGoldenFiles === 0;
-  const packageAndFilesMatch = exactPackage && allGoldenFilesMatch;
+  const allGoldenFilesAccepted = goldenFiles.length > 0 && missingGoldenFiles === 0 && acceptedGoldenFiles === goldenFiles.length;
+  const packageAndFilesMatch = exactPackage && allGoldenFilesAccepted;
   const awardedWeight = packageAndFilesMatch ? args.evaluator.weightedRubricTotal : 0;
   const warnings = [
-    "local_exact_golden_smoke is a packaging/verifier-boundary smoke; it is not the official Harbor/Gandalf verifier.",
+    "local_exact_or_workbook_semantic_smoke is a packaging/verifier-boundary smoke; it is not the official Harbor/Gandalf verifier.",
     ...(goldenFiles.length === 0 ? ["no evaluator golden files were available"] : []),
     ...(unsupportedCandidateDeliverables > 0 ? ["candidate package includes unsupported deliverable extensions"] : []),
     ...(extraCandidateDeliverables > 0 ? ["candidate package includes extra deliverables not present in evaluator expected outputs"] : []),
     ...(duplicateCandidateDeliverables > 0 ? ["candidate package includes duplicate deliverable names"] : []),
+    ...(workbookSemanticMatches > 0 ? ["one or more workbook deliverables were accepted by semantic workbook scoring despite package hash drift"] : []),
+    ...(workbookSemanticMismatches > 0 ? ["one or more workbook deliverables failed semantic workbook scoring"] : []),
   ];
   return {
     schema: 1,
     generatedAt: args.generatedAt,
     taskId: candidate.taskId,
     harborTaskId: candidate.harborTaskId,
-    verifier: "local_exact_golden_smoke",
+    verifier: runnerVerifier,
     totals: {
       rubricCriteria: args.evaluator.rubricItems.length,
       weightedTotal: args.evaluator.weightedRubricTotal,
       awardedWeight,
       exactMatchingGoldenFiles,
+      acceptedGoldenFiles,
+      workbookComparedGoldenFiles,
+      workbookSemanticMatches,
+      workbookSemanticMismatches,
       missingGoldenFiles,
       mismatchedGoldenFiles,
       expectedDeliverables: expectedResults.length,
@@ -481,8 +514,8 @@ function scoreCandidate(args: {
       ...item,
       passed: packageAndFilesMatch,
       reason: packageAndFilesMatch
-        ? "candidate package exactly matched evaluator expected deliverables and golden files"
-        : "candidate package did not exactly match evaluator expected deliverables and golden files",
+        ? "candidate package matched evaluator expected deliverables and all golden files by exact hash or workbook semantic scoring"
+        : "candidate package did not match evaluator expected deliverables and golden files by exact hash or workbook semantic scoring",
     })),
     deliverables: candidate.candidateDeliverables.map((deliverable) => ({
       ...deliverable,
@@ -569,6 +602,31 @@ function extensionOf(path: string): string {
 
 function isSupportedDeliverable(path: string): boolean {
   return supportedDeliverableExtensions.has(extensionOf(path));
+}
+
+function isWorkbookDeliverable(path: string): boolean {
+  return [".xlsx", ".xlsm"].includes(extensionOf(path));
+}
+
+async function scoreWorkbookDeliverable(args: {
+  taskId: string;
+  generatedAt?: string;
+  candidateWorkbookPath: string;
+  goldWorkbookPath: string;
+}): Promise<SpreadsheetBenchWorkbookScore | undefined> {
+  try {
+    return await scoreSpreadsheetBenchWorkbook({
+      taskId: `bankertoolbench/${args.taskId}`,
+      candidateWorkbookPath: args.candidateWorkbookPath,
+      goldWorkbookPath: args.goldWorkbookPath,
+      compareStyles: true,
+      compareCharts: true,
+      maxMismatches: 25,
+      generatedAt: args.generatedAt,
+    });
+  } catch {
+    return undefined;
+  }
 }
 
 function countBy(values: string[]): Map<string, number> {

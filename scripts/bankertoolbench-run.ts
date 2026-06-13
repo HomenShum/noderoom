@@ -15,13 +15,13 @@ if (!stageRoot || !outputRoot || !mode || !["copy-input-baseline", "apply-agent-
     "Usage:",
     "  npm run benchmark:bankertoolbench:run -- --stage-root <stage-dir> --output-root <run-dir> --mode copy-input-baseline|apply-agent-output [--limit 3] [--clean] [--json-out <path>]",
     "",
-    "This emits candidate deliverables from staged agent-visible files, then opens evaluator-only rubric/golden metadata for local exact-golden smoke scoring.",
+    "This emits candidate deliverables from staged agent-visible files, then opens evaluator-only rubric/golden metadata for local exact-or-workbook-semantic smoke scoring.",
     "It does not run Harbor/Docker, MCP financial tools, or the official Gandalf verifier.",
   ].join("\n"));
   process.exit(2);
 }
 
-const report = runStagedBankerToolBench({
+const report = await runStagedBankerToolBench({
   stageRoot,
   outputRoot,
   mode,

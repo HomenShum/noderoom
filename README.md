@@ -1093,9 +1093,11 @@ smoke artifacts and the contamination gate prove that boundary on a local BTB-sh
 agent-only workspace, emits candidate deliverables before opening evaluator-only rubric/golden
 metadata, validates the exact expected output package shape for supported spreadsheet, deck,
 document, PDF, CSV, and image deliverables, records a trajectory, and runs a local exact-package /
-exact-golden weighted-rubric smoke verifier. The checked-in run smoke is deliberately 0/6 because
-copy-input is not a solution, but it proves the runner/verifier handoff, multi-file package
-accounting, and 0-leak artifact path. This is still not a BTB score: Harbor/Docker process
+exact-or-workbook-semantic weighted-rubric smoke verifier. Excel deliverables now get reopened and
+scored with the workbook scorer, so a semantically identical `.xlsx` can pass even when package
+metadata changes the file hash. The checked-in run smoke is deliberately 0/6 because copy-input is
+not a solution, but it proves the runner/verifier handoff, multi-file package accounting, workbook
+semantic scoring, and 0-leak artifact path. This is still not a BTB score: Harbor/Docker process
 isolation, MCP financial tools, and Gandalf verifier replay remain red gates.
 
 ## Benchmark Harness / v3 Composite-Synthesis Run

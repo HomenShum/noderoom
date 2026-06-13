@@ -1,6 +1,6 @@
 # Official Benchmark Readiness
 
-Generated: 2026-06-13T12:59:09.127Z
+Generated: 2026-06-13T13:07:26.592Z
 
 This is the benchmark-faithful gate for the public targets we care about most: BankerToolBench and SpreadsheetBench. It is deliberately stricter than NodeRoom's internal professional evals. Internal green runs do not imply an official benchmark claim.
 
@@ -34,7 +34,7 @@ Scoring shape: Agentic verifier opens deliverables and scores weighted binary ru
 | `official_runner_adapter` | partial | `src/eval/bankerToolBenchRunner.ts` |
 | `trajectory_capture` | implemented | `evals/evalStore.ts` |
 | `cost_latency_retries` | implemented | `evals/financeModelLive.ts` |
-| `xlsx_import_export` | partial | `src/app/spreadsheetParser.ts` |
+| `xlsx_import_export` | partial | `src/eval/bankerToolBenchRunner.ts` |
 | `formula_recompute` | partial | `evals/financeModelLive.ts` |
 | `pptx_docx_pdf_outputs` | partial | `src/eval/bankerToolBenchRunner.ts` |
 | `mcp_financial_tools` | missing | BTB SEC/market-data/logo MCP tool servers are not adapted into NodeRoom's tool registry. |
@@ -43,13 +43,13 @@ Scoring shape: Agentic verifier opens deliverables and scores weighted binary ru
 
 Blockers:
 - official_gold_isolation: BankerToolBench staging separates final prompts/input files from evaluator-only prompt context, formatting context, canary, weighted rubric, golden outputs, and expected deliverable package metadata; contamination checks cover staged agent manifests and a Node permission subprocess smoke proves evaluator-only reads are denied outside the agent workspace, but Harbor/Docker process isolation and verifier handoff are still missing.
-- official_runner_adapter: A local BankerToolBench runner now emits candidate deliverables from per-attempt agent workspaces before opening evaluator-only rubric/golden metadata, validates exact expected package shape for supported Excel/PowerPoint/Word/PDF-style deliverables, and records local exact-golden smoke scores, but Harbor/Docker execution, MCP financial tools, and Gandalf verifier replay are still missing.
-- xlsx_import_export: Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.
+- official_runner_adapter: A local BankerToolBench runner now emits candidate deliverables from per-attempt agent workspaces before opening evaluator-only rubric/golden metadata, validates exact expected package shape for supported Excel/PowerPoint/Word/PDF-style deliverables, reopens Excel deliverables for semantic workbook scoring when hashes drift, and records local exact/semantic-golden smoke scores, but Harbor/Docker execution, MCP financial tools, and Gandalf verifier replay are still missing.
+- xlsx_import_export: The local BTB runner can emit workbook deliverables, reopen candidate/golden .xlsx/.xlsm files, and accept semantically matching workbooks even when package hashes differ; official workbook-level answer packaging, Harbor execution, and Gandalf verifier handoff are still missing.
 - formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.
 - pptx_docx_pdf_outputs: The local BTB runner validates multi-file candidate packages and supported .pptx/.docx/.pdf deliverable extensions after candidate emission; actual pitch-deck/report generation and official verifier handoff are not wired.
 - mcp_financial_tools: BTB SEC/market-data/logo MCP tool servers are not adapted into NodeRoom's tool registry.
 - docker_sandbox: BTB requires Docker/Harbor execution outside the Vite/Convex app runtime.
-- rubric_weighted_scoring: Weighted rubric metadata is parsed, isolated for the evaluator, and consumed by a local exact-package/exact-golden smoke scorer, but Gandalf/Harbor verifier execution and score import are not wired.
+- rubric_weighted_scoring: Weighted rubric metadata is parsed, isolated for the evaluator, and consumed by a local exact-package/exact-or-workbook-semantic-golden smoke scorer, but Gandalf/Harbor verifier execution and score import are not wired.
 
 ### SpreadsheetBench
 

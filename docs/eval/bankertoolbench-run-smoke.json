@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedAt": "2026-06-13T12:06:45.584Z",
+  "generatedAt": "2026-06-13T13:05:59.991Z",
   "stageRoot": "staged-btb",
   "outputRoot": "run-btb",
   "mode": "copy-input-baseline",
@@ -11,7 +11,7 @@
   "harness": {
     "toolPolicy": "agent_workspace_until_candidate",
     "evaluatorAccess": "after_candidate_emit_only",
-    "verifier": "local_exact_golden_smoke",
+    "verifier": "local_exact_or_workbook_semantic_smoke",
     "packagePolicy": "exact_expected_deliverables",
     "supportedDeliverableExtensions": [
       ".csv",
@@ -37,15 +37,19 @@
       "candidateManifest": "btb-0fc7bc3c/candidate-manifest.json",
       "score": {
         "schema": 1,
-        "generatedAt": "2026-06-13T12:06:45.584Z",
+        "generatedAt": "2026-06-13T13:05:59.991Z",
         "taskId": "0fc7bc3c-a111-4222-8333-444455556666",
         "harborTaskId": "btb-0fc7bc3c",
-        "verifier": "local_exact_golden_smoke",
+        "verifier": "local_exact_or_workbook_semantic_smoke",
         "totals": {
           "rubricCriteria": 2,
           "weightedTotal": 6,
           "awardedWeight": 0,
           "exactMatchingGoldenFiles": 0,
+          "acceptedGoldenFiles": 0,
+          "workbookComparedGoldenFiles": 0,
+          "workbookSemanticMatches": 0,
+          "workbookSemanticMismatches": 0,
           "missingGoldenFiles": 1,
           "mismatchedGoldenFiles": 0,
           "expectedDeliverables": 1,
@@ -64,14 +68,14 @@
             "weight": 5,
             "category": "Excel",
             "passed": false,
-            "reason": "candidate package did not exactly match evaluator expected deliverables and golden files"
+            "reason": "candidate package did not match evaluator expected deliverables and golden files by exact hash or workbook semantic scoring"
           },
           {
             "criterion": "Memo includes risks",
             "weight": 1,
             "category": "Memo",
             "passed": false,
-            "reason": "candidate package did not exactly match evaluator expected deliverables and golden files"
+            "reason": "candidate package did not match evaluator expected deliverables and golden files by exact hash or workbook semantic scoring"
           }
         ],
         "deliverables": [
@@ -100,16 +104,17 @@
           {
             "path": "golden-outputs/01-answer.xlsx",
             "expectedDeliverable": "answer.xlsx",
-            "exactMatch": false
+            "exactMatch": false,
+            "accepted": false
           }
         ],
         "warnings": [
-          "local_exact_golden_smoke is a packaging/verifier-boundary smoke; it is not the official Harbor/Gandalf verifier.",
+          "local_exact_or_workbook_semantic_smoke is a packaging/verifier-boundary smoke; it is not the official Harbor/Gandalf verifier.",
           "candidate package includes extra deliverables not present in evaluator expected outputs"
         ]
       },
       "timingsMs": {
-        "total": 20
+        "total": 19
       },
       "trajectory": [
         {

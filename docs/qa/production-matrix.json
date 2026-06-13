@@ -506,7 +506,7 @@
         { "type": "test", "ref": "tests/spreadsheetBenchChartScorer.test.ts" },
         { "type": "test", "ref": "tests/agentWorkspaceSandbox.test.ts" }
       ],
-      "nextReview": "Next official slice: run model-edit-plan across larger official SpreadsheetBench bundles, harden structured edit-plan generation until retries recover real tasks, add rendered/VLM SpreadsheetBench V2 chart grading beyond the static XLSX chart-package scorer now wired into score/run reports, upgrade the Node permission subprocess proof to Docker/Harbor isolation when the daemon is available, wire BTB MCP financial tools, and replace the BTB local exact-package/exact-golden smoke with Harbor/Docker plus Gandalf verifier import without exposing rubric/canary/golden files to the agent."
+      "nextReview": "Next official slice: run model-edit-plan across larger official SpreadsheetBench bundles, harden structured edit-plan generation until retries recover real tasks, add rendered/VLM SpreadsheetBench V2 chart grading beyond the static XLSX chart-package scorer now wired into score/run reports, upgrade the Node permission subprocess proof to Docker/Harbor isolation when the daemon is available, wire BTB MCP financial tools, and replace the BTB local exact-package/exact-or-workbook-semantic smoke with Harbor/Docker plus Gandalf verifier import without exposing rubric/canary/golden files to the agent."
     },
     {
       "id": "unified_nodeagent_jobs",

@@ -72,10 +72,12 @@ $0.0462905 spend, zero failure counts, zero retry attempts, and
 `docs/eval/spreadsheetbench-v1-run-3task-n5-contamination-smoke.json`. The new
 `filter_rows` and `sort_unique_rows` structural operators cover visible date
 filtering and visible duplicate-removal/sort tables without evaluator-gold
-access, repeatedly under live model variance. Remaining gap stays the same:
-run larger held-out official bundles and add Docker/Harbor isolation, route
-selection, V2 rendered chart grading, and BankerToolBench production verifier
-integration before claiming official benchmark readiness.
+access, repeatedly under live model variance. `npm run
+benchmark:spreadsheetbench:proof` now enforces the recorded run/leak thresholds
+and is part of HALO. Remaining gap stays the same: run larger held-out official
+bundles and add Docker/Harbor isolation, route selection, V2 rendered chart
+grading, and BankerToolBench production verifier integration before claiming
+official benchmark readiness.
 
 ## P1: UI Operations
 

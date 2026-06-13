@@ -258,6 +258,14 @@ const steps: StepSpec[] = [
     skipReason: "local SpreadsheetBench 3-task N5 run root is not present",
   },
   {
+    id: "spreadsheetbench-3task-n5-proof",
+    label: "SpreadsheetBench 3-task N5 proof gate",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "benchmark:spreadsheetbench:proof"],
+    timeoutMs: 120_000,
+  },
+  {
     id: "spreadsheetbench-retry-run-contamination",
     label: "SpreadsheetBench retry run artifact contamination",
     lane: "deterministic",

@@ -1,0 +1,157 @@
+{
+  "schema": "noderoom.publicGoldDemo.v1",
+  "updatedAt": "2026-06-13",
+  "largeFilePolicy": "Do not commit benchmark PDFs, licensed workbooks, or private docs. Store source URLs, expected answers, validators, and stable fingerprints; download binaries into a gitignored fixture cache for live parser evals.",
+  "cases": [
+    {
+      "caseId": "tat-dqa-impairment-change",
+      "title": "TAT-DQA arithmetic proof",
+      "source": {
+        "kind": "pdf",
+        "dataset": "TAT-DQA",
+        "sourceUrl": "https://nextplusplus.github.io/TAT-DQA/",
+        "licenseNote": "Use public dataset terms; do not commit large PDF binaries.",
+        "sourceRecordFingerprint": "53c40333beecb0f4cba54b1e4551ab00d2fa1916292cadc4ed1aec611ea80949"
+      },
+      "task": {
+        "prompt": "Compute the change in impairment losses between 2017 and 2018 from the source page.",
+        "targetArtifact": "shared spreadsheet",
+        "targetCells": ["D7"]
+      },
+      "expected": {
+        "formula": "=200657-50565",
+        "value": 150092,
+        "scale": "thousand",
+        "evidenceText": ["200,657", "50,565"],
+        "cellPayload": {
+          "cell": "D7",
+          "value": 150092,
+          "formula": "=200657-50565",
+          "scale": "thousand",
+          "status": "verified",
+          "evidenceRequired": true
+        }
+      },
+      "validators": [
+        "formula_ast_match",
+        "numeric_exact_match",
+        "scale_match",
+        "source_text_match",
+        "bbox_or_page_match",
+        "cellpayload_evidence_present",
+        "trace_readset_present",
+        "trace_writeset_present"
+      ]
+    },
+    {
+      "caseId": "financebench_id_03029",
+      "title": "FinanceBench citation QA",
+      "source": {
+        "kind": "pdf",
+        "dataset": "FinanceBench",
+        "sourceUrl": "https://github.com/patronus-ai/financebench",
+        "recordUrl": "https://raw.githubusercontent.com/patronus-ai/financebench/main/data/financebench_open_source.jsonl",
+        "docName": "3M_2018_10K",
+        "evidencePage": 59,
+        "licenseNote": "Open-source sample includes annotated examples and PDFs; keep binaries out unless redistribution remains acceptable.",
+        "sourceRecordFingerprint": "124d1a7162e7fd4eddbfe179f78ec83e1e9903e90e8cf4aef643f033c7a60ccc"
+      },
+      "task": {
+        "prompt": "What is the FY2018 capital expenditure amount in USD millions for 3M?",
+        "targetArtifact": "QA memo",
+        "targetCells": []
+      },
+      "expected": {
+        "answer": "$1577.00",
+        "normalizedAnswer": "$1,577.00",
+        "evidenceText": ["Purchases of property, plant and equipment (PP&E)", "(1,577)"],
+        "evidencePage": 59
+      },
+      "validators": [
+        "answer_exact_or_normalized_match",
+        "source_text_match",
+        "bbox_or_page_match",
+        "cellpayload_evidence_present",
+        "trace_readset_present"
+      ]
+    },
+    {
+      "caseId": "sec-aapl-fy2023-xbrl",
+      "title": "SEC XBRL watchlist fill",
+      "source": {
+        "kind": "json",
+        "dataset": "SEC EDGAR companyfacts",
+        "sourceUrl": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000320193.json",
+        "filingUrl": "https://www.sec.gov/Archives/edgar/data/320193/000032019323000106/aapl-20230930.htm",
+        "company": "Apple Inc.",
+        "cik": "0000320193",
+        "accession": "0000320193-23-000106",
+        "form": "10-K",
+        "period": "FY2023",
+        "filed": "2023-11-03",
+        "sourceRecordFingerprint": "2e4b45d7e2f8052d0c890e8ddf685e815e443ee64e5b2e2aac2ab7c2ecb0c259"
+      },
+      "task": {
+        "prompt": "Fill Apple FY2023 revenue, net income, and operating cash flow from SEC XBRL.",
+        "targetArtifact": "public company watchlist",
+        "targetCells": ["B12", "C12", "D12"]
+      },
+      "expected": {
+        "facts": [
+          {
+            "cell": "B12",
+            "concept": "us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax",
+            "value": 383285000000,
+            "unit": "USD"
+          },
+          {
+            "cell": "C12",
+            "concept": "us-gaap:NetIncomeLoss",
+            "value": 96995000000,
+            "unit": "USD"
+          },
+          {
+            "cell": "D12",
+            "concept": "us-gaap:NetCashProvidedByUsedInOperatingActivities",
+            "value": 110543000000,
+            "unit": "USD"
+          }
+        ]
+      },
+      "validators": [
+        "numeric_exact_match",
+        "scale_match",
+        "source_text_match",
+        "cellpayload_evidence_present",
+        "trace_readset_present",
+        "trace_writeset_present"
+      ]
+    },
+    {
+      "caseId": "noderoom-no-clobber-overlay",
+      "title": "Collaboration safety overlay",
+      "source": {
+        "kind": "trace",
+        "dataset": "NodeRoom room trace",
+        "sourceUrl": "docs/eval/MULTI_USER_COORDINATION_PROOF.md",
+        "sourceRecordFingerprint": "fcddd67a0a9c3edddc2ff07ab0d4c36388452210f59acb47d80ed6d28fac059e"
+      },
+      "task": {
+        "prompt": "Preserve a human edit that lands while public-gold child jobs are running.",
+        "targetArtifact": "shared spreadsheet and room trace",
+        "targetCells": ["human-owned note"]
+      },
+      "expected": {
+        "outcome": "human edit preserved",
+        "agentBehavior": "stale write rejected or review chip filed",
+        "duplicateFinalWrites": 0
+      },
+      "validators": [
+        "no_clobber",
+        "trace_readset_present",
+        "trace_writeset_present",
+        "privacy_boundary"
+      ]
+    }
+  ]
+}

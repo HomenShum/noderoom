@@ -89,9 +89,10 @@ result, with step captions and a progress bar. Regenerate any time with `npm run
 
 ### Multi-agent work queue (`/demo multi-agent`)
 ![Multi-agent work queue: one prompt splits into concurrent agent lanes with claims, streams, batched commits, and final proof](docs/walkthroughs/multi-agent-workbench.gif)
-<sub>Deterministic memory-mode walkthrough of the same UI contract: one burst prompt becomes child jobs,
-concurrent progress streams, visible row/artifact claims, CAS batch commits, and a sealed handoff.
-This is media evidence for the workbench interaction, not a live-provider proof.</sub>
+<sub>Deterministic memory-mode walkthrough of the same UI contract: one burst prompt fans out into
+TAT-DQA arithmetic, FinanceBench citation QA, SEC XBRL watchlist fill, and a NodeRoom no-clobber
+overlay. The proof board uses public-source gold answers and visible validators; this is media
+evidence for the workbench interaction, not a live-provider parser proof.</sub>
 
 ### GTM research import — updates, never duplicates
 ![CRM-style research import upsert — walkthrough](docs/walkthroughs/research-upsert.gif)

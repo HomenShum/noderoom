@@ -153,64 +153,116 @@ type DemoAgent = {
   commit: string;
 };
 
-const MULTI_AGENT_DEMO_MAX_TICK = 10;
+type DemoGoldCase = {
+  caseId: string;
+  title: string;
+  source: string;
+  target: string;
+  output: string;
+  gold: string;
+  evals: string[];
+};
+
+const MULTI_AGENT_DEMO_MAX_TICK = 12;
 
 const MULTI_AGENT_QUEUE = [
-  { label: "Split burst prompt into child jobs", startTick: 0, doneTick: 1 },
-  { label: "Claim row ranges and artifact targets", startTick: 1, doneTick: 3 },
-  { label: "Stream progress through persisted chunks", startTick: 2, doneTick: 7 },
-  { label: "Batch safe writes through CAS proposals", startTick: 6, doneTick: 9 },
-  { label: "Compare against golden checks and trace", startTick: 8, doneTick: 10 },
+  { label: "Load public-gold manifest", startTick: 0, doneTick: 1 },
+  { label: "Fan out TAT-DQA, FinanceBench, SEC", startTick: 1, doneTick: 3 },
+  { label: "Stream source reads + tool receipts", startTick: 2, doneTick: 8 },
+  { label: "Write CellPayloads through CAS", startTick: 6, doneTick: 10 },
+  { label: "Run validators and seal handoff", startTick: 9, doneTick: 12 },
 ];
 
 const MULTI_AGENT_AGENTS: DemoAgent[] = [
   {
     id: "agent-a",
     name: "Agent A",
-    scope: "GTM rows 1-10",
+    scope: "TAT-DQA PDF arithmetic",
     lane: "Owner token stream",
     color: "#7DD3FC",
     startTick: 1,
-    doneTick: 8,
+    doneTick: 9,
     chunks: [
-      "Loaded companies.csv + CRM notes.",
-      "Claimed rows 1-10 with 90s lease.",
-      "Matched 8 owners; 2 need review.",
-      "Queued 18 evidence cell payloads.",
+      "Loaded public report page + OCR blocks.",
+      "Claimed D7:D9 and evidence overlay.",
+      "Extracted facts: 200,657 and 50,565.",
+      "Wrote formula =200657-50565.",
+      "Attached bbox/text refs to CellPayload.",
     ],
-    commit: "18 safe cells, 2 review chips",
+    commit: "D7 formula, 2 bbox refs, exact result",
   },
   {
     id: "agent-b",
     name: "Agent B",
-    scope: "Finance rows 11-22",
+    scope: "FinanceBench citation QA",
     lane: "Observer semantic chunks",
     color: "#A7F3D0",
     startTick: 2,
-    doneTick: 9,
+    doneTick: 10,
     chunks: [
-      "Read workbook ranges safely.",
-      "Classified Q2/Q3 vendor deltas.",
-      "Preserved formula dependency.",
-      "Committed notes in one mutation.",
+      "Opened 3M_2018_10K benchmark row.",
+      "Read cash-flow evidence page 59.",
+      "Matched PP&E purchase line item.",
+      "Answered $1,577.00 with citation.",
+      "Queued QA memo + source page trace.",
     ],
-    commit: "12 notes, 1 formula preserved",
+    commit: "QA answer, page 59 citation, gold match",
   },
   {
     id: "agent-c",
     name: "Agent C",
-    scope: "Wiki + chart + trace",
+    scope: "SEC XBRL + no-clobber",
     lane: "Artifact mutation stream",
     color: "#FDE68A",
     startTick: 3,
-    doneTick: 10,
+    doneTick: 12,
     chunks: [
-      "Subscribed to child receipts.",
-      "Built chart from cell versions.",
-      "Updated wiki TOC from room evidence.",
-      "Stored trace + golden comparison.",
+      "Fetched Apple companyfacts snapshot.",
+      "Filled revenue, net income, cash flow.",
+      "Detected human note edit mid-run.",
+      "Skipped stale write; issued review chip.",
+      "Updated wiki TOC from verified evidence.",
     ],
-    commit: "1 chart, 1 wiki block, 1 trace",
+    commit: "3 XBRL facts, 1 review chip, 1 wiki block",
+  },
+];
+
+const MULTI_AGENT_GOLD_CASES: DemoGoldCase[] = [
+  {
+    caseId: "tat-dqa-impairment-change",
+    title: "TAT-DQA arithmetic proof",
+    source: "Financial report PDF + OCR boxes",
+    target: "D7",
+    output: "=200657-50565 -> 150092 thousand",
+    gold: "150092 thousand",
+    evals: ["Formula AST PASS", "Value PASS", "Scale PASS", "bbox/text PASS"],
+  },
+  {
+    caseId: "financebench_id_03029",
+    title: "FinanceBench citation QA",
+    source: "3M_2018_10K, page 59",
+    target: "QA memo",
+    output: "FY2018 capex = $1,577.00",
+    gold: "$1577.00",
+    evals: ["Answer PASS", "Evidence page PASS", "PP&E citation PASS"],
+  },
+  {
+    caseId: "sec-aapl-fy2023-xbrl",
+    title: "SEC XBRL watchlist fill",
+    source: "AAPL 2023 10-K companyfacts",
+    target: "B12:D12",
+    output: "Revenue 383.285B; NI 96.995B; CFO 110.543B",
+    gold: "Accession 0000320193-23-000106",
+    evals: ["Digit PASS", "Unit PASS", "Period PASS", "filing PASS"],
+  },
+  {
+    caseId: "noderoom-no-clobber-overlay",
+    title: "Collaboration safety overlay",
+    source: "Room trace + cell versions",
+    target: "Human-owned note",
+    output: "stale write rejected; review chip filed",
+    gold: "human edit preserved",
+    evals: ["CAS PASS", "Lease PASS", "Trace PASS", "Privacy PASS"],
   },
 ];
 
@@ -581,16 +633,16 @@ function MultiAgentWorkbenchDemo({ tick }: { tick: number }) {
     <div className="r-agent-workbench" data-testid="multi-agent-workbench" aria-label="Multi-agent work queue demo">
       <div className="r-agent-workbench-head">
         <div>
-          <span className="r-agent-eyebrow"><GitBranch size={13} /> Work queue</span>
-          <strong>Three agents, one room, structured commits</strong>
+          <span className="r-agent-eyebrow"><GitBranch size={13} /> Public-gold work queue</span>
+          <strong>Three agents run public finance docs, exact gold checks, and no-clobber proof</strong>
         </div>
-        <span className="r-agent-proof-pill" data-done={String(complete)}>{complete ? "handoff sealed" : "streaming"}</span>
+        <span className="r-agent-proof-pill" data-done={String(complete)}>{complete ? "HANDOFF SEALED" : "streaming"}</span>
       </div>
 
       <div className="r-agent-lanes" aria-label="Stream lanes">
-        <span><Sparkles size={12} /> Owner stream</span>
-        <span><Database size={12} /> Observer chunks</span>
-        <span><ShieldCheck size={12} /> CAS batch commits</span>
+        <span><Sparkles size={12} /> child-job streams</span>
+        <span><Database size={12} /> public source receipts</span>
+        <span><ShieldCheck size={12} /> CAS + eval gates</span>
       </div>
 
       <div className="r-command-queue" aria-label="Command queue">
@@ -641,16 +693,59 @@ function MultiAgentWorkbenchDemo({ tick }: { tick: number }) {
       </div>
 
       <div className="r-agent-claims" aria-label="Claimed ranges">
-        <span style={{ "--claim-color": "#7DD3FC" } as CSSProperties}>Rows 1-10 claimed</span>
-        <span style={{ "--claim-color": "#A7F3D0" } as CSSProperties}>Rows 11-22 claimed</span>
-        <span style={{ "--claim-color": "#FDE68A" } as CSSProperties}>Chart + wiki target claimed</span>
+        <span style={{ "--claim-color": "#7DD3FC" } as CSSProperties}>D7:D9 + PDF evidence claimed</span>
+        <span style={{ "--claim-color": "#A7F3D0" } as CSSProperties}>QA memo + source page claimed</span>
+        <span style={{ "--claim-color": "#FDE68A" } as CSSProperties}>B12:D12 + wiki target claimed</span>
+      </div>
+
+      <div className="r-agent-stream-strip" aria-label="Concurrent stream summary">
+        {MULTI_AGENT_AGENTS.map((agent) => {
+          const status = statusForTick(agent.startTick, agent.doneTick, tick);
+          const visibleCount = Math.max(1, Math.min(agent.chunks.length, Math.floor(Math.max(0, tick - agent.startTick) / 2) + 1));
+          const latest = status === "done" ? agent.commit : agent.chunks[visibleCount - 1];
+          return (
+            <span key={`${agent.id}-strip`} data-status={status} style={{ "--agent-color": agent.color } as CSSProperties}>
+              <i />
+              <b>{agent.name}</b>
+              <em>{latest}</em>
+            </span>
+          );
+        })}
+      </div>
+
+      <div className="r-gold-board" aria-label="Public gold proof board">
+        <div className="r-gold-board-head">
+          <span>Source document</span>
+          <span>NodeRoom output</span>
+          <span>Gold / eval</span>
+        </div>
+        {MULTI_AGENT_GOLD_CASES.map((goldCase, index) => {
+          const active = tick >= Math.max(2, index + 4);
+          return (
+            <div className="r-gold-row" data-active={String(active)} key={goldCase.caseId}>
+              <div>
+                <b>{goldCase.title}</b>
+                <em>{goldCase.source}</em>
+                <code>{goldCase.caseId}</code>
+              </div>
+              <div>
+                <b>{goldCase.target}</b>
+                <em>{active ? goldCase.output : "waiting for child receipt"}</em>
+              </div>
+              <div className="r-gold-evals">
+                <b>{goldCase.gold}</b>
+                {goldCase.evals.map((item) => <span key={item}>{active ? item : "queued"}</span>)}
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <div className="r-agent-proof-grid" data-testid={complete ? "multi-agent-complete" : undefined}>
-        <span><b>Golden comparison</b><em>30/30 entities checked</em></span>
-        <span><b>No clobber</b><em>stale writes rejected</em></span>
-        <span><b>Evidence</b><em>29 pass, 1 review</em></span>
-        <span><b>Privacy</b><em>private refs excluded</em></span>
+        <span><b>Public gold</b><em>4/4 cases validated</em></span>
+        <span><b>No clobber</b><em>human edit preserved</em></span>
+        <span><b>Evidence</b><em>page, bbox, XBRL refs present</em></span>
+        <span><b>Runtime</b><em>3 child jobs, 1 sealed handoff</em></span>
       </div>
     </div>
   );

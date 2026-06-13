@@ -1,0 +1,64 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-multi-agent-workbench",
+    "class": "readme_walkthrough",
+    "title": "Multi Agent Workbench",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\multi-agent-workbench.mp4",
+    "relPath": "docs/walkthroughs/multi-agent-workbench.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:multi-agent-workbench"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/multi-agent-workbench.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 5037200,
+  "judge": {
+    "verdict": "publish",
+    "summary": "Excellent walkthrough demonstrating the multi-agent workbench executing complex financial QA tasks with clear step-by-step progress and final verification.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.5,
+        "evidence": "Clear command input and structured multi-agent execution grid."
+      },
+      "workflowCompleteness": {
+        "score": 1.5,
+        "evidence": "Shows command entry, real-time agent execution, and final validation results."
+      },
+      "visualDesign": {
+        "score": 1.5,
+        "evidence": "Clean dark-themed grid layout with clear status indicators."
+      },
+      "consistency": {
+        "score": 1.5,
+        "evidence": "Aligns with NodeRoom's multi-agent and document verification workflow."
+      },
+      "evidenceQuality": {
+        "score": 1.5,
+        "evidence": "Authentic UI interaction showing live state updates."
+      },
+      "legibility": {
+        "score": 1.2,
+        "evidence": "Main text is highly readable, though some grid details are small."
+      },
+      "professionalRelevance": {
+        "score": 1.5,
+        "evidence": "Directly demonstrates financial QA and SEC compliance use cases."
+      },
+      "productionHonesty": {
+        "score": 1.5,
+        "evidence": "Accurately displays execution states and verification outcomes."
+      }
+    },
+    "observedEvidence": [
+      "Multi-agent command input",
+      "Real-time execution grid",
+      "Gold/Eval verification status"
+    ],
+    "missingEvidence": [],
+    "defects": [],
+    "suggestedReadmeCaption": "Watch the Multi-Agent Workbench execute parallel financial QA tasks and verify results against gold standards in real-time."
+  },
+  "score": 11.7,
+  "maxScore": 16
+}

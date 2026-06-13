@@ -57,6 +57,7 @@
       "description": "HALO loop, eval trust policy, budget and boundary checks, generated reports, QA matrix, and documentation gates.",
       "patterns": [
         "README.md",
+        "package-lock.json",
         "package.json",
         "docs/AGENT_EVAL.md",
         "docs/AGENT_RUNTIME.md",

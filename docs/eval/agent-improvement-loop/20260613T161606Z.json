@@ -1,0 +1,1088 @@
+{
+  "schema": 1,
+  "runId": "20260613T161606Z",
+  "generatedAt": "2026-06-13T16:19:22.209Z",
+  "cookbookSource": "https://developers.openai.com/cookbook/examples/agents_sdk/agent_improvement_loop",
+  "mode": {
+    "live": false,
+    "fullLive": false,
+    "strict": false
+  },
+  "targetUsers": [
+    "GTM sales operators managing account lists, enrichment, and PitchBook-style matching",
+    "Finance and banking analysts reconciling workbooks, exports, timecards, and variance evidence",
+    "Harness engineers converting messy workflow evidence into repeatable eval gates"
+  ],
+  "workflowProfile": {
+    "manifestFiles": 70,
+    "csvFiles": 23,
+    "xlsxFiles": 47,
+    "categoryCounts": {
+      "gtm_company_research": 46,
+      "finance_ops": 11,
+      "eval_harness": 2,
+      "analytics_optimization": 3,
+      "legacy_agent_outputs": 3,
+      "mixed": 5
+    },
+    "piiHeaderSignals": 47,
+    "formulaSampleFiles": 16,
+    "mergedCellFiles": 18,
+    "notes": [
+      "The profile stores only workbook shapes, categories, and header-level signals; raw private rows are not a repo artifact.",
+      "Most files are company research, classification, PitchBook, ParselyFi, or healthtech/JPM workflows.",
+      "Finance and ops files include timecards, timesheets, expense sheets, cost exports, and transaction exports with formula and layout concerns."
+    ]
+  },
+  "workflowCoverage": {
+    "totalCases": 21,
+    "byCategory": {
+      "gtm_company_research": 11,
+      "finance_ops": 5,
+      "eval_harness": 2,
+      "analytics_optimization": 2,
+      "legacy_agent_outputs": 1
+    },
+    "byRequirement": {
+      "artifact_refs": 12,
+      "cell_payload_evidence": 15,
+      "schema_detection": 8,
+      "cross_file_context": 7,
+      "spreadsheet_semantic_index": 7,
+      "privacy_redaction": 16,
+      "human_review": 20,
+      "long_running_free_auto": 5,
+      "workflow_checkpoint_resume": 6,
+      "resolved_model_audit": 5,
+      "wiki_grounded_update": 6,
+      "chat_intake_parser": 4,
+      "entity_resolution": 4,
+      "clarifying_question_gate": 4,
+      "provider_parser_adapter": 2,
+      "formula_dependency_locks": 4,
+      "private_gold_pack": 1,
+      "answer_key_formula_oracle": 1,
+      "formula_structure_equivalence": 1,
+      "guide_mode_no_write": 1,
+      "section_collaboration_locks": 1,
+      "liteparse_layout_fallback": 1
+    },
+    "topCases": [
+      {
+        "id": "gtm-company-deep-report",
+        "category": "gtm_company_research",
+        "persona": "Account executive or analyst building a company brief for outreach",
+        "requiredHarness": [
+          "artifact_refs",
+          "chat_intake_parser",
+          "entity_resolution",
+          "clarifying_question_gate",
+          "cross_file_context",
+          "provider_parser_adapter",
+          "wiki_grounded_update",
+          "privacy_redaction",
+          "human_review"
+        ]
+      },
+      {
+        "id": "gtm-chat-to-background-diligence-job",
+        "category": "gtm_company_research",
+        "persona": "Solo founder using chat as a lightweight CRM and research queue",
+        "requiredHarness": [
+          "chat_intake_parser",
+          "entity_resolution",
+          "clarifying_question_gate",
+          "cell_payload_evidence",
+          "long_running_free_auto",
+          "workflow_checkpoint_resume",
+          "resolved_model_audit",
+          "wiki_grounded_update",
+          "human_review"
+        ]
+      },
+      {
+        "id": "finance-three-statement-modeling-private-gold",
+        "category": "finance_ops",
+        "persona": "Investment-banking candidate or finance team completing a 3-statement modeling test",
+        "requiredHarness": [
+          "private_gold_pack",
+          "answer_key_formula_oracle",
+          "formula_structure_equivalence",
+          "formula_dependency_locks",
+          "privacy_redaction",
+          "guide_mode_no_write",
+          "section_collaboration_locks",
+          "workflow_checkpoint_resume",
+          "human_review"
+        ]
+      },
+      {
+        "id": "gtm-healthtech-sector-classification",
+        "category": "gtm_company_research",
+        "persona": "Healthcare investor classifying a large conference or PitchBook export",
+        "requiredHarness": [
+          "cell_payload_evidence",
+          "schema_detection",
+          "spreadsheet_semantic_index",
+          "long_running_free_auto",
+          "workflow_checkpoint_resume",
+          "resolved_model_audit",
+          "wiki_grounded_update",
+          "human_review"
+        ]
+      },
+      {
+        "id": "gtm-pitchbook-company-match-enrich",
+        "category": "gtm_company_research",
+        "persona": "Sales operations analyst preparing a PitchBook upload and match review",
+        "requiredHarness": [
+          "artifact_refs",
+          "cell_payload_evidence",
+          "schema_detection",
+          "cross_file_context",
+          "spreadsheet_semantic_index",
+          "privacy_redaction",
+          "human_review"
+        ]
+      },
+      {
+        "id": "gtm-amo-signal-scorer",
+        "category": "gtm_company_research",
+        "persona": "GTM analyst scoring target accounts against a reusable AMO rubric",
+        "requiredHarness": [
+          "spreadsheet_semantic_index",
+          "cell_payload_evidence",
+          "long_running_free_auto",
+          "workflow_checkpoint_resume",
+          "resolved_model_audit",
+          "privacy_redaction",
+          "human_review"
+        ]
+      },
+      {
+        "id": "gtm-chat-lead-capture-enrich",
+        "category": "gtm_company_research",
+        "persona": "Founder, investor, or BD lead capturing a fresh call note before it becomes a spreadsheet row",
+        "requiredHarness": [
+          "chat_intake_parser",
+          "entity_resolution",
+          "clarifying_question_gate",
+          "cell_payload_evidence",
+          "wiki_grounded_update",
+          "privacy_redaction",
+          "human_review"
+        ]
+      },
+      {
+        "id": "finance-timesheet-invoice-review",
+        "category": "finance_ops",
+        "persona": "Ops or finance reviewer approving contractor time",
+        "requiredHarness": [
+          "schema_detection",
+          "formula_dependency_locks",
+          "cell_payload_evidence",
+          "provider_parser_adapter",
+          "liteparse_layout_fallback",
+          "privacy_redaction",
+          "human_review"
+        ]
+      }
+    ]
+  },
+  "architectureReview": {
+    "rule": "Research must describe the workflow, architecture gap, and existing capability fit before it proposes evals or code.",
+    "evalTrustLevels": [
+      {
+        "level": "candidate",
+        "meaning": "Generated from traces or research; useful for discussion and advisory runs, not a merge gate."
+      },
+      {
+        "level": "research_validated",
+        "meaning": "Backed by captured sources or online consensus; can create scoped handoffs, still not blocking by default."
+      },
+      {
+        "level": "contested",
+        "meaning": "Credible sources disagree; advisory only, and the eval should check that disagreement is surfaced."
+      },
+      {
+        "level": "human_verified",
+        "meaning": "Reviewed or accepted for critical use; may become blocking when deterministic and safety-safe."
+      }
+    ],
+    "gateModes": [
+      "none",
+      "advisory",
+      "blocking"
+    ],
+    "architectureFitChecks": [
+      "Can existing tools, prompts, context builders, and Convex mutations already handle the case?",
+      "If not, is the missing piece a query, action, mutation, tool schema, validator, or UI review affordance?",
+      "What is the smallest implementation that proves the workflow without a new subsystem?",
+      "What old or proposed layer can be avoided because the existing artifact/job/lock path is enough?"
+    ],
+    "rootCauseCategories": [
+      {
+        "category": "stale_context",
+        "meaning": "The agent acted on old state or missing refreshed context."
+      },
+      {
+        "category": "wrong_tool",
+        "meaning": "The model chose a tool that could not satisfy the workflow contract."
+      },
+      {
+        "category": "missing_read_before_write",
+        "meaning": "A write occurred without a current source read and version."
+      },
+      {
+        "category": "bad_mutation_contract",
+        "meaning": "The server mutation allowed an unsafe or under-specified state change."
+      },
+      {
+        "category": "weak_source_evidence",
+        "meaning": "The output lacked source-backed evidence or cited the wrong evidence."
+      },
+      {
+        "category": "bad_prompt_or_context",
+        "meaning": "Instructions or context did not define the workflow sharply enough."
+      },
+      {
+        "category": "permission_or_visibility",
+        "meaning": "Scope, privacy, or role gating was wrong or underspecified."
+      },
+      {
+        "category": "model_routing_or_budget",
+        "meaning": "The chosen model, budget, or slice policy was unfit for the task."
+      },
+      {
+        "category": "ui_review_friction",
+        "meaning": "The human review or approval surface obscured the right decision."
+      },
+      {
+        "category": "eval_measures_wrong_behavior",
+        "meaning": "The eval target itself is suspect and needs research/calibration."
+      }
+    ]
+  },
+  "steps": [
+    {
+      "id": "professional-catalog",
+      "label": "Professional workflow catalog shape",
+      "lane": "deterministic",
+      "command": "npm run eval:professional",
+      "status": "pass",
+      "ms": 1660,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 eval:professional\n> vitest run tests/professionalWorkflows.test.ts\n\n\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/professionalWorkflows.test.ts (16 tests) 16ms\n\n Test Files  1 passed (1)\n      Tests  16 passed (16)\n   Start at  09:16:07\n   Duration  797ms (transform 118ms, setup 0ms, collect 184ms, tests 16ms, environment 0ms, prepare 114ms)\n\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "professional-catalog-proofs",
+      "label": "Professional catalog proof gate",
+      "lane": "deterministic",
+      "command": "npm run eval:professional:catalog-proofs",
+      "status": "pass",
+      "ms": 708,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 eval:professional:catalog-proofs\n> tsx evals/professionalCatalogProofs.ts --require-full\n\n{\n  \"total\": 21,\n  \"deterministicCatalog\": 21,\n  \"fullyProofed\": true,\n  \"failedCaseIds\": []\n}\nwrote docs\\eval\\professional-catalog-proofs.json\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "professional-proof-ledger",
+      "label": "Professional proof ledger",
+      "lane": "deterministic",
+      "command": "npm run eval:professional:proofs",
+      "status": "pass",
+      "ms": 1438,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 eval:professional:proofs\n> tsx evals/professionalProofLedger.ts\n\n{\n  \"total\": 21,\n  \"liveProvider\": 5,\n  \"partialLiveProvider\": 16,\n  \"liveProviderCatalog\": 0,\n  \"liveProviderCatalogPassed\": 21,\n  \"liveProviderRuntimePassed\": 21,\n  \"deterministicRuntime\": 0,\n  \"deterministicCatalog\": 0,\n  \"contractShape\": 0,\n  \"runtimeManagedLock\": 21,\n  \"explicitAgentLock\": 0,\n  \"catalogOnlyLockMode\": 0,\n  \"allCatalogsProofed\": true,\n  \"allLiveCatalogProven\": true,\n  \"allLiveRuntimeExecuted\": true,\n  \"allLiveProven\": false,\n  \"blockedCaseIds\": [\n    \"gtm-pitchbook-company-match-enrich\",\n    \"gtm-healthtech-sector-classification\",\n    \"gtm-intent-classifier-golden\",\n    \"gtm-amo-signal-scorer\",\n    \"gtm-jpm-market-map-joins\",\n    \"gtm-sbb-one-column-extraction\",\n    \"gtm-company-deep-report\",\n    \"gtm-pii-masking-and-public-private-boundary\",\n    \"finance-cost-reconciliation\",\n    \"finance-three-statement-modeling-private-gold\",\n    \"finance-accountant-template-population\",\n    \"finance-timesheet-invoice-review\",\n    \"finance-transaction-activity-summary\",\n    \"analytics-weighted-ranking\",\n    \"analytics-workout-progress-dashboard\",\n    \"legacy-output-migration\"\n  ],\n  \"runtimeBlockedCaseIds\": [\n    \"gtm-pitchbook-company-match-enrich\",\n    \"gtm-healthtech-sector-classification\",\n    \"gtm-intent-classifier-golden\",\n    \"gtm-amo-signal-scorer\",\n    \"gtm-jpm-market-map-joins\",\n    \"gtm-sbb-one-column-extraction\",\n    \"gtm-company-deep-report\",\n    \"gtm-pii-masking-and-public-private-boundary\",\n    \"finance-cost-reconciliation\",\n    \"finance-three-statement-modeling-private-gold\",\n    \"finance-accountant-template-population\",\n    \"finance-timesheet-invoice-review\",\n    \"finance-transaction-activity-summary\",\n    \"analytics-weighted-ranking\",\n    \"analytics-workout-progress-dashboard\",\n    \"legacy-output-migration\"\n  ],\n  \"unproofedCaseIds\": []\n}\nwrote docs\\eval\\professional-proof-ledger.json\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "workflow-evals",
+      "label": "GTM/finance workflow evals",
+      "lane": "deterministic",
+      "command": "npx vitest run tests/workflowEvals.test.ts",
+      "status": "pass",
+      "ms": 2351,
+      "exitCode": 0,
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/workflowEvals.test.ts (5 tests) 22ms\n\n Test Files  1 passed (1)\n      Tests  5 passed (5)\n   Start at  09:16:11\n   Duration  1.12s (transform 169ms, setup 0ms, collect 467ms, tests 22ms, environment 0ms, prepare 124ms)\n\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "collaboration-ladder",
+      "label": "Collaboration ladder L1-L6",
+      "lane": "deterministic",
+      "command": "npm run ladder -- --record",
+      "status": "pass",
+      "ms": 1249,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 ladder\n> tsx evals/ladder.ts --record\n\n  scripted · L1_read ... PASS (1 tools, 0.0s, $0.0000, resolved=scripted-read)\n  scripted · L2_edit ... PASS (4 tools, 0.0s, $0.0000)\n  scripted · L3_conflict ... PASS (4 tools, 0.0s, $0.0000)\n  scripted · L4_blocked ... PASS (4 tools, 0.0s, $0.0000)\n  scripted · L5_large_range ... PASS (4 tools, 0.0s, $0.0000)\n  scripted · L6_long_horizon ... PASS (16 tools, 0.0s, $0.0000)\n  scripted · L7_resume ... PASS (12 tools, 0.0s, $0.0000, resolved=scripted-resume)\n\nFAILURE HEATMAP (model x level)\n------------------------------------------------------------------------\nmodel                         L1  L2  L3  L4  L5  L6  L7\nscripted                      OK  OK  OK  OK  OK  OK  OK\n------------------------------------------------------------------------\nlegend: L1=READ (no mutation) | L2=EDIT (single CAS) | L3=CONFLICT (no clobber) | L4=BLOCKED (must draft) | L5=LARGE RANGE (no full snapshot) | L6=LONG HORIZON (compaction + recovery) | L7=RESUME (slice death + cold continuation)\n\nrecorded 7 rung result(s) to docs/eval/eval-runs.jsonl (304cffd+dirty.2083b6b3eb81d2ef). Diff: npm run eval:diff\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "credit-evals",
+      "label": "MM-banking credit decision evals",
+      "lane": "deterministic",
+      "command": "npm run eval:credit -- --record",
+      "status": "pass",
+      "ms": 1013,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 eval:credit\n> tsx evals/creditEval.ts --record\n\nPASS credit:cascade-healthy    expect=approve            +footsTieOut +dscrPass +leveragePass +ltvPass\nPASS credit:summit-stressed    expect=breach             +ratiosComputed +breachDetected\nPASS credit:delta-incomplete   expect=insufficient_data  +gapSurfaced\nPASS credit:mapping-correct    expect=compute+provenance +bindingsValid +dscrCorrect +leverageCorrect +provenanceCarried\nPASS credit:mapping-misbind    expect=mapping_rejected   +misbindDetected +notSilentlyComputed\n\nrecorded 5 credit case(s) to docs/eval/eval-runs.jsonl (304cffd+dirty.7c59d27ec7899d74). Diff: npm run eval:diff\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "official-benchmark-readiness",
+      "label": "Official benchmark readiness report",
+      "lane": "deterministic",
+      "command": "npm run benchmark:official:readiness",
+      "status": "pass",
+      "ms": 677,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:official:readiness\n> tsx scripts/official-benchmark-readiness.ts\n\nwrote docs/eval/official-benchmark-readiness.json\nwrote docs/eval/OFFICIAL_BENCHMARK_READINESS.md\nofficial benchmark readiness: 0/3 ready\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "official-benchmark-promotion-gate",
+      "label": "Official benchmark promotion gate",
+      "lane": "deterministic",
+      "command": "npm run benchmark:official:readiness -- --strict",
+      "status": "blocked",
+      "ms": 673,
+      "exitCode": 1,
+      "reason": "official BankerToolBench/SpreadsheetBench readiness remains blocked by external benchmark prerequisites",
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:official:readiness\n> tsx scripts/official-benchmark-readiness.ts --strict\n\nwrote docs/eval/official-benchmark-readiness.json\nwrote docs/eval/OFFICIAL_BENCHMARK_READINESS.md\nofficial benchmark readiness: 0/3 ready\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "benchmark-contamination-fixture",
+      "label": "Official benchmark contamination fixture",
+      "lane": "deterministic",
+      "command": "npx vitest run tests/benchmarkContamination.test.ts",
+      "status": "pass",
+      "ms": 1940,
+      "exitCode": 0,
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/benchmarkContamination.test.ts (3 tests) 39ms\n\n Test Files  1 passed (1)\n      Tests  3 passed (3)\n   Start at  09:16:17\n   Duration  733ms (transform 50ms, setup 0ms, collect 82ms, tests 39ms, environment 0ms, prepare 122ms)\n\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "bankertoolbench-ingest-fixture",
+      "label": "BankerToolBench official ingest fixture",
+      "lane": "deterministic",
+      "command": "npx vitest run tests/bankerToolBenchAdapter.test.ts",
+      "status": "pass",
+      "ms": 1893,
+      "exitCode": 0,
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/bankerToolBenchAdapter.test.ts (1 test) 23ms\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  09:16:19\n   Duration  664ms (transform 56ms, setup 0ms, collect 87ms, tests 23ms, environment 0ms, prepare 115ms)\n\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "bankertoolbench-stage-fixture",
+      "label": "BankerToolBench sandbox stage fixture",
+      "lane": "deterministic",
+      "command": "npx vitest run tests/bankerToolBenchStage.test.ts",
+      "status": "pass",
+      "ms": 1998,
+      "exitCode": 0,
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/bankerToolBenchStage.test.ts (1 test) 38ms\n\n Test Files  1 passed (1)\n      Tests  1 passed (1)\n   Start at  09:16:20\n   Duration  761ms (transform 58ms, setup 0ms, collect 112ms, tests 38ms, environment 0ms, prepare 140ms)\n\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "bankertoolbench-manifest-lock-fixture",
+      "label": "BankerToolBench manifest lock fixture",
+      "lane": "deterministic",
+      "command": "npm run benchmark:bankertoolbench:manifest-lock -- --root .tmp/official-benchmarks/btb-fixture --json-out docs/eval/bankertoolbench-manifest-lock-smoke.json",
+      "status": "pass",
+      "ms": 735,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:bankertoolbench:manifest-lock\n> tsx scripts/bankertoolbench-manifest-lock.ts --root .tmp/official-benchmarks/btb-fixture --json-out docs/eval/bankertoolbench-manifest-lock-smoke.json\n\nwrote docs/eval/bankertoolbench-manifest-lock-smoke.json\nBankerToolBench manifest lock: 4 file(s), aggregate=ba1c6596045a392e8d9b94ab270cd5a4f4faa2b01ea64b9ff1f987cbe756925f\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "bankertoolbench-runner-fixture",
+      "label": "BankerToolBench staged runner fixture",
+      "lane": "deterministic",
+      "command": "npx vitest run tests/bankerToolBenchRunner.test.ts",
+      "status": "pass",
+      "ms": 2815,
+      "exitCode": 0,
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/bankerToolBenchRunner.test.ts (4 tests) 381ms\n\n Test Files  1 passed (1)\n      Tests  4 passed (4)\n   Start at  09:16:23\n   Duration  1.64s (transform 116ms, setup 0ms, collect 623ms, tests 381ms, environment 0ms, prepare 131ms)\n\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "bankertoolbench-proof",
+      "label": "BankerToolBench local harness proof gate",
+      "lane": "deterministic",
+      "command": "npm run benchmark:bankertoolbench:proof",
+      "status": "pass",
+      "ms": 764,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:bankertoolbench:proof\n> tsx scripts/bankertoolbench-proof-check.ts\n\nBankerToolBench proof check passed: stage=1/1 weightedRubric=6 run=0/1 pass positive=1/1 pass candidateBeforeEvaluator=true leaks=0/2+0/3+0/4\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "bankertoolbench-official-contract",
+      "label": "BankerToolBench official execution contract",
+      "lane": "deterministic",
+      "command": "npm run benchmark:bankertoolbench:official-contract -- --strict",
+      "status": "blocked",
+      "ms": 733,
+      "exitCode": 1,
+      "reason": "BTB official contract is missing external Docker/MCP/Gandalf/provenance evidence",
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:bankertoolbench:official-contract\n> tsx scripts/bankertoolbench-official-contract.ts --json-out docs/eval/bankertoolbench-official-contract.json --strict\n\nwrote docs/eval/bankertoolbench-official-contract.json\nBankerToolBench official contract: blocked_external_requirements (4 blocker(s))\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "spreadsheetbench-ingest-fixture",
+      "label": "SpreadsheetBench official ingest fixture",
+      "lane": "deterministic",
+      "command": "npx vitest run tests/spreadsheetBenchAdapter.test.ts",
+      "status": "pass",
+      "ms": 1733,
+      "exitCode": 0,
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/spreadsheetBenchAdapter.test.ts (2 tests) 31ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  09:16:27\n   Duration  637ms (transform 47ms, setup 0ms, collect 90ms, tests 31ms, environment 0ms, prepare 100ms)\n\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "spreadsheetbench-stage-fixture",
+      "label": "SpreadsheetBench sandbox stage fixture",
+      "lane": "deterministic",
+      "command": "npx vitest run tests/spreadsheetBenchStage.test.ts",
+      "status": "pass",
+      "ms": 1782,
+      "exitCode": 0,
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/spreadsheetBenchStage.test.ts (2 tests) 75ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  09:16:29\n   Duration  708ms (transform 56ms, setup 0ms, collect 122ms, tests 75ms, environment 0ms, prepare 108ms)\n\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "spreadsheetbench-v1-full-stage-proof",
+      "label": "SpreadsheetBench V1 full-stage isolation proof",
+      "lane": "deterministic",
+      "command": "npm run benchmark:spreadsheetbench:stage-proof -- --report docs/eval/spreadsheetbench-v1-full-stage-smoke.json --stage-root .tmp/official-benchmarks/staged-v1-full --track spreadsheetbench-v1 --min-tasks 400",
+      "status": "pass",
+      "ms": 684,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:spreadsheetbench:stage-proof\n> tsx scripts/spreadsheetbench-stage-proof-check.ts --report docs/eval/spreadsheetbench-v1-full-stage-smoke.json --stage-root .tmp/official-benchmarks/staged-v1-full --track spreadsheetbench-v1 --min-tasks 400\n\nSpreadsheetBench stage proof passed: 400/400 staged task(s), agentFiles=800, goldFiles=400\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "spreadsheetbench-v2-stage-proof",
+      "label": "SpreadsheetBench V2 public-example stage proof",
+      "lane": "deterministic",
+      "command": "npm run benchmark:spreadsheetbench:stage-proof -- --report docs/eval/spreadsheetbench-v2-stage-smoke.json --stage-root .tmp/official-benchmarks/staged-v2 --track spreadsheetbench-v2 --min-tasks 3",
+      "status": "pass",
+      "ms": 563,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:spreadsheetbench:stage-proof\n> tsx scripts/spreadsheetbench-stage-proof-check.ts --report docs/eval/spreadsheetbench-v2-stage-smoke.json --stage-root .tmp/official-benchmarks/staged-v2 --track spreadsheetbench-v2 --min-tasks 3\n\nSpreadsheetBench stage proof passed: 3/26 staged task(s), agentFiles=3, goldFiles=3\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "spreadsheetbench-v1-route-selection",
+      "label": "SpreadsheetBench V1 route selection report",
+      "lane": "deterministic",
+      "command": "npm run benchmark:spreadsheetbench:routes -- --stage-root .tmp/official-benchmarks/staged-v1-full --json-out docs/eval/spreadsheetbench-v1-route-selection.json",
+      "status": "pass",
+      "ms": 640,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:spreadsheetbench:routes\n> tsx scripts/spreadsheetbench-route-selection.ts --stage-root .tmp/official-benchmarks/staged-v1-full --json-out docs/eval/spreadsheetbench-v1-route-selection.json\n\nwrote docs/eval/spreadsheetbench-v1-route-selection.json\nSpreadsheetBench route selection: 400 task(s), deterministic_table_transform=41, model_formula_edit=218, model_format_edit=33, model_general_edit=106, blocked_chart_visual=2\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "spreadsheetbench-v2-route-selection",
+      "label": "SpreadsheetBench V2 route selection report",
+      "lane": "deterministic",
+      "command": "npm run benchmark:spreadsheetbench:routes -- --stage-root .tmp/official-benchmarks/staged-v2 --json-out docs/eval/spreadsheetbench-v2-route-selection.json",
+      "status": "pass",
+      "ms": 573,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:spreadsheetbench:routes\n> tsx scripts/spreadsheetbench-route-selection.ts --stage-root .tmp/official-benchmarks/staged-v2 --json-out docs/eval/spreadsheetbench-v2-route-selection.json\n\nwrote docs/eval/spreadsheetbench-v2-route-selection.json\nSpreadsheetBench route selection: 3 task(s), deterministic_table_transform=0, model_formula_edit=2, model_format_edit=0, model_general_edit=1, blocked_chart_visual=0\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "spreadsheetbench-v1-copy-full-baseline",
+      "label": "SpreadsheetBench V1 full-bundle copy-input baseline",
+      "lane": "deterministic",
+      "command": "npm run benchmark:spreadsheetbench:run-chunked -- --stage-root .tmp/official-benchmarks/staged-v1-full --output-root .tmp/official-benchmarks/run-v1-copy-full --mode copy-input-baseline --chunk-size 5 --json-out docs/eval/spreadsheetbench-v1-copy-input-full-smoke.json --max-mismatches 5",
+      "status": "pass",
+      "ms": 147392,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:spreadsheetbench:run-chunked\n> tsx scripts/spreadsheetbench-run-chunked.ts --stage-root .tmp/official-benchmarks/staged-v1-full --output-root .tmp/official-benchmarks/run-v1-copy-full --mode copy-input-baseline --chunk-size 5 --json-out docs/eval/spreadsheetbench-v1-copy-input-full-smoke.json --max-mismatches 5\n\nchunk 1: offset=0 limit=5 pass=0/5\nchunk 2: offset=5 limit=5 pass=0/5\nchunk 3: offset=10 limit=5 pass=0/5\nchunk 4: offset=15 limit=5 pass=0/5\nchunk 5: offset=20 limit=5 pass=0/5\nchunk 6: offset=25 limit=5 pass=0/5\nchunk 7: offset=30 limit=5 pass=0/5\nchunk 8: offset=35 limit=5 pass=0/5\nchunk 9: offset=40 limit=5 pass=0/5\nchunk 10: offset=45 limit=5 pass=0/5\nchunk 11: offset=50 limit=5 pass=0/5\nchunk 12: offset=55 limit=5 pass=0/5\nchunk 13: offset=60 limit=5 pass=0/5\nchunk 14: offset=65 limit=5 pass=0/5\nchunk 15: offset=70 limit=5 pass=0/5\nchunk 16: offset=75 limit=5 failed; splitting into single-task chunks\nchunk 16: offset=75 limit=1 pass=0/1\nchunk 16: offset=76 limit=1 pass=0/1\nchunk 16: offset=77 limit=1 failed -> recorded synthetic error\nchunk 16: offset=78 limit=1 pass=0/1\nchunk 16: offset=79 limit=1 pass=0/1\nchunk 17: offset=80 limit=5 pass=0/5\nchunk 18: offset=85 limit=5 pass=0/5\nchunk 19: offset=90 limit=5 pass=0/5\nchunk 20: offset=95 limit=5 pass=0/5\nchunk 21: offset=100 limit=5 pass=0/5\nchunk 22: offset=105 limit=5 pass=0/5\nchunk 23: offset=110 limit=5 pass=0/5\nchunk 24: offset=115 limit=5 pass=0/5\nchunk 25: offset=120 limit=5 pass=0/5\nchunk 26: offset=125 limit=5 pass=0/5\nchunk 27: offset=130 limit=5 pass=0/5\nchunk 28: offset=135 limit=5 pass=0/5\nchunk 29: offset=140 limit=5 pass=0/5\nchunk 30: offset=145 limit=5 pass=0/5\nchunk 31: offset=150 limit=5 pass=0/5\nchunk 32: offset=155 limit=5 pass=0/5\nchunk 33: offset=160 limit=5 pass=0/5\nchunk 34: offset=165 limit=5 pass=0/5\nchunk 35: offset=170 limit=5 pass=0/5\nchunk 36: offset=175 limit=5 pass=0/5\nchunk 37: offset=180 limit=5 pass=0/5\nchunk 38: offset=185 limit=5 pass=0/5\nchunk 39: offset=190 limit=5 pass=0/5\nchunk 40: offset=195 limit=5 pass=0/5\nchunk 41: offset=200 limit=5 pass=0/5\nchunk 42: offset=205 limit=5 pass=0/5\nchunk 43: offset=210 limit=5 pass=0/5\nchunk 44: offset=215 limit=5 pass=0/5\nchunk 45: offset=220 limit=5 pass=0/5\nchunk 46: offset=225 limit=5 pass=0/5\nchunk 47: offset=230 limit=5 pass=0/5\nchunk 48: offset=235 limit=5 pass=0/5\nchunk 49: offset=240 limit=5 pass=0/5\nchunk 50: offset=245 limit=5 pass=0/5\nchunk 51: offset=250 limit=5 pass=0/5\nchunk 52: offset=255 limit=5 pass=0/5\nchunk 53: offset=260 limit=5 pass=0/5\nchunk 54: offset=265 limit=5 pass=0/5\nchunk 55: offset=270 limit=5 pass=0/5\nchunk 56: offset=275 limit=5 pass=0/5\nchunk 57: offset=280 limit=5 pass=0/5\nchunk 58: offset=285 limit=5 pass=0/5\nchunk 59: offset=290 limit=5 pass=0/5\nchunk 60: offset=295 limit=5 pass=0/5\nchunk 61: offset=300 limit=5 pass=0/5\nchunk 62: offset=305 limit=5 pass=0/5\nchunk 63: offset=310 limit=5 pass=0/5\nchunk 64: offset=315 limit=5 pass=0/5\nchunk 65: offset=320 limit=5 pass=0/5\nchunk 66: offset=325 limit=5 pass=0/5\nchunk 67: offset=330 limit=5 pass=0/5\nchunk 68: offset=335 limit=5 pass=0/5\nchunk 69: offset=340 limit=5 pass=0/5\nchunk 70: offset=345 limit=5 pass=0/5\nchunk 71: offset=350 limit=5 pass=0/5\nchunk 72: offset=355 limit=5 pass=0/5\nchunk 73: offset=360 limit=5 pass=0/5\nchunk 74: offset=365 limit=5 pass=0/5\nchunk 75: offset=370 limit=5 pass=0/5\nchunk 76: offset=375 limit=5 pass=0/5\nchunk 77: offset=380 limit=5 pass=1/5\nchunk 78: offset=385 limit=5 pass=0/5\nchunk 79: offset=390 limit=5 pass=0/5\nchunk 80: offset=395 limit=5 pass=0/5\nwrote docs/eval/spreadsheetbench-v1-copy-input-full-smoke.json\nSpreadsheetBench chunked run: 1/400 pass, average=0.253132\n",
+      "stderrTail": "\r\n<--- Last few GCs --->\r\n\r\n[95976:000001F7101AC000]    10974 ms: Scavenge (interleaved) 4035.9 (4126.8) -> 4032.5 (4128.1) MB, pooled: 0 MB, 19.21 / 0.00 ms  (average mu = 0.381, current mu = 0.293) allocation failure; \r\n[95976:000001F7101AC000]    11246 ms: Scavenge (interleaved) 4043.5 (4134.7) -> 4041.4 (4154.0) MB, pooled: 0 MB, 258.38 / 0.00 ms  (average mu = 0.381, current mu = 0.293) allocation failure; \r\n\r\n\r\n<--- JS stacktrace --->\r\n\r\nFATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory\r\n----- Native stack trace -----\r\n\r\n 1: 00007FF6E85D3587 node::SetCppgcReference+21127\r\n 2: 00007FF6E8533A5B v8::base::CPU::num_virtual_address_bits+102587\r\n 3: 00007FF6E913CCD1 v8::Isolate::ReportExternalAllocationLimitReached+65\r\n 4: 00007FF6E9129786 v8::Function::Experimental_IsNopFunction+3302\r\n 5: 00007FF6E8F85ED0 v8::internal::StrongRootAllocatorBase::StrongRootAllocatorBase+33904\r\n 6: 00007FF6E8F8255A v8::internal::StrongRootAllocatorBase::StrongRootAllocatorBase+19194\r\n 7: 00007FF6E8F98AFC v8::Isolate::GetHeapProfiler+8012\r\n 8: 00007FF6E8F9937A v8::Isolate::GetHeapProfiler+10186\r\n 9: 00007FF6E8FA9D7B v8::Isolate::GetHeapProfiler+78283\r\n10: 00007FF6E8C76C3B v8::base::AddressSpaceReservation::AddressSpaceReservation+323995\r\n11: 00007FF6891ADF10 \r\n\r\n<--- Last few GCs --->\r\n\r\n[23276:000001CA0779B000]    15594 ms: Scavenge (interleaved) 4045.0 (4132.1) -> 4043.9 (4141.8) MB, pooled: 0 MB, 14.18 / 0.00 ms  (average mu = 0.146, current mu = 0.071) allocation failure; \r\n[23276:000001CA0779B000]    18219 ms: Mark-Compact 4047.7 (4143.9) -> 4046.7 (4145.9) MB, pooled: 0 MB, 2622.29 / 0.00 ms  (average mu = 0.096, current mu = 0.030) allocation failure; scavenge might not succeed\r\n\r\n\r\n<--- JS stacktrace --->\r\n\r\nFATAL ERROR: Reached heap limit Allocation failed - JavaScript heap out of memory\r\n----- Native stack trace -----\r\n\r\n 1: 00007FF6E85D3587 node::SetCppgcReference+21127\r\n 2: 00007FF6E8533A5B v8::base::CPU::num_virtual_address_bits+102587\r\n 3: 00007FF6E913CCD1 v8::Isolate::ReportExternalAllocationLimitReached+65\r\n 4: 00007FF6E9129786 v8::Function::Experimental_IsNopFunction+3302\r\n 5: 00007FF6E8F85ED0 v8::internal::StrongRootAllocatorBase::StrongRootAllocatorBase+33904\r\n 6: 00007FF6E8F8255A v8::internal::StrongRootAllocatorBase::StrongRootAllocatorBase+19194\r\n 7: 00007FF6E8F98AFC v8::Isolate::GetHeapProfiler+8012\r\n 8: 00007FF6E8F9937A v8::Isolate::GetHeapProfiler+10186\r\n 9: 00007FF6E8FA4461 v8::Isolate::GetHeapProfiler+55473\r\n10: 00007FF6E8FB7DDC v8::Isolate::GetHeapProfiler+135724\r\n11: 00007FF6E8E3EC09 v8::MemorySpan<std::basic_string_view<char,std::char_traits<char> > const >::end+1094537\r\n12: 00007FF6E8E575EB v8::Message::GetIsolate+10795\r\n13: 00007FF6E8C8638F v8::base::AddressSpaceReservation::AddressSpaceReservation+387311\r\n14: 00007FF6891ADAFA \r\n"
+    },
+    {
+      "id": "spreadsheetbench-score-fixture",
+      "label": "SpreadsheetBench workbook score fixture",
+      "lane": "deterministic",
+      "command": "npx vitest run tests/spreadsheetBenchScorer.test.ts",
+      "status": "pass",
+      "ms": 2484,
+      "exitCode": 0,
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/spreadsheetBenchScorer.test.ts (8 tests) 256ms\n\n Test Files  1 passed (1)\n      Tests  8 passed (8)\n   Start at  09:19:01\n   Duration  1.37s (transform 73ms, setup 0ms, collect 570ms, tests 256ms, environment 0ms, prepare 112ms)\n\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "spreadsheetbench-chart-score-fixture",
+      "label": "SpreadsheetBench chart package score fixture",
+      "lane": "deterministic",
+      "command": "npx vitest run tests/spreadsheetBenchChartScorer.test.ts",
+      "status": "pass",
+      "ms": 2042,
+      "exitCode": 0,
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/spreadsheetBenchChartScorer.test.ts (2 tests) 50ms\n\n Test Files  1 passed (1)\n      Tests  2 passed (2)\n   Start at  09:19:03\n   Duration  786ms (transform 56ms, setup 0ms, collect 104ms, tests 50ms, environment 0ms, prepare 125ms)\n\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "spreadsheetbench-chart-visual-probe",
+      "label": "SpreadsheetBench rendered/VLM chart visual probe",
+      "lane": "deterministic",
+      "command": "npm run benchmark:spreadsheetbench:chart-visual:probe -- --strict",
+      "status": "blocked",
+      "ms": 690,
+      "exitCode": 1,
+      "reason": "SpreadsheetBench V2 rendered/VLM chart grading prerequisites are not proven",
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:spreadsheetbench:chart-visual:probe\n> tsx scripts/spreadsheetbench-chart-visual-probe.ts --json-out docs/eval/spreadsheetbench-chart-visual-probe.json --strict\n\nwrote docs/eval/spreadsheetbench-chart-visual-probe.json\nSpreadsheetBench chart visual probe: renderer_unavailable not-ready\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "spreadsheetbench-runner-fixture",
+      "label": "SpreadsheetBench staged runner fixture",
+      "lane": "deterministic",
+      "command": "npx vitest run tests/spreadsheetBenchRunner.test.ts",
+      "status": "pass",
+      "ms": 5003,
+      "exitCode": 0,
+      "stdoutTail": "\n RUN  v2.1.9 D:/VSCode Projects/cafecorner_nodebench/nodebench_ai4/noderoom\n\n ✓ tests/spreadsheetBenchRunner.test.ts (20 tests) 2079ms\n\n Test Files  1 passed (1)\n      Tests  20 passed (20)\n   Start at  09:19:06\n   Duration  3.76s (transform 219ms, setup 0ms, collect 1.05s, tests 2.08s, environment 0ms, prepare 133ms)\n\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "agent-workspace-process-sandbox",
+      "label": "Agent workspace process sandbox",
+      "lane": "deterministic",
+      "command": "npm run benchmark:agent-sandbox -- --json-out docs/eval/agent-workspace-sandbox-smoke.json",
+      "status": "pass",
+      "ms": 787,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:agent-sandbox\n> tsx scripts/agent-workspace-sandbox-smoke.ts --json-out docs/eval/agent-workspace-sandbox-smoke.json\n\nwrote docs/eval/agent-workspace-sandbox-smoke.json\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "docker-sandbox-probe",
+      "label": "Docker/Harbor availability probe",
+      "lane": "deterministic",
+      "command": "npm run benchmark:docker-sandbox:probe -- --require-pass",
+      "status": "blocked",
+      "ms": 1153,
+      "exitCode": 1,
+      "reason": "Docker/Harbor process isolation is not proven in this environment",
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:docker-sandbox:probe\n> tsx scripts/docker-sandbox-probe.ts --json-out docs/eval/docker-sandbox-probe.json --require-pass\n\nwrote docs/eval/docker-sandbox-probe.json\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "spreadsheetbench-stage-contamination",
+      "label": "SpreadsheetBench staged artifact contamination",
+      "lane": "deterministic",
+      "command": "npm run benchmark:contamination -- --root .tmp/official-benchmarks/staged-v1 --strict",
+      "status": "pass",
+      "ms": 663,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/staged-v1 --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T16:19:13.006Z\",\n  \"root\": \"staged-v1\",\n  \"checkedFiles\": 6,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 6 checked file(s)\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "spreadsheetbench-v1-full-stage-contamination",
+      "label": "SpreadsheetBench V1 full-stage contamination",
+      "lane": "deterministic",
+      "command": "npm run benchmark:contamination -- --root .tmp/official-benchmarks/staged-v1-full --strict",
+      "status": "pass",
+      "ms": 875,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/staged-v1-full --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T16:19:13.660Z\",\n  \"root\": \"staged-v1-full\",\n  \"checkedFiles\": 800,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 800 checked file(s)\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "spreadsheetbench-run-contamination",
+      "label": "SpreadsheetBench N5 run artifact contamination",
+      "lane": "deterministic",
+      "command": "npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v1-model-edit-n5 --strict",
+      "status": "pass",
+      "ms": 675,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/run-v1-model-edit-n5 --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T16:19:14.548Z\",\n  \"root\": \"run-v1-model-edit-n5\",\n  \"checkedFiles\": 25,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 25 checked file(s)\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "spreadsheetbench-3task-n5-run-contamination",
+      "label": "SpreadsheetBench 3-task N5 run artifact contamination",
+      "lane": "deterministic",
+      "command": "npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v1-model-edit-3task-n5 --strict",
+      "status": "pass",
+      "ms": 667,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/run-v1-model-edit-3task-n5 --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T16:19:15.208Z\",\n  \"root\": \"run-v1-model-edit-3task-n5\",\n  \"checkedFiles\": 75,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 75 checked file(s)\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "spreadsheetbench-3task-n5-proof",
+      "label": "SpreadsheetBench 3-task N5 proof gate",
+      "lane": "deterministic",
+      "command": "npm run benchmark:spreadsheetbench:proof -- --require-sidecar-files",
+      "status": "pass",
+      "ms": 682,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:spreadsheetbench:proof\n> tsx scripts/spreadsheetbench-proof-check.ts --require-sidecar-files\n\nSpreadsheetBench proof check passed: 15/15 attempts 3 case(s) x 5 repeat(s) p95=5080ms cost=$0.0462905 leaks=0/75 sidecarFiles=verified\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "spreadsheetbench-retry-run-contamination",
+      "label": "SpreadsheetBench retry run artifact contamination",
+      "lane": "deterministic",
+      "command": "npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v1-model-edit-retry --strict",
+      "status": "pass",
+      "ms": 670,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/run-v1-model-edit-retry --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T16:19:16.570Z\",\n  \"root\": \"run-v1-model-edit-retry\",\n  \"checkedFiles\": 15,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 15 checked file(s)\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "spreadsheetbench-v2-stage-contamination",
+      "label": "SpreadsheetBench V2 staged artifact contamination",
+      "lane": "deterministic",
+      "command": "npm run benchmark:contamination -- --root .tmp/official-benchmarks/staged-v2 --strict",
+      "status": "pass",
+      "ms": 662,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/staged-v2 --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T16:19:17.228Z\",\n  \"root\": \"staged-v2\",\n  \"checkedFiles\": 3,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 3 checked file(s)\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "spreadsheetbench-v2-run-contamination",
+      "label": "SpreadsheetBench V2 run artifact contamination",
+      "lane": "deterministic",
+      "command": "npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v2 --strict",
+      "status": "pass",
+      "ms": 673,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/run-v2 --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T16:19:17.911Z\",\n  \"root\": \"run-v2\",\n  \"checkedFiles\": 9,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 9 checked file(s)\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "bankertoolbench-stage-contamination",
+      "label": "BankerToolBench staged artifact contamination",
+      "lane": "deterministic",
+      "command": "npm run benchmark:contamination -- --root .tmp/official-benchmarks/staged-btb --strict",
+      "status": "pass",
+      "ms": 740,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/staged-btb --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T16:19:18.652Z\",\n  \"root\": \"staged-btb\",\n  \"checkedFiles\": 2,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 2 checked file(s)\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "bankertoolbench-run-contamination",
+      "label": "BankerToolBench run artifact contamination",
+      "lane": "deterministic",
+      "command": "npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-btb --strict",
+      "status": "pass",
+      "ms": 651,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 benchmark:contamination\n> tsx scripts/benchmark-contamination-check.ts --root .tmp/official-benchmarks/run-btb --strict\n\n{\n  \"schema\": 1,\n  \"generatedAt\": \"2026-06-13T16:19:19.305Z\",\n  \"root\": \"run-btb\",\n  \"checkedFiles\": 3,\n  \"leakCount\": 0,\n  \"leaks\": []\n}\nbenchmark contamination: 0 leak(s) across 3 checked file(s)\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "eval-diff",
+      "label": "Eval regression diff",
+      "lane": "deterministic",
+      "command": "npm run eval:diff",
+      "status": "pass",
+      "ms": 719,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 eval:diff\n> tsx evals/evalDiff.ts\n\nEval diff  304cffd+dirty.2083b6b3eb81d2ef -> 304cffd+dirty.7c59d27ec7899d74   0 degraded · 0 removed · 0 improved · 5 new · 0 same\n\n    new       credit:cascade-healthy        \n    new       credit:delta-incomplete       \n    new       credit:mapping-correct        \n    new       credit:mapping-misbind        \n    new       credit:summit-stressed        \n",
+      "stderrTail": ""
+    },
+    {
+      "id": "convex-boundaries",
+      "label": "Convex query/action/mutation boundaries",
+      "lane": "deterministic",
+      "command": "npm run convex:boundaries",
+      "status": "pass",
+      "ms": 1378,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 convex:boundaries\n> tsx scripts/convex-boundary-check.ts\n\nconvex boundaries: ok\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "architecture-budget",
+      "label": "Architecture budget review",
+      "lane": "deterministic",
+      "command": "npm run architecture:budget",
+      "status": "pass",
+      "ms": 772,
+      "exitCode": 0,
+      "stdoutTail": "\n> noderoom@0.1.0 architecture:budget\n> tsx scripts/architecture-budget-check.ts\n\narchitecture budget: review required\nunowned architecture surface: package-lock.json\n",
+      "stderrTail": ""
+    },
+    {
+      "id": "free-route-discovery",
+      "label": "OpenRouter free-auto discovery",
+      "lane": "live",
+      "command": "npm run openrouter:free -- --limit=5",
+      "status": "skip",
+      "ms": 0,
+      "exitCode": null,
+      "reason": "pass --live and set OPENROUTER_API_KEY to discover current free-auto candidates"
+    },
+    {
+      "id": "professional-live-catalog",
+      "label": "Professional live-provider catalog champion",
+      "lane": "live",
+      "command": "npm run eval:professional:live-catalog -- --real deepseek/deepseek-v4-flash --require-full --retry-failed 2 --json-out docs/eval/professional-live-catalog.json",
+      "status": "skip",
+      "ms": 0,
+      "exitCode": null,
+      "reason": "pass --live and set OPENROUTER_API_KEY to prove the professional catalog with the cheap champion route"
+    },
+    {
+      "id": "chat-intake-live-runtime",
+      "label": "Chat-first GTM live runtime",
+      "lane": "live",
+      "command": "npm run eval:chat-intake:live -- --json-out docs/eval/chat-intake-live.json --timeout-ms 240000",
+      "status": "skip",
+      "ms": 0,
+      "exitCode": null,
+      "reason": "pass --live and set OPENROUTER_API_KEY to run the chat-intake room runtime against a real route"
+    },
+    {
+      "id": "provider-parser-smoke",
+      "label": "Provider parser live smoke",
+      "lane": "live",
+      "command": "npm run provider-parser:smoke",
+      "status": "skip",
+      "ms": 0,
+      "exitCode": null,
+      "reason": "pass --live; script will skip providers without keys"
+    },
+    {
+      "id": "free-job-smoke",
+      "label": "Convex /free job smoke",
+      "lane": "full-live",
+      "command": "npm run free-job:smoke",
+      "status": "skip",
+      "ms": 0,
+      "exitCode": null,
+      "reason": "pass --full-live or set FREE_JOB_SMOKE=1 with CONVEX_URL/VITE_CONVEX_URL for deployment /free smoke"
+    },
+    {
+      "id": "benchmark-v2",
+      "label": "V2 multi-model benchmark",
+      "lane": "full-live",
+      "command": "npm run benchmark -- --model-timeout-ms=180000 --model-reserve-ms=15000 --row-hard-timeout-ms=210000",
+      "status": "skip",
+      "ms": 0,
+      "exitCode": null,
+      "reason": "pass --full-live to spend live provider calls on the full benchmark"
+    },
+    {
+      "id": "free-auto-ladder",
+      "label": "Free-auto router ladder",
+      "lane": "full-live",
+      "command": "npm run ladder:free",
+      "status": "skip",
+      "ms": 0,
+      "exitCode": null,
+      "reason": "pass --full-live and set OPENROUTER_API_KEY; this can take hours"
+    },
+    {
+      "id": "gemini-ui-review",
+      "label": "Gemini UI media review",
+      "lane": "ui",
+      "command": "npx tsx scripts/gemini-ui-review.ts",
+      "status": "skip",
+      "ms": 0,
+      "exitCode": null,
+      "reason": "pass --ui-media=<screenshot-or-video> and set GOOGLE_GENERATIVE_AI_API_KEY"
+    }
+  ],
+  "handoff": {
+    "topRecommendations": [
+      "Unblock benchmark promotion step official-benchmark-promotion-gate: official BankerToolBench/SpreadsheetBench readiness remains blocked by external benchmark prerequisites.",
+      "Unblock benchmark promotion step bankertoolbench-official-contract: BTB official contract is missing external Docker/MCP/Gandalf/provenance evidence.",
+      "Unblock benchmark promotion step spreadsheetbench-chart-visual-probe: SpreadsheetBench V2 rendered/VLM chart grading prerequisites are not proven.",
+      "Unblock benchmark promotion step docker-sandbox-probe: Docker/Harbor process isolation is not proven in this environment.",
+      "Resolve architecture budget review items or rerun with explicit handoff evidence before implementation.",
+      "Run skipped free-route-discovery once prerequisites are present: pass --live and set OPENROUTER_API_KEY to discover current free-auto candidates.",
+      "Run skipped professional-live-catalog once prerequisites are present: pass --live and set OPENROUTER_API_KEY to prove the professional catalog with the cheap champion route.",
+      "Run skipped chat-intake-live-runtime once prerequisites are present: pass --live and set OPENROUTER_API_KEY to run the chat-intake room runtime against a real route."
+    ],
+    "failingEvalEvidence": [],
+    "generatedEvalIdeas": [
+      {
+        "id": "candidate-gtm-pitchbook-match",
+        "title": "GTM PitchBook match with evidence and no CRM clobber",
+        "workflowDomain": "gtm_company_research",
+        "persona": "Sales operations analyst preparing a PitchBook upload and match review",
+        "goal": "For each uploaded company, compare firm name, website, HQ location, and ticker against the matched result row; write match status, confidence, and short evidence without overwriting source CRM fields.",
+        "sourceResearchPacketIds": [],
+        "architectureFit": {
+          "status": "existing_capability",
+          "existingCapabilityNotes": [
+            "Artifact refs, CellPayload evidence, lock/CAS, and workflow eval scaffolds already exist."
+          ],
+          "missingCapabilityNotes": [
+            "Needs a concrete trace fixture before becoming a gate."
+          ],
+          "convexBoundaryNeeds": {
+            "queries": [],
+            "mutations": [],
+            "actions": [],
+            "tools": [],
+            "validators": [
+              "cross-file evidence assertion"
+            ]
+          },
+          "smallestChange": "Add a deterministic fixture and assertions before touching runtime code.",
+          "avoidAdding": [
+            "new GTM service",
+            "new database tables"
+          ],
+          "requiredEvidence": [
+            "Every new match/status cell is a CellPayload with at least one evidence item pointing to a source artifact and row.",
+            "Original firm name, website, HQ, country, and ticker cells are unchanged."
+          ]
+        },
+        "confidenceLevel": "candidate",
+        "gateMode": "advisory",
+        "contestedClaims": [],
+        "assertions": [
+          {
+            "id": "gtm-1",
+            "description": "Every new match/status cell is a CellPayload with at least one evidence item pointing to a source artifact and row.",
+            "evidenceRefs": [
+              "PitchBook_Upload_Template*.csv",
+              "PitchBook_Upload_List_Results_*.csv",
+              "companies*.csv"
+            ]
+          },
+          {
+            "id": "gtm-2",
+            "description": "Original firm name, website, HQ, country, and ticker cells are unchanged.",
+            "evidenceRefs": [
+              "PitchBook_Upload_Template*.csv",
+              "PitchBook_Upload_List_Results_*.csv",
+              "companies*.csv"
+            ]
+          },
+          {
+            "id": "gtm-3",
+            "description": "Ambiguous duplicate-name rows are marked needs_review instead of guessed.",
+            "evidenceRefs": [
+              "PitchBook_Upload_Template*.csv",
+              "PitchBook_Upload_List_Results_*.csv",
+              "companies*.csv"
+            ]
+          }
+        ],
+        "rootCauseCategories": [
+          "weak_source_evidence",
+          "missing_read_before_write"
+        ]
+      },
+      {
+        "id": "research-validated-finance-reconcile",
+        "title": "Finance variance reconciliation with formula-safe writes",
+        "workflowDomain": "finance_ops",
+        "persona": "Finance analyst reconciling model/vendor spend",
+        "goal": "Aggregate spend by date and model/vendor, compare against expected totals, write variance and note cells with evidence, and skip already-correct cells.",
+        "sourceResearchPacketIds": [
+          "professional-workflow-profile-20260608"
+        ],
+        "architectureFit": {
+          "status": "small_gap",
+          "existingCapabilityNotes": [
+            "Formula dependency locks, CellPayload evidence, and no-clobber paths are already part of the harness."
+          ],
+          "missingCapabilityNotes": [
+            "Needs one concrete variance fixture with formula-preservation assertions."
+          ],
+          "convexBoundaryNeeds": {
+            "queries": [
+              "read bounded formula/source ranges"
+            ],
+            "mutations": [
+              "CAS write only changed variance notes"
+            ],
+            "actions": [],
+            "tools": [],
+            "validators": [
+              "formula-preservation assertion",
+              "source-row evidence assertion"
+            ]
+          },
+          "smallestChange": "Add an eval fixture and validator around existing spreadsheet tools before adding any new tool.",
+          "avoidAdding": [
+            "finance workflow service",
+            "new spreadsheet engine"
+          ],
+          "requiredEvidence": [
+            "Already-correct cells are skipped without version bumps.",
+            "Incorrect cells are corrected only after a current read and CAS-protected write."
+          ]
+        },
+        "confidenceLevel": "research_validated",
+        "gateMode": "advisory",
+        "contestedClaims": [],
+        "assertions": [
+          {
+            "id": "finance-1",
+            "description": "Already-correct cells are skipped without version bumps.",
+            "evidenceRefs": [
+              "openai_cost-*.csv",
+              "openai_cost-*_parsely_output.xlsx",
+              "business income & expense sheet.xlsx"
+            ]
+          },
+          {
+            "id": "finance-2",
+            "description": "Incorrect cells are corrected only after a current read and CAS-protected write.",
+            "evidenceRefs": [
+              "openai_cost-*.csv",
+              "openai_cost-*_parsely_output.xlsx",
+              "business income & expense sheet.xlsx"
+            ]
+          },
+          {
+            "id": "finance-3",
+            "description": "Formula children are locked or flagged when parent input cells are edited.",
+            "evidenceRefs": [
+              "openai_cost-*.csv",
+              "openai_cost-*_parsely_output.xlsx",
+              "business income & expense sheet.xlsx"
+            ]
+          }
+        ],
+        "rootCauseCategories": [
+          "bad_mutation_contract",
+          "weak_source_evidence"
+        ]
+      },
+      {
+        "id": "contested-eval-harness-expansion",
+        "title": "Eval harness generated from workflow rubrics",
+        "workflowDomain": "eval_harness",
+        "persona": "Harness engineer converting real workflows into regression tests",
+        "goal": "Read the eval template rows, generate NodeRoom run cases with persona, preconditions, expected artifact state, trace assertions, and cost/runtime budgets.",
+        "sourceResearchPacketIds": [
+          "professional-workflow-profile-20260608"
+        ],
+        "architectureFit": {
+          "status": "existing_capability",
+          "existingCapabilityNotes": [
+            "agent:improve already produces local artifacts and deterministic gates."
+          ],
+          "missingCapabilityNotes": [
+            "Research-derived evals need confidence and gate policy before they can block."
+          ],
+          "convexBoundaryNeeds": {
+            "queries": [],
+            "mutations": [],
+            "actions": [],
+            "tools": [],
+            "validators": [
+              "eval trust policy"
+            ]
+          },
+          "smallestChange": "Keep this as an advisory eval fixture until the rubric is not contested.",
+          "avoidAdding": [
+            "new HALO tables",
+            "new eval service"
+          ],
+          "requiredEvidence": [
+            "Every eval has a starting state, task, allowed tools, expected state, expected trace, and budget.",
+            "Slow/free-auto cases are routed to /free and include checkpoint assertions."
+          ]
+        },
+        "confidenceLevel": "contested",
+        "gateMode": "advisory",
+        "contestedClaims": [
+          "Different teams disagree on how much human review is required before eval promotion."
+        ],
+        "assertions": [
+          {
+            "id": "eval-1",
+            "description": "Every eval has a starting state, task, allowed tools, expected state, expected trace, and budget.",
+            "evidenceRefs": [
+              "nodebench_fast_slow_*.csv",
+              "ui_ux_mapping.csv"
+            ]
+          },
+          {
+            "id": "eval-2",
+            "description": "Slow/free-auto cases are routed to /free and include checkpoint assertions.",
+            "evidenceRefs": [
+              "nodebench_fast_slow_*.csv",
+              "ui_ux_mapping.csv"
+            ]
+          },
+          {
+            "id": "eval-3",
+            "description": "Interactive cases stay on the ladder-proven fast model.",
+            "evidenceRefs": [
+              "nodebench_fast_slow_*.csv",
+              "ui_ux_mapping.csv"
+            ]
+          }
+        ],
+        "rootCauseCategories": [
+          "eval_measures_wrong_behavior",
+          "ui_review_friction"
+        ]
+      }
+    ],
+    "implementationHandoffCandidates": [],
+    "blockedImplementationHandoffCandidates": [
+      {
+        "evalCandidateId": "candidate-gtm-pitchbook-match",
+        "kind": "more_research",
+        "canBlockMerge": false,
+        "reasons": [
+          "missing research packet evidence",
+          "candidate evals are advisory only"
+        ]
+      },
+      {
+        "evalCandidateId": "contested-eval-harness-expansion",
+        "kind": "eval_fixture",
+        "canBlockMerge": false,
+        "reasons": [
+          "contested claims must stay advisory until resolved or explicitly modeled"
+        ]
+      },
+      {
+        "evalCandidateId": "research-validated-finance-reconcile",
+        "kind": "implementation",
+        "canBlockMerge": false,
+        "reasons": [
+          "demoted: architecture budget is red (forbidden surfaces dirty / review required) — human approval before any implementation handoff"
+        ]
+      }
+    ],
+    "nextLiveRuns": [
+      "npm run agent:improve -- --live",
+      "npm run agent:improve -- --full-live",
+      "npm run agent:improve -- --ui-media=docs/eval/ui-recordings/<recording-or-screenshot>",
+      "npm run benchmark:charts"
+    ],
+    "architectureBudget": {
+      "allowedScope": "Only files or modules named by the failing trace, failing eval, or handoff evidence.",
+      "defaultAllowedAreas": [
+        "src/agent runtime, tools, context, and compaction",
+        "Convex job/tool adapters that already participate in the failing flow",
+        "eval fixtures and deterministic assertions for the affected workflow"
+      ],
+      "forbiddenWithoutHumanApproval": [
+        "new database tables",
+        "new services or framework layers",
+        "new UI surfaces",
+        "graph/wiki/embedding expansion without a failing workflow eval",
+        "weakened CAS, lock, draft, auth, privacy, or eval gates"
+      ]
+    }
+  }
+}

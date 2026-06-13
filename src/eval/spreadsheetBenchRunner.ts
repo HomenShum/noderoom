@@ -59,6 +59,7 @@ export type SpreadsheetBenchRunnerOptions = {
   retryFailed?: number;
   retryScoreFailures?: boolean;
   limit?: number;
+  offset?: number;
   clean?: boolean;
   compareStyles?: boolean;
   compareCharts?: boolean;
@@ -135,6 +136,7 @@ export type SpreadsheetBenchRunnerReport = {
   stageRoot: string;
   outputRoot: string;
   mode: SpreadsheetBenchRunnerMode;
+  taskOffset?: number;
   taskCount: number;
   passCount: number;
   averageOverall: number;
@@ -284,7 +286,8 @@ export async function runStagedSpreadsheetBench(options: SpreadsheetBenchRunnerO
   if (options.clean && existsSync(outputRoot)) rmSync(outputRoot, { recursive: true, force: true });
   mkdirSync(outputRoot, { recursive: true });
 
-  const tasks = findStagedTasks(stageRoot).slice(0, options.limit ?? Number.POSITIVE_INFINITY);
+  const offset = Math.max(0, Math.trunc(options.offset ?? 0));
+  const tasks = findStagedTasks(stageRoot).slice(offset, options.limit === undefined ? undefined : offset + options.limit);
   const repeatCount = Math.max(1, Math.trunc(options.repeats ?? 1));
   const retryPolicy = buildRetryPolicy(options);
   const warnings: string[] = [];
@@ -331,6 +334,7 @@ export async function runStagedSpreadsheetBench(options: SpreadsheetBenchRunnerO
     stageRoot: basename(stageRoot),
     outputRoot: basename(outputRoot),
     mode: options.mode,
+    taskOffset: offset,
     taskCount: results.length,
     passCount,
     averageOverall,

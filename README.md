@@ -1053,9 +1053,14 @@ benchmark:spreadsheetbench:routes` now classifies staged SpreadsheetBench V1/V2 
 deterministic table transforms, model-planned formula edits, model-planned format/general edits, or
 blocked chart-visual work using only agent-visible manifests; the checked-in V1 report classifies
 400 tasks as 41 deterministic table transforms, 218 formula edits, 33 format edits, 106 general
-edits, and 2 chart-visual blockers. This is a benchmark-path lesson, not a broad
-official-readiness claim: larger held-out V1 runs, V2 rendered chart grading, Docker/Harbor
-isolation, and full route execution/scoring are still tracked as blockers below.
+edits, and 2 chart-visual blockers. The full V1 copy-input baseline also has a chunked runner
+(`npm run benchmark:spreadsheetbench:run-chunked`) that records all 400 staged tasks instead of
+letting one pathological workbook abort the run: the checked-in report
+(`docs/eval/spreadsheetbench-v1-copy-input-full-smoke.json`) records 400/400 attempted tasks,
+15/400 pass, average overall `0.257472`, and zero failure counts after malformed answer-position,
+unsupported XLSX package-part, and external-link cell-read repair. This is a benchmark-path lesson, not a broad
+official-readiness claim: larger held-out model/route-execution runs, V2 rendered chart grading,
+Docker/Harbor isolation, and official scoring parity are still tracked as blockers below.
 The contamination gate
 (`npm run benchmark:contamination`) now scans agent-facing benchmark manifests, candidate manifests,
 agent-workspace manifests, and generated edit plans for evaluator-only gold/rubric/canary metadata; checked-in smokes show 0

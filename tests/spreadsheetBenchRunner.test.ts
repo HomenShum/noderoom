@@ -90,6 +90,46 @@ describe("SpreadsheetBench staged runner", () => {
     expect(JSON.stringify(workspaceManifest)).not.toContain("evaluator");
   });
 
+  it("can run an offset-limited slice for chunked full-bundle execution", async () => {
+    const source = tempRoot("source");
+    const stage = tempRoot("stage");
+    const out = tempRoot("out");
+    for (const id of ["01", "02", "03"]) {
+      mkdirSync(join(source, "spreadsheet", id), { recursive: true });
+      await writeWorkbook(join(source, "spreadsheet", id, `1_${id}_init.xlsx`), Number(id));
+      await writeWorkbook(join(source, "spreadsheet", id, `1_${id}_golden.xlsx`), Number(id));
+    }
+    writeJson(join(source, "dataset.json"), ["01", "02", "03"].map((id) => ({
+      id,
+      instruction: `Keep task ${id} unchanged.`,
+      spreadsheet_path: `spreadsheet/${id}`,
+      answer_position: "Sheet1!B2:B2",
+      answer_sheet: "Sheet1",
+    })));
+    stageSpreadsheetBenchBundle(source, {
+      track: "spreadsheetbench-v1",
+      outputRoot: stage,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    const report = await runStagedSpreadsheetBench({
+      stageRoot: stage,
+      outputRoot: out,
+      mode: "copy-input-baseline",
+      offset: 1,
+      limit: 1,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(report.taskOffset).toBe(1);
+    expect(report.taskCount).toBe(1);
+    expect(report.caseCount).toBe(1);
+    expect(report.results[0].taskId).toBe("02");
+    expect(report.passCount).toBe(1);
+  });
+
   it("applies an agent-side edit plan before opening evaluator-only gold", async () => {
     const source = tempRoot("source");
     const stage = tempRoot("stage");

@@ -87,6 +87,17 @@ tasks as 41 deterministic table transforms, 218 formula edits, 33 format edits,
 `docs/eval/spreadsheetbench-v2-route-selection.json` classifies the staged V2
 public examples as 2 formula edits and 1 general edit.
 
+SpreadsheetBench full-bundle baseline addendum: `npm run
+benchmark:spreadsheetbench:run-chunked` now runs the V1 staged bundle in fresh
+child processes and recursively splits failed chunks so one pathological
+workbook does not abort the full smoke. The checked-in
+`docs/eval/spreadsheetbench-v1-copy-input-full-smoke.json` records 400/400
+attempted tasks, 15/400 pass, average overall 0.257472, and zero failure counts
+after malformed answer-position, unsupported XLSX package-part, and
+external-link cell-read repair. This is harness-throughput and failure-taxonomy
+evidence for the copy-input baseline; the remaining gap is still full
+model/route execution and official scoring parity across the bundle.
+
 Docker/Harbor addendum: `npm run benchmark:docker-sandbox:probe` now writes
 `docs/eval/docker-sandbox-probe.json` and is part of HALO. The current artifact
 records Docker CLI present but Docker daemon unavailable, so it is blocker

@@ -11,6 +11,7 @@ const mode = (optionValue("--mode") ?? "copy-input-baseline") as SpreadsheetBenc
 const modelId = optionValue("--model");
 const modelTimeoutMs = numberOption("--model-timeout-ms") ?? 120_000;
 const limit = numberOption("--limit");
+const offset = numberOption("--offset") ?? 0;
 const repeats = numberOption("--repeats") ?? 1;
 const retryFailed = numberOption("--retry-failed") ?? 0;
 const maxMismatches = numberOption("--max-mismatches") ?? 20;
@@ -24,7 +25,7 @@ const allowedModes: SpreadsheetBenchRunnerMode[] = ["copy-input-baseline", "appl
 if (!stageRoot || !outputRoot || !allowedModes.includes(mode)) {
   console.error([
     "Usage:",
-    "  npm run benchmark:spreadsheetbench:run -- --stage-root <staged-dir> --output-root <candidate-output-dir> [--mode copy-input-baseline|apply-agent-patch|model-edit-plan] [--model <route>] [--limit 3] [--repeats 5] [--retry-failed 2] [--retry-score-failures] [--compare-charts] [--clean] [--json-out <path>]",
+    "  npm run benchmark:spreadsheetbench:run -- --stage-root <staged-dir> --output-root <candidate-output-dir> [--mode copy-input-baseline|apply-agent-patch|model-edit-plan] [--model <route>] [--offset 0] [--limit 3] [--repeats 5] [--retry-failed 2] [--retry-score-failures] [--compare-charts] [--clean] [--json-out <path>]",
     "",
     "copy-input-baseline proves runner/export/scoring plumbing.",
     "apply-agent-patch reads agent/edit-plan.json, edits the workbook, emits a candidate, then opens evaluator metadata.",
@@ -49,6 +50,7 @@ const report = await runStagedSpreadsheetBench({
   modelName: modelId,
   modelTimeoutMs,
   limit,
+  offset,
   repeats,
   retryFailed,
   retryScoreFailures,

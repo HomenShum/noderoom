@@ -1,5 +1,8 @@
 import ExcelJS from "exceljs";
-import { basename } from "node:path";
+import JSZip from "jszip";
+import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { basename, join } from "node:path";
 import { scoreSpreadsheetBenchCharts, type SpreadsheetBenchChartScore } from "./spreadsheetBenchChartScorer";
 
 export type SpreadsheetBenchCellMismatchKind = "value" | "formula" | "style" | "missing_sheet";
@@ -72,7 +75,12 @@ type CellParts = {
   style: string;
 };
 
+const XLSX_READ_IGNORE_NODES = ["drawing", "picture", "tableParts", "extLst"] as const;
+
 export async function scoreSpreadsheetBenchWorkbook(options: SpreadsheetBenchScoreOptions): Promise<SpreadsheetBenchWorkbookScore> {
+  const zipScore = await tryScoreSpreadsheetBenchWorkbookFromZip(options);
+  if (zipScore) return zipScore;
+
   const [candidate, gold] = await Promise.all([
     readWorkbook(options.candidateWorkbookPath),
     readWorkbook(options.goldWorkbookPath),
@@ -88,7 +96,7 @@ export async function scoreSpreadsheetBenchWorkbook(options: SpreadsheetBenchSco
         generatedAt: options.generatedAt,
       })
     : undefined;
-  const ranges = parseAnswerPosition(options.answerPosition, options.answerSheet);
+  const ranges = parseAnswerPosition(options.answerPosition, options.answerSheet, gold);
   const concreteRanges = ranges.length > 0 ? ranges : usedRangesFromGold(gold);
 
   let comparedCells = 0;
@@ -239,31 +247,383 @@ export async function scoreSpreadsheetBenchWorkbook(options: SpreadsheetBenchSco
   };
 }
 
-export function parseAnswerPosition(answerPosition: string | undefined, defaultSheet?: string): ParsedRange[] {
+async function tryScoreSpreadsheetBenchWorkbookFromZip(
+  options: SpreadsheetBenchScoreOptions,
+): Promise<SpreadsheetBenchWorkbookScore | undefined> {
+  if (options.compareStyles || options.compareCharts || !canUseZipCellScorer(options.answerPosition)) return undefined;
+  try {
+    const ranges = parseAnswerPosition(options.answerPosition, options.answerSheet);
+    if (ranges.length === 0) return undefined;
+    const [candidate, gold] = await Promise.all([
+      readZipWorkbookCells(options.candidateWorkbookPath),
+      readZipWorkbookCells(options.goldWorkbookPath),
+    ]);
+    return scoreZipWorkbookCells({ options, ranges, candidate, gold });
+  } catch {
+    return undefined;
+  }
+}
+
+function canUseZipCellScorer(answerPosition: string | undefined): boolean {
+  if (!answerPosition?.trim()) return false;
+  const normalized = normalizeAnswerPosition(answerPosition);
+  return splitOutsideQuotes(normalized).every((raw) => {
+    const bang = indexOfSheetBang(raw);
+    const rangeText = bang >= 0 ? raw.slice(bang + 1) : raw;
+    return rangeText.split(":").every((part) => /^\s*'?\$?[A-Z]{1,3}\$?[1-9]\d*'?\s*$/i.test(part));
+  });
+}
+
+type ZipWorkbookCells = {
+  firstSheetName?: string;
+  sheets: Map<string, Map<string, { value: unknown; formula?: string }>>;
+};
+
+async function readZipWorkbookCells(path: string): Promise<ZipWorkbookCells> {
+  const zip = await JSZip.loadAsync(await readFile(path));
+  const sharedStrings = await readZipSharedStrings(zip);
+  const sheets = await readZipWorkbookSheetMap(zip);
+  const out = new Map<string, Map<string, { value: unknown; formula?: string }>>();
+  for (const sheet of sheets) {
+    const file = zip.file(sheet.path);
+    if (!file) continue;
+    out.set(sheet.name, parseZipWorksheetCells(await file.async("string"), sharedStrings));
+  }
+  return { firstSheetName: sheets[0]?.name, sheets: out };
+}
+
+async function readZipSharedStrings(zip: JSZip): Promise<string[]> {
+  const file = zip.file("xl/sharedStrings.xml");
+  if (!file) return [];
+  const xml = await file.async("string");
+  return [...xml.matchAll(/<si\b[\s\S]*?<\/si>/gi)].map((match) =>
+    [...match[0].matchAll(/<t\b[^>]*>([\s\S]*?)<\/t>/gi)].map((text) => decodeXml(text[1])).join(""),
+  );
+}
+
+async function readZipWorkbookSheetMap(zip: JSZip): Promise<Array<{ name: string; path: string }>> {
+  const workbookXml = await zip.file("xl/workbook.xml")?.async("string");
+  if (!workbookXml) return [];
+  const relsXml = await zip.file("xl/_rels/workbook.xml.rels")?.async("string");
+  const rels = new Map<string, string>();
+  if (relsXml) {
+    for (const rel of relsXml.matchAll(/<Relationship\b([^>]*)\/>/gi)) {
+      const attrs = xmlAttrs(rel[1]);
+      if (attrs.Id && attrs.Target) rels.set(attrs.Id, normalizeWorkbookRelationshipTarget(attrs.Target));
+    }
+  }
+  const sheets: Array<{ name: string; path: string }> = [];
+  for (const sheet of workbookXml.matchAll(/<sheet\b([^>]*)\/>/gi)) {
+    const attrs = xmlAttrs(sheet[1]);
+    const relId = attrs["r:id"];
+    const path = relId ? rels.get(relId) : undefined;
+    if (attrs.name && path) sheets.push({ name: decodeXml(attrs.name), path });
+  }
+  return sheets;
+}
+
+function normalizeWorkbookRelationshipTarget(target: string): string {
+  const normalized = target.replace(/\\/g, "/").replace(/^\//, "");
+  return normalized.startsWith("xl/") ? normalized : `xl/${normalized}`;
+}
+
+function parseZipWorksheetCells(xml: string, sharedStrings: string[]): Map<string, { value: unknown; formula?: string }> {
+  const cells = new Map<string, { value: unknown; formula?: string }>();
+  for (const match of xml.matchAll(/<c\b([^>]*)(?:\/>|>([\s\S]*?)<\/c>)/gi)) {
+    const attrs = xmlAttrs(match[1]);
+    const address = attrs.r?.replace(/\$/g, "").toUpperCase();
+    if (!address) continue;
+    const body = match[2] ?? "";
+    const formula = body.match(/<f\b[^>]*>([\s\S]*?)<\/f>/i)?.[1];
+    cells.set(address, {
+      value: zipCellValue(attrs.t, body, sharedStrings),
+      ...(formula === undefined ? {} : { formula: ensureEquals(decodeXml(formula)) }),
+    });
+  }
+  return cells;
+}
+
+function zipCellValue(type: string | undefined, body: string, sharedStrings: string[]): unknown {
+  const raw = body.match(/<v\b[^>]*>([\s\S]*?)<\/v>/i)?.[1];
+  if (type === "inlineStr") {
+    return [...body.matchAll(/<t\b[^>]*>([\s\S]*?)<\/t>/gi)].map((item) => decodeXml(item[1])).join("");
+  }
+  if (raw === undefined) return "";
+  const decoded = decodeXml(raw);
+  if (type === "s") return sharedStrings[Number(decoded)] ?? "";
+  if (type === "b") return decoded === "1";
+  if (type === "str" || type === "e") return decoded;
+  const numeric = Number(decoded);
+  return Number.isFinite(numeric) ? numeric : decoded;
+}
+
+function scoreZipWorkbookCells(args: {
+  options: SpreadsheetBenchScoreOptions;
+  ranges: ParsedRange[];
+  candidate: ZipWorkbookCells;
+  gold: ZipWorkbookCells;
+}): SpreadsheetBenchWorkbookScore {
+  const maxMismatches = args.options.maxMismatches ?? 50;
+  const warnings: string[] = [];
+  const mismatches: SpreadsheetBenchCellMismatch[] = [];
+  let comparedCells = 0;
+  let valueMatches = 0;
+  let formulaCells = 0;
+  let formulaMatches = 0;
+  let missingSheets = 0;
+  let mismatchCount = 0;
+
+  for (const range of args.ranges) {
+    const sheetName = range.sheetName ?? defaultSheetName(args.options.answerSheet) ?? args.gold.firstSheetName;
+    if (!sheetName) {
+      warnings.push(`range ${range.label} has no sheet and the gold workbook has no worksheets`);
+      continue;
+    }
+    const goldSheet = args.gold.sheets.get(sheetName);
+    const candidateSheet = args.candidate.sheets.get(sheetName);
+    if (!goldSheet || !candidateSheet) {
+      missingSheets += 1;
+      mismatchCount += rangeCellCount(range);
+      if (mismatches.length < maxMismatches) {
+        mismatches.push({ kind: "missing_sheet", sheet: sheetName, expected: goldSheet ? "present" : "missing", actual: candidateSheet ? "present" : "missing" });
+      }
+      continue;
+    }
+    for (let row = range.startRow; row <= range.endRow; row += 1) {
+      for (let col = range.startCol; col <= range.endCol; col += 1) {
+        comparedCells += 1;
+        const address = `${colToLetters(col)}${row}`;
+        const goldCell = goldSheet.get(address) ?? { value: "" };
+        const candidateCell = candidateSheet.get(address) ?? { value: "" };
+        if (valuesEqual(candidateCell.value, goldCell.value)) {
+          valueMatches += 1;
+        } else {
+          mismatchCount += 1;
+          if (mismatches.length < maxMismatches) {
+            mismatches.push({
+              kind: "value",
+              sheet: sheetName,
+              cell: address,
+              expected: preview(goldCell.value),
+              actual: preview(candidateCell.value),
+            });
+          }
+        }
+        if (goldCell.formula) {
+          formulaCells += 1;
+          if (normalizeFormula(candidateCell.formula) === normalizeFormula(goldCell.formula)) {
+            formulaMatches += 1;
+          } else {
+            mismatchCount += 1;
+            if (mismatches.length < maxMismatches) {
+              mismatches.push({
+                kind: "formula",
+                sheet: sheetName,
+                cell: address,
+                expected: goldCell.formula,
+                actual: candidateCell.formula,
+              });
+            }
+          }
+        }
+      }
+    }
+  }
+
+  const valueScore = ratio(valueMatches, comparedCells);
+  const formulaScore = formulaCells ? ratio(formulaMatches, formulaCells) : null;
+  const overallParts = [valueScore, ...(formulaScore === null ? [] : [formulaScore])];
+  const overall = ratio(overallParts.reduce((sum, value) => sum + value, 0), overallParts.length || 1);
+  return {
+    schema: 1,
+    generatedAt: args.options.generatedAt,
+    taskId: args.options.taskId,
+    candidateWorkbook: basename(args.options.candidateWorkbookPath),
+    goldWorkbook: basename(args.options.goldWorkbookPath),
+    answerPosition: args.options.answerPosition,
+    ranges: args.ranges.map((range) => range.label),
+    totals: {
+      comparedCells,
+      valueMatches,
+      formulaCells,
+      formulaMatches,
+      styleCells: 0,
+      styleMatches: 0,
+      styleLayoutItems: 0,
+      styleLayoutMatches: 0,
+      mismatches: mismatchCount,
+      missingSheets,
+    },
+    scores: {
+      value: valueScore,
+      formula: formulaScore,
+      style: null,
+      chartPackage: null,
+      overall,
+    },
+    pass: comparedCells > 0 && mismatchCount === 0 && missingSheets === 0,
+    warnings,
+    mismatches,
+  };
+}
+
+function xmlAttrs(value: string): Record<string, string> {
+  const attrs: Record<string, string> = {};
+  for (const match of value.matchAll(/([A-Za-z_:][\w:.-]*)="([^"]*)"/g)) attrs[match[1]] = decodeXml(match[2]);
+  return attrs;
+}
+
+function decodeXml(value: string): string {
+  return value
+    .replace(/&quot;/g, "\"")
+    .replace(/&apos;/g, "'")
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&amp;/g, "&");
+}
+
+export function parseAnswerPosition(answerPosition: string | undefined, defaultSheet?: string, workbook?: ExcelJS.Workbook): ParsedRange[] {
   if (!answerPosition?.trim()) return [];
-  return splitOutsideQuotes(answerPosition).map((raw) => {
+  return splitOutsideQuotes(normalizeAnswerPosition(answerPosition)).map((raw) => {
     const part = raw.trim();
     const bang = indexOfSheetBang(part);
-    const sheetName = bang >= 0 ? unquoteSheet(part.slice(0, bang)) : defaultSheet;
+    const sheetName = bang >= 0 ? unquoteSheet(part.slice(0, bang)) : defaultSheetName(defaultSheet);
     const rangeText = bang >= 0 ? part.slice(bang + 1) : part;
     const [startText, endText = startText] = rangeText.split(":").map((item) => item.trim());
-    const start = parseCellRef(startText);
-    const end = parseCellRef(endText);
+    const bounds = sheetUsedBounds(workbook, sheetName);
+    const start = parseRangePoint(startText, { bounds, isEnd: false });
+    const end = parseRangePoint(endText, { bounds, paired: start, isEnd: true });
     return {
       sheetName,
       startRow: Math.min(start.row, end.row),
       endRow: Math.max(start.row, end.row),
       startCol: Math.min(start.col, end.col),
       endCol: Math.max(start.col, end.col),
-      label: `${sheetName ? `'${sheetName}'!` : ""}${startText}${endText === startText ? "" : `:${endText}`}`,
+      label: `${sheetName ? `'${sheetName}'!` : ""}${cleanRangeToken(startText)}${endText === startText ? "" : `:${cleanRangeToken(endText)}`}`,
     };
   });
 }
 
 async function readWorkbook(path: string): Promise<ExcelJS.Workbook> {
+  if (await workbookPackageNeedsCellReadSanitizer(path)) {
+    return readSanitizedWorkbook(path);
+  }
   const workbook = new ExcelJS.Workbook();
-  await workbook.xlsx.readFile(path);
-  return workbook;
+  try {
+    await workbook.xlsx.readFile(path, { ignoreNodes: [...XLSX_READ_IGNORE_NODES] });
+    return workbook;
+  } catch (error) {
+    if (!isExcelJsUnsupportedPackagePartError(error)) throw error;
+    return readSanitizedWorkbook(path);
+  }
+}
+
+async function readSanitizedWorkbook(path: string): Promise<ExcelJS.Workbook> {
+  const sanitized = await sanitizeWorkbookPackageForCellRead(path);
+  try {
+    const fallback = new ExcelJS.Workbook();
+    await fallback.xlsx.readFile(sanitized.path, { ignoreNodes: [...XLSX_READ_IGNORE_NODES] });
+    return fallback;
+  } finally {
+    await rm(sanitized.root, { recursive: true, force: true });
+  }
+}
+
+async function workbookPackageNeedsCellReadSanitizer(path: string): Promise<boolean> {
+  const buffer = await readFile(path);
+  return [
+    "xl/externalLinks/",
+    "xl/drawings/",
+    "xl/comments",
+    "xl/threadedComments/",
+    "xl/tables/",
+  ].some((marker) => buffer.includes(Buffer.from(marker)));
+}
+
+function isExcelJsUnsupportedPackagePartError(error: unknown): boolean {
+  const message = error instanceof Error ? error.message : String(error);
+  return (
+    message.includes("reading 'anchors'") ||
+    message.includes("reading 'comments'") ||
+    message.includes("reading 'name'")
+  );
+}
+
+async function sanitizeWorkbookPackageForCellRead(path: string): Promise<{ root: string; path: string }> {
+  const zip = await JSZip.loadAsync(await readFile(path));
+  for (const entryName of Object.keys(zip.files)) {
+    if (shouldRemoveWorkbookPart(entryName)) zip.remove(entryName);
+  }
+  await rewriteZipXml(zip, "[Content_Types].xml", removeUnsupportedContentTypes);
+  await rewriteZipXml(zip, "xl/workbook.xml", removeUnsupportedWorkbookNodes);
+  await rewriteZipXml(zip, "xl/_rels/workbook.xml.rels", removeUnsupportedWorkbookRelationships);
+  for (const entryName of Object.keys(zip.files)) {
+    if (/^xl\/worksheets\/_rels\/[^/]+\.rels$/i.test(entryName)) {
+      await rewriteZipXml(zip, entryName, removeUnsupportedWorksheetRelationships);
+    }
+    if (/^xl\/worksheets\/[^/]+\.xml$/i.test(entryName)) {
+      await rewriteZipXml(zip, entryName, removeUnsupportedWorksheetNodes);
+    }
+  }
+  const root = await mkdtemp(join(tmpdir(), "noderoom-xlsx-cell-read-"));
+  const sanitizedPath = join(root, basename(path));
+  await writeFile(sanitizedPath, await zip.generateAsync({ type: "nodebuffer", compression: "DEFLATE" }));
+  return { root, path: sanitizedPath };
+}
+
+function shouldRemoveWorkbookPart(path: string): boolean {
+  return (
+    /^xl\/drawings\//i.test(path) ||
+    /^xl\/comments\d*\.xml$/i.test(path) ||
+    /^xl\/threadedComments\//i.test(path) ||
+    /^xl\/externalLinks\//i.test(path) ||
+    /^xl\/calcChain\.xml$/i.test(path) ||
+    /^xl\/person\/persons\.xml$/i.test(path) ||
+    /^xl\/tables\//i.test(path) ||
+    /^xl\/media\//i.test(path) ||
+    /^xl\/ctrlProps\//i.test(path)
+  );
+}
+
+async function rewriteZipXml(zip: JSZip, path: string, rewrite: (xml: string) => string): Promise<void> {
+  const file = zip.file(path);
+  if (!file) return;
+  zip.file(path, rewrite(await file.async("string")));
+}
+
+function removeUnsupportedContentTypes(xml: string): string {
+  return xml.replace(
+    /<Override\b[^>]+PartName="\/xl\/(?:(?:drawings|comments|threadedComments|person|tables|media|ctrlProps|externalLinks)\/[^"]+|calcChain\.xml)"[^>]*\/>/gi,
+    "",
+  );
+}
+
+function removeUnsupportedWorkbookRelationships(xml: string): string {
+  return xml.replace(
+    /<Relationship\b[^>]+Type="[^"]+\/(?:externalLink|calcChain|table|ctrlProp)"[^>]*\/>/gi,
+    "",
+  );
+}
+
+function removeUnsupportedWorkbookNodes(xml: string): string {
+  return xml.replace(/<externalReferences\b[\s\S]*?<\/externalReferences>/gi, "");
+}
+
+function removeUnsupportedWorksheetRelationships(xml: string): string {
+  return xml.replace(
+    /<Relationship\b[^>]+Type="[^"]+\/(?:drawing|vmlDrawing|comments|threadedComment|table|ctrlProp)"[^>]*\/>/gi,
+    "",
+  );
+}
+
+function removeUnsupportedWorksheetNodes(xml: string): string {
+  return xml
+    .replace(/<drawing\b[^>]*\/>/gi, "")
+    .replace(/<legacyDrawing\b[^>]*\/>/gi, "")
+    .replace(/<legacyDrawingHF\b[^>]*\/>/gi, "")
+    .replace(/<picture\b[^>]*\/>/gi, "")
+    .replace(/<tableParts\b[\s\S]*?<\/tableParts>/gi, "")
+    .replace(/<extLst\b[\s\S]*?<\/extLst>/gi, "");
 }
 
 function usedRangesFromGold(workbook: ExcelJS.Workbook): ParsedRange[] {
@@ -302,7 +662,7 @@ function cellParts(cell: ExcelJS.Cell): CellParts {
 
 function comparableValue(value: ExcelJS.CellValue): unknown {
   if (value === null || value === undefined) return "";
-  if (value instanceof Date) return value.toISOString();
+  if (value instanceof Date) return Number.isNaN(value.getTime()) ? "" : value.toISOString();
   if (typeof value !== "object") return value;
   if ("formula" in value) return comparableValue(value.result as ExcelJS.CellValue);
   if ("sharedFormula" in value) return comparableValue(value.result as ExcelJS.CellValue);
@@ -495,6 +855,14 @@ function splitOutsideQuotes(value: string): string[] {
   return out;
 }
 
+function normalizeAnswerPosition(value: string): string {
+  return value
+    .replace(/(^|,)\s*'([^'!,]+)!'(?=[A-Z$])/gi, (_match, prefix: string, sheet: string) => `${prefix}'${sheet}'!`)
+    .replace(/(^|,)\s*'([^'!,]+)!(?=[A-Z$])/gi, (_match, prefix: string, sheet: string) => `${prefix}'${sheet}'!`)
+    .replace(/(^|,)\s*([^,'!]+)'!(?=[A-Z$])/gi, (_match, prefix: string, sheet: string) => `${prefix}'${sheet.trim()}'!`)
+    .replace(/(\$?[A-Z]{1,3}\$?[1-9]\d*|\$?[A-Z]{1,3}|\$?[1-9]\d*)'(?=,|$)/gi, "$1");
+}
+
 function indexOfSheetBang(value: string): number {
   let quoted = false;
   for (let i = 0; i < value.length; i += 1) {
@@ -512,13 +880,69 @@ function indexOfSheetBang(value: string): number {
 function unquoteSheet(value: string): string {
   const trimmed = value.trim();
   if (trimmed.startsWith("'") && trimmed.endsWith("'")) return trimmed.slice(1, -1).replace(/''/g, "'");
-  return trimmed;
+  return trimmed.replace(/^'+/, "").replace(/'+$/, "").replace(/''/g, "'");
 }
 
 function parseCellRef(value: string): { row: number; col: number } {
-  const match = /^\$?([A-Z]{1,3})\$?([1-9]\d*)$/i.exec(value.trim());
+  const match = /^\$?([A-Z]{1,3})\$?([1-9]\d*)$/i.exec(cleanRangeToken(value));
   if (!match) throw new Error(`Unsupported SpreadsheetBench cell reference: ${value}`);
   return { col: lettersToCol(match[1].toUpperCase()), row: Number(match[2]) };
+}
+
+function parseRangePoint(
+  value: string,
+  args: {
+    bounds?: { minRow: number; maxRow: number; minCol: number; maxCol: number };
+    paired?: { row: number; col: number };
+    isEnd: boolean;
+  },
+): { row: number; col: number } {
+  const token = cleanRangeToken(value);
+  const cell = /^\$?[A-Z]{1,3}\$?[1-9]\d*$/i.test(token) ? parseCellRef(token) : undefined;
+  if (cell) return cell;
+  const colOnly = /^\$?([A-Z]{1,3})$/i.exec(token);
+  if (colOnly) {
+    return {
+      col: lettersToCol(colOnly[1].toUpperCase()),
+      row: args.isEnd ? (args.bounds?.maxRow ?? args.paired?.row ?? 1) : (args.bounds?.minRow ?? 1),
+    };
+  }
+  const rowOnly = /^\$?([1-9]\d*)$/i.exec(token);
+  if (rowOnly) {
+    return {
+      col: args.paired?.col ?? (args.isEnd ? (args.bounds?.maxCol ?? 1) : (args.bounds?.minCol ?? 1)),
+      row: Number(rowOnly[1]),
+    };
+  }
+  throw new Error(`Unsupported SpreadsheetBench cell reference: ${value}`);
+}
+
+function cleanRangeToken(value: string): string {
+  return value.trim().replace(/^'+/, "").replace(/'+$/, "").replace(/\$/g, "");
+}
+
+function defaultSheetName(value: string | undefined): string | undefined {
+  if (!value?.trim()) return undefined;
+  return unquoteSheet(splitOutsideQuotes(value)[0] ?? value);
+}
+
+function sheetUsedBounds(workbook: ExcelJS.Workbook | undefined, sheetName: string | undefined) {
+  const sheet = sheetName ? workbook?.getWorksheet(sheetName) : workbook?.worksheets[0];
+  if (!sheet) return undefined;
+  let minRow = Number.POSITIVE_INFINITY;
+  let maxRow = 0;
+  let minCol = Number.POSITIVE_INFINITY;
+  let maxCol = 0;
+  sheet.eachRow({ includeEmpty: false }, (row, rowNumber) => {
+    row.eachCell({ includeEmpty: false }, (_cell, colNumber) => {
+      minRow = Math.min(minRow, rowNumber);
+      maxRow = Math.max(maxRow, rowNumber);
+      minCol = Math.min(minCol, colNumber);
+      maxCol = Math.max(maxCol, colNumber);
+    });
+  });
+  if (!maxRow || !maxCol) return undefined;
+  return { minRow, maxRow, minCol, maxCol };
 }
 
 function lettersToCol(letters: string): number {

@@ -142,7 +142,14 @@ describe("official benchmark readiness", () => {
       expect(runner?.blocker).toContain("workspace");
       expect(runner?.blocker).toContain("Route-selection reports");
       expect(runner?.blocker).toContain("deterministic table transforms");
-      expect(runner?.blocker).toContain("route execution/scoring");
+      expect(runner?.blocker).toContain("chunked full 400-task V1 copy-input baseline");
+      if (item.id === "spreadsheetbench-v1") {
+        expect(runner?.blocker).toContain("400/400 attempted tasks");
+        expect(runner?.blocker).toContain("15/400 pass");
+        expect(runner?.blocker).toContain("zero failure counts");
+        expect(runner?.blocker).toContain("external-link cell-read repair");
+      }
+      expect(runner?.blocker).toMatch(/route[- ]execution/);
       expect(runner?.blocker).toContain("Docker/Harbor");
       expect(runner?.blocker).not.toContain("route selection remain incomplete");
       expect(gold?.blocker).toContain("Node permission subprocess");

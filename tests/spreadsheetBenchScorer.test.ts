@@ -19,6 +19,30 @@ describe("SpreadsheetBench workbook scorer", () => {
     ]);
   });
 
+  it("normalizes malformed official answer-position sheet quotes and shorthand ranges", async () => {
+    const workbook = new ExcelJS.Workbook();
+    const sheet3 = workbook.addWorksheet("Sheet3");
+    const outCas = workbook.addWorksheet("OUT CAS");
+    sheet3.getCell("A1").value = "a";
+    sheet3.getCell("G4").value = "g";
+    outCas.getCell("BD308").value = "tail";
+
+    expect(parseAnswerPosition("'PL Recon Items!'A1:D2,'Statement Recon Items!'A1:J3")).toEqual([
+      { sheetName: "PL Recon Items", startRow: 1, endRow: 2, startCol: 1, endCol: 4, label: "'PL Recon Items'!A1:D2" },
+      { sheetName: "Statement Recon Items", startRow: 1, endRow: 3, startCol: 1, endCol: 10, label: "'Statement Recon Items'!A1:J3" },
+    ]);
+    expect(parseAnswerPosition("'99250!A1:F9','99251!A1:F9'")).toEqual([
+      { sheetName: "99250", startRow: 1, endRow: 9, startCol: 1, endCol: 6, label: "'99250'!A1:F9" },
+      { sheetName: "99251", startRow: 1, endRow: 9, startCol: 1, endCol: 6, label: "'99251'!A1:F9" },
+    ]);
+    expect(parseAnswerPosition("Sheet3'!A:G", undefined, workbook)).toEqual([
+      { sheetName: "Sheet3", startRow: 1, endRow: 4, startCol: 1, endCol: 7, label: "'Sheet3'!A:G" },
+    ]);
+    expect(parseAnswerPosition("OUT CAS'!BD2:308", undefined, workbook)).toEqual([
+      { sheetName: "OUT CAS", startRow: 2, endRow: 308, startCol: 56, endCol: 56, label: "'OUT CAS'!BD2:308" },
+    ]);
+  });
+
   it("passes when candidate workbook matches evaluator-only gold across values, formulas, and styles", async () => {
     const root = tempRoot();
     const candidate = join(root, "candidate.xlsx");
@@ -172,6 +196,26 @@ describe("SpreadsheetBench workbook scorer", () => {
       expect.stringContaining("not a rendered visual or VLM"),
     ]));
   });
+
+  it("scores invalid ExcelJS date objects as blank values instead of throwing", async () => {
+    const root = tempRoot();
+    const candidate = join(root, "candidate.xlsx");
+    const gold = join(root, "gold.xlsx");
+    await writeInvalidDateWorkbook(candidate);
+    await writeInvalidDateWorkbook(gold);
+
+    const score = await scoreSpreadsheetBenchWorkbook({
+      taskId: "fixture/invalid-date",
+      candidateWorkbookPath: candidate,
+      goldWorkbookPath: gold,
+      answerPosition: "'Model'!A1:A1",
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(score.pass).toBe(true);
+    expect(score.totals.comparedCells).toBe(1);
+    expect(score.totals.mismatches).toBe(0);
+  });
 });
 
 function tempRoot(): string {
@@ -212,6 +256,13 @@ async function writeLayoutWorkbook(path: string, args: { formatted: boolean }) {
     sheet.getRow(2).height = 32;
     sheet.mergeCells("B2:C2");
   }
+  await workbook.xlsx.writeFile(path);
+}
+
+async function writeInvalidDateWorkbook(path: string) {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Model");
+  sheet.getCell("A1").value = new Date(Number.NaN);
   await workbook.xlsx.writeFile(path);
 }
 

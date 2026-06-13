@@ -1,8 +1,10 @@
-import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { relative, resolve } from "node:path";
 
 type SpreadsheetBenchRunReport = {
   schema: number;
+  outputRoot?: string;
   taskCount: number;
   passCount: number;
   passRate: number;
@@ -101,8 +103,16 @@ const minCheckedFiles = numberOption("--min-checked-files") ?? 75;
 const run = readJson<SpreadsheetBenchRunReport>(runPath);
 const contamination = readJson<ContaminationReport>(contaminationPath);
 const failures: string[] = [];
+const defaultSidecarRoot = run.outputRoot ? resolve(".tmp", "official-benchmarks", run.outputRoot) : undefined;
+const sidecarRoot = resolve(optionValue("--sidecar-root") ?? defaultSidecarRoot ?? "");
+const sidecarRootExists = Boolean(defaultSidecarRoot && existsSync(defaultSidecarRoot));
+const requireSidecarFiles = args.includes("--require-sidecar-files") || sidecarRootExists;
 
 expect(run.schema === 1, `run schema must be 1, got ${run.schema}`);
+if (args.includes("--require-sidecar-files")) {
+  expect(Boolean(defaultSidecarRoot || optionValue("--sidecar-root")), "sidecar file verification requires run.outputRoot or --sidecar-root");
+  expect(existsSync(sidecarRoot), `sidecar root does not exist: ${sidecarRoot}`);
+}
 expect(run.taskCount >= minTaskCount, `taskCount ${run.taskCount} < ${minTaskCount}`);
 expect(run.caseCount >= minCaseCount, `caseCount ${run.caseCount} < ${minCaseCount}`);
 expect(run.repeatCount >= minRepeatCount, `repeatCount ${run.repeatCount} < ${minRepeatCount}`);
@@ -148,6 +158,7 @@ console.log([
   `p95=${run.stats?.latencyMs?.p95}ms`,
   `cost=$${run.harness?.budget?.providerCostUsd}`,
   `leaks=${contamination.leakCount}/${contamination.checkedFiles}`,
+  `sidecarFiles=${requireSidecarFiles ? "verified" : "not-available"}`,
 ].join(" "));
 
 function readJson<T>(path: string): T {
@@ -175,6 +186,21 @@ function expectFileEvidence(label: string, name: string, evidence: SidecarFileEv
   expect(Boolean(evidence?.path), `${label} must record ${name}.path`);
   expect(/^[a-f0-9]{64}$/.test(evidence?.sha256 ?? ""), `${label} must record ${name}.sha256`);
   expect((evidence?.bytes ?? 0) > 0, `${label} must record ${name}.bytes`);
+  if (requireSidecarFiles) expectSidecarFileOnDisk(label, name, evidence);
+}
+
+function expectSidecarFileOnDisk(label: string, name: string, evidence: SidecarFileEvidence | undefined): void {
+  if (!evidence?.path) return;
+  const root = resolve(sidecarRoot);
+  const file = resolve(root, evidence.path);
+  expect(file.startsWith(root), `${label} ${name}.path escapes sidecar root: ${evidence.path}`);
+  expect(existsSync(file), `${label} ${name}.path missing on disk: ${evidence.path}`);
+  if (!existsSync(file)) return;
+  const stat = statSync(file);
+  expect(stat.isFile(), `${label} ${name}.path is not a file: ${evidence.path}`);
+  expect(stat.size === evidence.bytes, `${label} ${name}.bytes ${evidence.bytes} does not match disk size ${stat.size}: ${evidence.path}`);
+  const sha256 = createHash("sha256").update(readFileSync(file)).digest("hex");
+  expect(sha256 === evidence.sha256, `${label} ${name}.sha256 does not match disk file ${evidence.path}: expected ${evidence.sha256}, got ${sha256}`);
 }
 
 function expectTrajectory(label: string, trajectory: Array<{ step?: string }> | undefined): void {

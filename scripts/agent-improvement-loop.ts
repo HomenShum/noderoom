@@ -312,8 +312,10 @@ const steps: StepSpec[] = [
     label: "SpreadsheetBench 3-task N5 proof gate",
     lane: "deterministic",
     command: "npm",
-    args: ["run", "benchmark:spreadsheetbench:proof"],
+    args: ["run", "benchmark:spreadsheetbench:proof", "--", "--require-sidecar-files"],
     timeoutMs: 120_000,
+    includeWhen: () => existsSync(join(process.cwd(), ".tmp", "official-benchmarks", "run-v1-model-edit-3task-n5")),
+    skipReason: "local SpreadsheetBench 3-task N5 run root is not present",
   },
   {
     id: "spreadsheetbench-retry-run-contamination",

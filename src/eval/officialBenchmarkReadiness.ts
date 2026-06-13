@@ -262,7 +262,7 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "The SpreadsheetBench runner caches deterministic results for a local formula subset covering arithmetic, same-sheet cell refs/ranges, SUM/AVERAGE/MIN/MAX/COUNT/COUNTA, ABS, ROUND/ROUNDUP/ROUNDDOWN, IF/IFERROR, and SUMIF/COUNTIF before export/reopen scoring, and the scorer no longer penalizes value-equivalent candidate formulas when gold stores only scalar results. A full Excel-compatible recompute engine is not complete.",
+        "The SpreadsheetBench runner caches deterministic results for a local formula subset covering arithmetic, same-sheet cell refs/ranges, SUM/AVERAGE/MIN/MAX/COUNT/COUNTA, ABS, ROUND/ROUNDUP/ROUNDDOWN, IF/IFERROR, single-criteria SUMIF/COUNTIF/AVERAGEIF, and multi-criteria SUMIFS/COUNTIFS/AVERAGEIFS before export/reopen scoring, including basic wildcard criteria. The scorer no longer penalizes value-equivalent candidate formulas when gold stores only scalar results. A full Excel-compatible recompute engine is not complete.",
     },
     format_diff: {
       capability: "format_diff",
@@ -302,7 +302,7 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "The SpreadsheetBench runner caches deterministic results for a local formula subset covering arithmetic, same-sheet cell refs/ranges, SUM/AVERAGE/MIN/MAX/COUNT/COUNTA, ABS, ROUND/ROUNDUP/ROUNDDOWN, IF/IFERROR, and SUMIF/COUNTIF before export/reopen scoring, and scalar-gold/formula-candidate equivalence is handled when values match; full Excel-compatible recompute, chart formulas, external refs, and volatile functions are not complete.",
+        "The SpreadsheetBench runner caches deterministic results for a local formula subset covering arithmetic, same-sheet cell refs/ranges, SUM/AVERAGE/MIN/MAX/COUNT/COUNTA, ABS, ROUND/ROUNDUP/ROUNDDOWN, IF/IFERROR, single-criteria SUMIF/COUNTIF/AVERAGEIF, and multi-criteria SUMIFS/COUNTIFS/AVERAGEIFS before export/reopen scoring, including basic wildcard criteria. Scalar-gold/formula-candidate equivalence is handled when values match; full Excel-compatible recompute, chart formulas, external refs, and volatile functions are not complete.",
     },
     format_diff: {
       capability: "format_diff",

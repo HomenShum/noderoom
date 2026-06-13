@@ -150,6 +150,7 @@ describe("official benchmark readiness", () => {
         evidence: "src/eval/spreadsheetBenchRunner.ts",
       });
       expect(formula?.blocker).toContain("SUM/AVERAGE/MIN/MAX/COUNT");
+      expect(formula?.blocker).toContain("SUMIFS/COUNTIFS/AVERAGEIFS");
       expect(formula?.blocker).toContain("full Excel-compatible");
       expect(format).toMatchObject({
         state: "partial",

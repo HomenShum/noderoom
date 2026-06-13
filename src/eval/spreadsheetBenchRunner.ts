@@ -25,6 +25,10 @@ const SUPPORTED_FORMULA_FUNCTIONS = [
   "IFERROR",
   "SUMIF",
   "COUNTIF",
+  "AVERAGEIF",
+  "SUMIFS",
+  "COUNTIFS",
+  "AVERAGEIFS",
 ] as const;
 
 export type SpreadsheetBenchRunnerOptions = {
@@ -1800,6 +1804,10 @@ function evaluateFormulaFunction(
   if (fn === "IFERROR") return evaluateIfErrorFunction(workbook, currentSheet, args);
   if (fn === "SUMIF") return evaluateSumIfFunction(workbook, currentSheet, args);
   if (fn === "COUNTIF") return evaluateCountIfFunction(workbook, currentSheet, args);
+  if (fn === "AVERAGEIF") return evaluateAverageIfFunction(workbook, currentSheet, args);
+  if (fn === "SUMIFS") return evaluateSumIfsFunction(workbook, currentSheet, args);
+  if (fn === "COUNTIFS") return evaluateCountIfsFunction(workbook, currentSheet, args);
+  if (fn === "AVERAGEIFS") return evaluateAverageIfsFunction(workbook, currentSheet, args);
   if (fn === "COUNTA") return args.flatMap((part) => rawValuesForFormulaArg(workbook, currentSheet, part.trim())).filter(isNonBlankFormulaValue).length;
 
   const values = args.flatMap((part) => valuesForFormulaArg(workbook, currentSheet, part.trim()));
@@ -1912,6 +1920,101 @@ function evaluateCountIfFunction(
   return cells.filter((cell) => formulaValueMatchesCriteria(cell.value, criteria)).length;
 }
 
+function evaluateAverageIfFunction(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  args: string[],
+): number | undefined {
+  if (args.length < 2 || args.length > 3) return undefined;
+  const criteriaCells = cellsForFormulaRef(workbook, currentSheet, args[0]);
+  if (!criteriaCells) return undefined;
+  const averageCells = args[2] ? cellsForFormulaRef(workbook, currentSheet, args[2]) : criteriaCells;
+  if (!averageCells || averageCells.length < criteriaCells.length) return undefined;
+  const criteria = criteriaFromFormulaArg(workbook, currentSheet, args[1]);
+  if (criteria === undefined) return undefined;
+  const values: number[] = [];
+  for (let index = 0; index < criteriaCells.length; index += 1) {
+    if (!formulaValueMatchesCriteria(criteriaCells[index].value, criteria)) continue;
+    const numeric = numericComparableValue(averageCells[index].value);
+    if (numeric === undefined) return undefined;
+    values.push(numeric);
+  }
+  if (values.length === 0) return undefined;
+  return roundFormulaNumber(values.reduce((sum, value) => sum + value, 0) / values.length);
+}
+
+function evaluateSumIfsFunction(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  args: string[],
+): number | undefined {
+  if (args.length < 3 || args.length % 2 !== 1) return undefined;
+  const sumCells = cellsForFormulaRef(workbook, currentSheet, args[0]);
+  const criteriaSets = criteriaSetsFromFormulaArgs(workbook, currentSheet, args.slice(1), sumCells?.length ?? 0);
+  if (!sumCells || !criteriaSets) return undefined;
+  let total = 0;
+  for (let index = 0; index < sumCells.length; index += 1) {
+    if (!criteriaSets.every((set) => formulaValueMatchesCriteria(set.cells[index].value, set.criteria))) continue;
+    const numeric = numericComparableValue(sumCells[index].value);
+    if (numeric === undefined) return undefined;
+    total += numeric;
+  }
+  return roundFormulaNumber(total);
+}
+
+function evaluateCountIfsFunction(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  args: string[],
+): number | undefined {
+  if (args.length < 2 || args.length % 2 !== 0) return undefined;
+  const firstRange = cellsForFormulaRef(workbook, currentSheet, args[0]);
+  const criteriaSets = criteriaSetsFromFormulaArgs(workbook, currentSheet, args, firstRange?.length ?? 0);
+  if (!firstRange || !criteriaSets) return undefined;
+  let count = 0;
+  for (let index = 0; index < firstRange.length; index += 1) {
+    if (criteriaSets.every((set) => formulaValueMatchesCriteria(set.cells[index].value, set.criteria))) count += 1;
+  }
+  return count;
+}
+
+function evaluateAverageIfsFunction(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  args: string[],
+): number | undefined {
+  if (args.length < 3 || args.length % 2 !== 1) return undefined;
+  const averageCells = cellsForFormulaRef(workbook, currentSheet, args[0]);
+  const criteriaSets = criteriaSetsFromFormulaArgs(workbook, currentSheet, args.slice(1), averageCells?.length ?? 0);
+  if (!averageCells || !criteriaSets) return undefined;
+  const values: number[] = [];
+  for (let index = 0; index < averageCells.length; index += 1) {
+    if (!criteriaSets.every((set) => formulaValueMatchesCriteria(set.cells[index].value, set.criteria))) continue;
+    const numeric = numericComparableValue(averageCells[index].value);
+    if (numeric === undefined) return undefined;
+    values.push(numeric);
+  }
+  if (values.length === 0) return undefined;
+  return roundFormulaNumber(values.reduce((sum, value) => sum + value, 0) / values.length);
+}
+
+function criteriaSetsFromFormulaArgs(
+  workbook: ExcelJS.Workbook,
+  currentSheet: ExcelJS.Worksheet,
+  args: string[],
+  expectedLength: number,
+): Array<{ cells: Array<{ row: number; col: number; value: FormulaCellValue }>; criteria: FormulaResult }> | undefined {
+  if (expectedLength <= 0 || args.length < 2 || args.length % 2 !== 0) return undefined;
+  const sets: Array<{ cells: Array<{ row: number; col: number; value: FormulaCellValue }>; criteria: FormulaResult }> = [];
+  for (let index = 0; index < args.length; index += 2) {
+    const cells = cellsForFormulaRef(workbook, currentSheet, args[index]);
+    const criteria = criteriaFromFormulaArg(workbook, currentSheet, args[index + 1]);
+    if (!cells || cells.length < expectedLength || criteria === undefined) return undefined;
+    sets.push({ cells, criteria });
+  }
+  return sets;
+}
+
 function valuesForFormulaArg(
   workbook: ExcelJS.Workbook,
   currentSheet: ExcelJS.Worksheet,
@@ -1993,7 +2096,7 @@ function replaceFormulaFunctionCalls(
   let current = expression;
   for (let pass = 0; pass < 20; pass += 1) {
     let changed = false;
-    current = current.replace(/\b(SUM|AVERAGE|MIN|MAX|COUNT|COUNTA|ABS|ROUND|ROUNDUP|ROUNDDOWN|IF|IFERROR|SUMIF|COUNTIF)\(([^()]+)\)/gi, (match) => {
+    current = current.replace(/\b(SUM|AVERAGE|MIN|MAX|COUNT|COUNTA|ABS|ROUND|ROUNDUP|ROUNDDOWN|IF|IFERROR|SUMIF|COUNTIF|AVERAGEIF|SUMIFS|COUNTIFS|AVERAGEIFS)\(([^()]+)\)/gi, (match) => {
       const result = evaluateFormulaFunction(workbook, currentSheet, match);
       if (typeof result !== "number") {
         failed = true;
@@ -2153,6 +2256,7 @@ function formulaValueMatchesCriteria(value: FormulaCellValue, criteria: FormulaR
   if (typeof criteria === "string") {
     const match = criteria.match(/^(>=|<=|<>|>|<|=)(.*)$/);
     if (match) return compareCriteriaValue(value, match[2].trim(), match[1]);
+    if (formulaCriteriaHasWildcard(criteria)) return wildcardFormulaCriteriaMatches(value, criteria);
   }
   return compareFormulaValues(value, criteria, "=");
 }
@@ -2160,7 +2264,21 @@ function formulaValueMatchesCriteria(value: FormulaCellValue, criteria: FormulaR
 function compareCriteriaValue(value: FormulaCellValue, rawExpected: string, operator: string): boolean {
   const expected = rawExpected === "" ? "" : Number(rawExpected);
   if (typeof expected === "number" && Number.isFinite(expected)) return compareFormulaValues(value, expected, operator);
-  return compareFormulaValues(value, rawExpected.replace(/^"|"$/g, ""), operator);
+  const expectedText = rawExpected.replace(/^"|"$/g, "");
+  if ((operator === "=" || operator === "<>") && formulaCriteriaHasWildcard(expectedText)) {
+    const matches = wildcardFormulaCriteriaMatches(value, expectedText);
+    return operator === "<>" ? !matches : matches;
+  }
+  return compareFormulaValues(value, expectedText, operator);
+}
+
+function formulaCriteriaHasWildcard(criteria: string): boolean {
+  return /[*?]/.test(criteria);
+}
+
+function wildcardFormulaCriteriaMatches(value: FormulaCellValue, criteria: string): boolean {
+  const escaped = criteria.replace(/[.+^${}()|[\]\\]/g, "\\$&").replace(/\*/g, ".*").replace(/\?/g, ".");
+  return new RegExp(`^${escaped}$`, "i").test(String(value ?? ""));
 }
 
 function compareFormulaValues(left: FormulaCellValue, right: FormulaCellValue, operator: string): boolean {

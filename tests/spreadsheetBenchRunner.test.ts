@@ -284,9 +284,9 @@ describe("SpreadsheetBench staged runner", () => {
     writeJson(join(source, "dataset.json"), [
       {
         id: "13-13",
-        instruction: "Write the business formulas for conditional rounding and region criteria.",
+        instruction: "Write the business formulas for conditional rounding and multi-criteria region criteria.",
         spreadsheet_path: "spreadsheet/13-13",
-        answer_position: "Sheet1!E2:K2",
+        answer_position: "Sheet1!E2:P2",
         answer_sheet: "Sheet1",
       },
     ]);
@@ -306,6 +306,11 @@ describe("SpreadsheetBench staged runner", () => {
         { sheet: "Sheet1", cell: "I2", formula: "IFERROR(1/0,99)" },
         { sheet: "Sheet1", cell: "J2", formula: "ROUNDUP(B3,1)" },
         { sheet: "Sheet1", cell: "K2", formula: "ROUNDDOWN(B3,1)" },
+        { sheet: "Sheet1", cell: "L2", formula: "SUMIFS(D2:D4,C2:C4,\"North\",A2:A4,\">=60\")" },
+        { sheet: "Sheet1", cell: "M2", formula: "COUNTIFS(C2:C4,\"No*\",A2:A4,\">50\")" },
+        { sheet: "Sheet1", cell: "N2", formula: "AVERAGEIF(C2:C4,\"North\",D2:D4)" },
+        { sheet: "Sheet1", cell: "O2", formula: "AVERAGEIFS(D2:D4,C2:C4,\"North\",A2:A4,\">=60\")" },
+        { sheet: "Sheet1", cell: "P2", formula: "SUMIFS(D2:D4,C2:C4,\"<>South\",A2:A4,\">50\")" },
       ],
     });
 
@@ -319,10 +324,10 @@ describe("SpreadsheetBench staged runner", () => {
 
     expect(report.passCount).toBe(1);
     expect(report.results[0].score?.totals).toMatchObject({
-      comparedCells: 7,
-      valueMatches: 7,
-      formulaCells: 7,
-      formulaMatches: 7,
+      comparedCells: 12,
+      valueMatches: 12,
+      formulaCells: 12,
+      formulaMatches: 12,
       mismatches: 0,
     });
     const candidate = new ExcelJS.Workbook();
@@ -335,8 +340,15 @@ describe("SpreadsheetBench staged runner", () => {
     expect(sheet.getCell("I2").value).toMatchObject({ formula: "IFERROR(1/0,99)", result: 99 });
     expect(sheet.getCell("J2").value).toMatchObject({ formula: "ROUNDUP(B3,1)", result: 2.8 });
     expect(sheet.getCell("K2").value).toMatchObject({ formula: "ROUNDDOWN(B3,1)", result: 2.7 });
+    expect(sheet.getCell("L2").value).toMatchObject({ formula: "SUMIFS(D2:D4,C2:C4,\"North\",A2:A4,\">=60\")", result: 10 });
+    expect(sheet.getCell("M2").value).toMatchObject({ formula: "COUNTIFS(C2:C4,\"No*\",A2:A4,\">50\")", result: 2 });
+    expect(sheet.getCell("N2").value).toMatchObject({ formula: "AVERAGEIF(C2:C4,\"North\",D2:D4)", result: 20 });
+    expect(sheet.getCell("O2").value).toMatchObject({ formula: "AVERAGEIFS(D2:D4,C2:C4,\"North\",A2:A4,\">=60\")", result: 10 });
+    expect(sheet.getCell("P2").value).toMatchObject({ formula: "SUMIFS(D2:D4,C2:C4,\"<>South\",A2:A4,\">50\")", result: 40 });
     const candidateManifest = readFileSync(join(out, "13-13", "candidate-manifest.json"), "utf8");
     expect(candidateManifest).toContain("SUMIF");
+    expect(candidateManifest).toContain("SUMIFS");
+    expect(candidateManifest).toContain("AVERAGEIFS");
     expect(candidateManifest).toContain("IFERROR");
   });
 
@@ -1367,5 +1379,10 @@ async function writeBusinessFormulaWorkbook(path: string, completed: boolean) {
   sheet.getCell("I2").value = completed ? { formula: "IFERROR(1/0,99)", result: 99 } : "";
   sheet.getCell("J2").value = completed ? { formula: "ROUNDUP(B3,1)", result: 2.8 } : "";
   sheet.getCell("K2").value = completed ? { formula: "ROUNDDOWN(B3,1)", result: 2.7 } : "";
+  sheet.getCell("L2").value = completed ? { formula: "SUMIFS(D2:D4,C2:C4,\"North\",A2:A4,\">=60\")", result: 10 } : "";
+  sheet.getCell("M2").value = completed ? { formula: "COUNTIFS(C2:C4,\"No*\",A2:A4,\">50\")", result: 2 } : "";
+  sheet.getCell("N2").value = completed ? { formula: "AVERAGEIF(C2:C4,\"North\",D2:D4)", result: 20 } : "";
+  sheet.getCell("O2").value = completed ? { formula: "AVERAGEIFS(D2:D4,C2:C4,\"North\",A2:A4,\">=60\")", result: 10 } : "";
+  sheet.getCell("P2").value = completed ? { formula: "SUMIFS(D2:D4,C2:C4,\"<>South\",A2:A4,\">50\")", result: 40 } : "";
   await workbook.xlsx.writeFile(path);
 }

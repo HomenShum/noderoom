@@ -1080,8 +1080,10 @@ The deterministic formula-result lane has since moved beyond `SUM(...)`: `apply-
 `model-edit-plan` candidate manifests now record `formulaResultPolicy:
 deterministic_local_subset`, covering arithmetic, same-sheet cell refs/ranges,
 `SUM`/`AVERAGE`/`MIN`/`MAX`/`COUNT`/`COUNTA`, `ABS`,
-`ROUND`/`ROUNDUP`/`ROUNDDOWN`, `IF`/`IFERROR`, and `SUMIF`/`COUNTIF`
-before export/reopen scoring. That is useful for SpreadsheetBench smokes, but still not a
+`ROUND`/`ROUNDUP`/`ROUNDDOWN`, `IF`/`IFERROR`, single-criteria
+`SUMIF`/`COUNTIF`/`AVERAGEIF`, and multi-criteria
+`SUMIFS`/`COUNTIFS`/`AVERAGEIFS` before export/reopen scoring, including basic
+wildcard criteria. That is useful for SpreadsheetBench smokes, but still not a
 complete Excel calculation engine.
 
 SpreadsheetBench format evidence now goes beyond individual cell style hashes when

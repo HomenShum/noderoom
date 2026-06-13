@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T12:33:19.731Z",
+  "root": "run-v2",
+  "checkedFiles": 9,
+  "leakCount": 0,
+  "leaks": []
+}

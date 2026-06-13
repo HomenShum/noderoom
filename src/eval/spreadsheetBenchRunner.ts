@@ -351,7 +351,7 @@ async function runTask(
       answerPosition: evaluator.answerPosition,
       answerSheet: evaluator.answerSheet,
       compareStyles: options.compareStyles,
-      compareCharts: options.compareCharts ?? agent.track === "spreadsheetbench-v2",
+      compareCharts: options.compareCharts || agent.track === "spreadsheetbench-v2",
       maxMismatches: options.maxMismatches,
       generatedAt: options.generatedAt,
     });

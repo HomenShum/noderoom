@@ -439,6 +439,8 @@
         "npm run benchmark:contamination -- --root .tmp/official-benchmarks/staged-v1 --strict --json-out docs/eval/spreadsheetbench-v1-stage-contamination-smoke.json",
         "npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v1-model-edit-n5 --strict --json-out docs/eval/spreadsheetbench-v1-run-n5-contamination-smoke.json",
         "npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v1-model-edit-retry --strict --json-out docs/eval/spreadsheetbench-v1-run-retry-contamination-smoke.json",
+        "npm run benchmark:contamination -- --root .tmp/official-benchmarks/staged-v2 --strict --json-out docs/eval/spreadsheetbench-v2-stage-contamination-smoke.json",
+        "npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-v2 --strict --json-out docs/eval/spreadsheetbench-v2-run-contamination-smoke.json",
         "npm run benchmark:contamination -- --root .tmp/official-benchmarks/staged-btb --strict --json-out docs/eval/bankertoolbench-stage-contamination-smoke.json",
         "npm run benchmark:contamination -- --root .tmp/official-benchmarks/run-btb --strict --json-out docs/eval/bankertoolbench-run-contamination-smoke.json",
         "missing: official SpreadsheetBench V1/V2 full-bundle runner smoke"
@@ -465,6 +467,8 @@
         { "type": "data", "ref": "docs/eval/spreadsheetbench-v1-stage-contamination-smoke.json" },
         { "type": "data", "ref": "docs/eval/spreadsheetbench-v1-run-n5-contamination-smoke.json" },
         { "type": "data", "ref": "docs/eval/spreadsheetbench-v1-run-retry-contamination-smoke.json" },
+        { "type": "data", "ref": "docs/eval/spreadsheetbench-v2-stage-contamination-smoke.json" },
+        { "type": "data", "ref": "docs/eval/spreadsheetbench-v2-run-contamination-smoke.json" },
         { "type": "data", "ref": "docs/eval/bankertoolbench-stage-contamination-smoke.json" },
         { "type": "data", "ref": "docs/eval/spreadsheetbench-v1-score-smoke.json" },
         { "type": "data", "ref": "docs/eval/spreadsheetbench-v2-score-smoke.json" },

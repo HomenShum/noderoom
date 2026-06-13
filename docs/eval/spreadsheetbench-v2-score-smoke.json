@@ -1,24 +1,28 @@
 {
   "schema": 1,
-  "generatedAt": "2026-06-13T09:28:02.194Z",
+  "generatedAt": "2026-06-13T12:32:37.032Z",
   "mode": "input-vs-gold-baseline",
   "track": "spreadsheetbench-v2",
   "sourceRoot": "data_example_05_11",
   "taskCount": 26,
-  "scoredTaskCount": 2,
+  "scoredTaskCount": 3,
   "passCount": 0,
-  "averageOverall": 0.993716,
-  "warningCount": 4,
+  "averageOverall": 0.590074,
+  "warningCount": 8,
   "warnings": [
     "Visualization/Task 96: no input workbook files found",
     "Visualization/Task 96: no evaluator gold workbook files found",
     "Debugging/01_01: mismatch list capped at 5/34",
-    "Debugging/02_01: mismatch list capped at 5/48"
+    "Debugging/01_01: chart_package: xlsx_chart_package_static compares chart/drawing XML package parts only; it is not a rendered visual or VLM chart-quality grade.",
+    "Debugging/02_01: mismatch list capped at 5/48",
+    "Debugging/02_01: chart_package: xlsx_chart_package_static compares chart/drawing XML package parts only; it is not a rendered visual or VLM chart-quality grade.",
+    "Debugging/03_01: mismatch list capped at 5/2715",
+    "Debugging/03_01: chart_package: xlsx_chart_package_static compares chart/drawing XML package parts only; it is not a rendered visual or VLM chart-quality grade."
   ],
   "results": [
     {
       "schema": 1,
-      "generatedAt": "2026-06-13T09:28:02.194Z",
+      "generatedAt": "2026-06-13T12:32:37.032Z",
       "taskId": "Debugging/01_01",
       "candidateWorkbook": "Double Counting_input.xlsx",
       "goldWorkbook": "01_golden.xlsx",
@@ -51,11 +55,13 @@
         "value": 0.998616,
         "formula": 0.988619,
         "style": null,
-        "overall": 0.9936175
+        "chartPackage": 0,
+        "overall": 0.6624116666666667
       },
       "pass": false,
       "warnings": [
-        "mismatch list capped at 5/34"
+        "mismatch list capped at 5/34",
+        "chart_package: xlsx_chart_package_static compares chart/drawing XML package parts only; it is not a rendered visual or VLM chart-quality grade."
       ],
       "mismatches": [
         {
@@ -93,11 +99,61 @@
           "expected": "=+S65+S76+S85",
           "actual": "=S91"
         }
-      ]
+      ],
+      "chartPackage": {
+        "schema": 1,
+        "generatedAt": "2026-06-13T12:32:37.032Z",
+        "taskId": "Debugging/01_01",
+        "candidateWorkbook": "Double Counting_input.xlsx",
+        "goldWorkbook": "01_golden.xlsx",
+        "verifier": "xlsx_chart_package_static",
+        "totals": {
+          "goldChartParts": 2,
+          "candidateChartParts": 0,
+          "matchedChartParts": 0,
+          "missingChartParts": 2,
+          "extraChartParts": 0,
+          "mismatchedChartParts": 0
+        },
+        "scores": {
+          "package": 0
+        },
+        "pass": false,
+        "candidateParts": [],
+        "goldParts": [
+          {
+            "path": "xl/drawings/drawing1.xml",
+            "kind": "drawing",
+            "sha256": "832220df4600509b666d4660add3cafee00c5196d65dc742fb6f49bf83bdc0b6",
+            "bytes": 2611
+          },
+          {
+            "path": "xl/drawings/drawing2.xml",
+            "kind": "drawing",
+            "sha256": "8d207f14c695d60b07613ae8ab78e77a67edf1c0eddd0b94cb7e7ddc5d0bcdb7",
+            "bytes": 2334
+          }
+        ],
+        "mismatches": [
+          {
+            "kind": "missing_chart_part",
+            "path": "xl/drawings/drawing1.xml",
+            "expected": "832220df4600509b666d4660add3cafee00c5196d65dc742fb6f49bf83bdc0b6"
+          },
+          {
+            "kind": "missing_chart_part",
+            "path": "xl/drawings/drawing2.xml",
+            "expected": "8d207f14c695d60b07613ae8ab78e77a67edf1c0eddd0b94cb7e7ddc5d0bcdb7"
+          }
+        ],
+        "warnings": [
+          "xlsx_chart_package_static compares chart/drawing XML package parts only; it is not a rendered visual or VLM chart-quality grade."
+        ]
+      }
     },
     {
       "schema": 1,
-      "generatedAt": "2026-06-13T09:28:02.194Z",
+      "generatedAt": "2026-06-13T12:32:37.032Z",
       "taskId": "Debugging/02_01",
       "candidateWorkbook": "Embedded Hardcode_input.xlsx",
       "goldWorkbook": "01_golden.xlsx",
@@ -130,11 +186,13 @@
         "value": 0.996424,
         "formula": 0.991205,
         "style": null,
-        "overall": 0.9938145
+        "chartPackage": 0,
+        "overall": 0.662543
       },
       "pass": false,
       "warnings": [
-        "mismatch list capped at 5/48"
+        "mismatch list capped at 5/48",
+        "chart_package: xlsx_chart_package_static compares chart/drawing XML package parts only; it is not a rendered visual or VLM chart-quality grade."
       ],
       "mismatches": [
         {
@@ -170,7 +228,188 @@
           "expected": "14.2033949536391",
           "actual": "14.2"
         }
-      ]
+      ],
+      "chartPackage": {
+        "schema": 1,
+        "generatedAt": "2026-06-13T12:32:37.032Z",
+        "taskId": "Debugging/02_01",
+        "candidateWorkbook": "Embedded Hardcode_input.xlsx",
+        "goldWorkbook": "01_golden.xlsx",
+        "verifier": "xlsx_chart_package_static",
+        "totals": {
+          "goldChartParts": 2,
+          "candidateChartParts": 0,
+          "matchedChartParts": 0,
+          "missingChartParts": 2,
+          "extraChartParts": 0,
+          "mismatchedChartParts": 0
+        },
+        "scores": {
+          "package": 0
+        },
+        "pass": false,
+        "candidateParts": [],
+        "goldParts": [
+          {
+            "path": "xl/drawings/drawing1.xml",
+            "kind": "drawing",
+            "sha256": "832220df4600509b666d4660add3cafee00c5196d65dc742fb6f49bf83bdc0b6",
+            "bytes": 2611
+          },
+          {
+            "path": "xl/drawings/drawing2.xml",
+            "kind": "drawing",
+            "sha256": "8d207f14c695d60b07613ae8ab78e77a67edf1c0eddd0b94cb7e7ddc5d0bcdb7",
+            "bytes": 2334
+          }
+        ],
+        "mismatches": [
+          {
+            "kind": "missing_chart_part",
+            "path": "xl/drawings/drawing1.xml",
+            "expected": "832220df4600509b666d4660add3cafee00c5196d65dc742fb6f49bf83bdc0b6"
+          },
+          {
+            "kind": "missing_chart_part",
+            "path": "xl/drawings/drawing2.xml",
+            "expected": "8d207f14c695d60b07613ae8ab78e77a67edf1c0eddd0b94cb7e7ddc5d0bcdb7"
+          }
+        ],
+        "warnings": [
+          "xlsx_chart_package_static compares chart/drawing XML package parts only; it is not a rendered visual or VLM chart-quality grade."
+        ]
+      }
+    },
+    {
+      "schema": 1,
+      "generatedAt": "2026-06-13T12:32:37.032Z",
+      "taskId": "Debugging/03_01",
+      "candidateWorkbook": "Errors_input.xlsx",
+      "goldWorkbook": "01_golden.xlsx",
+      "answerPosition": "'Ex 1 - LBO'!B1:AK95,'Ex 2 - Valuation Bridge'!B2:C36,'Ex 3 - PF P&L'!B1:I30,'Ex 4 - Organic Operating Model'!B1:AF41,'Ex 5 - M&A'!B1:AB81,'Ex 6 - Amdocs Historical M&A'!B2:J19,'Ex 7 - SOFR'!B2:E79,'Ex 8 - Public Comps'!B2:F37,'Ex 9 - Transaction Comps'!B2:G24,'Ex 10 - Balance Sheet'!B2:F33,'Ex 11 - Income Statement'!B2:K28,'Ex 12 - Cash Flow Statement'!B2:G44",
+      "ranges": [
+        "'Ex 1 - LBO'!B1:AK95",
+        "'Ex 2 - Valuation Bridge'!B2:C36",
+        "'Ex 3 - PF P&L'!B1:I30",
+        "'Ex 4 - Organic Operating Model'!B1:AF41",
+        "'Ex 5 - M&A'!B1:AB81",
+        "'Ex 6 - Amdocs Historical M&A'!B2:J19",
+        "'Ex 7 - SOFR'!B2:E79",
+        "'Ex 8 - Public Comps'!B2:F37",
+        "'Ex 9 - Transaction Comps'!B2:G24",
+        "'Ex 10 - Balance Sheet'!B2:F33",
+        "'Ex 11 - Income Statement'!B2:K28",
+        "'Ex 12 - Cash Flow Statement'!B2:G44"
+      ],
+      "totals": {
+        "comparedCells": 8668,
+        "valueMatches": 7017,
+        "formulaCells": 2246,
+        "formulaMatches": 1182,
+        "styleCells": 0,
+        "styleMatches": 0,
+        "mismatches": 2715,
+        "missingSheets": 0
+      },
+      "scores": {
+        "value": 0.809529,
+        "formula": 0.526269,
+        "style": null,
+        "chartPackage": 0,
+        "overall": 0.445266
+      },
+      "pass": false,
+      "warnings": [
+        "mismatch list capped at 5/2715",
+        "chart_package: xlsx_chart_package_static compares chart/drawing XML package parts only; it is not a rendered visual or VLM chart-quality grade."
+      ],
+      "mismatches": [
+        {
+          "kind": "value",
+          "sheet": "Ex 1 - LBO",
+          "cell": "I17",
+          "expected": "0.04",
+          "actual": "#REF!"
+        },
+        {
+          "kind": "value",
+          "sheet": "Ex 1 - LBO",
+          "cell": "J17",
+          "expected": "0.052",
+          "actual": "#REF!"
+        },
+        {
+          "kind": "value",
+          "sheet": "Ex 1 - LBO",
+          "cell": "K17",
+          "expected": "0.0640000000000001",
+          "actual": "#REF!"
+        },
+        {
+          "kind": "value",
+          "sheet": "Ex 1 - LBO",
+          "cell": "L17",
+          "expected": "0.0780000000000001",
+          "actual": "#REF!"
+        },
+        {
+          "kind": "value",
+          "sheet": "Ex 1 - LBO",
+          "cell": "M17",
+          "expected": "0.0920000000000001",
+          "actual": "#REF!"
+        }
+      ],
+      "chartPackage": {
+        "schema": 1,
+        "generatedAt": "2026-06-13T12:32:37.032Z",
+        "taskId": "Debugging/03_01",
+        "candidateWorkbook": "Errors_input.xlsx",
+        "goldWorkbook": "01_golden.xlsx",
+        "verifier": "xlsx_chart_package_static",
+        "totals": {
+          "goldChartParts": 2,
+          "candidateChartParts": 0,
+          "matchedChartParts": 0,
+          "missingChartParts": 2,
+          "extraChartParts": 0,
+          "mismatchedChartParts": 0
+        },
+        "scores": {
+          "package": 0
+        },
+        "pass": false,
+        "candidateParts": [],
+        "goldParts": [
+          {
+            "path": "xl/drawings/drawing1.xml",
+            "kind": "drawing",
+            "sha256": "832220df4600509b666d4660add3cafee00c5196d65dc742fb6f49bf83bdc0b6",
+            "bytes": 2611
+          },
+          {
+            "path": "xl/drawings/drawing2.xml",
+            "kind": "drawing",
+            "sha256": "8d207f14c695d60b07613ae8ab78e77a67edf1c0eddd0b94cb7e7ddc5d0bcdb7",
+            "bytes": 2334
+          }
+        ],
+        "mismatches": [
+          {
+            "kind": "missing_chart_part",
+            "path": "xl/drawings/drawing1.xml",
+            "expected": "832220df4600509b666d4660add3cafee00c5196d65dc742fb6f49bf83bdc0b6"
+          },
+          {
+            "kind": "missing_chart_part",
+            "path": "xl/drawings/drawing2.xml",
+            "expected": "8d207f14c695d60b07613ae8ab78e77a67edf1c0eddd0b94cb7e7ddc5d0bcdb7"
+          }
+        ],
+        "warnings": [
+          "xlsx_chart_package_static compares chart/drawing XML package parts only; it is not a rendered visual or VLM chart-quality grade."
+        ]
+      }
     }
   ]
 }

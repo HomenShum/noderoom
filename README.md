@@ -1063,7 +1063,10 @@ normalizing and hashing `xl/charts/*.xml` plus `xl/drawings/*.xml`, then reports
 extra, and mismatched chart parts. The workbook scorer and staged runner can carry that evidence in
 score reports, so V2 chart-package drift is no longer invisible. That closes one blind spot in
 workbook packaging, but it is not a rendered screenshot grade, a layout-quality judge, or a
-Gemini/VLM visual grade.
+Gemini/VLM visual grade. The refreshed V2 score/run smokes now show the signal explicitly:
+copy-input candidates miss two evaluator-only chart/drawing package parts per sampled task, dropping
+runner best-overall scores from workbook-only near-passes to chart-aware failures while the V2
+staged/run contamination smokes stay at 0 leaks.
 
 BankerToolBench now has the same first boundary in place: `npm run
 benchmark:bankertoolbench:ingest` scans an already-downloaded BTB bundle (`tasks.jsonl`,

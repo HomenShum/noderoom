@@ -95,7 +95,7 @@ describe("official benchmark readiness", () => {
         evidence: "src/eval/spreadsheetBenchRunner.ts",
       });
       expect(xlsx).toMatchObject({
-        state: "partial",
+        state: "implemented",
         evidence: "src/eval/spreadsheetBenchRunner.ts",
       });
       expect(format).toMatchObject({

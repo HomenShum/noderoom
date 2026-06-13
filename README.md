@@ -1016,8 +1016,11 @@ baseline runner (`npm run benchmark:spreadsheetbench:run`) that emits candidate 
 staged `agent/` directory before opening the evaluator manifest. A local workbook scoring adapter
 (`npm run benchmark:spreadsheetbench:score`) then reopens candidate/golden workbooks and compares
 values, formulas, and optional style fingerprints. Smoke artifacts cover the V1 verified-400 bundle
-and the V2 public example bundle. Those artifacts prove ingest, sandbox-staging, candidate-output,
-and diff plumbing; they are not model scores.
+and the V2 public example bundle. The runner also supports `--mode apply-agent-patch`, which reads
+`agent/edit-plan.json`, applies cell-level value/formula/style edits, emits a candidate workbook,
+then opens evaluator metadata for scoring; the checked-in edit-plan smoke records a passing
+candidate and a zero-mismatch score. These artifacts prove ingest, sandbox-staging,
+candidate-output, edit/export/reopen, and diff plumbing; they are not model scores.
 
 BankerToolBench now has the same first boundary in place: `npm run
 benchmark:bankertoolbench:ingest` scans an already-downloaded BTB bundle (`tasks.jsonl`,

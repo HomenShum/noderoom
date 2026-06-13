@@ -12,12 +12,16 @@ const maxMismatches = numberOption("--max-mismatches") ?? 20;
 const clean = args.includes("--clean");
 const compareStyles = args.includes("--compare-styles");
 
-if (!stageRoot || !outputRoot || mode !== "copy-input-baseline") {
+const allowedModes: SpreadsheetBenchRunnerMode[] = ["copy-input-baseline", "apply-agent-patch"];
+
+if (!stageRoot || !outputRoot || !allowedModes.includes(mode)) {
   console.error([
     "Usage:",
-    "  npm run benchmark:spreadsheetbench:run -- --stage-root <staged-dir> --output-root <candidate-output-dir> [--mode copy-input-baseline] [--limit 3] [--clean] [--json-out <path>]",
+    "  npm run benchmark:spreadsheetbench:run -- --stage-root <staged-dir> --output-root <candidate-output-dir> [--mode copy-input-baseline|apply-agent-patch] [--limit 3] [--clean] [--json-out <path>]",
     "",
-    "The current mode is a copy-input baseline. It proves runner/export/scoring plumbing and the agent/evaluator directory boundary; it is not a model score.",
+    "copy-input-baseline proves runner/export/scoring plumbing.",
+    "apply-agent-patch reads agent/edit-plan.json, edits the workbook, emits a candidate, then opens evaluator metadata.",
+    "Neither mode is an official model score unless the edit plan was produced by a benchmark runner under the recorded model/tool policy.",
   ].join("\n"));
   process.exit(2);
 }

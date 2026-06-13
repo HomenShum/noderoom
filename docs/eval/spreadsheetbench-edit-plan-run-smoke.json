@@ -1,0 +1,87 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T09:57:19.215Z",
+  "stageRoot": "staged-edit",
+  "outputRoot": "run-edit",
+  "mode": "apply-agent-patch",
+  "taskCount": 1,
+  "passCount": 1,
+  "averageOverall": 1,
+  "harness": {
+    "toolPolicy": "agent_dir_only_until_candidate",
+    "evaluatorAccess": "after_candidate_emit_only",
+    "budget": {
+      "modelCalls": 0,
+      "providerCostUsd": 0
+    }
+  },
+  "warnings": [],
+  "results": [
+    {
+      "taskId": "13-2",
+      "track": "spreadsheetbench-v1",
+      "mode": "apply-agent-patch",
+      "taskDir": "tasks/13-2",
+      "agentManifest": "tasks/13-2/agent/task.json",
+      "evaluatorManifest": "tasks/13-2/evaluator/evaluator.json",
+      "candidateWorkbook": "13-2/candidate-01-1_13-2_init.xlsx",
+      "score": {
+        "schema": 1,
+        "generatedAt": "2026-06-13T09:57:19.215Z",
+        "taskId": "13-2",
+        "candidateWorkbook": "candidate-01-1_13-2_init.xlsx",
+        "goldWorkbook": "01-1_13-2_golden.xlsx",
+        "answerPosition": "Sheet1!B2:B2",
+        "ranges": [
+          "'Sheet1'!B2"
+        ],
+        "totals": {
+          "comparedCells": 1,
+          "valueMatches": 1,
+          "formulaCells": 0,
+          "formulaMatches": 0,
+          "styleCells": 0,
+          "styleMatches": 0,
+          "mismatches": 0,
+          "missingSheets": 0
+        },
+        "scores": {
+          "value": 1,
+          "formula": null,
+          "style": null,
+          "overall": 1
+        },
+        "pass": true,
+        "warnings": [],
+        "mismatches": []
+      },
+      "timingsMs": {
+        "candidateGeneration": 109,
+        "scoring": 33,
+        "total": 142
+      },
+      "trajectory": [
+        {
+          "step": "read_agent_manifest",
+          "detail": "tasks/13-2/agent/task.json"
+        },
+        {
+          "step": "read_agent_edit_plan",
+          "detail": "tasks/13-2/agent/edit-plan.json"
+        },
+        {
+          "step": "emit_candidate_workbook",
+          "detail": "13-2/candidate-01-1_13-2_init.xlsx"
+        },
+        {
+          "step": "read_evaluator_manifest",
+          "detail": "tasks/13-2/evaluator/evaluator.json"
+        },
+        {
+          "step": "score_candidate",
+          "detail": "0 mismatch(es)"
+        }
+      ]
+    }
+  ]
+}

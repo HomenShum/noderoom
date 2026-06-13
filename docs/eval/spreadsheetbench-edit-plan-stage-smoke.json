@@ -1,0 +1,35 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T09:57:11.150Z",
+  "sourceRoot": "spreadsheetbench-edit-fixture",
+  "outputRoot": "staged-edit",
+  "track": "spreadsheetbench-v1",
+  "scannedTaskCount": 1,
+  "stagedTaskCount": 1,
+  "skippedTaskCount": 0,
+  "agentFileCount": 1,
+  "evaluatorGoldFileCount": 1,
+  "isolation": {
+    "agentDirectoryGoldFileCount": 0,
+    "agentManifestGoldPathLeaks": 0,
+    "agentManifestScorerMetadataLeaks": 0,
+    "agentEvaluatorPathOverlap": false
+  },
+  "warnings": [],
+  "tasks": [
+    {
+      "id": "13-2",
+      "taskDir": "tasks/13-2",
+      "agentManifest": "tasks/13-2/agent/task.json",
+      "evaluatorManifest": "tasks/13-2/evaluator/evaluator.json",
+      "agentInputFiles": [
+        "tasks/13-2/agent/inputs/01-1_13-2_init.xlsx"
+      ],
+      "agentPromptFiles": [],
+      "evaluatorGoldFiles": [
+        "tasks/13-2/evaluator/gold/01-1_13-2_golden.xlsx"
+      ],
+      "warnings": []
+    }
+  ]
+}

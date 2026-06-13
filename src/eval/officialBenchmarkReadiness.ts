@@ -231,14 +231,12 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "A copy-input baseline runner emits candidate workbooks from staged agent directories and scores them afterward, but no model/edit/export worker is wired yet.",
+        "A copy-input baseline and agent edit-plan worker emit candidate workbooks from staged agent directories and score them afterward, but no model-solving worker is wired yet.",
     },
     xlsx_import_export: {
       capability: "xlsx_import_export",
-      state: "partial",
+      state: "implemented",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
-      blocker:
-        "The baseline runner emits and reopens candidate workbooks; model-generated workbook edits and official output packaging are not complete.",
     },
     format_diff: {
       capability: "format_diff",
@@ -266,14 +264,12 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "A copy-input baseline runner emits candidate workbooks from staged agent directories and scores them afterward, but no model/edit/export worker or chart lane is wired yet.",
+        "A copy-input baseline and agent edit-plan worker emit candidate workbooks from staged agent directories and score them afterward, but no model-solving worker or chart lane is wired yet.",
     },
     xlsx_import_export: {
       capability: "xlsx_import_export",
-      state: "partial",
+      state: "implemented",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
-      blocker:
-        "The baseline runner emits and reopens candidate workbooks; model-generated workbook edits and official output packaging are not complete.",
     },
     format_diff: {
       capability: "format_diff",

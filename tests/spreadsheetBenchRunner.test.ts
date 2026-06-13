@@ -71,6 +71,67 @@ describe("SpreadsheetBench staged runner", () => {
     expect(candidateManifest.toLowerCase()).not.toContain("gold");
     expect(candidateManifest).not.toContain("evaluator");
   });
+
+  it("applies an agent-side edit plan before opening evaluator-only gold", async () => {
+    const source = tempRoot("source");
+    const stage = tempRoot("stage");
+    const out = tempRoot("out");
+    mkdirSync(join(source, "spreadsheet", "13-2"), { recursive: true });
+    writeJson(join(source, "dataset.json"), [
+      {
+        id: "13-2",
+        instruction: "Change Sheet1 B2 to 2.",
+        spreadsheet_path: "spreadsheet/13-2",
+        answer_position: "Sheet1!B2:B2",
+        answer_sheet: "Sheet1",
+      },
+    ]);
+    await writeWorkbook(join(source, "spreadsheet", "13-2", "1_13-2_init.xlsx"), 1);
+    await writeWorkbook(join(source, "spreadsheet", "13-2", "1_13-2_golden.xlsx"), 2);
+    stageSpreadsheetBenchBundle(source, {
+      track: "spreadsheetbench-v1",
+      outputRoot: stage,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+    writeJson(join(stage, "tasks", "13-2", "agent", "edit-plan.json"), {
+      schema: 1,
+      operations: [{ sheet: "Sheet1", cell: "B2", value: 2 }],
+    });
+
+    const report = await runStagedSpreadsheetBench({
+      stageRoot: stage,
+      outputRoot: out,
+      mode: "apply-agent-patch",
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(report).toMatchObject({
+      mode: "apply-agent-patch",
+      taskCount: 1,
+      passCount: 1,
+      averageOverall: 1,
+      harness: {
+        toolPolicy: "agent_dir_only_until_candidate",
+        evaluatorAccess: "after_candidate_emit_only",
+        budget: { modelCalls: 0, providerCostUsd: 0 },
+      },
+    });
+    const result = report.results[0];
+    expect(result.trajectory.map((step) => step.step)).toEqual([
+      "read_agent_manifest",
+      "read_agent_edit_plan",
+      "emit_candidate_workbook",
+      "read_evaluator_manifest",
+      "score_candidate",
+    ]);
+    expect(result.score.pass).toBe(true);
+    const candidateManifest = readFileSync(join(out, "13-2", "candidate-manifest.json"), "utf8");
+    expect(candidateManifest).toContain("apply-agent-patch");
+    expect(candidateManifest.toLowerCase()).not.toContain("gold");
+    expect(candidateManifest).not.toContain("evaluator");
+  });
 });
 
 function tempRoot(prefix: string): string {

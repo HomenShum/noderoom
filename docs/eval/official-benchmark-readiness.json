@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedAt": "2026-06-13T09:50:12.757Z",
+  "generatedAt": "2026-06-13T10:02:48.670Z",
   "summary": {
     "total": 3,
     "ready": 0,
@@ -151,7 +151,7 @@
           "capability": "official_runner_adapter",
           "state": "partial",
           "evidence": "src/eval/spreadsheetBenchRunner.ts",
-          "blocker": "A copy-input baseline runner emits candidate workbooks from staged agent directories and scores them afterward, but no model/edit/export worker is wired yet."
+          "blocker": "A copy-input baseline and agent edit-plan worker emit candidate workbooks from staged agent directories and score them afterward, but no model-solving worker is wired yet."
         },
         {
           "capability": "trajectory_capture",
@@ -165,9 +165,8 @@
         },
         {
           "capability": "xlsx_import_export",
-          "state": "partial",
-          "evidence": "src/eval/spreadsheetBenchRunner.ts",
-          "blocker": "The baseline runner emits and reopens candidate workbooks; model-generated workbook edits and official output packaging are not complete."
+          "state": "implemented",
+          "evidence": "src/eval/spreadsheetBenchRunner.ts"
         },
         {
           "capability": "formula_recompute",
@@ -185,8 +184,7 @@
       "ready": false,
       "blockers": [
         "official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; model execution sandboxing and output diff enforcement are still missing.",
-        "official_runner_adapter: A copy-input baseline runner emits candidate workbooks from staged agent directories and scores them afterward, but no model/edit/export worker is wired yet.",
-        "xlsx_import_export: The baseline runner emits and reopens candidate workbooks; model-generated workbook edits and official output packaging are not complete.",
+        "official_runner_adapter: A copy-input baseline and agent edit-plan worker emit candidate workbooks from staged agent directories and score them afterward, but no model-solving worker is wired yet.",
         "formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.",
         "format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy and full style coverage are not complete."
       ]
@@ -227,7 +225,7 @@
           "capability": "official_runner_adapter",
           "state": "partial",
           "evidence": "src/eval/spreadsheetBenchRunner.ts",
-          "blocker": "A copy-input baseline runner emits candidate workbooks from staged agent directories and scores them afterward, but no model/edit/export worker or chart lane is wired yet."
+          "blocker": "A copy-input baseline and agent edit-plan worker emit candidate workbooks from staged agent directories and score them afterward, but no model-solving worker or chart lane is wired yet."
         },
         {
           "capability": "trajectory_capture",
@@ -241,9 +239,8 @@
         },
         {
           "capability": "xlsx_import_export",
-          "state": "partial",
-          "evidence": "src/eval/spreadsheetBenchRunner.ts",
-          "blocker": "The baseline runner emits and reopens candidate workbooks; model-generated workbook edits and official output packaging are not complete."
+          "state": "implemented",
+          "evidence": "src/eval/spreadsheetBenchRunner.ts"
         },
         {
           "capability": "formula_recompute",
@@ -266,8 +263,7 @@
       "ready": false,
       "blockers": [
         "official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; chart/visual grading and model execution sandboxing are still missing.",
-        "official_runner_adapter: A copy-input baseline runner emits candidate workbooks from staged agent directories and scores them afterward, but no model/edit/export worker or chart lane is wired yet.",
-        "xlsx_import_export: The baseline runner emits and reopens candidate workbooks; model-generated workbook edits and official output packaging are not complete.",
+        "official_runner_adapter: A copy-input baseline and agent edit-plan worker emit candidate workbooks from staged agent directories and score them afterward, but no model-solving worker or chart lane is wired yet.",
         "formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.",
         "format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy, chart rendering, and visual grading are not complete.",
         "chart_visual_grade: No VLM/chart-visual evaluator is wired into benchmark-faithful mode."

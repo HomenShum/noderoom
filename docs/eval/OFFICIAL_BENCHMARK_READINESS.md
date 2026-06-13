@@ -1,6 +1,6 @@
 # Official Benchmark Readiness
 
-Generated: 2026-06-13T09:50:12.757Z
+Generated: 2026-06-13T10:02:48.670Z
 
 This is the benchmark-faithful gate for the public targets we care about most: BankerToolBench and SpreadsheetBench. It is deliberately stricter than NodeRoom's internal professional evals. Internal green runs do not imply an official benchmark claim.
 
@@ -66,14 +66,13 @@ Scoring shape: Online-judge style multi-test-case evaluation; the agent must pro
 | `official_runner_adapter` | partial | `src/eval/spreadsheetBenchRunner.ts` |
 | `trajectory_capture` | implemented | `evals/evalStore.ts` |
 | `cost_latency_retries` | implemented | `evals/financeModelLive.ts` |
-| `xlsx_import_export` | partial | `src/eval/spreadsheetBenchRunner.ts` |
+| `xlsx_import_export` | implemented | `src/eval/spreadsheetBenchRunner.ts` |
 | `formula_recompute` | partial | `evals/financeModelLive.ts` |
 | `format_diff` | partial | `src/eval/spreadsheetBenchScorer.ts` |
 
 Blockers:
 - official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; model execution sandboxing and output diff enforcement are still missing.
-- official_runner_adapter: A copy-input baseline runner emits candidate workbooks from staged agent directories and scores them afterward, but no model/edit/export worker is wired yet.
-- xlsx_import_export: The baseline runner emits and reopens candidate workbooks; model-generated workbook edits and official output packaging are not complete.
+- official_runner_adapter: A copy-input baseline and agent edit-plan worker emit candidate workbooks from staged agent directories and score them afterward, but no model-solving worker is wired yet.
 - formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.
 - format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy and full style coverage are not complete.
 
@@ -92,15 +91,14 @@ Scoring shape: Workflow-level grading across exact cell values/formulas/formats 
 | `official_runner_adapter` | partial | `src/eval/spreadsheetBenchRunner.ts` |
 | `trajectory_capture` | implemented | `evals/evalStore.ts` |
 | `cost_latency_retries` | implemented | `evals/financeModelLive.ts` |
-| `xlsx_import_export` | partial | `src/eval/spreadsheetBenchRunner.ts` |
+| `xlsx_import_export` | implemented | `src/eval/spreadsheetBenchRunner.ts` |
 | `formula_recompute` | partial | `evals/financeModelLive.ts` |
 | `format_diff` | partial | `src/eval/spreadsheetBenchScorer.ts` |
 | `chart_visual_grade` | missing | No VLM/chart-visual evaluator is wired into benchmark-faithful mode. |
 
 Blockers:
 - official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; chart/visual grading and model execution sandboxing are still missing.
-- official_runner_adapter: A copy-input baseline runner emits candidate workbooks from staged agent directories and scores them afterward, but no model/edit/export worker or chart lane is wired yet.
-- xlsx_import_export: The baseline runner emits and reopens candidate workbooks; model-generated workbook edits and official output packaging are not complete.
+- official_runner_adapter: A copy-input baseline and agent edit-plan worker emit candidate workbooks from staged agent directories and score them afterward, but no model-solving worker or chart lane is wired yet.
 - formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.
 - format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy, chart rendering, and visual grading are not complete.
 - chart_visual_grade: No VLM/chart-visual evaluator is wired into benchmark-faithful mode.

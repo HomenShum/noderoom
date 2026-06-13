@@ -1,9 +1,10 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, join, relative, resolve } from "node:path";
+import ExcelJS from "exceljs";
 import { scoreSpreadsheetBenchWorkbook, type SpreadsheetBenchWorkbookScore } from "./spreadsheetBenchScorer";
 import type { SpreadsheetBenchTrack } from "./spreadsheetBenchAdapter";
 
-export type SpreadsheetBenchRunnerMode = "copy-input-baseline";
+export type SpreadsheetBenchRunnerMode = "copy-input-baseline" | "apply-agent-patch";
 
 export type SpreadsheetBenchRunnerOptions = {
   stageRoot: string;
@@ -32,7 +33,7 @@ export type SpreadsheetBenchRunnerTaskResult = {
     total: number;
   };
   trajectory: Array<{
-    step: "read_agent_manifest" | "emit_candidate_workbook" | "read_evaluator_manifest" | "score_candidate";
+    step: "read_agent_manifest" | "read_agent_edit_plan" | "emit_candidate_workbook" | "read_evaluator_manifest" | "score_candidate";
     detail: string;
   }>;
 };
@@ -83,6 +84,20 @@ type StagedTaskPaths = {
   taskDir: string;
   agentManifestPath: string;
   evaluatorManifestPath: string;
+};
+
+type AgentEditPlan = {
+  schema: 1;
+  operations: AgentEditOperation[];
+};
+
+type AgentEditOperation = {
+  sheet: string;
+  cell: string;
+  value?: string | number | boolean | null;
+  formula?: string;
+  result?: string | number | boolean | null;
+  numFmt?: string;
 };
 
 export async function runStagedSpreadsheetBench(options: SpreadsheetBenchRunnerOptions): Promise<SpreadsheetBenchRunnerReport> {
@@ -158,9 +173,11 @@ async function runTask(
     taskOutDir,
     agent,
     mode: options.mode,
+    trajectory,
   });
+  const resolvedCandidateWorkbook = await candidateWorkbook;
   const generationMs = Date.now() - generationStarted;
-  trajectory.push({ step: "emit_candidate_workbook", detail: rel(outputRoot, candidateWorkbook) });
+  trajectory.push({ step: "emit_candidate_workbook", detail: rel(outputRoot, resolvedCandidateWorkbook) });
 
   const scoreStarted = Date.now();
   const evaluator = readJson<EvaluatorManifest>(task.evaluatorManifestPath);
@@ -168,7 +185,7 @@ async function runTask(
   const goldWorkbook = resolveManifestPath(dirname(task.evaluatorManifestPath), evaluator.goldFiles[0]);
   const score = await scoreSpreadsheetBenchWorkbook({
     taskId: agent.taskId,
-    candidateWorkbookPath: candidateWorkbook,
+    candidateWorkbookPath: resolvedCandidateWorkbook,
     goldWorkbookPath: goldWorkbook,
     answerPosition: evaluator.answerPosition,
     answerSheet: evaluator.answerSheet,
@@ -187,7 +204,7 @@ async function runTask(
     taskDir: rel(stageRoot, task.taskDir),
     agentManifest: rel(stageRoot, task.agentManifestPath),
     evaluatorManifest: rel(stageRoot, task.evaluatorManifestPath),
-    candidateWorkbook: rel(outputRoot, candidateWorkbook),
+    candidateWorkbook: rel(outputRoot, resolvedCandidateWorkbook),
     score,
     timingsMs: {
       candidateGeneration: generationMs,
@@ -204,14 +221,16 @@ function emitCandidateWorkbook(args: {
   taskOutDir: string;
   agent: AgentManifest;
   mode: SpreadsheetBenchRunnerMode;
-}): string {
-  if (args.mode !== "copy-input-baseline") throw new Error(`Unsupported SpreadsheetBench runner mode: ${args.mode}`);
+  trajectory: SpreadsheetBenchRunnerTaskResult["trajectory"];
+}): Promise<string> | string {
   const firstInput = args.agent.inputFiles[0];
   if (!firstInput) throw new Error(`agent manifest has no input workbook: ${args.agent.taskId}`);
   const source = resolveManifestPath(join(args.taskDir, "agent"), firstInput);
   if (!existsSync(source)) throw new Error(`agent input workbook does not exist: ${source}`);
   mkdirSync(args.taskOutDir, { recursive: true });
   const target = join(args.taskOutDir, `candidate-${safeFileName(basename(source))}`);
+  if (args.mode === "apply-agent-patch") return emitPatchedCandidateWorkbook({ ...args, source, target });
+  if (args.mode !== "copy-input-baseline") throw new Error(`Unsupported SpreadsheetBench runner mode: ${args.mode}`);
   copyFileSync(source, target);
   writeJson(join(args.taskOutDir, "candidate-manifest.json"), {
     schema: 1,
@@ -222,6 +241,66 @@ function emitCandidateWorkbook(args: {
     note: "copy-input-baseline proves runner/export/scoring plumbing only; it is not a model score.",
   });
   return target;
+}
+
+async function emitPatchedCandidateWorkbook(args: {
+  stageRoot: string;
+  taskDir: string;
+  taskOutDir: string;
+  agent: AgentManifest;
+  mode: SpreadsheetBenchRunnerMode;
+  trajectory: SpreadsheetBenchRunnerTaskResult["trajectory"];
+  source: string;
+  target: string;
+}): Promise<string> {
+  const editPlanPath = join(args.taskDir, "agent", "edit-plan.json");
+  if (!existsSync(editPlanPath)) throw new Error(`apply-agent-patch requires agent/edit-plan.json: ${args.agent.taskId}`);
+  const plan = readJson<AgentEditPlan>(editPlanPath);
+  validateEditPlan(plan, args.agent.taskId);
+  args.trajectory.push({ step: "read_agent_edit_plan", detail: rel(args.stageRoot, editPlanPath) });
+
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.readFile(args.source);
+  for (const operation of plan.operations) applyOperation(workbook, operation);
+  await workbook.xlsx.writeFile(args.target);
+  writeJson(join(args.taskOutDir, "candidate-manifest.json"), {
+    schema: 1,
+    taskId: args.agent.taskId,
+    mode: args.mode,
+    sourceAgentManifest: rel(args.stageRoot, join(args.taskDir, "agent", "task.json")),
+    sourceEditPlan: rel(args.stageRoot, editPlanPath),
+    candidateWorkbook: basename(args.target),
+    appliedOperationCount: plan.operations.length,
+    note: "apply-agent-patch proves agent-side workbook edit/export/reopen plumbing; it is not an official model score.",
+  });
+  return args.target;
+}
+
+function validateEditPlan(plan: AgentEditPlan, taskId: string) {
+  if (!plan || plan.schema !== 1) throw new Error(`invalid edit-plan schema for ${taskId}`);
+  if (!Array.isArray(plan.operations) || plan.operations.length === 0) {
+    throw new Error(`edit-plan has no operations for ${taskId}`);
+  }
+  for (const [index, operation] of plan.operations.entries()) {
+    if (!operation || typeof operation.sheet !== "string" || !operation.sheet.trim()) {
+      throw new Error(`edit-plan operation ${index + 1} is missing sheet`);
+    }
+    if (!/^[A-Z]{1,3}[1-9][0-9]*$/i.test(operation.cell)) {
+      throw new Error(`edit-plan operation ${index + 1} has invalid cell: ${operation.cell}`);
+    }
+    if (operation.formula === undefined && !("value" in operation)) {
+      throw new Error(`edit-plan operation ${index + 1} must set value or formula`);
+    }
+  }
+}
+
+function applyOperation(workbook: ExcelJS.Workbook, operation: AgentEditOperation) {
+  const sheet = workbook.getWorksheet(operation.sheet);
+  if (!sheet) throw new Error(`edit-plan references missing sheet: ${operation.sheet}`);
+  const cell = sheet.getCell(operation.cell);
+  if (operation.formula !== undefined) cell.value = { formula: operation.formula, result: operation.result ?? undefined };
+  else cell.value = operation.value ?? null;
+  if (operation.numFmt) cell.numFmt = operation.numFmt;
 }
 
 function resolveManifestPath(base: string, manifestPath: string | undefined): string {

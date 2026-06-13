@@ -185,9 +185,40 @@ const CAPABILITY_STATUS: Record<BenchmarkCapability, CapabilityReadiness> = {
   },
 };
 
+const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<Record<BenchmarkCapability, CapabilityReadiness>>>> = {
+  "spreadsheetbench-v1": {
+    official_task_ingest: {
+      capability: "official_task_ingest",
+      state: "implemented",
+      evidence: "src/eval/spreadsheetBenchAdapter.ts",
+    },
+    official_gold_isolation: {
+      capability: "official_gold_isolation",
+      state: "partial",
+      evidence: "src/eval/spreadsheetBenchAdapter.ts",
+      blocker:
+        "Agent-facing SpreadsheetBench tasks redact golden workbook paths and scorer metadata; runner-level sandboxing and output diff enforcement are still missing.",
+    },
+  },
+  "spreadsheetbench-v2": {
+    official_task_ingest: {
+      capability: "official_task_ingest",
+      state: "implemented",
+      evidence: "src/eval/spreadsheetBenchAdapter.ts",
+    },
+    official_gold_isolation: {
+      capability: "official_gold_isolation",
+      state: "partial",
+      evidence: "src/eval/spreadsheetBenchAdapter.ts",
+      blocker:
+        "Agent-facing SpreadsheetBench tasks redact golden workbook paths and scorer metadata; chart/visual grading and runner-level sandboxing are still missing.",
+    },
+  },
+};
+
 export function officialBenchmarkReadiness(): OfficialBenchmarkReadiness[] {
   return OFFICIAL_BENCHMARK_CONTRACTS.map((contract) => {
-    const capabilities = contract.requiredCapabilities.map((capability) => CAPABILITY_STATUS[capability]);
+    const capabilities = contract.requiredCapabilities.map((capability) => capabilityStatusFor(contract.id, capability));
     const blockers = capabilities
       .filter((item) => item.state !== "implemented")
       .map((item) => `${item.capability}: ${item.blocker ?? "not implemented"}`);
@@ -207,4 +238,8 @@ export function officialBenchmarkSummary(readiness = officialBenchmarkReadiness(
     blocked: readiness.filter((item) => !item.ready).length,
     missingCapabilities: [...new Set(readiness.flatMap((item) => item.blockers.map((blocker) => blocker.split(":")[0])))].sort(),
   };
+}
+
+function capabilityStatusFor(benchmarkId: OfficialBenchmarkId, capability: BenchmarkCapability): CapabilityReadiness {
+  return BENCHMARK_CAPABILITY_STATUS[benchmarkId]?.[capability] ?? CAPABILITY_STATUS[capability];
 }

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedAt": "2026-06-13T09:09:06.919Z",
+  "generatedAt": "2026-06-13T09:19:04.248Z",
   "summary": {
     "total": 3,
     "ready": 0,
@@ -139,14 +139,14 @@
       "capabilities": [
         {
           "capability": "official_task_ingest",
-          "state": "missing",
-          "blocker": "No official benchmark task downloader/cache/manifest runner is wired yet."
+          "state": "implemented",
+          "evidence": "src/eval/spreadsheetBenchAdapter.ts"
         },
         {
           "capability": "official_gold_isolation",
           "state": "partial",
-          "evidence": "docs/TARGET_2026_06.md",
-          "blocker": "Internal eval policy forbids hidden gold leaks, but official benchmark adapters do not yet enforce this boundary."
+          "evidence": "src/eval/spreadsheetBenchAdapter.ts",
+          "blocker": "Agent-facing SpreadsheetBench tasks redact golden workbook paths and scorer metadata; runner-level sandboxing and output diff enforcement are still missing."
         },
         {
           "capability": "official_runner_adapter",
@@ -183,8 +183,7 @@
       ],
       "ready": false,
       "blockers": [
-        "official_task_ingest: No official benchmark task downloader/cache/manifest runner is wired yet.",
-        "official_gold_isolation: Internal eval policy forbids hidden gold leaks, but official benchmark adapters do not yet enforce this boundary.",
+        "official_gold_isolation: Agent-facing SpreadsheetBench tasks redact golden workbook paths and scorer metadata; runner-level sandboxing and output diff enforcement are still missing.",
         "official_runner_adapter: No Harbor/BankerToolBench or SpreadsheetBench runner adapter exists in this repo.",
         "xlsx_import_export: Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.",
         "formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.",
@@ -214,14 +213,14 @@
       "capabilities": [
         {
           "capability": "official_task_ingest",
-          "state": "missing",
-          "blocker": "No official benchmark task downloader/cache/manifest runner is wired yet."
+          "state": "implemented",
+          "evidence": "src/eval/spreadsheetBenchAdapter.ts"
         },
         {
           "capability": "official_gold_isolation",
           "state": "partial",
-          "evidence": "docs/TARGET_2026_06.md",
-          "blocker": "Internal eval policy forbids hidden gold leaks, but official benchmark adapters do not yet enforce this boundary."
+          "evidence": "src/eval/spreadsheetBenchAdapter.ts",
+          "blocker": "Agent-facing SpreadsheetBench tasks redact golden workbook paths and scorer metadata; chart/visual grading and runner-level sandboxing are still missing."
         },
         {
           "capability": "official_runner_adapter",
@@ -263,8 +262,7 @@
       ],
       "ready": false,
       "blockers": [
-        "official_task_ingest: No official benchmark task downloader/cache/manifest runner is wired yet.",
-        "official_gold_isolation: Internal eval policy forbids hidden gold leaks, but official benchmark adapters do not yet enforce this boundary.",
+        "official_gold_isolation: Agent-facing SpreadsheetBench tasks redact golden workbook paths and scorer metadata; chart/visual grading and runner-level sandboxing are still missing.",
         "official_runner_adapter: No Harbor/BankerToolBench or SpreadsheetBench runner adapter exists in this repo.",
         "xlsx_import_export: Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.",
         "formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.",

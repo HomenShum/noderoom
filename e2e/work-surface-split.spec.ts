@@ -1,63 +1,64 @@
 import { test, expect, enterDemoRoom } from "./fixtures";
 
 /**
- * Center-stage split mode (memory mode, no backend).
+ * Center-stage split mode across the four canonical responsive bands
+ * (docs/synthesis/specs/A_UI_SHELL.md — TARGET_2026_06 L91-96, L197).
  *
- * Closes the "center-stage split mode" gap from docs/synthesis/specs/A_UI_SHELL.md
- * (TARGET_2026_06 L197): a primary Work Surface (e.g. the Q3 model) can open a second
- * reference surface (proof / source / wiki) BESIDE it without leaving the center stage.
- * Split is self-contained in the Artifact panel — the right Copilot is untouched.
+ * Split lets a primary Work Surface (e.g. the Q3 model) open a second reference surface
+ * (proof / source / wiki) BESIDE it without leaving the center stage. It is a DESKTOP
+ * affordance: at >=1200px the control is present and opens a side-by-side pane; below that
+ * the stage is too narrow for two usable panes, so the control hides and the stage stays a
+ * single surface — matching the canonical "<900 = single primary surface" intent.
+ *
+ * Self-contained in the Artifact panel: the left Binder and right Copilot are untouched.
  */
-
-// Desktop bands where two panes fit comfortably (isCompact kicks in at <=980px).
-const SPLIT_BANDS = [
-  { name: "desktop-1440", width: 1440, height: 900 },
-  { name: "laptop-1280", width: 1280, height: 800 },
+const BANDS = [
+  { name: "desktop-1440", width: 1440, height: 900, splitAvailable: true },
+  { name: "laptop-1280", width: 1280, height: 800, splitAvailable: true },
+  { name: "workspace-1024", width: 1024, height: 768, splitAvailable: false },
+  { name: "tablet-768", width: 768, height: 1024, splitAvailable: false },
 ] as const;
 
 test.describe("center-stage split mode", () => {
-  test("defaults to a single surface with a split control present", async ({ page }) => {
-    await page.setViewportSize({ width: 1440, height: 900 });
-    await enterDemoRoom(page);
-
-    const stage = page.getByTestId("work-surface");
-    await expect(stage).toHaveAttribute("data-split", "false");
-    // Exactly one surface by default; no secondary pane mounted.
-    await expect(page.getByTestId("artifact-panel")).toBeVisible();
-    await expect(page.getByTestId("artifact-panel-secondary")).toHaveCount(0);
-
-    // The seeded demo room has multiple artifacts, so the split control is enabled.
-    const toggle = page.getByTestId("artifact-split-toggle");
-    await expect(toggle).toBeVisible();
-    await expect(toggle).toBeEnabled();
-    await expect(toggle).toHaveAttribute("aria-pressed", "false");
-  });
-
-  for (const band of SPLIT_BANDS) {
-    test(`opens a second surface beside the primary and closes it again — ${band.name}`, async ({ page }) => {
+  for (const band of BANDS) {
+    test(`${band.name} — ${band.splitAvailable ? "split opens a second surface beside the primary" : "single surface, no split control"}`, async ({ page }) => {
       await page.setViewportSize({ width: band.width, height: band.height });
       await enterDemoRoom(page);
 
       const stage = page.getByTestId("work-surface");
       const primary = page.getByTestId("artifact-panel");
       const secondary = page.getByTestId("artifact-panel-secondary");
+      const toggle = page.getByTestId("artifact-split-toggle");
 
-      // Open: the secondary surface mounts beside the primary; both stay on the center stage.
-      await page.getByTestId("artifact-split-toggle").click();
-      await expect(stage).toHaveAttribute("data-split", "true");
+      // The Work Surface is always present and starts as a single surface.
       await expect(primary).toBeVisible();
-      await expect(secondary).toBeVisible();
-      await expect(page.getByTestId("artifact-split-toggle")).toHaveAttribute("aria-pressed", "true");
+      await expect(stage).toHaveAttribute("data-split", "false");
+      await expect(secondary).toHaveCount(0);
 
-      // Two panes really sit side by side (secondary's left edge is right of the primary's left edge).
+      if (!band.splitAvailable) {
+        // Below 1200px the split control is not rendered and the stage stays single.
+        await expect(toggle).toHaveCount(0);
+        return;
+      }
+
+      // Desktop tier: control present and enabled (the seeded room has multiple artifacts).
+      await expect(toggle).toBeVisible();
+      await expect(toggle).toBeEnabled();
+      await expect(toggle).toHaveAttribute("aria-pressed", "false");
+
+      // Open: a second surface mounts beside the primary; both stay on the center stage.
+      await toggle.click();
+      await expect(stage).toHaveAttribute("data-split", "true");
+      await expect(secondary).toBeVisible();
+      await expect(toggle).toHaveAttribute("aria-pressed", "true");
+      await expect(page.getByTestId("artifact-tabs-secondary")).toBeVisible();
+
+      // Truly side by side: the secondary's left edge sits right of the primary's.
       const a = await primary.boundingBox();
       const b = await secondary.boundingBox();
       expect(a).not.toBeNull();
       expect(b).not.toBeNull();
       expect(b!.x).toBeGreaterThan(a!.x);
-
-      // The secondary has its own independent tab strip.
-      await expect(page.getByTestId("artifact-tabs-secondary")).toBeVisible();
 
       // Close from the secondary pane: it unmounts, primary remains, stage collapses to single.
       await page.getByTestId("artifact-split-close").click();

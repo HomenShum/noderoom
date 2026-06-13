@@ -1,28 +1,29 @@
 # Agent Improvement Loop
 
-Generated: 2026-06-13T09:09:10.604Z
+Generated: 2026-06-13T09:18:48.356Z
 
 Source pattern: https://developers.openai.com/cookbook/examples/agents_sdk/agent_improvement_loop
 
 NodeRoom adapts the cookbook loop as: traces -> human/model feedback -> reusable evals -> gate -> Codex handoff -> next harness change.
 
-Latest run artifact: `docs/eval/agent-improvement-loop/20260613T090856Z.json`
+Latest run artifact: `docs/eval/agent-improvement-loop/20260613T091831Z.json`
 
-Summary: 10 pass, 0 fail, 8 skip.
+Summary: 11 pass, 0 fail, 8 skip.
 
 ## Step Results
 
 | Step | Lane | Status | Duration | Command |
 |---|---|---:|---:|---|
-| Professional workflow catalog shape | deterministic | PASS | 2.0s | `npm run eval:professional` |
+| Professional workflow catalog shape | deterministic | PASS | 2.1s | `npm run eval:professional` |
 | Professional catalog proof gate | deterministic | PASS | 0.8s | `npm run eval:professional:catalog-proofs` |
-| Professional proof ledger | deterministic | PASS | 1.2s | `npm run eval:professional:proofs` |
-| GTM/finance workflow evals | deterministic | PASS | 2.8s | `npx vitest run tests/workflowEvals.test.ts` |
-| Collaboration ladder L1-L6 | deterministic | PASS | 1.7s | `npm run ladder -- --record` |
-| MM-banking credit decision evals | deterministic | PASS | 1.5s | `npm run eval:credit -- --record` |
+| Professional proof ledger | deterministic | PASS | 1.1s | `npm run eval:professional:proofs` |
+| GTM/finance workflow evals | deterministic | PASS | 2.9s | `npx vitest run tests/workflowEvals.test.ts` |
+| Collaboration ladder L1-L6 | deterministic | PASS | 1.4s | `npm run ladder -- --record` |
+| MM-banking credit decision evals | deterministic | PASS | 1.1s | `npm run eval:credit -- --record` |
 | Official benchmark readiness | deterministic | PASS | 0.9s | `npm run benchmark:official:readiness` |
-| Eval regression diff | deterministic | PASS | 0.9s | `npm run eval:diff` |
-| Convex query/action/mutation boundaries | deterministic | PASS | 1.7s | `npm run convex:boundaries` |
+| SpreadsheetBench official ingest fixture | deterministic | PASS | 2.7s | `npx vitest run tests/spreadsheetBenchAdapter.test.ts` |
+| Eval regression diff | deterministic | PASS | 1.2s | `npm run eval:diff` |
+| Convex query/action/mutation boundaries | deterministic | PASS | 2.0s | `npm run convex:boundaries` |
 | Architecture budget review | deterministic | PASS | 1.0s | `npm run architecture:budget` |
 | OpenRouter free-auto discovery | live | SKIP | 0.0s | `npm run openrouter:free -- --limit=5` |
 | Professional live-provider catalog champion | live | SKIP | 0.0s | `npm run eval:professional:live-catalog -- --real deepseek/deepseek-v4-flash --require-full --retry-failed 2 --json-out docs/eval/professional-live-catalog.json` |

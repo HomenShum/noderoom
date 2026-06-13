@@ -1005,6 +1005,14 @@ The full founder-level rationale, past-project comparison, and HALO handoff cont
 [`docs/WHY_NODEAGENT_AND_HALO.md`](docs/WHY_NODEAGENT_AND_HALO.md).
 Architecture ownership/budget gate: `npm run architecture:budget -- --strict`.
 
+Official benchmark posture: `npm run benchmark:official:readiness` is a reporting gate, and
+`npm run benchmark:official:readiness -- --strict` remains red until at least one official runner
+can execute, export, reopen, and score benchmark work products without hidden-gold access.
+SpreadsheetBench V1/V2 now has a local official-bundle ingest adapter (`npm run
+benchmark:spreadsheetbench:ingest`) that separates agent-visible workbooks/prompts from
+evaluator-only golden files and scorer metadata; smoke artifacts cover the V1 verified-400 bundle
+and the V2 public example bundle. That is ingest proof, not a SpreadsheetBench score.
+
 ## Benchmark Harness / v3 Composite-Synthesis Run
 
 The agent is model-agnostic (one `AgentModel` seam), so the diligence-research task can run across

@@ -1,6 +1,6 @@
 # Official Benchmark Readiness
 
-Generated: 2026-06-13T09:09:06.919Z
+Generated: 2026-06-13T09:19:04.248Z
 
 This is the benchmark-faithful gate for the public targets we care about most: BankerToolBench and SpreadsheetBench. It is deliberately stricter than NodeRoom's internal professional evals. Internal green runs do not imply an official benchmark claim.
 
@@ -62,8 +62,8 @@ Scoring shape: Online-judge style multi-test-case evaluation; the agent must pro
 
 | Capability | State | Evidence / blocker |
 |---|---|---|
-| `official_task_ingest` | missing | No official benchmark task downloader/cache/manifest runner is wired yet. |
-| `official_gold_isolation` | partial | `docs/TARGET_2026_06.md` |
+| `official_task_ingest` | implemented | `src/eval/spreadsheetBenchAdapter.ts` |
+| `official_gold_isolation` | partial | `src/eval/spreadsheetBenchAdapter.ts` |
 | `official_runner_adapter` | missing | No Harbor/BankerToolBench or SpreadsheetBench runner adapter exists in this repo. |
 | `trajectory_capture` | implemented | `evals/evalStore.ts` |
 | `cost_latency_retries` | implemented | `evals/financeModelLive.ts` |
@@ -72,8 +72,7 @@ Scoring shape: Online-judge style multi-test-case evaluation; the agent must pro
 | `format_diff` | missing | No official cell-format/style diff grader is wired. |
 
 Blockers:
-- official_task_ingest: No official benchmark task downloader/cache/manifest runner is wired yet.
-- official_gold_isolation: Internal eval policy forbids hidden gold leaks, but official benchmark adapters do not yet enforce this boundary.
+- official_gold_isolation: Agent-facing SpreadsheetBench tasks redact golden workbook paths and scorer metadata; runner-level sandboxing and output diff enforcement are still missing.
 - official_runner_adapter: No Harbor/BankerToolBench or SpreadsheetBench runner adapter exists in this repo.
 - xlsx_import_export: Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.
 - formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.
@@ -89,8 +88,8 @@ Scoring shape: Workflow-level grading across exact cell values/formulas/formats 
 
 | Capability | State | Evidence / blocker |
 |---|---|---|
-| `official_task_ingest` | missing | No official benchmark task downloader/cache/manifest runner is wired yet. |
-| `official_gold_isolation` | partial | `docs/TARGET_2026_06.md` |
+| `official_task_ingest` | implemented | `src/eval/spreadsheetBenchAdapter.ts` |
+| `official_gold_isolation` | partial | `src/eval/spreadsheetBenchAdapter.ts` |
 | `official_runner_adapter` | missing | No Harbor/BankerToolBench or SpreadsheetBench runner adapter exists in this repo. |
 | `trajectory_capture` | implemented | `evals/evalStore.ts` |
 | `cost_latency_retries` | implemented | `evals/financeModelLive.ts` |
@@ -100,8 +99,7 @@ Scoring shape: Workflow-level grading across exact cell values/formulas/formats 
 | `chart_visual_grade` | missing | No VLM/chart-visual evaluator is wired into benchmark-faithful mode. |
 
 Blockers:
-- official_task_ingest: No official benchmark task downloader/cache/manifest runner is wired yet.
-- official_gold_isolation: Internal eval policy forbids hidden gold leaks, but official benchmark adapters do not yet enforce this boundary.
+- official_gold_isolation: Agent-facing SpreadsheetBench tasks redact golden workbook paths and scorer metadata; chart/visual grading and runner-level sandboxing are still missing.
 - official_runner_adapter: No Harbor/BankerToolBench or SpreadsheetBench runner adapter exists in this repo.
 - xlsx_import_export: Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.
 - formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.

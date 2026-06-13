@@ -43,6 +43,29 @@ describe("official benchmark readiness", () => {
     expect(spreadsheet.find((item) => item.id === "spreadsheetbench-v2")?.requiredCapabilities).toContain("chart_visual_grade");
   });
 
+  it("records SpreadsheetBench local-bundle ingest progress without promoting benchmark readiness", () => {
+    const spreadsheet = officialBenchmarkReadiness().filter((item) => item.id.startsWith("spreadsheetbench"));
+
+    for (const item of spreadsheet) {
+      const ingest = item.capabilities.find((capability) => capability.capability === "official_task_ingest");
+      const gold = item.capabilities.find((capability) => capability.capability === "official_gold_isolation");
+
+      expect(ingest).toMatchObject({
+        state: "implemented",
+        evidence: "src/eval/spreadsheetBenchAdapter.ts",
+      });
+      expect(gold).toMatchObject({
+        state: "partial",
+        evidence: "src/eval/spreadsheetBenchAdapter.ts",
+      });
+      expect(item.ready).toBe(false);
+      expect(item.blockers).toEqual(expect.arrayContaining([
+        expect.stringContaining("official_runner_adapter"),
+        expect.stringContaining("format_diff"),
+      ]));
+    }
+  });
+
   it("summarizes blockers so HALO can target real benchmark gaps", () => {
     const summary = officialBenchmarkSummary();
 

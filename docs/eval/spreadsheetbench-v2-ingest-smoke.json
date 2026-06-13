@@ -1,0 +1,172 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T09:17:36.064Z",
+  "sourceRoot": "data_example_05_11",
+  "track": "spreadsheetbench-v2",
+  "taskCount": 26,
+  "inputFileCount": 25,
+  "promptFileCount": 25,
+  "evaluatorGoldFileCount": 25,
+  "categoryCounts": {
+    "Debugging": 10,
+    "Financial_Model": 5,
+    "Template": 6,
+    "Visualization": 5
+  },
+  "goldIsolation": {
+    "agentTaskGoldPathLeaks": 0,
+    "agentTasksExposeGold": false,
+    "agentTaskScorerMetadataLeaks": 0,
+    "agentTasksExposeScorerMetadata": false
+  },
+  "warnings": [
+    "Visualization/Task 96: no input workbook files found",
+    "Visualization/Task 96: no evaluator gold workbook files found"
+  ],
+  "sampleAgentTasks": [
+    {
+      "id": "Debugging/01_01",
+      "track": "spreadsheetbench-v2",
+      "category": "Debugging",
+      "instruction": "Please audit and fix this file thoroughly. Errors may include but are not limited to: formula logic errors or inconsistencies, hardcoded values that should be formulas, broken cell references, data validation issues, potential calculation errors, inconsistent formatting or naming conventions, best practice violations, and any other issues that could affect accuracy or maintainability.",
+      "inputFiles": [
+        "Debugging/spreadsheet/01_Debugging/input_files/Double Counting_input.xlsx"
+      ],
+      "promptFiles": [],
+      "goldAvailable": true
+    },
+    {
+      "id": "Debugging/02_01",
+      "track": "spreadsheetbench-v2",
+      "category": "Debugging",
+      "instruction": "Please audit and fix this file thoroughly. Errors may include but are not limited to: formula logic errors or inconsistencies, hardcoded values that should be formulas, broken cell references, data validation issues, potential calculation errors, inconsistent formatting or naming conventions, best practice violations, and any other issues that could affect accuracy or maintainability.",
+      "inputFiles": [
+        "Debugging/spreadsheet/01_Debugging/input_files/Embedded Hardcode_input.xlsx"
+      ],
+      "promptFiles": [],
+      "goldAvailable": true
+    },
+    {
+      "id": "Debugging/03_01",
+      "track": "spreadsheetbench-v2",
+      "category": "Debugging",
+      "instruction": "Please audit and fix this file thoroughly. Errors may include but are not limited to: deleted rows causing #REF! errors, broken cross-sheet references, typos in sheet names, and cascading calculation failures. Fixes must be applied in the correct order - restoring structural elements before fixing dependent formulas.\n\nReference data: The model uses 3 scenario cases (Base, Upside, Downside). The active scenario case selector value is 3.\n\nNote: After fixing all formulas, the debt schedule and sensitivity tables may still show #REF! due to stale cached values from the circular reference. To resolve: click any #REF! cell in the debt schedule, press F2 then Enter to force recalculation, then press Ctrl+Alt+F9 (or Cmd+Option+F9 on Mac) several times to let the iterative calculation converge.",
+      "inputFiles": [
+        "Debugging/spreadsheet/01_Debugging/input_files/Errors_input.xlsx"
+      ],
+      "promptFiles": [],
+      "goldAvailable": true
+    },
+    {
+      "id": "Debugging/04_01",
+      "track": "spreadsheetbench-v2",
+      "category": "Debugging",
+      "instruction": "Please audit and fix this file thoroughly. Errors may include but are not limited to: formula logic errors or inconsistencies, hardcoded values that should be formulas, broken cell references, data validation issues, potential calculation errors, inconsistent formatting or naming conventions, best practice violations, and any other issues that could affect accuracy or maintainability.",
+      "inputFiles": [
+        "Debugging/spreadsheet/01_Debugging/input_files/Inconsistent Color Coding_input.xlsx"
+      ],
+      "promptFiles": [],
+      "goldAvailable": true
+    },
+    {
+      "id": "Debugging/05_01",
+      "track": "spreadsheetbench-v2",
+      "category": "Debugging",
+      "instruction": "Please audit and fix this file thoroughly. Errors may include but are not limited to: formula logic errors or inconsistencies, hardcoded values that should be formulas, broken cell references, data validation issues, potential calculation errors, inconsistent formatting or naming conventions, best practice violations, and any other issues that could affect accuracy or maintainability.",
+      "inputFiles": [
+        "Debugging/spreadsheet/01_Debugging/input_files/Incorrect Average_input.xlsx"
+      ],
+      "promptFiles": [],
+      "goldAvailable": true
+    },
+    {
+      "id": "Debugging/06_01",
+      "track": "spreadsheetbench-v2",
+      "category": "Debugging",
+      "instruction": "Please audit and fix this file thoroughly. Errors may include but are not limited to: formula logic errors or inconsistencies, hardcoded values that should be formulas, broken cell references, data validation issues, potential calculation errors, inconsistent formatting or naming conventions, best practice violations, and any other issues that could affect accuracy or maintainability.",
+      "inputFiles": [
+        "Debugging/spreadsheet/01_Debugging/input_files/Incorrect Cross Sheet References_input.xlsx"
+      ],
+      "promptFiles": [],
+      "goldAvailable": true
+    },
+    {
+      "id": "Debugging/07_01",
+      "track": "spreadsheetbench-v2",
+      "category": "Debugging",
+      "instruction": "Please audit and fix this file thoroughly. Errors may include but are not limited to: formula logic errors or inconsistencies, hardcoded values that should be formulas, broken cell references, data validation issues, potential calculation errors, inconsistent formatting or naming conventions, best practice violations, and any other issues that could affect accuracy or maintainability.",
+      "inputFiles": [
+        "Debugging/spreadsheet/01_Debugging/input_files/Incorrect Index Match_input.xlsx"
+      ],
+      "promptFiles": [],
+      "goldAvailable": true
+    },
+    {
+      "id": "Debugging/08_01",
+      "track": "spreadsheetbench-v2",
+      "category": "Debugging",
+      "instruction": "Please audit and fix this file thoroughly. Errors may include but are not limited to: formula logic errors or inconsistencies, hardcoded values that should be formulas, broken cell references, data validation issues, potential calculation errors, inconsistent formatting or naming conventions, best practice violations, and any other issues that could affect accuracy or maintainability.",
+      "inputFiles": [
+        "Debugging/spreadsheet/01_Debugging/input_files/Incorrect Sign Conventions_input.xlsx"
+      ],
+      "promptFiles": [],
+      "goldAvailable": true
+    },
+    {
+      "id": "Debugging/09_01",
+      "track": "spreadsheetbench-v2",
+      "category": "Debugging",
+      "instruction": "Please audit and fix this file thoroughly. Errors may include but are not limited to: formula logic errors or inconsistencies, hardcoded values that should be formulas, broken cell references, data validation issues, potential calculation errors, inconsistent formatting or naming conventions, best practice violations, and any other issues that could affect accuracy or maintainability.",
+      "inputFiles": [
+        "Debugging/spreadsheet/01_Debugging/input_files/Relative vs Absolute References_input.xlsx"
+      ],
+      "promptFiles": [],
+      "goldAvailable": true
+    },
+    {
+      "id": "Debugging/10_01",
+      "track": "spreadsheetbench-v2",
+      "category": "Debugging",
+      "instruction": "Please audit and fix this file thoroughly. Errors may include but are not limited to: formula logic errors or inconsistencies, hardcoded values that should be formulas, broken cell references, data validation issues, potential calculation errors, inconsistent formatting or naming conventions, best practice violations, and any other issues that could affect accuracy or maintainability.",
+      "inputFiles": [
+        "Debugging/spreadsheet/01_Debugging/input_files/Unit Mismatch_input.xlsx"
+      ],
+      "promptFiles": [],
+      "goldAvailable": true
+    },
+    {
+      "id": "Financial_Model/09_01",
+      "track": "spreadsheetbench-v2",
+      "category": "Financial_Model",
+      "instruction": "Complete the financial model based on the provided assumptions. Ensure the existing structure, layout, and formatting of the model are preserved throughout the process.\nAll tabs are to be used as input tabs. The only tab you need to complete is the “Valuation” tab. Calculate the Upside/(downside) to the current price as shown in the model by using the DCF and comps valuation.",
+      "inputFiles": [
+        "Financial_Model/spreadsheet/09_Project Pepsi Co/09_01_PepsiCo_input.xlsx"
+      ],
+      "promptFiles": [
+        "Financial_Model/spreadsheet/09_Project Pepsi Co/09_01_PepsiCo_prompt.txt",
+        "Financial_Model/spreadsheet/09_Project Pepsi Co/09_02_PepsiCo_prompt.txt",
+        "Financial_Model/spreadsheet/09_Project Pepsi Co/09_03_PepsiCo_prompt.txt",
+        "Financial_Model/spreadsheet/09_Project Pepsi Co/09_04_PepsiCo_prompt.txt",
+        "Financial_Model/spreadsheet/09_Project Pepsi Co/09_05_PepsiCo_prompt.txt"
+      ],
+      "goldAvailable": true
+    },
+    {
+      "id": "Financial_Model/09_02",
+      "track": "spreadsheetbench-v2",
+      "category": "Financial_Model",
+      "instruction": "Complete the financial model based on the provided assumptions. Ensure the existing structure, layout, and formatting of the model are preserved throughout the process.\nAll tabs are to be used as input tabs. The only tabs you need to complete are the “Valuation” and “Ratio Analysis” tabs. Calculate the Upside/(downside) to the current price as shown in the model by using the DCF and comps valuation as well as important ratios for our IC memo.",
+      "inputFiles": [
+        "Financial_Model/spreadsheet/09_Project Pepsi Co/09_02_PepsiCo_input.xlsx"
+      ],
+      "promptFiles": [
+        "Financial_Model/spreadsheet/09_Project Pepsi Co/09_01_PepsiCo_prompt.txt",
+        "Financial_Model/spreadsheet/09_Project Pepsi Co/09_02_PepsiCo_prompt.txt",
+        "Financial_Model/spreadsheet/09_Project Pepsi Co/09_03_PepsiCo_prompt.txt",
+        "Financial_Model/spreadsheet/09_Project Pepsi Co/09_04_PepsiCo_prompt.txt",
+        "Financial_Model/spreadsheet/09_Project Pepsi Co/09_05_PepsiCo_prompt.txt"
+      ],
+      "goldAvailable": true
+    }
+  ]
+}

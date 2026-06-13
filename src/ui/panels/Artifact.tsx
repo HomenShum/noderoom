@@ -130,8 +130,23 @@ export function Artifact(props: {
   const store = useStore();
   const arts = store.listArtifacts(roomId);
   const [splitId, setSplitId] = useState<string | null>(null);
-  const canSplit = arts.length >= 2;
-  // Keep the split target valid: collapse if it vanished or folded back onto the primary.
+  // Split is a desktop affordance: below ~1200px the stage is too narrow for two usable panes,
+  // and on compact the side panels are overlays — so the control hides and any open split
+  // auto-collapses. Mirrors the canonical "<900 = single primary surface" responsive band.
+  const [wideEnough, setWideEnough] = useState(() =>
+    typeof window !== "undefined" && typeof window.matchMedia === "function"
+      ? window.matchMedia("(min-width: 1200px)").matches : true);
+  useEffect(() => {
+    if (typeof window === "undefined" || typeof window.matchMedia !== "function") return;
+    const mq = window.matchMedia("(min-width: 1200px)");
+    const onChange = () => setWideEnough(mq.matches);
+    onChange();
+    mq.addEventListener?.("change", onChange);
+    return () => mq.removeEventListener?.("change", onChange);
+  }, []);
+  const canSplit = wideEnough && arts.length >= 2;
+  // Keep the split target valid: collapse if it vanished, folded back onto the primary, or the
+  // viewport became too narrow.
   const splitting = canSplit && !!splitId && splitId !== artId && arts.some((a) => a.id === splitId);
   const openSplit = () => {
     const candidate =
@@ -179,7 +194,7 @@ export function Artifact(props: {
         onArt={onArt}
         collab={collab}
         surfaceKey="primary"
-        headerExtra={splitToggle}
+        headerExtra={wideEnough ? splitToggle : undefined}
         style={{ flex: 1, minWidth: 0 }}
       />
       {splitting && splitId && (

@@ -1,0 +1,178 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T09:17:36.010Z",
+  "sourceRoot": "spreadsheetbench_verified_400",
+  "track": "spreadsheetbench-v1",
+  "taskCount": 400,
+  "inputFileCount": 400,
+  "promptFileCount": 400,
+  "evaluatorGoldFileCount": 400,
+  "categoryCounts": {
+    "uncategorized": 400
+  },
+  "goldIsolation": {
+    "agentTaskGoldPathLeaks": 0,
+    "agentTasksExposeGold": false,
+    "agentTaskScorerMetadataLeaks": 0,
+    "agentTasksExposeScorerMetadata": false
+  },
+  "warnings": [],
+  "sampleAgentTasks": [
+    {
+      "id": "13-1",
+      "track": "spreadsheetbench-v1",
+      "instruction": "How can I combine data from a 'RANGES' sheet to a 'LISTS' sheet, by matching duplicates based on the 'DATE' and 'REF' columns in columns B and C, and add a 'TOTAL' row to sum up the amounts? Additionally, since new ranges with headers will be added to the 'RANGES' sheet, how do I ensure to delete the old ranges in the 'LISTS' sheet before populating the new data? I have given the correct answer of the \"STAGE\" table in the \"LISTS\" table as a format reference, please help me complete the other answers. Each of the sections in \"LISTS\" should be sorted based on data from lowest to highest, secondary sort key is alphabetical A to Z on column C.",
+      "instructionType": "Sheet-Level Manipulation",
+      "inputFiles": [
+        "spreadsheet/13-1/1_13-1_init.xlsx"
+      ],
+      "promptFiles": [
+        "spreadsheet/13-1/prompt.txt"
+      ],
+      "goldAvailable": true
+    },
+    {
+      "id": "17-35",
+      "track": "spreadsheetbench-v1",
+      "instruction": "Display the dates based on the start and end date criteria entered in cells I2 and J2. I have a data range from A1 to E315, the criteria range in cells I2 and J2, and I want the filtered results to start from cell I6 and to maintain the original formatting for each row that's brought over.",
+      "instructionType": "Sheet-Level Manipulation",
+      "inputFiles": [
+        "spreadsheet/17-35/1_17-35_init.xlsx"
+      ],
+      "promptFiles": [
+        "spreadsheet/17-35/prompt.txt"
+      ],
+      "goldAvailable": true
+    },
+    {
+      "id": "22-47",
+      "track": "spreadsheetbench-v1",
+      "instruction": "I need to sort data in column B based on a helper column (J) so that the first entries written in column J are shown first in the output range F:H. Names listed in column J, include all matching rows and keep their original order from the source and do not sort within the group. Names not listed in column J should be arranged as they are in the original data (same order). The sort should skip empty cells, headers, and duplicate items, where duplicates are defined by identical entries in both column B and C. If the helper column J is empty, only then sort alphabetically A–Z and still skip empty cells, headers, and duplicate items. Additionally, I need this sorting process to handle new ranges that contain headers and some names in range A:C, as well as changes in names listed in column J. The final answer should be output in columns G and H, and sort only column H sorted lowest to highest.",
+      "instructionType": "Sheet-Level Manipulation",
+      "inputFiles": [
+        "spreadsheet/22-47/1_22-47_init.xlsx"
+      ],
+      "promptFiles": [
+        "spreadsheet/22-47/prompt.txt"
+      ],
+      "goldAvailable": true
+    },
+    {
+      "id": "23-24",
+      "track": "spreadsheetbench-v1",
+      "instruction": "How can I automatically delete a word and its associated details in columns B, C, D, and E in my Excel file if the word in column A matches any word found in column I? Manually, I would highlight from A1 to E1 and press CTRL MINUS to shift cells up, but doing this for all duplicates is time-consuming.",
+      "instructionType": "Sheet-Level Manipulation",
+      "inputFiles": [
+        "spreadsheet/23-24/1_23-24_init.xlsx"
+      ],
+      "promptFiles": [
+        "spreadsheet/23-24/prompt.txt"
+      ],
+      "goldAvailable": true
+    },
+    {
+      "id": "24-23",
+      "track": "spreadsheetbench-v1",
+      "instruction": "In my Excel spreadsheet, which has over 13,000 rows, I need to filter column A for the groups labeled '@9T', 'SAL', and 'T9A', and then delete these rows. The attached example only shows 207 rows. Can the provided code handle deleting the rows without taking excessive amounts of time?",
+      "instructionType": "Sheet-Level Manipulation",
+      "inputFiles": [
+        "spreadsheet/24-23/1_24-23_init.xlsx"
+      ],
+      "promptFiles": [
+        "spreadsheet/24-23/prompt.txt"
+      ],
+      "goldAvailable": true
+    },
+    {
+      "id": "28-7",
+      "track": "spreadsheetbench-v1",
+      "instruction": "How can I delete all rows in an Excel column that occur after and including a part number starting with '400-' followed by any characters and ending in '-A', up to but not including the next part number following the same initial '400-' pattern? Note that if the part number ending in '-A' does not exist, no rows should be deleted. There can be any number of blank cells between these part numbers, and the part number immediately following the one ending in '-A' might differ between cases.",
+      "instructionType": "Sheet-Level Manipulation",
+      "inputFiles": [
+        "spreadsheet/28-7/1_28-7_init.xlsx"
+      ],
+      "promptFiles": [
+        "spreadsheet/28-7/prompt.txt"
+      ],
+      "goldAvailable": true
+    },
+    {
+      "id": "41-47",
+      "track": "spreadsheetbench-v1",
+      "instruction": "On OUT CAS tab, I want to aggregate and summarize by account types. See the headers in the OUT CAS tables for the account types. Go through the 3 other sheets and aggregate each item in the appropriate bucket on OUT CAS. Order them by item number (i.e., 000011 should be before 000012). PUR Purchase should be pretty much correct if you want to use that as the example. Additionally, I want to be able to insert new sheets before the OUT CAS sheet when needed, and also have the ability to clear the existing data in the OUT CAS sheet before performing the split.",
+      "instructionType": "Sheet-Level Manipulation",
+      "inputFiles": [
+        "spreadsheet/41-47/1_41-47_init.xlsx"
+      ],
+      "promptFiles": [
+        "spreadsheet/41-47/prompt.txt"
+      ],
+      "goldAvailable": true
+    },
+    {
+      "id": "51-12",
+      "track": "spreadsheetbench-v1",
+      "instruction": "How can I create a VBA code that will count the number of times a value in a range from A1 to M1 on an Excel sheet increases by at least 10% from a reference cell, beginning the count from A1 and restarting the counting process from the cell immediately right of each cell where a 10% increase is found, terminating the count before M1 if there is no further data, and display the count in cell B6? Additionally, I'm looking to include the ability to update the data range in the code, as the actual worksheet data range is L26 to SHA26.",
+      "instructionType": "Sheet-Level Manipulation",
+      "inputFiles": [
+        "spreadsheet/51-12/1_51-12_init.xlsx"
+      ],
+      "promptFiles": [
+        "spreadsheet/51-12/prompt.txt"
+      ],
+      "goldAvailable": true
+    },
+    {
+      "id": "60-7",
+      "track": "spreadsheetbench-v1",
+      "instruction": "How can I update the data in a 'Consolidated Tracker' tab in Excel by combining the rows from an 'Existing Task' sheet and an 'Additions' sheet, and subtracting the rows from a 'Retired' sheet? The operation should result in the 'Consolidated Tracker' containing the final list of net activities, effectively calculated as 'Consolidated Tracker = Existing Task + Additions - Retired'. I have added the position where I want to output the answer in the attachment. Please output the answer from position A3 in the table, and make sure that the position of the corresponding column is correct.",
+      "instructionType": "Sheet-Level Manipulation",
+      "inputFiles": [
+        "spreadsheet/60-7/1_60-7_init.xlsx"
+      ],
+      "promptFiles": [
+        "spreadsheet/60-7/prompt.txt"
+      ],
+      "goldAvailable": true
+    },
+    {
+      "id": "262-17",
+      "track": "spreadsheetbench-v1",
+      "instruction": "How can I create ranges for header values 'Task' and 'Responsibility' without hard coding the range definitions, and then apply a multiple column sort using VBA in Excel? The macro should identify the positions of these headers dynamically and perform the sorting based on the data provided in the first worksheet, with the expected outcome detailed in the second worksheet attached to the thread. The first level sorts the \"Tasks\" column from small to large, and the second level sorts the \"Responsibilities\" column from small to large",
+      "instructionType": "Sheet-Level Manipulation",
+      "inputFiles": [
+        "spreadsheet/262-17/1_262-17_init.xlsx"
+      ],
+      "promptFiles": [
+        "spreadsheet/262-17/prompt.txt"
+      ],
+      "goldAvailable": true
+    },
+    {
+      "id": "263-1",
+      "track": "spreadsheetbench-v1",
+      "instruction": "I have a worksheet with a list that contains columns of material types, widths, and heights, and this list can vary in the number of rows and material types. I'm seeking a macro that can calculate and compile the total areas for each material type and display the results in a specific manner, as shown in my attached example. How can I integrate Power Query code with a VBA module, considering the solution might be part of a larger macro? Part of the answer examples have been given in the attachment, please help me complete the answer in the remaining corresponding positions, pay attention to the position correspondence. In addition, please make this sheet dynamic.",
+      "instructionType": "Sheet-Level Manipulation",
+      "inputFiles": [
+        "spreadsheet/263-1/1_263-1_init.xlsx"
+      ],
+      "promptFiles": [
+        "spreadsheet/263-1/prompt.txt"
+      ],
+      "goldAvailable": true
+    },
+    {
+      "id": "267-18",
+      "track": "spreadsheetbench-v1",
+      "instruction": "I have an Excel sheet where I am concatenating strings in column G in the format [\"/out/\",\"https://theurl.top/images/2.jpg \", \"text?\", \"text!\"]. I need to add a prefix \"//\" to this concatenation pattern (eg, //[ ), Apply formula but only for rows that are highlighted with a yellow color. How can I accomplish this? Could you implement this based on my description?",
+      "instructionType": "Sheet-Level Manipulation",
+      "inputFiles": [
+        "spreadsheet/267-18/1_267-18_init.xlsx"
+      ],
+      "promptFiles": [
+        "spreadsheet/267-18/prompt.txt"
+      ],
+      "goldAvailable": true
+    }
+  ]
+}

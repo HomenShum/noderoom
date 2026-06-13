@@ -148,6 +148,14 @@ const steps: StepSpec[] = [
     timeoutMs: 120_000,
   },
   {
+    id: "spreadsheetbench-ingest-fixture",
+    label: "SpreadsheetBench official ingest fixture",
+    lane: "deterministic",
+    command: "npx",
+    args: ["vitest", "run", "tests/spreadsheetBenchAdapter.test.ts"],
+    timeoutMs: 120_000,
+  },
+  {
     id: "eval-diff",
     label: "Eval regression diff",
     lane: "deterministic",

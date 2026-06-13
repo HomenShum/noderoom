@@ -76,6 +76,7 @@ function shouldCheckFile(file: string): boolean {
     normalized.endsWith("/agent/task.json") ||
     name === "agent-workspace-manifest.json" ||
     name === "candidate-manifest.json" ||
+    name === "output-manifest.json" ||
     name === "model-edit-plan.json"
   );
 }

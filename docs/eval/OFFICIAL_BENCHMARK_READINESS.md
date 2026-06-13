@@ -1,6 +1,6 @@
 # Official Benchmark Readiness
 
-Generated: 2026-06-13T11:51:17.500Z
+Generated: 2026-06-13T12:02:12.002Z
 
 This is the benchmark-faithful gate for the public targets we care about most: BankerToolBench and SpreadsheetBench. It is deliberately stricter than NodeRoom's internal professional evals. Internal green runs do not imply an official benchmark claim.
 
@@ -31,7 +31,7 @@ Scoring shape: Agentic verifier opens deliverables and scores weighted binary ru
 |---|---|---|
 | `official_task_ingest` | implemented | `src/eval/bankerToolBenchAdapter.ts` |
 | `official_gold_isolation` | partial | `src/eval/bankerToolBenchStage.ts` |
-| `official_runner_adapter` | missing | No Harbor-compatible NodeRoom runner adapter exists yet; the current BTB support stops at official bundle ingest and staged manifests. |
+| `official_runner_adapter` | partial | `src/eval/bankerToolBenchRunner.ts` |
 | `trajectory_capture` | implemented | `evals/evalStore.ts` |
 | `cost_latency_retries` | implemented | `evals/financeModelLive.ts` |
 | `xlsx_import_export` | partial | `src/app/spreadsheetParser.ts` |
@@ -39,17 +39,17 @@ Scoring shape: Agentic verifier opens deliverables and scores weighted binary ru
 | `pptx_docx_pdf_outputs` | missing | No official pitch-deck/report deliverable generation and verifier handoff is wired. |
 | `mcp_financial_tools` | missing | BTB SEC/market-data/logo MCP tool servers are not adapted into NodeRoom's tool registry. |
 | `docker_sandbox` | external | BTB requires Docker/Harbor execution outside the Vite/Convex app runtime. |
-| `rubric_weighted_scoring` | partial | `src/eval/bankerToolBenchAdapter.ts` |
+| `rubric_weighted_scoring` | partial | `src/eval/bankerToolBenchRunner.ts` |
 
 Blockers:
 - official_gold_isolation: BankerToolBench staging separates final prompts/input files from evaluator-only prompt context, formatting context, canary, weighted rubric, and golden outputs; a contamination checker covers staged agent manifests, but Harbor/Docker process isolation and verifier handoff are still missing.
-- official_runner_adapter: No Harbor-compatible NodeRoom runner adapter exists yet; the current BTB support stops at official bundle ingest and staged manifests.
+- official_runner_adapter: A local BankerToolBench runner now emits candidate deliverables from per-attempt agent workspaces before opening evaluator-only rubric/golden metadata and records local exact-golden smoke scores, but Harbor/Docker execution, MCP financial tools, Gandalf verifier replay, and multi-file deliverable packaging are still missing.
 - xlsx_import_export: Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.
 - formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.
 - pptx_docx_pdf_outputs: No official pitch-deck/report deliverable generation and verifier handoff is wired.
 - mcp_financial_tools: BTB SEC/market-data/logo MCP tool servers are not adapted into NodeRoom's tool registry.
 - docker_sandbox: BTB requires Docker/Harbor execution outside the Vite/Convex app runtime.
-- rubric_weighted_scoring: Weighted rubric metadata is parsed and isolated for the evaluator, but Gandalf/Harbor verifier execution and score import are not wired.
+- rubric_weighted_scoring: Weighted rubric metadata is parsed, isolated for the evaluator, and consumed by a local exact-golden smoke scorer, but Gandalf/Harbor verifier execution and score import are not wired.
 
 ### SpreadsheetBench
 

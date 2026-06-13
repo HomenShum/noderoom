@@ -172,6 +172,14 @@ const steps: StepSpec[] = [
     timeoutMs: 120_000,
   },
   {
+    id: "bankertoolbench-runner-fixture",
+    label: "BankerToolBench staged runner fixture",
+    lane: "deterministic",
+    command: "npx",
+    args: ["vitest", "run", "tests/bankerToolBenchRunner.test.ts"],
+    timeoutMs: 120_000,
+  },
+  {
     id: "spreadsheetbench-ingest-fixture",
     label: "SpreadsheetBench official ingest fixture",
     lane: "deterministic",
@@ -242,6 +250,16 @@ const steps: StepSpec[] = [
     timeoutMs: 120_000,
     includeWhen: () => existsSync(join(process.cwd(), ".tmp", "official-benchmarks", "staged-btb")),
     skipReason: "local staged BankerToolBench root is not present",
+  },
+  {
+    id: "bankertoolbench-run-contamination",
+    label: "BankerToolBench run artifact contamination",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "benchmark:contamination", "--", "--root", ".tmp/official-benchmarks/run-btb", "--strict"],
+    timeoutMs: 120_000,
+    includeWhen: () => existsSync(join(process.cwd(), ".tmp", "official-benchmarks", "run-btb")),
+    skipReason: "local BankerToolBench run root is not present",
   },
   {
     id: "eval-diff",

@@ -201,16 +201,17 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
     },
     official_runner_adapter: {
       capability: "official_runner_adapter",
-      state: "missing",
+      state: "partial",
+      evidence: "src/eval/bankerToolBenchRunner.ts",
       blocker:
-        "No Harbor-compatible NodeRoom runner adapter exists yet; the current BTB support stops at official bundle ingest and staged manifests.",
+        "A local BankerToolBench runner now emits candidate deliverables from per-attempt agent workspaces before opening evaluator-only rubric/golden metadata and records local exact-golden smoke scores, but Harbor/Docker execution, MCP financial tools, Gandalf verifier replay, and multi-file deliverable packaging are still missing.",
     },
     rubric_weighted_scoring: {
       capability: "rubric_weighted_scoring",
       state: "partial",
-      evidence: "src/eval/bankerToolBenchAdapter.ts",
+      evidence: "src/eval/bankerToolBenchRunner.ts",
       blocker:
-        "Weighted rubric metadata is parsed and isolated for the evaluator, but Gandalf/Harbor verifier execution and score import are not wired.",
+        "Weighted rubric metadata is parsed, isolated for the evaluator, and consumed by a local exact-golden smoke scorer, but Gandalf/Harbor verifier execution and score import are not wired.",
     },
   },
   "spreadsheetbench-v1": {

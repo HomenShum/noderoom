@@ -45,11 +45,14 @@ describe("official benchmark readiness", () => {
     expect(gold?.blocker).toContain("contamination checker");
     expect(rubric).toMatchObject({
       state: "partial",
-      evidence: "src/eval/bankerToolBenchAdapter.ts",
+      evidence: "src/eval/bankerToolBenchRunner.ts",
     });
     expect(runner).toMatchObject({
-      state: "missing",
+      state: "partial",
+      evidence: "src/eval/bankerToolBenchRunner.ts",
     });
+    expect(runner?.blocker).toContain("agent workspaces");
+    expect(runner?.blocker).toContain("Gandalf");
     expect(btb?.ready).toBe(false);
     expect(btb?.blockers).toEqual(expect.arrayContaining([
       expect.stringContaining("official_runner_adapter"),

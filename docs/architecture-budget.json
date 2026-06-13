@@ -80,6 +80,7 @@
         ".tmp-qa/**",
         "scripts/agent-improvement-loop.ts",
         "scripts/architecture-budget-check.ts",
+        "scripts/bankertoolbench-run.ts",
         "scripts/benchmark-contamination-check.ts",
         "scripts/benchmark/**",
         "scripts/spreadsheetbench-*.ts",

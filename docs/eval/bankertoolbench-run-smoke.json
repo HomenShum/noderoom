@@ -1,0 +1,107 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T11:57:48.452Z",
+  "stageRoot": "staged-btb",
+  "outputRoot": "run-btb",
+  "mode": "copy-input-baseline",
+  "taskCount": 1,
+  "passCount": 0,
+  "passRate": 0,
+  "averageWeightedScore": 0,
+  "harness": {
+    "toolPolicy": "agent_workspace_until_candidate",
+    "evaluatorAccess": "after_candidate_emit_only",
+    "verifier": "local_exact_golden_smoke"
+  },
+  "warnings": [],
+  "results": [
+    {
+      "taskId": "0fc7bc3c-a111-4222-8333-444455556666",
+      "harborTaskId": "btb-0fc7bc3c",
+      "mode": "copy-input-baseline",
+      "taskDir": "tasks/btb-0fc7bc3c",
+      "agentManifest": "tasks/btb-0fc7bc3c/agent/task.json",
+      "evaluatorManifest": "tasks/btb-0fc7bc3c/evaluator/evaluator.json",
+      "candidateManifest": "btb-0fc7bc3c/candidate-manifest.json",
+      "score": {
+        "schema": 1,
+        "generatedAt": "2026-06-13T11:57:48.452Z",
+        "taskId": "0fc7bc3c-a111-4222-8333-444455556666",
+        "harborTaskId": "btb-0fc7bc3c",
+        "verifier": "local_exact_golden_smoke",
+        "totals": {
+          "rubricCriteria": 2,
+          "weightedTotal": 6,
+          "awardedWeight": 0,
+          "exactMatchingGoldenFiles": 0,
+          "missingGoldenFiles": 1,
+          "mismatchedGoldenFiles": 0
+        },
+        "weightedScore": 0,
+        "pass": false,
+        "rubricResults": [
+          {
+            "criterion": "Uses revenue multiple correctly",
+            "weight": 5,
+            "category": "Excel",
+            "passed": false,
+            "reason": "candidate deliverables did not exactly match evaluator golden files"
+          },
+          {
+            "criterion": "Memo includes risks",
+            "weight": 1,
+            "category": "Memo",
+            "passed": false,
+            "reason": "candidate deliverables did not exactly match evaluator golden files"
+          }
+        ],
+        "deliverables": [
+          {
+            "path": "01-01-model.xlsx",
+            "sha256": "5bd17a4a66c4126008a147278511f1fb55774b443fa32bf571a0ffd5a8efc073",
+            "bytes": 9
+          },
+          {
+            "path": "02-02-source.pdf",
+            "sha256": "5bd17a4a66c4126008a147278511f1fb55774b443fa32bf571a0ffd5a8efc073",
+            "bytes": 9
+          }
+        ],
+        "goldenFiles": [
+          {
+            "path": "golden-outputs/01-answer.xlsx",
+            "exactMatch": false
+          }
+        ],
+        "warnings": [
+          "local_exact_golden_smoke is a packaging/verifier-boundary smoke; it is not the official Harbor/Gandalf verifier."
+        ]
+      },
+      "timingsMs": {
+        "total": 32
+      },
+      "trajectory": [
+        {
+          "step": "read_agent_manifest",
+          "detail": "tasks/btb-0fc7bc3c/agent/task.json"
+        },
+        {
+          "step": "prepare_agent_workspace",
+          "detail": "btb-0fc7bc3c/agent-workspace/agent-workspace-manifest.json"
+        },
+        {
+          "step": "emit_candidate_deliverables",
+          "detail": "btb-0fc7bc3c/candidate-manifest.json"
+        },
+        {
+          "step": "read_evaluator_manifest",
+          "detail": "tasks/btb-0fc7bc3c/evaluator/evaluator.json"
+        },
+        {
+          "step": "score_candidate",
+          "detail": "0/6 weighted points"
+        }
+      ]
+    }
+  ]
+}

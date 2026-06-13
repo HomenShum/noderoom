@@ -1,5 +1,6 @@
 import { copyFileSync, existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from "node:fs";
 import { basename, dirname, isAbsolute, join, relative, resolve } from "node:path";
+import { createHash } from "node:crypto";
 import ExcelJS from "exceljs";
 import { scoreSpreadsheetBenchWorkbook, type SpreadsheetBenchWorkbookScore } from "./spreadsheetBenchScorer";
 import type { SpreadsheetBenchTrack } from "./spreadsheetBenchAdapter";
@@ -57,6 +58,7 @@ export type SpreadsheetBenchRunnerTaskResult = {
   agentManifest: string;
   evaluatorManifest: string;
   candidateWorkbook?: string;
+  sidecarEvidence?: SpreadsheetBenchSidecarEvidence;
   score?: SpreadsheetBenchWorkbookScore;
   error?: {
     phase: "candidate_generation" | "scoring";
@@ -86,6 +88,24 @@ export type SpreadsheetBenchRunnerTaskResult = {
       | "score_candidate";
     detail: string;
   }>;
+};
+
+export type SpreadsheetBenchSidecarFileEvidence = {
+  path: string;
+  sha256: string;
+  bytes: number;
+};
+
+export type SpreadsheetBenchSidecarEvidence = {
+  candidateManifest: SpreadsheetBenchSidecarFileEvidence;
+  agentWorkspaceManifest?: SpreadsheetBenchSidecarFileEvidence;
+  editPlan?: SpreadsheetBenchSidecarFileEvidence & {
+    kind: "source" | "generated";
+  };
+  rawModelOutput?: SpreadsheetBenchSidecarFileEvidence;
+  formulaResultPolicy?: string;
+  supportedFormulaFunctions?: string[];
+  appliedOperationCount?: number;
 };
 
 export type SpreadsheetBenchRunnerReport = {
@@ -396,6 +416,7 @@ async function runTask(
   const resolvedCandidateWorkbook = typeof emitted === "string" ? emitted : emitted.path;
   const generationMs = Date.now() - generationStarted;
   trajectory.push({ step: "emit_candidate_workbook", detail: rel(outputRoot, resolvedCandidateWorkbook) });
+  const sidecarEvidence = collectSidecarEvidence(outputRoot, taskOutDir);
 
   const scoreStarted = Date.now();
   const evaluator = readJson<EvaluatorManifest>(task.evaluatorManifestPath);
@@ -427,6 +448,7 @@ async function runTask(
       phase: "scoring",
       message: error instanceof Error ? error.message : String(error),
       candidateWorkbook: rel(outputRoot, resolvedCandidateWorkbook),
+      sidecarEvidence,
       model: typeof emitted === "string" ? undefined : emitted.model,
       modelPlanningMs: typeof emitted === "string" ? undefined : emitted.modelPlanningMs,
       candidateGenerationMs: generationMs,
@@ -459,6 +481,7 @@ async function runTask(
     agentManifest: rel(stageRoot, task.agentManifestPath),
     evaluatorManifest: rel(stageRoot, task.evaluatorManifestPath),
     candidateWorkbook: rel(outputRoot, resolvedCandidateWorkbook),
+    sidecarEvidence,
     score,
     model: typeof emitted === "string" ? undefined : emitted.model,
     timingsMs: {
@@ -483,6 +506,7 @@ function failedTaskResult(args: {
   phase: "candidate_generation" | "scoring";
   message: string;
   candidateWorkbook?: string;
+  sidecarEvidence?: SpreadsheetBenchRunnerTaskResult["sidecarEvidence"];
   model?: SpreadsheetBenchRunnerTaskResult["model"];
   modelPlanningMs?: number;
   candidateGenerationMs: number;
@@ -503,6 +527,7 @@ function failedTaskResult(args: {
     agentManifest: rel(args.stageRoot, args.task.agentManifestPath),
     evaluatorManifest: rel(args.stageRoot, args.task.evaluatorManifestPath),
     candidateWorkbook: args.candidateWorkbook,
+    sidecarEvidence: args.sidecarEvidence,
     error: {
       phase: args.phase,
       message: args.message,
@@ -515,6 +540,50 @@ function failedTaskResult(args: {
       total: args.totalMs,
     },
     trajectory: args.trajectory,
+  };
+}
+
+function collectSidecarEvidence(outputRoot: string, taskOutDir: string): SpreadsheetBenchSidecarEvidence | undefined {
+  const candidateManifestPath = join(taskOutDir, "candidate-manifest.json");
+  if (!existsSync(candidateManifestPath)) return undefined;
+  const manifest = readJson<{
+    agentWorkspaceManifest?: string;
+    generatedEditPlan?: string;
+    sourceEditPlan?: string;
+    rawModelOutput?: string;
+    formulaResultPolicy?: string;
+    supportedFormulaFunctions?: string[];
+    appliedOperationCount?: number;
+  }>(candidateManifestPath);
+  const editPlanPath = manifest.generatedEditPlan ?? manifest.sourceEditPlan;
+  return {
+    candidateManifest: fileEvidence(outputRoot, candidateManifestPath),
+    ...(manifest.agentWorkspaceManifest ? { agentWorkspaceManifest: fileEvidence(outputRoot, resolveSidecarPath(taskOutDir, manifest.agentWorkspaceManifest)) } : {}),
+    ...(editPlanPath
+      ? {
+          editPlan: {
+            ...fileEvidence(outputRoot, resolveSidecarPath(taskOutDir, editPlanPath)),
+            kind: manifest.generatedEditPlan ? "generated" as const : "source" as const,
+          },
+        }
+      : {}),
+    ...(manifest.rawModelOutput ? { rawModelOutput: fileEvidence(outputRoot, resolveSidecarPath(taskOutDir, manifest.rawModelOutput)) } : {}),
+    ...(manifest.formulaResultPolicy ? { formulaResultPolicy: manifest.formulaResultPolicy } : {}),
+    ...(Array.isArray(manifest.supportedFormulaFunctions) ? { supportedFormulaFunctions: manifest.supportedFormulaFunctions } : {}),
+    ...(typeof manifest.appliedOperationCount === "number" ? { appliedOperationCount: manifest.appliedOperationCount } : {}),
+  };
+}
+
+function resolveSidecarPath(taskOutDir: string, value: string): string {
+  return isAbsolute(value) ? value : resolve(taskOutDir, value);
+}
+
+function fileEvidence(outputRoot: string, path: string): SpreadsheetBenchSidecarFileEvidence {
+  const content = readFileSync(path);
+  return {
+    path: rel(outputRoot, path),
+    sha256: createHash("sha256").update(content).digest("hex"),
+    bytes: content.byteLength,
   };
 }
 

@@ -75,6 +75,10 @@ describe("SpreadsheetBench staged runner", () => {
       expect.objectContaining({ kind: "value", sheet: "Sheet1", cell: "B2", expected: "2", actual: "1" }),
     ]));
     expect(existsSync(join(out, result.candidateWorkbook!))).toBe(true);
+    expectSidecarFile(result.sidecarEvidence?.candidateManifest, "13-1/candidate-manifest.json");
+    expectSidecarFile(result.sidecarEvidence?.agentWorkspaceManifest, "13-1/agent-workspace/agent-workspace-manifest.json");
+    expect(result.sidecarEvidence?.editPlan).toBeUndefined();
+    expect(result.sidecarEvidence?.rawModelOutput).toBeUndefined();
     const candidateManifest = readFileSync(join(out, "13-1", "candidate-manifest.json"), "utf8");
     expect(candidateManifest).toContain("agentWorkspaceManifest");
     expect(candidateManifest.toLowerCase()).not.toContain("gold");
@@ -147,6 +151,13 @@ describe("SpreadsheetBench staged runner", () => {
     ]);
     expect(result.score).toBeDefined();
     expect(result.score!.pass).toBe(true);
+    expectSidecarFile(result.sidecarEvidence?.candidateManifest, "13-2/candidate-manifest.json");
+    expectSidecarFile(result.sidecarEvidence?.agentWorkspaceManifest, "13-2/agent-workspace/agent-workspace-manifest.json");
+    expectSidecarFile(result.sidecarEvidence?.editPlan, "13-2/agent-workspace/agent/edit-plan.json");
+    expect(result.sidecarEvidence?.editPlan?.kind).toBe("source");
+    expect(result.sidecarEvidence?.formulaResultPolicy).toBe("deterministic_local_subset");
+    expect(result.sidecarEvidence?.supportedFormulaFunctions).toEqual(expect.arrayContaining(["SUM", "IFERROR", "COUNTIF"]));
+    expect(result.sidecarEvidence?.appliedOperationCount).toBe(1);
     const candidateManifest = readFileSync(join(out, "13-2", "candidate-manifest.json"), "utf8");
     expect(candidateManifest).toContain("apply-agent-patch");
     expect(candidateManifest).toContain("agentWorkspaceManifest");
@@ -405,6 +416,14 @@ describe("SpreadsheetBench staged runner", () => {
       "read_evaluator_manifest",
       "score_candidate",
     ]);
+    expectSidecarFile(result.sidecarEvidence?.candidateManifest, "13-3/candidate-manifest.json");
+    expectSidecarFile(result.sidecarEvidence?.agentWorkspaceManifest, "13-3/agent-workspace/agent-workspace-manifest.json");
+    expectSidecarFile(result.sidecarEvidence?.editPlan, "13-3/model-edit-plan.json");
+    expectSidecarFile(result.sidecarEvidence?.rawModelOutput, "13-3/model-output.txt");
+    expect(result.sidecarEvidence?.editPlan?.kind).toBe("generated");
+    expect(result.sidecarEvidence?.formulaResultPolicy).toBe("deterministic_local_subset");
+    expect(result.sidecarEvidence?.supportedFormulaFunctions).toEqual(expect.arrayContaining(["SUM", "IFERROR", "COUNTIF"]));
+    expect(result.sidecarEvidence?.appliedOperationCount).toBe(1);
     const candidateManifest = readFileSync(join(out, "13-3", "candidate-manifest.json"), "utf8");
     expect(candidateManifest).toContain("model-edit-plan");
     expect(candidateManifest).toContain("agentWorkspaceManifest");
@@ -1179,6 +1198,12 @@ function tempRoot(prefix: string): string {
   const root = mkdtempSync(join(tmpdir(), `noderoom-spreadsheetbench-runner-${prefix}-`));
   roots.push(root);
   return root;
+}
+
+function expectSidecarFile(evidence: { path?: string; sha256?: string; bytes?: number } | undefined, path: string) {
+  expect(evidence).toMatchObject({ path });
+  expect(evidence?.sha256).toMatch(/^[a-f0-9]{64}$/);
+  expect(evidence?.bytes).toBeGreaterThan(0);
 }
 
 function writeJson(path: string, value: unknown) {

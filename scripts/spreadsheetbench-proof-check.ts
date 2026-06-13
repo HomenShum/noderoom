@@ -44,6 +44,20 @@ type SpreadsheetBenchRunReport = {
       calls?: number;
       costUsd?: number;
     };
+    sidecarEvidence?: {
+      candidateManifest?: SidecarFileEvidence;
+      agentWorkspaceManifest?: SidecarFileEvidence;
+      editPlan?: SidecarFileEvidence & {
+        kind?: "source" | "generated";
+      };
+      rawModelOutput?: SidecarFileEvidence;
+      formulaResultPolicy?: string;
+      supportedFormulaFunctions?: string[];
+      appliedOperationCount?: number;
+    };
+    trajectory?: Array<{
+      step?: string;
+    }>;
   }>;
 };
 
@@ -51,6 +65,24 @@ type ContaminationReport = {
   schema: number;
   checkedFiles: number;
   leakCount: number;
+};
+
+type SidecarFileEvidence = {
+  path?: string;
+  sha256?: string;
+  bytes?: number;
+};
+
+type ResultSidecarEvidence = {
+  candidateManifest?: SidecarFileEvidence;
+  agentWorkspaceManifest?: SidecarFileEvidence;
+  editPlan?: SidecarFileEvidence & {
+    kind?: "source" | "generated";
+  };
+  rawModelOutput?: SidecarFileEvidence;
+  formulaResultPolicy?: string;
+  supportedFormulaFunctions?: string[];
+  appliedOperationCount?: number;
 };
 
 const args = process.argv.slice(2);
@@ -95,6 +127,8 @@ for (const [index, result] of (run.results ?? []).entries()) {
   expect((result.score?.scores?.overall ?? 0) >= minAverageOverall, `${label} overall ${result.score?.scores?.overall ?? "missing"} < ${minAverageOverall}`);
   expect(Boolean(result.model?.name), `${label} must record resolved model name`);
   expect((result.model?.calls ?? 0) > 0, `${label} must record at least one model call`);
+  expectSidecar(label, result.sidecarEvidence);
+  expectTrajectory(label, result.trajectory);
 }
 
 expect(contamination.schema === 1, `contamination schema must be 1, got ${contamination.schema}`);
@@ -122,6 +156,42 @@ function readJson<T>(path: string): T {
 
 function expect(condition: boolean, message: string): void {
   if (!condition) failures.push(message);
+}
+
+function expectSidecar(label: string, sidecar: ResultSidecarEvidence | undefined): void {
+  expect(Boolean(sidecar), `${label} must record sidecarEvidence`);
+  if (!sidecar) return;
+  expectFileEvidence(label, "candidateManifest", sidecar.candidateManifest);
+  expectFileEvidence(label, "agentWorkspaceManifest", sidecar.agentWorkspaceManifest);
+  expectFileEvidence(label, "editPlan", sidecar.editPlan);
+  expectFileEvidence(label, "rawModelOutput", sidecar.rawModelOutput);
+  expect(sidecar.editPlan?.kind === "generated", `${label} editPlan.kind must be generated`);
+  expect(sidecar.formulaResultPolicy === "deterministic_local_subset", `${label} must record deterministic formula result policy`);
+  expect((sidecar.supportedFormulaFunctions?.length ?? 0) >= 10, `${label} must record supported formula function list`);
+  expect((sidecar.appliedOperationCount ?? 0) > 0, `${label} must record appliedOperationCount`);
+}
+
+function expectFileEvidence(label: string, name: string, evidence: SidecarFileEvidence | undefined): void {
+  expect(Boolean(evidence?.path), `${label} must record ${name}.path`);
+  expect(/^[a-f0-9]{64}$/.test(evidence?.sha256 ?? ""), `${label} must record ${name}.sha256`);
+  expect((evidence?.bytes ?? 0) > 0, `${label} must record ${name}.bytes`);
+}
+
+function expectTrajectory(label: string, trajectory: Array<{ step?: string }> | undefined): void {
+  expect(Array.isArray(trajectory), `${label} must record trajectory`);
+  if (!trajectory) return;
+  const emit = stepIndex(trajectory, "emit_candidate_workbook");
+  const evaluator = stepIndex(trajectory, "read_evaluator_manifest");
+  const score = stepIndex(trajectory, "score_candidate");
+  const model = stepIndex(trajectory, "call_model_for_edit_plan");
+  expect(model >= 0, `${label} trajectory must call model before candidate emission`);
+  expect(emit >= 0, `${label} trajectory must emit candidate workbook`);
+  expect(evaluator > emit, `${label} must not open evaluator manifest before candidate emission`);
+  expect(score > evaluator, `${label} must score after reading evaluator manifest`);
+}
+
+function stepIndex(trajectory: Array<{ step?: string }>, step: string): number {
+  return trajectory.findIndex((item) => item.step === step);
 }
 
 function optionValue(name: string): string | undefined {

@@ -1042,8 +1042,10 @@ locally staged official tasks five times each: `taskCount: 15`, `caseCount: 3`, 
 `passRate: 1`, average overall `1`, p95 latency 5.080s, `$0.0462905` spend, zero failure counts,
 zero retry attempts, and 0 candidate-output leaks across 60 checked files
 (`docs/eval/spreadsheetbench-v1-run-3task-n5-contamination-smoke.json`). `npm run
-benchmark:spreadsheetbench:proof` now enforces those run metrics and leak bounds, and HALO runs that
-proof gate on every `agent:improve`. That run exercises the next two spreadsheet-harness lessons
+benchmark:spreadsheetbench:proof` now enforces those run metrics, leak bounds, result-level
+sidecar hashes for candidate manifests, agent-workspace manifests, generated edit plans, raw model
+outputs, and candidate-before-evaluator trajectory order. HALO runs that proof gate on every
+`agent:improve`. That run exercises the next two spreadsheet-harness lessons
 repeatedly under live model variance: deterministic structural operators for visible date filters
 (`filter_rows`) and visible duplicate-removal/sort tables (`sort_unique_rows`) belong in the harness
 tool contract, not as fragile one-cell dynamic formulas or short prefix writes. This is a

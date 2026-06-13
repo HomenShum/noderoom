@@ -318,7 +318,48 @@
           "step": "score_candidate",
           "detail": "0 cell mismatch(es)"
         }
-      ]
+      ],
+      "sidecarEvidence": {
+        "candidateManifest": {
+          "path": "13-1/attempt-01/candidate-manifest.json",
+          "sha256": "c101558cb7a0497d78238ae6dfa418c75255de4327227b0be550cdb028f8a21f",
+          "bytes": 991
+        },
+        "agentWorkspaceManifest": {
+          "path": "13-1/attempt-01/agent-workspace/agent-workspace-manifest.json",
+          "sha256": "0abd9eab4648e96038de3c6040ad33768476249f2f5383c766f4b36f3fe4625d",
+          "bytes": 566
+        },
+        "editPlan": {
+          "path": "13-1/attempt-01/model-edit-plan.json",
+          "sha256": "0b3c4b5f0cc9e5947a435a085a0a93f6627ebd4458259364a63b927b5b121bb3",
+          "bytes": 1084,
+          "kind": "generated"
+        },
+        "rawModelOutput": {
+          "path": "13-1/attempt-01/model-output.txt",
+          "sha256": "6903219caf80204bdf94d8792a6ce0025d797347514b74bc40ee26993ea67920",
+          "bytes": 1359
+        },
+        "formulaResultPolicy": "deterministic_local_subset",
+        "supportedFormulaFunctions": [
+          "SUM",
+          "AVERAGE",
+          "MIN",
+          "MAX",
+          "COUNT",
+          "COUNTA",
+          "ABS",
+          "ROUND",
+          "ROUNDUP",
+          "ROUNDDOWN",
+          "IF",
+          "IFERROR",
+          "SUMIF",
+          "COUNTIF"
+        ],
+        "appliedOperationCount": 3
+      }
     },
     {
       "taskId": "17-35",
@@ -408,7 +449,48 @@
           "step": "score_candidate",
           "detail": "0 cell mismatch(es)"
         }
-      ]
+      ],
+      "sidecarEvidence": {
+        "candidateManifest": {
+          "path": "17-35/attempt-02/candidate-manifest.json",
+          "sha256": "ade206d3c3371eb41d886020e9af9663682c3a31e7a1fed2bceb5c5b03a9a4c6",
+          "bytes": 1004
+        },
+        "agentWorkspaceManifest": {
+          "path": "17-35/attempt-02/agent-workspace/agent-workspace-manifest.json",
+          "sha256": "5bbf818a5c56937ce64cd978f543478c039860b8534853e82ffb1fd19ead25bf",
+          "bytes": 569
+        },
+        "editPlan": {
+          "path": "17-35/attempt-02/model-edit-plan.json",
+          "sha256": "f5b8a09882ead18eb03b647c9c8c2ff27036df8d6124b653c2c9426eee0a79fe",
+          "bytes": 238,
+          "kind": "generated"
+        },
+        "rawModelOutput": {
+          "path": "17-35/attempt-02/model-output.txt",
+          "sha256": "202fadf579be628c6193d1c30cd36c2edb5d28754ec0eba85aa93c8e8779b2f9",
+          "bytes": 159
+        },
+        "formulaResultPolicy": "deterministic_local_subset",
+        "supportedFormulaFunctions": [
+          "SUM",
+          "AVERAGE",
+          "MIN",
+          "MAX",
+          "COUNT",
+          "COUNTA",
+          "ABS",
+          "ROUND",
+          "ROUNDUP",
+          "ROUNDDOWN",
+          "IF",
+          "IFERROR",
+          "SUMIF",
+          "COUNTIF"
+        ],
+        "appliedOperationCount": 1
+      }
     },
     {
       "taskId": "22-47",
@@ -498,7 +580,48 @@
           "step": "score_candidate",
           "detail": "0 cell mismatch(es)"
         }
-      ]
+      ],
+      "sidecarEvidence": {
+        "candidateManifest": {
+          "path": "22-47/attempt-03/candidate-manifest.json",
+          "sha256": "888e015c76916e4ed1ca9fec32ad5d17bc25b26e969e26fa59a7110d2b6c7b4f",
+          "bytes": 993
+        },
+        "agentWorkspaceManifest": {
+          "path": "22-47/attempt-03/agent-workspace/agent-workspace-manifest.json",
+          "sha256": "f0c3a9d9b2f1a26be62d39ad03cc6e19daf7d5a9a6f0af6ee565f8a4f6ad388d",
+          "bytes": 569
+        },
+        "editPlan": {
+          "path": "22-47/attempt-03/model-edit-plan.json",
+          "sha256": "3c1714ccd66816d240ff0e135eadaf269abd60700b149297ef2840415708ca3f",
+          "bytes": 361,
+          "kind": "generated"
+        },
+        "rawModelOutput": {
+          "path": "22-47/attempt-03/model-output.txt",
+          "sha256": "9c5ff43669e798ed4094fbb8707aa465cc45a4fc82fad1c20fa7b4f0ee95ff0d",
+          "bytes": 221
+        },
+        "formulaResultPolicy": "deterministic_local_subset",
+        "supportedFormulaFunctions": [
+          "SUM",
+          "AVERAGE",
+          "MIN",
+          "MAX",
+          "COUNT",
+          "COUNTA",
+          "ABS",
+          "ROUND",
+          "ROUNDUP",
+          "ROUNDDOWN",
+          "IF",
+          "IFERROR",
+          "SUMIF",
+          "COUNTIF"
+        ],
+        "appliedOperationCount": 1
+      }
     },
     {
       "taskId": "13-1",
@@ -588,7 +711,48 @@
           "step": "score_candidate",
           "detail": "0 cell mismatch(es)"
         }
-      ]
+      ],
+      "sidecarEvidence": {
+        "candidateManifest": {
+          "path": "13-1/attempt-04/candidate-manifest.json",
+          "sha256": "35f545c642b1ad9c1b1787fbef9ef511abfb1526b243cd27b4ae0b836d6e81cb",
+          "bytes": 990
+        },
+        "agentWorkspaceManifest": {
+          "path": "13-1/attempt-04/agent-workspace/agent-workspace-manifest.json",
+          "sha256": "0abd9eab4648e96038de3c6040ad33768476249f2f5383c766f4b36f3fe4625d",
+          "bytes": 566
+        },
+        "editPlan": {
+          "path": "13-1/attempt-04/model-edit-plan.json",
+          "sha256": "0b3c4b5f0cc9e5947a435a085a0a93f6627ebd4458259364a63b927b5b121bb3",
+          "bytes": 1084,
+          "kind": "generated"
+        },
+        "rawModelOutput": {
+          "path": "13-1/attempt-04/model-output.txt",
+          "sha256": "a885f4f224fca0e5b4068d369c0346a384b185e8b0238b6446e74c179e3cdab6",
+          "bytes": 675
+        },
+        "formulaResultPolicy": "deterministic_local_subset",
+        "supportedFormulaFunctions": [
+          "SUM",
+          "AVERAGE",
+          "MIN",
+          "MAX",
+          "COUNT",
+          "COUNTA",
+          "ABS",
+          "ROUND",
+          "ROUNDUP",
+          "ROUNDDOWN",
+          "IF",
+          "IFERROR",
+          "SUMIF",
+          "COUNTIF"
+        ],
+        "appliedOperationCount": 3
+      }
     },
     {
       "taskId": "17-35",
@@ -678,7 +842,48 @@
           "step": "score_candidate",
           "detail": "0 cell mismatch(es)"
         }
-      ]
+      ],
+      "sidecarEvidence": {
+        "candidateManifest": {
+          "path": "17-35/attempt-05/candidate-manifest.json",
+          "sha256": "f9385ab419b4ae15bc43477295f0e3139ae00610d58086d1c2d9cbe61644b3d1",
+          "bytes": 1004
+        },
+        "agentWorkspaceManifest": {
+          "path": "17-35/attempt-05/agent-workspace/agent-workspace-manifest.json",
+          "sha256": "5bbf818a5c56937ce64cd978f543478c039860b8534853e82ffb1fd19ead25bf",
+          "bytes": 569
+        },
+        "editPlan": {
+          "path": "17-35/attempt-05/model-edit-plan.json",
+          "sha256": "f5b8a09882ead18eb03b647c9c8c2ff27036df8d6124b653c2c9426eee0a79fe",
+          "bytes": 238,
+          "kind": "generated"
+        },
+        "rawModelOutput": {
+          "path": "17-35/attempt-05/model-output.txt",
+          "sha256": "a9be531c0b9f08943aa751cc69da1c686ebdf97455857e132365133200592d42",
+          "bytes": 237
+        },
+        "formulaResultPolicy": "deterministic_local_subset",
+        "supportedFormulaFunctions": [
+          "SUM",
+          "AVERAGE",
+          "MIN",
+          "MAX",
+          "COUNT",
+          "COUNTA",
+          "ABS",
+          "ROUND",
+          "ROUNDUP",
+          "ROUNDDOWN",
+          "IF",
+          "IFERROR",
+          "SUMIF",
+          "COUNTIF"
+        ],
+        "appliedOperationCount": 1
+      }
     },
     {
       "taskId": "22-47",
@@ -768,7 +973,48 @@
           "step": "score_candidate",
           "detail": "0 cell mismatch(es)"
         }
-      ]
+      ],
+      "sidecarEvidence": {
+        "candidateManifest": {
+          "path": "22-47/attempt-06/candidate-manifest.json",
+          "sha256": "8cd7080ea6dd68fc8b161915a0433a2cec938e2baaebdb6254aadcaa6b6e4537",
+          "bytes": 992
+        },
+        "agentWorkspaceManifest": {
+          "path": "22-47/attempt-06/agent-workspace/agent-workspace-manifest.json",
+          "sha256": "f0c3a9d9b2f1a26be62d39ad03cc6e19daf7d5a9a6f0af6ee565f8a4f6ad388d",
+          "bytes": 569
+        },
+        "editPlan": {
+          "path": "22-47/attempt-06/model-edit-plan.json",
+          "sha256": "3c1714ccd66816d240ff0e135eadaf269abd60700b149297ef2840415708ca3f",
+          "bytes": 361,
+          "kind": "generated"
+        },
+        "rawModelOutput": {
+          "path": "22-47/attempt-06/model-output.txt",
+          "sha256": "f3bb8b29ac89d5d803f58140e0d1483c936ff796dd113beffe827158191595a0",
+          "bytes": 361
+        },
+        "formulaResultPolicy": "deterministic_local_subset",
+        "supportedFormulaFunctions": [
+          "SUM",
+          "AVERAGE",
+          "MIN",
+          "MAX",
+          "COUNT",
+          "COUNTA",
+          "ABS",
+          "ROUND",
+          "ROUNDUP",
+          "ROUNDDOWN",
+          "IF",
+          "IFERROR",
+          "SUMIF",
+          "COUNTIF"
+        ],
+        "appliedOperationCount": 1
+      }
     },
     {
       "taskId": "13-1",
@@ -858,7 +1104,48 @@
           "step": "score_candidate",
           "detail": "0 cell mismatch(es)"
         }
-      ]
+      ],
+      "sidecarEvidence": {
+        "candidateManifest": {
+          "path": "13-1/attempt-07/candidate-manifest.json",
+          "sha256": "35f545c642b1ad9c1b1787fbef9ef511abfb1526b243cd27b4ae0b836d6e81cb",
+          "bytes": 990
+        },
+        "agentWorkspaceManifest": {
+          "path": "13-1/attempt-07/agent-workspace/agent-workspace-manifest.json",
+          "sha256": "0abd9eab4648e96038de3c6040ad33768476249f2f5383c766f4b36f3fe4625d",
+          "bytes": 566
+        },
+        "editPlan": {
+          "path": "13-1/attempt-07/model-edit-plan.json",
+          "sha256": "0b3c4b5f0cc9e5947a435a085a0a93f6627ebd4458259364a63b927b5b121bb3",
+          "bytes": 1084,
+          "kind": "generated"
+        },
+        "rawModelOutput": {
+          "path": "13-1/attempt-07/model-output.txt",
+          "sha256": "a885f4f224fca0e5b4068d369c0346a384b185e8b0238b6446e74c179e3cdab6",
+          "bytes": 675
+        },
+        "formulaResultPolicy": "deterministic_local_subset",
+        "supportedFormulaFunctions": [
+          "SUM",
+          "AVERAGE",
+          "MIN",
+          "MAX",
+          "COUNT",
+          "COUNTA",
+          "ABS",
+          "ROUND",
+          "ROUNDUP",
+          "ROUNDDOWN",
+          "IF",
+          "IFERROR",
+          "SUMIF",
+          "COUNTIF"
+        ],
+        "appliedOperationCount": 3
+      }
     },
     {
       "taskId": "17-35",
@@ -948,7 +1235,48 @@
           "step": "score_candidate",
           "detail": "0 cell mismatch(es)"
         }
-      ]
+      ],
+      "sidecarEvidence": {
+        "candidateManifest": {
+          "path": "17-35/attempt-08/candidate-manifest.json",
+          "sha256": "f9385ab419b4ae15bc43477295f0e3139ae00610d58086d1c2d9cbe61644b3d1",
+          "bytes": 1004
+        },
+        "agentWorkspaceManifest": {
+          "path": "17-35/attempt-08/agent-workspace/agent-workspace-manifest.json",
+          "sha256": "5bbf818a5c56937ce64cd978f543478c039860b8534853e82ffb1fd19ead25bf",
+          "bytes": 569
+        },
+        "editPlan": {
+          "path": "17-35/attempt-08/model-edit-plan.json",
+          "sha256": "f5b8a09882ead18eb03b647c9c8c2ff27036df8d6124b653c2c9426eee0a79fe",
+          "bytes": 238,
+          "kind": "generated"
+        },
+        "rawModelOutput": {
+          "path": "17-35/attempt-08/model-output.txt",
+          "sha256": "a9be531c0b9f08943aa751cc69da1c686ebdf97455857e132365133200592d42",
+          "bytes": 237
+        },
+        "formulaResultPolicy": "deterministic_local_subset",
+        "supportedFormulaFunctions": [
+          "SUM",
+          "AVERAGE",
+          "MIN",
+          "MAX",
+          "COUNT",
+          "COUNTA",
+          "ABS",
+          "ROUND",
+          "ROUNDUP",
+          "ROUNDDOWN",
+          "IF",
+          "IFERROR",
+          "SUMIF",
+          "COUNTIF"
+        ],
+        "appliedOperationCount": 1
+      }
     },
     {
       "taskId": "22-47",
@@ -1038,7 +1366,48 @@
           "step": "score_candidate",
           "detail": "0 cell mismatch(es)"
         }
-      ]
+      ],
+      "sidecarEvidence": {
+        "candidateManifest": {
+          "path": "22-47/attempt-09/candidate-manifest.json",
+          "sha256": "325ac7d6e300fbf13ae52b2bff8350b3db8d4f8b35e7420d62738eec7cb82843",
+          "bytes": 993
+        },
+        "agentWorkspaceManifest": {
+          "path": "22-47/attempt-09/agent-workspace/agent-workspace-manifest.json",
+          "sha256": "f0c3a9d9b2f1a26be62d39ad03cc6e19daf7d5a9a6f0af6ee565f8a4f6ad388d",
+          "bytes": 569
+        },
+        "editPlan": {
+          "path": "22-47/attempt-09/model-edit-plan.json",
+          "sha256": "3c1714ccd66816d240ff0e135eadaf269abd60700b149297ef2840415708ca3f",
+          "bytes": 361,
+          "kind": "generated"
+        },
+        "rawModelOutput": {
+          "path": "22-47/attempt-09/model-output.txt",
+          "sha256": "ea02625ed1652e7276770d65201ddaf74b9a484989b3fce82d6681bce490042e",
+          "bytes": 346
+        },
+        "formulaResultPolicy": "deterministic_local_subset",
+        "supportedFormulaFunctions": [
+          "SUM",
+          "AVERAGE",
+          "MIN",
+          "MAX",
+          "COUNT",
+          "COUNTA",
+          "ABS",
+          "ROUND",
+          "ROUNDUP",
+          "ROUNDDOWN",
+          "IF",
+          "IFERROR",
+          "SUMIF",
+          "COUNTIF"
+        ],
+        "appliedOperationCount": 1
+      }
     },
     {
       "taskId": "13-1",
@@ -1128,7 +1497,48 @@
           "step": "score_candidate",
           "detail": "0 cell mismatch(es)"
         }
-      ]
+      ],
+      "sidecarEvidence": {
+        "candidateManifest": {
+          "path": "13-1/attempt-10/candidate-manifest.json",
+          "sha256": "19ebb8c90642c9677c1a7274035f3c644f86342cf0dcd0cbd2ae9db248f2cda0",
+          "bytes": 990
+        },
+        "agentWorkspaceManifest": {
+          "path": "13-1/attempt-10/agent-workspace/agent-workspace-manifest.json",
+          "sha256": "0abd9eab4648e96038de3c6040ad33768476249f2f5383c766f4b36f3fe4625d",
+          "bytes": 566
+        },
+        "editPlan": {
+          "path": "13-1/attempt-10/model-edit-plan.json",
+          "sha256": "0b3c4b5f0cc9e5947a435a085a0a93f6627ebd4458259364a63b927b5b121bb3",
+          "bytes": 1084,
+          "kind": "generated"
+        },
+        "rawModelOutput": {
+          "path": "13-1/attempt-10/model-output.txt",
+          "sha256": "bcc1d34b539c299c8c36a2aca08b50edee97fcdf1d5f2e490958c6d257bd5da6",
+          "bytes": 789
+        },
+        "formulaResultPolicy": "deterministic_local_subset",
+        "supportedFormulaFunctions": [
+          "SUM",
+          "AVERAGE",
+          "MIN",
+          "MAX",
+          "COUNT",
+          "COUNTA",
+          "ABS",
+          "ROUND",
+          "ROUNDUP",
+          "ROUNDDOWN",
+          "IF",
+          "IFERROR",
+          "SUMIF",
+          "COUNTIF"
+        ],
+        "appliedOperationCount": 3
+      }
     },
     {
       "taskId": "17-35",
@@ -1218,7 +1628,48 @@
           "step": "score_candidate",
           "detail": "0 cell mismatch(es)"
         }
-      ]
+      ],
+      "sidecarEvidence": {
+        "candidateManifest": {
+          "path": "17-35/attempt-11/candidate-manifest.json",
+          "sha256": "ade206d3c3371eb41d886020e9af9663682c3a31e7a1fed2bceb5c5b03a9a4c6",
+          "bytes": 1004
+        },
+        "agentWorkspaceManifest": {
+          "path": "17-35/attempt-11/agent-workspace/agent-workspace-manifest.json",
+          "sha256": "5bbf818a5c56937ce64cd978f543478c039860b8534853e82ffb1fd19ead25bf",
+          "bytes": 569
+        },
+        "editPlan": {
+          "path": "17-35/attempt-11/model-edit-plan.json",
+          "sha256": "f5b8a09882ead18eb03b647c9c8c2ff27036df8d6124b653c2c9426eee0a79fe",
+          "bytes": 238,
+          "kind": "generated"
+        },
+        "rawModelOutput": {
+          "path": "17-35/attempt-11/model-output.txt",
+          "sha256": "202fadf579be628c6193d1c30cd36c2edb5d28754ec0eba85aa93c8e8779b2f9",
+          "bytes": 159
+        },
+        "formulaResultPolicy": "deterministic_local_subset",
+        "supportedFormulaFunctions": [
+          "SUM",
+          "AVERAGE",
+          "MIN",
+          "MAX",
+          "COUNT",
+          "COUNTA",
+          "ABS",
+          "ROUND",
+          "ROUNDUP",
+          "ROUNDDOWN",
+          "IF",
+          "IFERROR",
+          "SUMIF",
+          "COUNTIF"
+        ],
+        "appliedOperationCount": 1
+      }
     },
     {
       "taskId": "22-47",
@@ -1308,7 +1759,48 @@
           "step": "score_candidate",
           "detail": "0 cell mismatch(es)"
         }
-      ]
+      ],
+      "sidecarEvidence": {
+        "candidateManifest": {
+          "path": "22-47/attempt-12/candidate-manifest.json",
+          "sha256": "4c18cf22e2587f8cd798c2cb0d14288b1568f879fade9b46f3fc838d7fde73e6",
+          "bytes": 994
+        },
+        "agentWorkspaceManifest": {
+          "path": "22-47/attempt-12/agent-workspace/agent-workspace-manifest.json",
+          "sha256": "f0c3a9d9b2f1a26be62d39ad03cc6e19daf7d5a9a6f0af6ee565f8a4f6ad388d",
+          "bytes": 569
+        },
+        "editPlan": {
+          "path": "22-47/attempt-12/model-edit-plan.json",
+          "sha256": "3c1714ccd66816d240ff0e135eadaf269abd60700b149297ef2840415708ca3f",
+          "bytes": 361,
+          "kind": "generated"
+        },
+        "rawModelOutput": {
+          "path": "22-47/attempt-12/model-output.txt",
+          "sha256": "e906adb4de33d9e5c1f9f61ca7cda9c56858ba11ebd7ee8870361fcbb6f304db",
+          "bytes": 407
+        },
+        "formulaResultPolicy": "deterministic_local_subset",
+        "supportedFormulaFunctions": [
+          "SUM",
+          "AVERAGE",
+          "MIN",
+          "MAX",
+          "COUNT",
+          "COUNTA",
+          "ABS",
+          "ROUND",
+          "ROUNDUP",
+          "ROUNDDOWN",
+          "IF",
+          "IFERROR",
+          "SUMIF",
+          "COUNTIF"
+        ],
+        "appliedOperationCount": 1
+      }
     },
     {
       "taskId": "13-1",
@@ -1398,7 +1890,48 @@
           "step": "score_candidate",
           "detail": "0 cell mismatch(es)"
         }
-      ]
+      ],
+      "sidecarEvidence": {
+        "candidateManifest": {
+          "path": "13-1/attempt-13/candidate-manifest.json",
+          "sha256": "1e53aca32257ba7c3ab40715e0b33b60ae53b03724a21cb587c8f722497673bf",
+          "bytes": 990
+        },
+        "agentWorkspaceManifest": {
+          "path": "13-1/attempt-13/agent-workspace/agent-workspace-manifest.json",
+          "sha256": "0abd9eab4648e96038de3c6040ad33768476249f2f5383c766f4b36f3fe4625d",
+          "bytes": 566
+        },
+        "editPlan": {
+          "path": "13-1/attempt-13/model-edit-plan.json",
+          "sha256": "0b3c4b5f0cc9e5947a435a085a0a93f6627ebd4458259364a63b927b5b121bb3",
+          "bytes": 1084,
+          "kind": "generated"
+        },
+        "rawModelOutput": {
+          "path": "13-1/attempt-13/model-output.txt",
+          "sha256": "59f089544f42058d29fdbd969f89064733accb5db2dbe52aa5a8543f73c18cb3",
+          "bytes": 2329
+        },
+        "formulaResultPolicy": "deterministic_local_subset",
+        "supportedFormulaFunctions": [
+          "SUM",
+          "AVERAGE",
+          "MIN",
+          "MAX",
+          "COUNT",
+          "COUNTA",
+          "ABS",
+          "ROUND",
+          "ROUNDUP",
+          "ROUNDDOWN",
+          "IF",
+          "IFERROR",
+          "SUMIF",
+          "COUNTIF"
+        ],
+        "appliedOperationCount": 3
+      }
     },
     {
       "taskId": "17-35",
@@ -1488,7 +2021,48 @@
           "step": "score_candidate",
           "detail": "0 cell mismatch(es)"
         }
-      ]
+      ],
+      "sidecarEvidence": {
+        "candidateManifest": {
+          "path": "17-35/attempt-14/candidate-manifest.json",
+          "sha256": "ade206d3c3371eb41d886020e9af9663682c3a31e7a1fed2bceb5c5b03a9a4c6",
+          "bytes": 1004
+        },
+        "agentWorkspaceManifest": {
+          "path": "17-35/attempt-14/agent-workspace/agent-workspace-manifest.json",
+          "sha256": "5bbf818a5c56937ce64cd978f543478c039860b8534853e82ffb1fd19ead25bf",
+          "bytes": 569
+        },
+        "editPlan": {
+          "path": "17-35/attempt-14/model-edit-plan.json",
+          "sha256": "f5b8a09882ead18eb03b647c9c8c2ff27036df8d6124b653c2c9426eee0a79fe",
+          "bytes": 238,
+          "kind": "generated"
+        },
+        "rawModelOutput": {
+          "path": "17-35/attempt-14/model-output.txt",
+          "sha256": "202fadf579be628c6193d1c30cd36c2edb5d28754ec0eba85aa93c8e8779b2f9",
+          "bytes": 159
+        },
+        "formulaResultPolicy": "deterministic_local_subset",
+        "supportedFormulaFunctions": [
+          "SUM",
+          "AVERAGE",
+          "MIN",
+          "MAX",
+          "COUNT",
+          "COUNTA",
+          "ABS",
+          "ROUND",
+          "ROUNDUP",
+          "ROUNDDOWN",
+          "IF",
+          "IFERROR",
+          "SUMIF",
+          "COUNTIF"
+        ],
+        "appliedOperationCount": 1
+      }
     },
     {
       "taskId": "22-47",
@@ -1578,7 +2152,48 @@
           "step": "score_candidate",
           "detail": "0 cell mismatch(es)"
         }
-      ]
+      ],
+      "sidecarEvidence": {
+        "candidateManifest": {
+          "path": "22-47/attempt-15/candidate-manifest.json",
+          "sha256": "cba6844f2516c167bf7524d6c6cb356e7419bdc1f03e0fff066eb995eb653cc5",
+          "bytes": 993
+        },
+        "agentWorkspaceManifest": {
+          "path": "22-47/attempt-15/agent-workspace/agent-workspace-manifest.json",
+          "sha256": "f0c3a9d9b2f1a26be62d39ad03cc6e19daf7d5a9a6f0af6ee565f8a4f6ad388d",
+          "bytes": 569
+        },
+        "editPlan": {
+          "path": "22-47/attempt-15/model-edit-plan.json",
+          "sha256": "3c1714ccd66816d240ff0e135eadaf269abd60700b149297ef2840415708ca3f",
+          "bytes": 361,
+          "kind": "generated"
+        },
+        "rawModelOutput": {
+          "path": "22-47/attempt-15/model-output.txt",
+          "sha256": "0f5ae3e5f34a39e0ca86fe1d6abb7a93774a6cd12c990252fc2c7c5d1908e8b7",
+          "bytes": 217
+        },
+        "formulaResultPolicy": "deterministic_local_subset",
+        "supportedFormulaFunctions": [
+          "SUM",
+          "AVERAGE",
+          "MIN",
+          "MAX",
+          "COUNT",
+          "COUNTA",
+          "ABS",
+          "ROUND",
+          "ROUNDUP",
+          "ROUNDDOWN",
+          "IF",
+          "IFERROR",
+          "SUMIF",
+          "COUNTIF"
+        ],
+        "appliedOperationCount": 1
+      }
     }
   ]
 }

@@ -427,7 +427,8 @@
       "liveChecks": [
         "missing: npm run benchmark:official:readiness -- --strict",
         "missing: official BankerToolBench Harbor/Docker smoke",
-        "missing: official SpreadsheetBench V1/V2 runner smoke"
+        "npm run benchmark:spreadsheetbench:run -- --stage-root .tmp/official-benchmarks/staged-edit --output-root .tmp/official-benchmarks/run-model-edit --mode model-edit-plan --model gpt-5.4-nano --limit 1 --clean --json-out docs/eval/spreadsheetbench-model-edit-plan-live-smoke.json",
+        "missing: official SpreadsheetBench V1/V2 full-bundle runner smoke"
       ],
       "evidence": [
         { "type": "doc", "ref": "docs/eval/OFFICIAL_BENCHMARK_READINESS.md" },
@@ -442,6 +443,7 @@
         { "type": "data", "ref": "docs/eval/spreadsheetbench-v2-run-smoke.json" },
         { "type": "data", "ref": "docs/eval/spreadsheetbench-edit-plan-stage-smoke.json" },
         { "type": "data", "ref": "docs/eval/spreadsheetbench-edit-plan-run-smoke.json" },
+        { "type": "data", "ref": "docs/eval/spreadsheetbench-model-edit-plan-live-smoke.json" },
         { "type": "data", "ref": "docs/eval/spreadsheetbench-v1-score-smoke.json" },
         { "type": "data", "ref": "docs/eval/spreadsheetbench-v2-score-smoke.json" },
         { "type": "script", "ref": "scripts/official-benchmark-readiness.ts" },
@@ -465,7 +467,7 @@
         { "type": "test", "ref": "tests/spreadsheetBenchRunner.test.ts" },
         { "type": "test", "ref": "tests/spreadsheetBenchScorer.test.ts" }
       ],
-      "nextReview": "Next official slice: replace the deterministic SpreadsheetBench edit-plan with a model-solving worker inside the staged agent directory, emit edited candidate workbooks, and score them with the existing evaluator manifest; then add a BTB Harbor/Docker smoke that imports Gandalf verifier results without exposing rubric/canary/golden files to the agent."
+      "nextReview": "Next official slice: run model-edit-plan against an official SpreadsheetBench bundle with repeated-run retry/failure accounting and process sandbox proof; then add a BTB Harbor/Docker smoke that imports Gandalf verifier results without exposing rubric/canary/golden files to the agent."
     },
     {
       "id": "unified_nodeagent_jobs",

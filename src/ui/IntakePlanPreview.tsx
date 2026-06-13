@@ -59,6 +59,8 @@ export function IntakePlanPreview({
   const trimmed = text.trim();
   const proposals = store.listProposals(roomId);
   const proposalKey = proposals.map((p) => (p as { artifactId?: string }).artifactId ?? "").join(",");
+  // Cost is the prior run's real telemetry as a proxy estimate, never a fabricated number.
+  const lastCost = store.lastRun()?.costUsd ?? 0;
 
   const result = useMemo(() => {
     if (!trimmed) return null;
@@ -71,11 +73,13 @@ export function IntakePlanPreview({
       targetArtifacts,
       intendedWriteSet: decision.mutating ? targetArtifacts : [],
       pendingProposals,
+      estimatedCostUsd: lastCost,
+      authorizedCostUsd: lastCost,
     });
     return { decision, plan };
     // proposals are represented by proposalKey to avoid rerender churn from store object identity.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [trimmed, targetArtifacts.join(","), proposalKey]);
+  }, [trimmed, targetArtifacts.join(","), proposalKey, lastCost]);
 
   if (!result) return null;
   const { decision, plan } = result;

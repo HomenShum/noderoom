@@ -14,6 +14,7 @@ import { Artifact } from "./panels/Artifact";
 import { LeftRail } from "./LeftRail";
 import { GuidedTour, type TourStep } from "./GuidedTour";
 import { selectPublicSignalTraces, statusText as publicStatusText } from "./signalStatus";
+import { focusStage } from "./stageFocus";
 import type { Actor, Channel } from "../engine/types";
 
 const AUTO_ACCEPT_PREF_KEY = "noderoom:autoAcceptConsent:v1";
@@ -266,7 +267,7 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
           />
         )}
       </div>
-      <SignalStatusStrip roomId={roomId} />
+      <SignalStatusStrip roomId={roomId} onOpenArtifact={openArtifact} />
       {autoAcceptModal && (
         <div className="r-modal-backdrop" role="presentation">
           <div className="r-modal" role="dialog" aria-modal="true" aria-labelledby="auto-accept-title">
@@ -333,7 +334,7 @@ function CopilotPanel({
   );
 }
 
-function SignalStatusStrip({ roomId }: { roomId: string }) {
+function SignalStatusStrip({ roomId, onOpenArtifact }: { roomId: string; onOpenArtifact: (id: string) => void }) {
   const store = useStore();
   const traces = selectPublicSignalTraces(store.listTraces(roomId));
   const proposals = store.listProposals(roomId);
@@ -350,18 +351,44 @@ function SignalStatusStrip({ roomId }: { roomId: string }) {
     { k: "Eval", v: run ? `${run.model} · ${run.toolCalls} tools` : "ready" },
     { k: "Cost", v: run ? `$${run.costUsd.toFixed(3)}` : job ? job.modelPolicy : "$0.000" },
   ];
+  // Click-through (TARGET L87): a Signal Tape / Status item opens its referenced artifact on the
+  // stage and pulses the cell. It never fabricates a target; only renders a button when one exists.
+  const openProposal = () => {
+    const p = proposals[0];
+    if (!p) return;
+    onOpenArtifact(p.artifactId);
+    focusStage({ artifactId: p.artifactId, elementId: (p.op as { elementId?: string }).elementId });
+  };
+  const latestArt = latest?.refs?.artifactId;
+  const openLatest = () => {
+    if (!latestArt) return;
+    onOpenArtifact(latestArt);
+    focusStage({ artifactId: latestArt, elementId: latest?.refs?.cell ?? latest?.refs?.elementId });
+  };
 
   return (
     <div className="r-shell-bottom" data-testid="shell-bottom">
       <div className="r-signal-tape" data-testid="signal-tape" aria-label="Signal Tape">
         <Activity size={13} />
-        {signals.map((s) => (
-          <span key={s.k} className="r-signal-chip"><b>{s.k}</b>{s.v}</span>
-        ))}
+        {signals.map((s) =>
+          s.k === "Review" && proposals.length > 0 ? (
+            <button key={s.k} className="r-signal-chip" data-testid="signal-review" style={{ border: "none", cursor: "pointer" }} title="Open the pending proposal on the stage" onClick={openProposal}>
+              <b>{s.k}</b>{s.v}
+            </button>
+          ) : (
+            <span key={s.k} className="r-signal-chip"><b>{s.k}</b>{s.v}</span>
+          ),
+        )}
       </div>
       <div className="r-status-strip" data-testid="status-strip" role="status" aria-live="polite">
         <span className="r-status-dot" data-kind={status.kind} />
-        <span className="r-status-main">{status.text}</span>
+        {latestArt ? (
+          <button className="r-status-main" data-testid="status-open" style={{ border: "none", background: "transparent", color: "inherit", font: "inherit", padding: 0, textAlign: "left", cursor: "pointer" }} title="Open the referenced artifact on the stage" onClick={openLatest}>
+            {status.text}
+          </button>
+        ) : (
+          <span className="r-status-main">{status.text}</span>
+        )}
         {latest && <span className="r-status-meta">{latest.actor.name} · {latest.type}</span>}
       </div>
     </div>

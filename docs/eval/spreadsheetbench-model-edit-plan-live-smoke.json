@@ -1,0 +1,103 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T10:07:37.919Z",
+  "stageRoot": "staged-edit",
+  "outputRoot": "run-model-edit",
+  "mode": "model-edit-plan",
+  "taskCount": 1,
+  "passCount": 1,
+  "averageOverall": 1,
+  "harness": {
+    "toolPolicy": "agent_dir_only_until_candidate",
+    "evaluatorAccess": "after_candidate_emit_only",
+    "budget": {
+      "modelCalls": 1,
+      "inputTokens": 197,
+      "outputTokens": 27,
+      "providerCostUsd": 0.00007315
+    }
+  },
+  "warnings": [],
+  "results": [
+    {
+      "taskId": "13-2",
+      "track": "spreadsheetbench-v1",
+      "mode": "model-edit-plan",
+      "taskDir": "tasks/13-2",
+      "agentManifest": "tasks/13-2/agent/task.json",
+      "evaluatorManifest": "tasks/13-2/evaluator/evaluator.json",
+      "candidateWorkbook": "13-2/candidate-01-1_13-2_init.xlsx",
+      "score": {
+        "schema": 1,
+        "generatedAt": "2026-06-13T10:07:37.919Z",
+        "taskId": "13-2",
+        "candidateWorkbook": "candidate-01-1_13-2_init.xlsx",
+        "goldWorkbook": "01-1_13-2_golden.xlsx",
+        "answerPosition": "Sheet1!B2:B2",
+        "ranges": [
+          "'Sheet1'!B2"
+        ],
+        "totals": {
+          "comparedCells": 1,
+          "valueMatches": 1,
+          "formulaCells": 0,
+          "formulaMatches": 0,
+          "styleCells": 0,
+          "styleMatches": 0,
+          "mismatches": 0,
+          "missingSheets": 0
+        },
+        "scores": {
+          "value": 1,
+          "formula": null,
+          "style": null,
+          "overall": 1
+        },
+        "pass": true,
+        "warnings": [],
+        "mismatches": []
+      },
+      "model": {
+        "name": "gpt-5.4-nano",
+        "calls": 1,
+        "usage": {
+          "inputTokens": 197,
+          "outputTokens": 27
+        },
+        "costUsd": 0.00007315
+      },
+      "timingsMs": {
+        "modelPlanning": 1975,
+        "candidateGeneration": 2062,
+        "scoring": 36,
+        "total": 2098
+      },
+      "trajectory": [
+        {
+          "step": "read_agent_manifest",
+          "detail": "tasks/13-2/agent/task.json"
+        },
+        {
+          "step": "snapshot_agent_workbook",
+          "detail": "1 sheet(s), 2 cell(s)"
+        },
+        {
+          "step": "call_model_for_edit_plan",
+          "detail": "gpt-5.4-nano"
+        },
+        {
+          "step": "emit_candidate_workbook",
+          "detail": "13-2/candidate-01-1_13-2_init.xlsx"
+        },
+        {
+          "step": "read_evaluator_manifest",
+          "detail": "tasks/13-2/evaluator/evaluator.json"
+        },
+        {
+          "step": "score_candidate",
+          "detail": "0 mismatch(es)"
+        }
+      ]
+    }
+  ]
+}

@@ -266,7 +266,7 @@ export class RoomEngine {
     };
     this.locks.set(lock.id, lock);
     if (args.holder.kind === "agent") this.patchSessionByAgent(args.holder, { status: "working", heldLockId: lock.id, lastAction: `locked ${args.elementIds.join(",")}` });
-    this.trace(args.roomId, args.holder, "lock_acquired", `${args.holder.name} locked ${args.elementIds.join(", ")} — ${args.reason}`, { lockId: lock.id, artifactId: args.artifactId }, `propose_lock · [${args.elementIds.join(", ")}] · reason: "${args.reason}" → ok`);
+    this.trace(args.roomId, args.holder, "lock_acquired", `${args.holder.name} locked ${args.elementIds.join(", ")} — ${args.reason}`, { lockId: lock.id, artifactId: args.artifactId, cell: args.elementIds[0], elementId: args.elementIds[0] }, `propose_lock · [${args.elementIds.join(", ")}] · reason: "${args.reason}" → ok`);
     this.emit();
     return { ok: true, lock };
   }
@@ -282,7 +282,7 @@ export class RoomEngine {
     lock.status = "released";
     lock.releasedAt = this.now();
     if (lock.holder.kind === "agent") this.patchSessionByAgent(lock.holder, { status: "idle", heldLockId: undefined, lastAction: "released lock" });
-    this.trace(lock.roomId, lock.holder, "lock_released", `${lock.holder.name} released lock on ${lock.elementIds.join(", ")}`, { lockId }, `release_lock · ${lockId} → smart-merge waiting drafts`);
+    this.trace(lock.roomId, lock.holder, "lock_released", `${lock.holder.name} released lock on ${lock.elementIds.join(", ")}`, { lockId, artifactId: lock.artifactId, cell: lock.elementIds[0], elementId: lock.elementIds[0] }, `release_lock · ${lockId} → smart-merge waiting drafts`);
 
     // Merge every pending draft that was waiting on this lock (or overlaps its range).
     const merged: MergeOutcome[] = [];
@@ -363,7 +363,14 @@ export class RoomEngine {
     el.updatedAt = now;
     el.updatedBy = actor;
     art.version++; art.updatedAt = now; this.appliedOps.add(op.opId);
-    this.trace(art.roomId, actor, "edit_applied", `${actor.name} set ${op.elementId} = ${fmt(op.value)}`, { artifactId: art.id }, `edit_cell · ${op.elementId} = ${fmt(op.value)} · v${from} → v${el.version}`);
+    this.trace(
+      art.roomId,
+      actor,
+      "edit_applied",
+      `${actor.name} set ${op.elementId} = ${fmt(op.value)}`,
+      { artifactId: art.id, cell: op.elementId, elementId: op.elementId },
+      `edit_cell · ${op.elementId} = ${fmt(op.value)} · v${from} → v${el.version}`,
+    );
     return { ok: true, element: { ...el }, fromVersion: from, toVersion: el.version };
   }
 

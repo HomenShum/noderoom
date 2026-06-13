@@ -56,6 +56,11 @@ describe("CAS edits (optimistic concurrency)", () => {
     expect(r.ok).toBe(true);
     if (r.ok) expect(r.toVersion).toBe(2);
     expect(eng.getArtifact(sheet.id)!.elements.B1.value).toBe(420);
+    expect(eng.listTraces(room.id).find((t) => t.type === "edit_applied" && t.refs?.cell === "B1")?.refs).toMatchObject({
+      artifactId: sheet.id,
+      cell: "B1",
+      elementId: "B1",
+    });
 
     const stale = eng.applyEdit({ roomId: room.id, op: setOp("o2", sheet.id, "B1", 999, 1), actor: hostActor });
     expect(stale.ok).toBe(false);
@@ -104,6 +109,12 @@ describe("the lock tool: read-only range, still readable as context (point 8)", 
     const released = eng.releaseLock(lock.lock.id, pub);
     expect(released.ok).toBe(true);
     expect(eng.lockFor(sheet.id, "B1")).toBeUndefined();
+    expect(eng.listTraces(room.id).find((t) => t.type === "lock_released")?.refs).toMatchObject({
+      lockId: lock.lock.id,
+      artifactId: sheet.id,
+      cell: "B1",
+      elementId: "B1",
+    });
   });
 });
 

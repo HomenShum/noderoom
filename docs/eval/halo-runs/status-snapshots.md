@@ -1,12 +1,12 @@
 # HALO Status Snapshots
 
-Generated: 2026-06-13T09:24:25.798Z
+Generated: 2026-06-13T10:19:57.897Z
 Snapshot source: `docs/eval/halo-runs/status-snapshots.jsonl`
-Snapshots parsed: 68
+Snapshots parsed: 69
 
 ## Latest
 
-- Time: 2026-06-13T09:24:14.252Z
+- Time: 2026-06-13T10:19:51.500Z
 - Run: unknown
 - Active PID: unknown alive=undefined
 - Step: unknown
@@ -19,13 +19,12 @@ Snapshots parsed: 68
 ## Anomalies
 
 - Duplicate-supervisor snapshots: 1
-- Missing-supervisor snapshots: 6
+- Missing-supervisor snapshots: 7
 
 ## Recent Snapshots
 
 | generatedAt | runId | step | pidAlive | supervisors | routerJson | freshness | wakeIn | lockAge | runAge | deadlineIn |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| 2026-06-10T01:08:56.697Z | 20260609T183814Z | sleeping | yes | 1 | yes | process | 5m 10s | 24m 50s | 6h 30m | 15h 51m |
 | 2026-06-10T01:40:53.541Z | 20260609T183814Z | sleeping | yes | 1 | yes | process | 3m 48s | 26m 12s | 7h 2m | 15h 19m |
 | 2026-06-10T02:10:25.185Z | 20260609T183814Z | sleeping | yes | 1 | yes | process | 4m 41s | 25m 19s | 7h 32m | 14h 49m |
 | 2026-06-10T02:40:24.385Z | 20260609T183814Z | sleeping | yes | 1 | yes | process | 5m 5s | 24m 55s | 8h 2m | 14h 19m |
@@ -45,3 +44,4 @@ Snapshots parsed: 68
 | 2026-06-10T09:00:40.636Z | 20260609T183814Z | sleeping | no | 0 | yes |  | 23m 50s | 6m 10s | 14h 22m | 7h 59m |
 | 2026-06-13T08:58:39.172Z | 20260609T183814Z | sleeping | no | 0 | yes |  | -71h 34m | 72h 4m | 86h 20m | -63h 58m |
 | 2026-06-13T09:24:14.252Z |  |  | no | 0 | yes |  |  |  |  |  |
+| 2026-06-13T10:19:51.500Z |  |  | no | 0 | yes |  |  |  |  |  |

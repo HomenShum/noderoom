@@ -4,6 +4,7 @@ import { FolderOpen, Table2, FileText, StickyNote, Database, BookOpen, Upload, L
 import { useStore, type UploadedArtifactInput } from "../app/store";
 import type { Actor } from "../engine/types";
 import { ARTIFACT_REF_MIME, encodeArtifactRef } from "./artifactRefs";
+import { focusStage } from "./stageFocus";
 import { isExcelWorkbook, isSpreadsheetFile, parseSpreadsheetArtifacts } from "../app/spreadsheetParser";
 import { documentParsePlan, guessDocumentMimeType } from "../app/documentParserPlan";
 
@@ -20,6 +21,15 @@ function roleOf(name: string, role: string, anon: boolean): string {
   if (name === "Priya") return "Finance lead";
   return anon ? "Guest" : "Member";
 }
+/** Compact "A1:C5"-style label for a lock's claimed range (binder agent/person rows). */
+function rangeLabel(elementIds: string[]): string {
+  if (!elementIds.length) return "";
+  if (elementIds.length === 1) return elementIds[0];
+  return `${elementIds[0]}:${elementIds[elementIds.length - 1]}`;
+}
+// A binder row becomes a focus button only when there is a real claimed range to jump to.
+// looks-clickable-must-act. Reset to a bare row visually; .r-person provides the layout.
+const personFocusBtn: CSSProperties = { width: "100%", textAlign: "left", border: "none", background: "transparent", cursor: "pointer", font: "inherit", color: "inherit" };
 
 export function LeftRail({ roomId, me, artId, onPick, style }: { roomId: string; me: Actor; artId: string; onPick: (id: string) => void; style?: CSSProperties }) {
   const store = useStore();
@@ -31,6 +41,7 @@ export function LeftRail({ roomId, me, artId, onPick, style }: { roomId: string;
   const sessions = store.listSessions(roomId);
   const proposals = store.listProposals(roomId);
   const traces = store.listTraces(roomId);
+  const locks = store.awareness(roomId).activeLocks;
   const sub = (a: { kind: string; title: string; version: number; elements: Record<string, unknown>; order?: string[]; meta?: { excelGrid?: { rows: number; columns: number } } }) =>
     a.title === WIKI_TITLE ? `v${a.version} · live TOC` : uploadDocMeta(a) ?? (a.kind === "sheet" ? `v${a.version} · ${rowCount(a)} rows` : a.kind === "wall" ? `${Object.keys(a.elements).length} notes` : "edited recently");
   const onUpload = async (files: FileList | null) => {
@@ -110,21 +121,41 @@ export function LeftRail({ roomId, me, artId, onPick, style }: { roomId: string;
 
         <div className="r-rail-section">
           <div className="kicker" style={{ padding: "2px 9px 8px" }}>People & agents · {members.length} live</div>
-          {members.map((m) => (
-            <div key={m.id} className="r-person">
-              <span className="r-avatar sm" style={{ background: m.color }}>{initials(m.name)}</span>
-              <span className="grow"><div className="pn">{m.name}</div><div className="pr">{roleOf(m.name, m.role, m.anon)}</div></span>
-              <span className="r-dot-live" />
-            </div>
-          ))}
-          {sessions.filter((s) => s.scope === "public").map((s) => (
-            <div key={s.id} className="r-person">
-              <span className="r-avatar agent sm" style={{ background: "#d97757" }}>◆</span>
-              <span className="grow"><div className="pn">{s.agentName}</div><div className="pr">Public agent · {s.status}</div></span>
-              {/* The agent is a live participant too — same presence dot as human members. */}
-              <span className="r-dot-live" />
-            </div>
-          ))}
+          {members.map((m) => {
+            const lock = locks.find((l) => l.holder.id === m.id);
+            const range = lock ? rangeLabel(lock.elementIds) : "";
+            const body = (
+              <>
+                <span className="r-avatar sm" style={{ background: m.color }}>{initials(m.name)}</span>
+                <span className="grow"><div className="pn">{m.name}</div><div className="pr">{roleOf(m.name, m.role, m.anon)}{range ? ` · editing ${range}` : ""}</div></span>
+                <span className="r-dot-live" />
+              </>
+            );
+            return lock ? (
+              <button key={m.id} className="r-person" data-testid="binder-person" style={personFocusBtn} title={`Jump to ${m.name}'s edit (${range})`}
+                onClick={() => { onPick(lock.artifactId); focusStage({ artifactId: lock.artifactId, elementId: lock.elementIds[0] }); }}>{body}</button>
+            ) : (
+              <div key={m.id} className="r-person">{body}</div>
+            );
+          })}
+          {sessions.filter((s) => s.scope === "public").map((s) => {
+            const lock = locks.find((l) => l.sessionId === s.id);
+            const range = lock ? rangeLabel(lock.elementIds) : "";
+            const body = (
+              <>
+                <span className="r-avatar agent sm" style={{ background: "#d97757" }}>◆</span>
+                <span className="grow"><div className="pn">{s.agentName}</div><div className="pr">Public agent · {s.status}{range ? ` · ${range}` : ""}</div></span>
+                {/* The agent is a live participant too — same presence dot as human members. */}
+                <span className="r-dot-live" />
+              </>
+            );
+            return lock ? (
+              <button key={s.id} className="r-person" data-testid="binder-agent" style={personFocusBtn} title={`Highlight ${s.agentName}'s claimed range (${range})`}
+                onClick={() => { onPick(lock.artifactId); focusStage({ artifactId: lock.artifactId, elementId: lock.elementIds[0] }); }}>{body}</button>
+            ) : (
+              <div key={s.id} className="r-person">{body}</div>
+            );
+          })}
         </div>
       </div>
     </div>

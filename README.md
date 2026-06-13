@@ -1019,8 +1019,13 @@ values, formulas, and optional style fingerprints. Smoke artifacts cover the V1 
 and the V2 public example bundle. The runner also supports `--mode apply-agent-patch`, which reads
 `agent/edit-plan.json`, applies cell-level value/formula/style edits, emits a candidate workbook,
 then opens evaluator metadata for scoring; the checked-in edit-plan smoke records a passing
-candidate and a zero-mismatch score. These artifacts prove ingest, sandbox-staging,
-candidate-output, edit/export/reopen, and diff plumbing; they are not model scores.
+candidate and a zero-mismatch score. It also supports `--mode model-edit-plan --model <route>`,
+which snapshots only the staged `agent/` workbook/prompts, asks the configured model for a JSON
+edit plan, applies it, records token/cost usage, emits a candidate workbook, then scores afterward.
+The checked-in live smoke (`docs/eval/spreadsheetbench-model-edit-plan-live-smoke.json`) passed one
+staged task with `gpt-5.4-nano` and recorded trajectory, timing, and cost. These artifacts prove
+ingest, sandbox-staging, candidate-output, edit/export/reopen, model-planning, and diff plumbing;
+they are not official benchmark scores until run across official bundles under the benchmark policy.
 
 BankerToolBench now has the same first boundary in place: `npm run
 benchmark:bankertoolbench:ingest` scans an already-downloaded BTB bundle (`tasks.jsonl`,

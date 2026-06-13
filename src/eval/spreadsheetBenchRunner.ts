@@ -3,13 +3,18 @@ import { basename, dirname, join, relative, resolve } from "node:path";
 import ExcelJS from "exceljs";
 import { scoreSpreadsheetBenchWorkbook, type SpreadsheetBenchWorkbookScore } from "./spreadsheetBenchScorer";
 import type { SpreadsheetBenchTrack } from "./spreadsheetBenchAdapter";
+import type { AgentModel, TokenUsage } from "../agent/types";
+import { priceRun } from "../agent/model";
 
-export type SpreadsheetBenchRunnerMode = "copy-input-baseline" | "apply-agent-patch";
+export type SpreadsheetBenchRunnerMode = "copy-input-baseline" | "apply-agent-patch" | "model-edit-plan";
 
 export type SpreadsheetBenchRunnerOptions = {
   stageRoot: string;
   outputRoot: string;
   mode: SpreadsheetBenchRunnerMode;
+  model?: AgentModel;
+  modelName?: string;
+  modelTimeoutMs?: number;
   limit?: number;
   clean?: boolean;
   compareStyles?: boolean;
@@ -27,13 +32,27 @@ export type SpreadsheetBenchRunnerTaskResult = {
   evaluatorManifest: string;
   candidateWorkbook: string;
   score: SpreadsheetBenchWorkbookScore;
+  model?: {
+    name: string;
+    calls: number;
+    usage: TokenUsage;
+    costUsd: number;
+  };
   timingsMs: {
+    modelPlanning?: number;
     candidateGeneration: number;
     scoring: number;
     total: number;
   };
   trajectory: Array<{
-    step: "read_agent_manifest" | "read_agent_edit_plan" | "emit_candidate_workbook" | "read_evaluator_manifest" | "score_candidate";
+    step:
+      | "read_agent_manifest"
+      | "read_agent_edit_plan"
+      | "snapshot_agent_workbook"
+      | "call_model_for_edit_plan"
+      | "emit_candidate_workbook"
+      | "read_evaluator_manifest"
+      | "score_candidate";
     detail: string;
   }>;
 };
@@ -51,8 +70,10 @@ export type SpreadsheetBenchRunnerReport = {
     toolPolicy: "agent_dir_only_until_candidate";
     evaluatorAccess: "after_candidate_emit_only";
     budget: {
-      modelCalls: 0;
-      providerCostUsd: 0;
+      modelCalls: number;
+      inputTokens: number;
+      outputTokens: number;
+      providerCostUsd: number;
     };
   };
   warnings: string[];
@@ -120,6 +141,7 @@ export async function runStagedSpreadsheetBench(options: SpreadsheetBenchRunnerO
   const averageOverall = results.length
     ? Number((results.reduce((sum, result) => sum + result.score.scores.overall, 0) / results.length).toFixed(6))
     : 0;
+  const usage = aggregateUsage(results);
   return {
     schema: 1,
     generatedAt: options.generatedAt,
@@ -133,8 +155,10 @@ export async function runStagedSpreadsheetBench(options: SpreadsheetBenchRunnerO
       toolPolicy: "agent_dir_only_until_candidate",
       evaluatorAccess: "after_candidate_emit_only",
       budget: {
-        modelCalls: 0,
-        providerCostUsd: 0,
+        modelCalls: usage.calls,
+        inputTokens: usage.inputTokens,
+        outputTokens: usage.outputTokens,
+        providerCostUsd: usage.costUsd,
       },
     },
     warnings,
@@ -174,8 +198,12 @@ async function runTask(
     agent,
     mode: options.mode,
     trajectory,
+    model: options.model,
+    modelName: options.modelName,
+    modelTimeoutMs: options.modelTimeoutMs,
   });
-  const resolvedCandidateWorkbook = await candidateWorkbook;
+  const emitted = await candidateWorkbook;
+  const resolvedCandidateWorkbook = typeof emitted === "string" ? emitted : emitted.path;
   const generationMs = Date.now() - generationStarted;
   trajectory.push({ step: "emit_candidate_workbook", detail: rel(outputRoot, resolvedCandidateWorkbook) });
 
@@ -206,7 +234,9 @@ async function runTask(
     evaluatorManifest: rel(stageRoot, task.evaluatorManifestPath),
     candidateWorkbook: rel(outputRoot, resolvedCandidateWorkbook),
     score,
+    model: typeof emitted === "string" ? undefined : emitted.model,
     timingsMs: {
+      ...(typeof emitted === "string" ? {} : { modelPlanning: emitted.modelPlanningMs }),
       candidateGeneration: generationMs,
       scoring: scoringMs,
       total: Date.now() - started,
@@ -222,13 +252,17 @@ function emitCandidateWorkbook(args: {
   agent: AgentManifest;
   mode: SpreadsheetBenchRunnerMode;
   trajectory: SpreadsheetBenchRunnerTaskResult["trajectory"];
-}): Promise<string> | string {
+  model?: AgentModel;
+  modelName?: string;
+  modelTimeoutMs?: number;
+}): Promise<string | ModelCandidateEmission> | string {
   const firstInput = args.agent.inputFiles[0];
   if (!firstInput) throw new Error(`agent manifest has no input workbook: ${args.agent.taskId}`);
   const source = resolveManifestPath(join(args.taskDir, "agent"), firstInput);
   if (!existsSync(source)) throw new Error(`agent input workbook does not exist: ${source}`);
   mkdirSync(args.taskOutDir, { recursive: true });
   const target = join(args.taskOutDir, `candidate-${safeFileName(basename(source))}`);
+  if (args.mode === "model-edit-plan") return emitModelEditCandidateWorkbook({ ...args, source, target });
   if (args.mode === "apply-agent-patch") return emitPatchedCandidateWorkbook({ ...args, source, target });
   if (args.mode !== "copy-input-baseline") throw new Error(`Unsupported SpreadsheetBench runner mode: ${args.mode}`);
   copyFileSync(source, target);
@@ -242,6 +276,17 @@ function emitCandidateWorkbook(args: {
   });
   return target;
 }
+
+type ModelCandidateEmission = {
+  path: string;
+  modelPlanningMs: number;
+  model: {
+    name: string;
+    calls: number;
+    usage: TokenUsage;
+    costUsd: number;
+  };
+};
 
 async function emitPatchedCandidateWorkbook(args: {
   stageRoot: string;
@@ -276,6 +321,71 @@ async function emitPatchedCandidateWorkbook(args: {
   return args.target;
 }
 
+async function emitModelEditCandidateWorkbook(args: {
+  stageRoot: string;
+  taskDir: string;
+  taskOutDir: string;
+  agent: AgentManifest;
+  mode: SpreadsheetBenchRunnerMode;
+  trajectory: SpreadsheetBenchRunnerTaskResult["trajectory"];
+  source: string;
+  target: string;
+  model?: AgentModel;
+  modelName?: string;
+  modelTimeoutMs?: number;
+}): Promise<ModelCandidateEmission> {
+  if (!args.model) throw new Error(`model-edit-plan requires options.model: ${args.agent.taskId}`);
+  const snapshot = await snapshotWorkbook(args.source);
+  args.trajectory.push({ step: "snapshot_agent_workbook", detail: `${snapshot.sheets.length} sheet(s), ${snapshot.cellCount} cell(s)` });
+  const promptFiles = readPromptFiles(join(args.taskDir, "agent"), args.agent.promptFiles);
+  const planningStarted = Date.now();
+  const step = await args.model.next({
+    system: spreadsheetBenchPlannerSystem(),
+    messages: [{ role: "user", content: spreadsheetBenchPlannerPrompt(args.agent, snapshot, promptFiles) }],
+    tools: [],
+    signal: args.modelTimeoutMs ? AbortSignal.timeout(args.modelTimeoutMs) : undefined,
+  });
+  const modelPlanningMs = Date.now() - planningStarted;
+  args.trajectory.push({ step: "call_model_for_edit_plan", detail: args.model.name });
+  if (step.toolCalls.length) throw new Error(`model-edit-plan expected JSON text, got ${step.toolCalls.length} tool call(s)`);
+  const plan = parseEditPlanText(step.text ?? "", args.agent.taskId);
+  validateEditPlan(plan, args.agent.taskId);
+  const editPlanPath = join(args.taskOutDir, "model-edit-plan.json");
+  writeJson(editPlanPath, plan);
+
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.readFile(args.source);
+  for (const operation of plan.operations) applyOperation(workbook, operation);
+  await workbook.xlsx.writeFile(args.target);
+
+  const usage = step.usage ?? { inputTokens: 0, outputTokens: 0 };
+  const modelName = args.modelName ?? args.model.name;
+  const costUsd = step.usage && args.modelName ? priceRun(args.modelName, usage.inputTokens, usage.outputTokens) : 0;
+  writeJson(join(args.taskOutDir, "candidate-manifest.json"), {
+    schema: 1,
+    taskId: args.agent.taskId,
+    mode: args.mode,
+    model: modelName,
+    sourceAgentManifest: rel(args.stageRoot, join(args.taskDir, "agent", "task.json")),
+    generatedEditPlan: basename(editPlanPath),
+    candidateWorkbook: basename(args.target),
+    appliedOperationCount: plan.operations.length,
+    modelUsage: usage,
+    modelCostUsd: costUsd,
+    note: "model-edit-plan asks a model to produce an agent-side edit plan before scoring; this is a benchmark runner path, not an official score unless run on official tasks with the recorded model/tool policy.",
+  });
+  return {
+    path: args.target,
+    modelPlanningMs,
+    model: {
+      name: modelName,
+      calls: 1,
+      usage,
+      costUsd,
+    },
+  };
+}
+
 function validateEditPlan(plan: AgentEditPlan, taskId: string) {
   if (!plan || plan.schema !== 1) throw new Error(`invalid edit-plan schema for ${taskId}`);
   if (!Array.isArray(plan.operations) || plan.operations.length === 0) {
@@ -294,6 +404,95 @@ function validateEditPlan(plan: AgentEditPlan, taskId: string) {
   }
 }
 
+type WorkbookSnapshot = {
+  sheets: Array<{
+    name: string;
+    cells: Array<{ address: string; value: string; formula?: string; numFmt?: string }>;
+  }>;
+  cellCount: number;
+  truncated: boolean;
+};
+
+async function snapshotWorkbook(path: string, maxCells = 240): Promise<WorkbookSnapshot> {
+  const workbook = new ExcelJS.Workbook();
+  await workbook.xlsx.readFile(path);
+  const sheets: WorkbookSnapshot["sheets"] = [];
+  let cellCount = 0;
+  let truncated = false;
+  for (const sheet of workbook.worksheets) {
+    const cells: WorkbookSnapshot["sheets"][number]["cells"] = [];
+    sheet.eachRow({ includeEmpty: false }, (row) => {
+      row.eachCell({ includeEmpty: false }, (cell) => {
+        if (cellCount >= maxCells) {
+          truncated = true;
+          return;
+        }
+        cells.push({
+          address: cell.address,
+          value: cellValueForPrompt(cell.value),
+          ...(cellFormula(cell.value) ? { formula: cellFormula(cell.value) } : {}),
+          ...(cell.numFmt ? { numFmt: cell.numFmt } : {}),
+        });
+        cellCount += 1;
+      });
+    });
+    if (cells.length) sheets.push({ name: sheet.name, cells });
+  }
+  return { sheets, cellCount, truncated };
+}
+
+function cellFormula(value: ExcelJS.CellValue): string | undefined {
+  if (value && typeof value === "object" && "formula" in value && typeof value.formula === "string") return value.formula;
+  return undefined;
+}
+
+function cellValueForPrompt(value: ExcelJS.CellValue): string {
+  if (value === null || value === undefined) return "";
+  if (value instanceof Date) return value.toISOString();
+  if (typeof value === "object") {
+    if ("result" in value && value.result !== undefined) return String(value.result ?? "");
+    if ("text" in value && typeof value.text === "string") return value.text;
+    if ("richText" in value) return JSON.stringify(value.richText);
+    return JSON.stringify(value);
+  }
+  return String(value);
+}
+
+function readPromptFiles(agentDir: string, promptFiles: string[]): Array<{ path: string; text: string }> {
+  return promptFiles.slice(0, 4).flatMap((file) => {
+    const path = resolveManifestPath(agentDir, file);
+    if (!existsSync(path)) return [];
+    return [{ path: file, text: readFileSync(path, "utf8").slice(0, 5000) }];
+  });
+}
+
+function spreadsheetBenchPlannerSystem(): string {
+  return [
+    "You are a spreadsheet editing worker.",
+    "Return only JSON matching this schema:",
+    "{\"schema\":1,\"operations\":[{\"sheet\":\"Sheet1\",\"cell\":\"B2\",\"value\":2}]}",
+    "Use value for literal values, or formula plus optional result for formulas.",
+    "Do not include markdown, prose, comments, evaluator metadata, or hidden answers.",
+  ].join("\n");
+}
+
+function spreadsheetBenchPlannerPrompt(agent: AgentManifest, snapshot: WorkbookSnapshot, promptFiles: Array<{ path: string; text: string }>): string {
+  return JSON.stringify({
+    taskId: agent.taskId,
+    instruction: agent.instruction,
+    instructionType: agent.instructionType,
+    prompts: promptFiles,
+    workbook: snapshot,
+  }, null, 2);
+}
+
+function parseEditPlanText(text: string, taskId: string): AgentEditPlan {
+  const cleaned = text.trim().replace(/^```(?:json)?\s*/i, "").replace(/\s*```$/i, "").trim();
+  const jsonText = cleaned.startsWith("{") ? cleaned : cleaned.slice(cleaned.indexOf("{"), cleaned.lastIndexOf("}") + 1);
+  if (!jsonText.startsWith("{")) throw new Error(`model-edit-plan returned no JSON for ${taskId}`);
+  return JSON.parse(jsonText) as AgentEditPlan;
+}
+
 function applyOperation(workbook: ExcelJS.Workbook, operation: AgentEditOperation) {
   const sheet = workbook.getWorksheet(operation.sheet);
   if (!sheet) throw new Error(`edit-plan references missing sheet: ${operation.sheet}`);
@@ -301,6 +500,14 @@ function applyOperation(workbook: ExcelJS.Workbook, operation: AgentEditOperatio
   if (operation.formula !== undefined) cell.value = { formula: operation.formula, result: operation.result ?? undefined };
   else cell.value = operation.value ?? null;
   if (operation.numFmt) cell.numFmt = operation.numFmt;
+}
+
+function aggregateUsage(results: SpreadsheetBenchRunnerTaskResult[]) {
+  const calls = results.reduce((sum, result) => sum + (result.model?.calls ?? 0), 0);
+  const inputTokens = results.reduce((sum, result) => sum + (result.model?.usage.inputTokens ?? 0), 0);
+  const outputTokens = results.reduce((sum, result) => sum + (result.model?.usage.outputTokens ?? 0), 0);
+  const costUsd = Number(results.reduce((sum, result) => sum + (result.model?.costUsd ?? 0), 0).toFixed(8));
+  return { calls, inputTokens, outputTokens, costUsd };
 }
 
 function resolveManifestPath(base: string, manifestPath: string | undefined): string {

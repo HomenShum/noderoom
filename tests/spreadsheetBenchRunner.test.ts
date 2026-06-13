@@ -5,6 +5,7 @@ import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it } from "vitest";
 import { stageSpreadsheetBenchBundle } from "../src/eval/spreadsheetBenchStage";
 import { runStagedSpreadsheetBench } from "../src/eval/spreadsheetBenchRunner";
+import type { AgentModel } from "../src/agent/types";
 
 const roots: string[] = [];
 
@@ -129,6 +130,83 @@ describe("SpreadsheetBench staged runner", () => {
     expect(result.score.pass).toBe(true);
     const candidateManifest = readFileSync(join(out, "13-2", "candidate-manifest.json"), "utf8");
     expect(candidateManifest).toContain("apply-agent-patch");
+    expect(candidateManifest.toLowerCase()).not.toContain("gold");
+    expect(candidateManifest).not.toContain("evaluator");
+  });
+
+  it("asks a model for an edit plan and records usage before evaluator scoring", async () => {
+    const source = tempRoot("source");
+    const stage = tempRoot("stage");
+    const out = tempRoot("out");
+    mkdirSync(join(source, "spreadsheet", "13-3"), { recursive: true });
+    writeJson(join(source, "dataset.json"), [
+      {
+        id: "13-3",
+        instruction: "Change Sheet1 B2 to 2.",
+        spreadsheet_path: "spreadsheet/13-3",
+        answer_position: "Sheet1!B2:B2",
+        answer_sheet: "Sheet1",
+      },
+    ]);
+    await writeWorkbook(join(source, "spreadsheet", "13-3", "1_13-3_init.xlsx"), 1);
+    await writeWorkbook(join(source, "spreadsheet", "13-3", "1_13-3_golden.xlsx"), 2);
+    stageSpreadsheetBenchBundle(source, {
+      track: "spreadsheetbench-v1",
+      outputRoot: stage,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+    const planner: AgentModel = {
+      name: "scripted-spreadsheetbench-planner",
+      async next({ messages }) {
+        expect(messages[0]?.content).toContain("Change Sheet1 B2 to 2");
+        expect(messages[0]?.content.toLowerCase()).not.toContain("gold");
+        return {
+          text: JSON.stringify({ schema: 1, operations: [{ sheet: "Sheet1", cell: "B2", value: 2 }] }),
+          toolCalls: [],
+          done: true,
+          usage: { inputTokens: 80, outputTokens: 20 },
+        };
+      },
+    };
+
+    const report = await runStagedSpreadsheetBench({
+      stageRoot: stage,
+      outputRoot: out,
+      mode: "model-edit-plan",
+      model: planner,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(report).toMatchObject({
+      mode: "model-edit-plan",
+      taskCount: 1,
+      passCount: 1,
+      averageOverall: 1,
+      harness: {
+        toolPolicy: "agent_dir_only_until_candidate",
+        evaluatorAccess: "after_candidate_emit_only",
+        budget: { modelCalls: 1, inputTokens: 80, outputTokens: 20, providerCostUsd: 0 },
+      },
+    });
+    const result = report.results[0];
+    expect(result.model).toMatchObject({
+      name: "scripted-spreadsheetbench-planner",
+      calls: 1,
+      usage: { inputTokens: 80, outputTokens: 20 },
+      costUsd: 0,
+    });
+    expect(result.trajectory.map((step) => step.step)).toEqual([
+      "read_agent_manifest",
+      "snapshot_agent_workbook",
+      "call_model_for_edit_plan",
+      "emit_candidate_workbook",
+      "read_evaluator_manifest",
+      "score_candidate",
+    ]);
+    const candidateManifest = readFileSync(join(out, "13-3", "candidate-manifest.json"), "utf8");
+    expect(candidateManifest).toContain("model-edit-plan");
     expect(candidateManifest.toLowerCase()).not.toContain("gold");
     expect(candidateManifest).not.toContain("evaluator");
   });

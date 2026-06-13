@@ -16,6 +16,7 @@ import {
 import { useStore, type RoomStore, type EditFeedback } from "../../app/store";
 import { formatExcelNumber } from "../../app/numberFormat";
 import { columnLetters } from "../../app/spreadsheetIndex";
+import { onStageFocus, type StageFocusTarget } from "../stageFocus";
 import type { Actor, Artifact as Art, CellPayload, DataframeColumn, DocumentParseMeta, Proposal, TraceEvent, ResearchRowInput } from "../../engine/types";
 
 const WIKI_TITLE = "Agent wiki";
@@ -79,13 +80,47 @@ function ArtifactSurface({ roomId, me, artId, onArt, collab, style, surfaceKey =
     window.addEventListener("keydown", onKey);
     return () => window.removeEventListener("keydown", onKey);
   }, [store, roomId, me]);
+  // Stage focus: the Room Binder / Signal Tape can point this surface at a claimed range or a
+  // referenced cell (operation-like, ephemeral; never a durable write). When a focus targets the
+  // artifact this surface is showing, scroll the cell into view and pulse it; retry briefly while
+  // the tab/grid settles after an open.
+  const surfaceRef = useRef<HTMLDivElement>(null);
+  const [pendingFocus, setPendingFocus] = useState<StageFocusTarget | null>(null);
+  useEffect(() => onStageFocus((target) => setPendingFocus(target)), []);
+  useEffect(() => {
+    if (!pendingFocus || pendingFocus.artifactId !== artId || !pendingFocus.elementId) return;
+    const elementId = pendingFocus.elementId;
+    const RING = "inset 0 0 0 2px var(--accent-primary), 0 0 0 3px var(--accent-tint)";
+    const clear = () => { const c = surfaceRef.current?.querySelector<HTMLElement>(`[data-cell-key="${CSS.escape(elementId)}"]`); if (c) c.style.boxShadow = ""; };
+    let raf = 0;
+    let frame = 0;
+    let revealedAt = -1;
+    // Re-query + re-assert the ring each frame for ~1.6s. A sheet re-render (frequent during an active
+    // agent run) can recreate the cell node and drop an imperative style, so we keep winning the last
+    // write instead of setting it once. Give up if the cell never appears (wrong tab / artifact).
+    const tick = () => {
+      const cell = surfaceRef.current?.querySelector<HTMLElement>(`[data-cell-key="${CSS.escape(elementId)}"]`);
+      if (cell) {
+        if (revealedAt < 0) { cell.scrollIntoView({ block: "center", inline: "center" }); revealedAt = frame; }
+        cell.style.boxShadow = RING;
+        if (frame - revealedAt > 96) { cell.style.boxShadow = ""; setPendingFocus(null); return; }
+      } else if (revealedAt < 0 && frame > 30) {
+        setPendingFocus(null);
+        return;
+      }
+      frame++;
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => { cancelAnimationFrame(raf); clear(); };
+  }, [pendingFocus, artId, tab]);
   if (arts.length === 0) return <div className="r-panel artifact"><div className="r-art-body" /></div>;
   const activeTab: TabId = artFor(tab) ? tab : fallbackTab;
   const pick = (t: TabId) => { const a = artFor(t); if (a) { onArt(a.id); setTab(t); } };
   const openArtifact = (a: Art) => { onArt(a.id); setTab(tabForArt(a.id)); };
 
   return (
-    <div className="r-panel artifact" style={style} data-testid={surfaceKey === "secondary" ? "artifact-panel-secondary" : "artifact-panel"}>
+    <div className="r-panel artifact" ref={surfaceRef} style={style} data-testid={surfaceKey === "secondary" ? "artifact-panel-secondary" : "artifact-panel"}>
       <div className="r-panel-head">
         <div className="r-tabs" data-testid={surfaceKey === "secondary" ? "artifact-tabs-secondary" : "artifact-tabs"}>
           {TABS.filter((t) => artFor(t.id)).map((t) => (

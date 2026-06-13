@@ -224,14 +224,14 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchStage.ts",
       blocker:
-        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; model execution sandboxing and output diff enforcement are still missing.",
+        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; one live model-edit smoke exists, but official full-bundle sandboxing and output policy proof are still missing.",
     },
     official_runner_adapter: {
       capability: "official_runner_adapter",
       state: "partial",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "A copy-input baseline and agent edit-plan worker emit candidate workbooks from staged agent directories and score them afterward, but no model-solving worker is wired yet.",
+        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; only a one-task live smoke is recorded, so official full-bundle runs, benchmark policy, retries, and process sandbox proof remain incomplete.",
     },
     xlsx_import_export: {
       capability: "xlsx_import_export",
@@ -257,14 +257,14 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchStage.ts",
       blocker:
-        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; chart/visual grading and model execution sandboxing are still missing.",
+        "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; one live model-edit smoke exists, but chart/visual grading and process sandboxing are still missing.",
     },
     official_runner_adapter: {
       capability: "official_runner_adapter",
       state: "partial",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "A copy-input baseline and agent edit-plan worker emit candidate workbooks from staged agent directories and score them afterward, but no model-solving worker or chart lane is wired yet.",
+        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; only a one-task live smoke is recorded, so official full-bundle runs, benchmark policy, retries, process sandbox proof, and chart lane remain incomplete.",
     },
     xlsx_import_export: {
       capability: "xlsx_import_export",

@@ -1,0 +1,276 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T09:09:06.919Z",
+  "summary": {
+    "total": 3,
+    "ready": 0,
+    "blocked": 3,
+    "missingCapabilities": [
+      "chart_visual_grade",
+      "docker_sandbox",
+      "format_diff",
+      "formula_recompute",
+      "mcp_financial_tools",
+      "official_gold_isolation",
+      "official_runner_adapter",
+      "official_task_ingest",
+      "pptx_docx_pdf_outputs",
+      "rubric_weighted_scoring",
+      "xlsx_import_export"
+    ]
+  },
+  "readiness": [
+    {
+      "id": "bankertoolbench",
+      "name": "BankerToolBench",
+      "sourceUrls": [
+        "https://arxiv.org/abs/2604.11304",
+        "https://github.com/Handshake-AI-Research/bankertoolbench",
+        "https://huggingface.co/datasets/handshake-ai-research/bankertoolbench"
+      ],
+      "taskShape": "100 end-to-end junior investment-banking tasks that require data-room navigation, market/SEC/logo tools, and multi-file Excel, PowerPoint, Word, PDF deliverables.",
+      "scoringShape": "Agentic verifier opens deliverables and scores weighted binary rubric criteria; reporting must include model, harness, tool policy, budget, verifier, trajectory, retries, and failures.",
+      "requiredCapabilities": [
+        "official_task_ingest",
+        "official_gold_isolation",
+        "official_runner_adapter",
+        "trajectory_capture",
+        "cost_latency_retries",
+        "xlsx_import_export",
+        "formula_recompute",
+        "pptx_docx_pdf_outputs",
+        "mcp_financial_tools",
+        "docker_sandbox",
+        "rubric_weighted_scoring"
+      ],
+      "capabilities": [
+        {
+          "capability": "official_task_ingest",
+          "state": "missing",
+          "blocker": "No official benchmark task downloader/cache/manifest runner is wired yet."
+        },
+        {
+          "capability": "official_gold_isolation",
+          "state": "partial",
+          "evidence": "docs/TARGET_2026_06.md",
+          "blocker": "Internal eval policy forbids hidden gold leaks, but official benchmark adapters do not yet enforce this boundary."
+        },
+        {
+          "capability": "official_runner_adapter",
+          "state": "missing",
+          "blocker": "No Harbor/BankerToolBench or SpreadsheetBench runner adapter exists in this repo."
+        },
+        {
+          "capability": "trajectory_capture",
+          "state": "implemented",
+          "evidence": "evals/evalStore.ts"
+        },
+        {
+          "capability": "cost_latency_retries",
+          "state": "implemented",
+          "evidence": "evals/financeModelLive.ts"
+        },
+        {
+          "capability": "xlsx_import_export",
+          "state": "partial",
+          "evidence": "src/app/spreadsheetParser.ts",
+          "blocker": "Import exists; official export/reopen diffing and workbook-level answer packaging are not complete."
+        },
+        {
+          "capability": "formula_recompute",
+          "state": "partial",
+          "evidence": "evals/financeModelLive.ts",
+          "blocker": "Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete."
+        },
+        {
+          "capability": "pptx_docx_pdf_outputs",
+          "state": "missing",
+          "blocker": "No official pitch-deck/report deliverable generation and verifier handoff is wired."
+        },
+        {
+          "capability": "mcp_financial_tools",
+          "state": "missing",
+          "blocker": "BTB SEC/market-data/logo MCP tool servers are not adapted into NodeRoom's tool registry."
+        },
+        {
+          "capability": "docker_sandbox",
+          "state": "external",
+          "blocker": "BTB requires Docker/Harbor execution outside the Vite/Convex app runtime."
+        },
+        {
+          "capability": "rubric_weighted_scoring",
+          "state": "missing",
+          "blocker": "No official weighted rubric scorer adapter exists."
+        }
+      ],
+      "ready": false,
+      "blockers": [
+        "official_task_ingest: No official benchmark task downloader/cache/manifest runner is wired yet.",
+        "official_gold_isolation: Internal eval policy forbids hidden gold leaks, but official benchmark adapters do not yet enforce this boundary.",
+        "official_runner_adapter: No Harbor/BankerToolBench or SpreadsheetBench runner adapter exists in this repo.",
+        "xlsx_import_export: Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.",
+        "formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.",
+        "pptx_docx_pdf_outputs: No official pitch-deck/report deliverable generation and verifier handoff is wired.",
+        "mcp_financial_tools: BTB SEC/market-data/logo MCP tool servers are not adapted into NodeRoom's tool registry.",
+        "docker_sandbox: BTB requires Docker/Harbor execution outside the Vite/Convex app runtime.",
+        "rubric_weighted_scoring: No official weighted rubric scorer adapter exists."
+      ]
+    },
+    {
+      "id": "spreadsheetbench-v1",
+      "name": "SpreadsheetBench",
+      "sourceUrls": [
+        "https://arxiv.org/abs/2406.14991",
+        "https://github.com/RUCKBReasoning/SpreadsheetBench",
+        "https://huggingface.co/datasets/KAKA22/SpreadsheetBench"
+      ],
+      "taskShape": "912 real-world spreadsheet manipulation instructions with 2,729 test cases, varied workbook structures, and Excel-forum style user intent.",
+      "scoringShape": "Online-judge style multi-test-case evaluation; the agent must produce robust spreadsheet transformations without seeing hidden test values.",
+      "requiredCapabilities": [
+        "official_task_ingest",
+        "official_gold_isolation",
+        "official_runner_adapter",
+        "trajectory_capture",
+        "cost_latency_retries",
+        "xlsx_import_export",
+        "formula_recompute",
+        "format_diff"
+      ],
+      "capabilities": [
+        {
+          "capability": "official_task_ingest",
+          "state": "missing",
+          "blocker": "No official benchmark task downloader/cache/manifest runner is wired yet."
+        },
+        {
+          "capability": "official_gold_isolation",
+          "state": "partial",
+          "evidence": "docs/TARGET_2026_06.md",
+          "blocker": "Internal eval policy forbids hidden gold leaks, but official benchmark adapters do not yet enforce this boundary."
+        },
+        {
+          "capability": "official_runner_adapter",
+          "state": "missing",
+          "blocker": "No Harbor/BankerToolBench or SpreadsheetBench runner adapter exists in this repo."
+        },
+        {
+          "capability": "trajectory_capture",
+          "state": "implemented",
+          "evidence": "evals/evalStore.ts"
+        },
+        {
+          "capability": "cost_latency_retries",
+          "state": "implemented",
+          "evidence": "evals/financeModelLive.ts"
+        },
+        {
+          "capability": "xlsx_import_export",
+          "state": "partial",
+          "evidence": "src/app/spreadsheetParser.ts",
+          "blocker": "Import exists; official export/reopen diffing and workbook-level answer packaging are not complete."
+        },
+        {
+          "capability": "formula_recompute",
+          "state": "partial",
+          "evidence": "evals/financeModelLive.ts",
+          "blocker": "Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete."
+        },
+        {
+          "capability": "format_diff",
+          "state": "missing",
+          "blocker": "No official cell-format/style diff grader is wired."
+        }
+      ],
+      "ready": false,
+      "blockers": [
+        "official_task_ingest: No official benchmark task downloader/cache/manifest runner is wired yet.",
+        "official_gold_isolation: Internal eval policy forbids hidden gold leaks, but official benchmark adapters do not yet enforce this boundary.",
+        "official_runner_adapter: No Harbor/BankerToolBench or SpreadsheetBench runner adapter exists in this repo.",
+        "xlsx_import_export: Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.",
+        "formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.",
+        "format_diff: No official cell-format/style diff grader is wired."
+      ]
+    },
+    {
+      "id": "spreadsheetbench-v2",
+      "name": "SpreadsheetBench 2",
+      "sourceUrls": [
+        "https://spreadsheetbench.github.io/",
+        "https://huggingface.co/datasets/KAKA22/SpreadsheetBench-v2"
+      ],
+      "taskShape": "321 end-to-end business spreadsheet workflows covering financial modeling, formula debugging, data analysis, formatting, and chart visualization.",
+      "scoringShape": "Workflow-level grading across exact cell values/formulas/formats plus visual chart quality; benchmark-faithful mode must preserve unchanged ground-truth cells and avoid answer lookup.",
+      "requiredCapabilities": [
+        "official_task_ingest",
+        "official_gold_isolation",
+        "official_runner_adapter",
+        "trajectory_capture",
+        "cost_latency_retries",
+        "xlsx_import_export",
+        "formula_recompute",
+        "format_diff",
+        "chart_visual_grade"
+      ],
+      "capabilities": [
+        {
+          "capability": "official_task_ingest",
+          "state": "missing",
+          "blocker": "No official benchmark task downloader/cache/manifest runner is wired yet."
+        },
+        {
+          "capability": "official_gold_isolation",
+          "state": "partial",
+          "evidence": "docs/TARGET_2026_06.md",
+          "blocker": "Internal eval policy forbids hidden gold leaks, but official benchmark adapters do not yet enforce this boundary."
+        },
+        {
+          "capability": "official_runner_adapter",
+          "state": "missing",
+          "blocker": "No Harbor/BankerToolBench or SpreadsheetBench runner adapter exists in this repo."
+        },
+        {
+          "capability": "trajectory_capture",
+          "state": "implemented",
+          "evidence": "evals/evalStore.ts"
+        },
+        {
+          "capability": "cost_latency_retries",
+          "state": "implemented",
+          "evidence": "evals/financeModelLive.ts"
+        },
+        {
+          "capability": "xlsx_import_export",
+          "state": "partial",
+          "evidence": "src/app/spreadsheetParser.ts",
+          "blocker": "Import exists; official export/reopen diffing and workbook-level answer packaging are not complete."
+        },
+        {
+          "capability": "formula_recompute",
+          "state": "partial",
+          "evidence": "evals/financeModelLive.ts",
+          "blocker": "Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete."
+        },
+        {
+          "capability": "format_diff",
+          "state": "missing",
+          "blocker": "No official cell-format/style diff grader is wired."
+        },
+        {
+          "capability": "chart_visual_grade",
+          "state": "missing",
+          "blocker": "No VLM/chart-visual evaluator is wired into benchmark-faithful mode."
+        }
+      ],
+      "ready": false,
+      "blockers": [
+        "official_task_ingest: No official benchmark task downloader/cache/manifest runner is wired yet.",
+        "official_gold_isolation: Internal eval policy forbids hidden gold leaks, but official benchmark adapters do not yet enforce this boundary.",
+        "official_runner_adapter: No Harbor/BankerToolBench or SpreadsheetBench runner adapter exists in this repo.",
+        "xlsx_import_export: Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.",
+        "formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.",
+        "format_diff: No official cell-format/style diff grader is wired.",
+        "chart_visual_grade: No VLM/chart-visual evaluator is wired into benchmark-faithful mode."
+      ]
+    }
+  ]
+}

@@ -128,6 +128,14 @@ const steps: StepSpec[] = [
     timeoutMs: 25 * 60_000,
   },
   {
+    id: "official-benchmark-readiness",
+    label: "Official benchmark readiness",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "benchmark:official:readiness"],
+    timeoutMs: 10 * 60_000,
+  },
+  {
     id: "eval-diff",
     label: "Cross-commit eval regression diff",
     lane: "deterministic",

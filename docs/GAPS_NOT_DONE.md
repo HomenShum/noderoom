@@ -57,6 +57,7 @@ Do not claim a feature is production-complete until it has:
 
 | Gap | Current state | Needed proof | Acceptance gate |
 |---|---|---|---|
+| Official BankerToolBench / SpreadsheetBench readiness | A generated official-readiness report now tracks BankerToolBench, SpreadsheetBench V1, and SpreadsheetBench V2 contracts and is wired into HALO / `agent:improve`. It currently reports 0/3 ready by design. | Implement official task ingest, hidden-gold isolation, runner adapters, workbook export/reopen diffing, formula/format/chart grading, BTB MCP tool adapters, Docker/Harbor execution, and weighted rubric scoring. | `npm run benchmark:official:readiness -- --strict` passes and at least one official adapter records model, harness, tool policy, budget, verifier, trajectory, retries/failures, route, and final deliverables without answer lookup or evaluator mutation. |
 | GTM sales workflows | Local CSV/XLSX corpus has been profiled and converted into eval backlog. | Row-level evals for company classification, enrichment, CRM preservation, source citation, and PII masking. | Fixture evals pass and one live provider smoke completes with trace evidence. |
 | Finance/banker workflows | Finance and timesheet workbook shapes are identified. | Reconciliation evals for formulas, locked cells, source rows, rounding, and sensitive-value redaction. | Agent preserves formulas/layout and only writes bounded evidence-bearing cells. |
 | Multi-file research | Cross-file workflow need is documented. | Eval for using several uploaded artifacts as context without leaking private files into room public traces. | Public/private source boundaries are asserted in tests. |
@@ -69,7 +70,7 @@ Do not claim a feature is production-complete until it has:
 | Job controls | Status chips exist. | Add cancel, manual retry, attempt details, latest resolved model, stop reason, next run time, duration, tokens/cost, and linked agent run. | A host can operate a long-running job without reading logs. |
 | Auto-accept UX | Accept/reject proposal flow exists. | Host opt-in modal for auto-accept/accept-all, scoped to safe proposal classes, with remember-my-preference. | Auto-accept never applies blocked, stale, or policy-failed proposals. |
 | Spreadsheet/agent interaction | Spreadsheet, trace, notes, and chat are wired. | Browser E2E for spreadsheet row selection -> ask agent -> proposed cells -> accept -> trace -> note/wiki reference. | Agent and spreadsheet remain synchronized under concurrent human edits. |
-| June 2026 workroom shell | Binder -> Work Surface -> Copilot -> Signal Tape/Status Strip is implemented in the MVP shell and memory-mode responsive QA. Remaining work: source/proof center split, richer binder click-throughs, live/Convex shell proof, and Gemini UI judge proof. | Add live browser specs, media judge walkthrough, center split source/proof mode, and status drilldown tests. | Browser specs prove binder navigation, center split source/proof mode, right-side Copilot steering, thin bottom status, no overflow, and no private-data leakage in ambient events. |
+| June 2026 workroom shell | Binder -> Work Surface -> Copilot -> Signal Tape/Status Strip is implemented in the MVP shell; center-stage split mode now has memory-mode browser proof. Remaining work: richer binder click-throughs, live/Convex shell proof, Gemini UI judge proof, and status drilldown tests. | Add live browser specs, media judge walkthrough, richer binder source/proof/policy click-throughs, and status drilldown tests. | Browser specs prove binder navigation, center split source/proof mode, right-side Copilot steering, thin bottom status, no overflow, and no private-data leakage in ambient events. |
 | Wall operations | Wall exists. | Create/delete/edit post-it E2E, including multi-user conflict handling. | Two users can create/delete without ghost posts or stale UI. |
 | Resizable containers | Desired by user. | Persist panel widths per user/room and keep accessible keyboard reset. | Users can give more space to spreadsheet or chat without breaking layout. |
 
@@ -122,6 +123,9 @@ deployment is clean.
 - Run `npm run ladder`.
 - Run `npm run build`.
 - Run `npm run media:gemini-judge -- --all` when walkthrough/demo media changes.
+- Run `npm run benchmark:official:readiness`; require
+  `npm run benchmark:official:readiness -- --strict` only when claiming
+  BankerToolBench or SpreadsheetBench readiness.
 - Run a secret scan excluding ignored local files.
 - Verify public repo contents from a clean clone.
 - Run a live Convex smoke before claiming production deployment.

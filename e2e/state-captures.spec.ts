@@ -110,7 +110,7 @@ test("capture — LeftRail states", async ({ page }) => {
   // Hover a NON-selected row (nth 0 = Agent wiki; nth 1 = Q3 variance is the OPEN/selected one).
   await page.locator(".r-file").nth(0).hover();
   await shoot(rail, "leftrail", "file-hover", "dark", 1860, "A non-selected file row (Agent wiki) shows a hover-fill — distinct from both the default rows and the accent-tinted SELECTED row (Q3 variance).");
-  await page.locator(".r-file-static").hover();
+  await page.locator(".r-file-static").filter({ hasText: /NetSuite export/i }).hover();
   await shoot(rail, "leftrail", "static-hover", "dark", 1860, "The inert NetSuite row does NOT highlight on hover — it stays muted. (The 'Agent wiki' row carries a persistent SELECTED background because it is the open artifact — that is selection, not hover.)");
   flushManifest();
 });

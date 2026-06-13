@@ -32,6 +32,7 @@ playwright/.cache/
 .tmp/
 .tmp-qa/
 docs/eval/finance-model-runs/
+docs/eval/halo-runs/.active-run.json
 
 # Walkthrough capture intermediates (regenerable: npm run walkthroughs)
 remotion/public/frames/

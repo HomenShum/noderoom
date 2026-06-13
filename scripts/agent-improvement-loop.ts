@@ -140,6 +140,14 @@ const steps: StepSpec[] = [
     timeoutMs: 120_000,
   },
   {
+    id: "official-benchmark-readiness",
+    label: "Official benchmark readiness",
+    lane: "deterministic",
+    command: "npm",
+    args: ["run", "benchmark:official:readiness"],
+    timeoutMs: 120_000,
+  },
+  {
     id: "eval-diff",
     label: "Eval regression diff",
     lane: "deterministic",
@@ -642,7 +650,6 @@ function renderMarkdown(run: LoopRun, timestampedJson: string): string {
   lines.push("## Next Live Runs");
   lines.push("");
   for (const item of run.handoff.nextLiveRuns) lines.push(`- \`${item}\``);
-  lines.push("");
   return `${lines.join("\n")}\n`;
 }
 

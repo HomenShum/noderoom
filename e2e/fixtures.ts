@@ -5,13 +5,19 @@ import { test as base, expect, type Page } from "@playwright/test";
  * "Enter the Q3 diligence room" button mounts the EngineStoreProvider over the seeded demo room.
  */
 export async function enterDemoRoom(page: Page): Promise<void> {
-  await page.goto("/?mode=memory");
+  await page.goto("/?mode=memory", { waitUntil: "domcontentloaded" });
   // Suppress the first-run guided tour for non-tour specs — its card would overlay the UI under test.
   // (The dedicated tour spec clears this flag to exercise auto-start.)
   await page.evaluate(() => { try { localStorage.setItem("noderoom:tour:v1", "done"); } catch { /* ignore */ } });
-  await page.getByRole("button", { name: /Enter the Q3 diligence room/i }).click();
+  const artifactPanel = page.getByTestId("artifact-panel");
+  const alreadyInsideRoom = await artifactPanel.waitFor({ state: "visible", timeout: 1_000 }).then(() => true, () => false);
+  if (!alreadyInsideRoom) {
+    const enterButton = page.getByRole("button", { name: /Enter the Q3 diligence room/i });
+    await expect(enterButton).toBeVisible({ timeout: 10_000 });
+    await enterButton.click();
+  }
   // The Work Surface is the always-on anchor; Copilot may be closed on compact screens.
-  await expect(page.getByTestId("artifact-panel")).toBeVisible();
+  await expect(artifactPanel).toBeVisible();
 }
 
 /** The public chat lane in Copilot. Scopes selectors so the private agent lane never matches. */

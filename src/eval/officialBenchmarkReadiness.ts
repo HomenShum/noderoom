@@ -1,0 +1,210 @@
+export type OfficialBenchmarkId = "bankertoolbench" | "spreadsheetbench-v1" | "spreadsheetbench-v2";
+
+export type BenchmarkCapability =
+  | "official_task_ingest"
+  | "official_gold_isolation"
+  | "official_runner_adapter"
+  | "trajectory_capture"
+  | "cost_latency_retries"
+  | "xlsx_import_export"
+  | "formula_recompute"
+  | "format_diff"
+  | "chart_visual_grade"
+  | "pptx_docx_pdf_outputs"
+  | "mcp_financial_tools"
+  | "docker_sandbox"
+  | "rubric_weighted_scoring";
+
+export type CapabilityState = "implemented" | "partial" | "missing" | "external";
+
+export type CapabilityReadiness = {
+  capability: BenchmarkCapability;
+  state: CapabilityState;
+  evidence?: string;
+  blocker?: string;
+};
+
+export type OfficialBenchmarkContract = {
+  id: OfficialBenchmarkId;
+  name: string;
+  sourceUrls: string[];
+  taskShape: string;
+  scoringShape: string;
+  requiredCapabilities: BenchmarkCapability[];
+};
+
+export type OfficialBenchmarkReadiness = OfficialBenchmarkContract & {
+  capabilities: CapabilityReadiness[];
+  ready: boolean;
+  blockers: string[];
+};
+
+export const OFFICIAL_BENCHMARK_CONTRACTS: OfficialBenchmarkContract[] = [
+  {
+    id: "bankertoolbench",
+    name: "BankerToolBench",
+    sourceUrls: [
+      "https://arxiv.org/abs/2604.11304",
+      "https://github.com/Handshake-AI-Research/bankertoolbench",
+      "https://huggingface.co/datasets/handshake-ai-research/bankertoolbench",
+    ],
+    taskShape:
+      "100 end-to-end junior investment-banking tasks that require data-room navigation, market/SEC/logo tools, and multi-file Excel, PowerPoint, Word, PDF deliverables.",
+    scoringShape:
+      "Agentic verifier opens deliverables and scores weighted binary rubric criteria; reporting must include model, harness, tool policy, budget, verifier, trajectory, retries, and failures.",
+    requiredCapabilities: [
+      "official_task_ingest",
+      "official_gold_isolation",
+      "official_runner_adapter",
+      "trajectory_capture",
+      "cost_latency_retries",
+      "xlsx_import_export",
+      "formula_recompute",
+      "pptx_docx_pdf_outputs",
+      "mcp_financial_tools",
+      "docker_sandbox",
+      "rubric_weighted_scoring",
+    ],
+  },
+  {
+    id: "spreadsheetbench-v1",
+    name: "SpreadsheetBench",
+    sourceUrls: [
+      "https://arxiv.org/abs/2406.14991",
+      "https://github.com/RUCKBReasoning/SpreadsheetBench",
+      "https://huggingface.co/datasets/KAKA22/SpreadsheetBench",
+    ],
+    taskShape:
+      "912 real-world spreadsheet manipulation instructions with 2,729 test cases, varied workbook structures, and Excel-forum style user intent.",
+    scoringShape:
+      "Online-judge style multi-test-case evaluation; the agent must produce robust spreadsheet transformations without seeing hidden test values.",
+    requiredCapabilities: [
+      "official_task_ingest",
+      "official_gold_isolation",
+      "official_runner_adapter",
+      "trajectory_capture",
+      "cost_latency_retries",
+      "xlsx_import_export",
+      "formula_recompute",
+      "format_diff",
+    ],
+  },
+  {
+    id: "spreadsheetbench-v2",
+    name: "SpreadsheetBench 2",
+    sourceUrls: [
+      "https://spreadsheetbench.github.io/",
+      "https://huggingface.co/datasets/KAKA22/SpreadsheetBench-v2",
+    ],
+    taskShape:
+      "321 end-to-end business spreadsheet workflows covering financial modeling, formula debugging, data analysis, formatting, and chart visualization.",
+    scoringShape:
+      "Workflow-level grading across exact cell values/formulas/formats plus visual chart quality; benchmark-faithful mode must preserve unchanged ground-truth cells and avoid answer lookup.",
+    requiredCapabilities: [
+      "official_task_ingest",
+      "official_gold_isolation",
+      "official_runner_adapter",
+      "trajectory_capture",
+      "cost_latency_retries",
+      "xlsx_import_export",
+      "formula_recompute",
+      "format_diff",
+      "chart_visual_grade",
+    ],
+  },
+];
+
+const CAPABILITY_STATUS: Record<BenchmarkCapability, CapabilityReadiness> = {
+  official_task_ingest: {
+    capability: "official_task_ingest",
+    state: "missing",
+    blocker: "No official benchmark task downloader/cache/manifest runner is wired yet.",
+  },
+  official_gold_isolation: {
+    capability: "official_gold_isolation",
+    state: "partial",
+    evidence: "docs/TARGET_2026_06.md",
+    blocker: "Internal eval policy forbids hidden gold leaks, but official benchmark adapters do not yet enforce this boundary.",
+  },
+  official_runner_adapter: {
+    capability: "official_runner_adapter",
+    state: "missing",
+    blocker: "No Harbor/BankerToolBench or SpreadsheetBench runner adapter exists in this repo.",
+  },
+  trajectory_capture: {
+    capability: "trajectory_capture",
+    state: "implemented",
+    evidence: "evals/evalStore.ts",
+  },
+  cost_latency_retries: {
+    capability: "cost_latency_retries",
+    state: "implemented",
+    evidence: "evals/financeModelLive.ts",
+  },
+  xlsx_import_export: {
+    capability: "xlsx_import_export",
+    state: "partial",
+    evidence: "src/app/spreadsheetParser.ts",
+    blocker: "Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.",
+  },
+  formula_recompute: {
+    capability: "formula_recompute",
+    state: "partial",
+    evidence: "evals/financeModelLive.ts",
+    blocker: "Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.",
+  },
+  format_diff: {
+    capability: "format_diff",
+    state: "missing",
+    blocker: "No official cell-format/style diff grader is wired.",
+  },
+  chart_visual_grade: {
+    capability: "chart_visual_grade",
+    state: "missing",
+    blocker: "No VLM/chart-visual evaluator is wired into benchmark-faithful mode.",
+  },
+  pptx_docx_pdf_outputs: {
+    capability: "pptx_docx_pdf_outputs",
+    state: "missing",
+    blocker: "No official pitch-deck/report deliverable generation and verifier handoff is wired.",
+  },
+  mcp_financial_tools: {
+    capability: "mcp_financial_tools",
+    state: "missing",
+    blocker: "BTB SEC/market-data/logo MCP tool servers are not adapted into NodeRoom's tool registry.",
+  },
+  docker_sandbox: {
+    capability: "docker_sandbox",
+    state: "external",
+    blocker: "BTB requires Docker/Harbor execution outside the Vite/Convex app runtime.",
+  },
+  rubric_weighted_scoring: {
+    capability: "rubric_weighted_scoring",
+    state: "missing",
+    blocker: "No official weighted rubric scorer adapter exists.",
+  },
+};
+
+export function officialBenchmarkReadiness(): OfficialBenchmarkReadiness[] {
+  return OFFICIAL_BENCHMARK_CONTRACTS.map((contract) => {
+    const capabilities = contract.requiredCapabilities.map((capability) => CAPABILITY_STATUS[capability]);
+    const blockers = capabilities
+      .filter((item) => item.state !== "implemented")
+      .map((item) => `${item.capability}: ${item.blocker ?? "not implemented"}`);
+    return {
+      ...contract,
+      capabilities,
+      ready: blockers.length === 0,
+      blockers,
+    };
+  });
+}
+
+export function officialBenchmarkSummary(readiness = officialBenchmarkReadiness()) {
+  return {
+    total: readiness.length,
+    ready: readiness.filter((item) => item.ready).length,
+    blocked: readiness.filter((item) => !item.ready).length,
+    missingCapabilities: [...new Set(readiness.flatMap((item) => item.blockers.map((blocker) => blocker.split(":")[0])))].sort(),
+  };
+}

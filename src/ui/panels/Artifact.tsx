@@ -11,7 +11,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import {
   Table2, FileText, StickyNote, Users, GitMerge, Play, RotateCcw, History, Search, BookOpen,
-  Lock, Unlock, Ban, Pencil, Plus, Check, AlertTriangle, Eye, Circle, ChevronRight, Download, Trash2, Undo2, X, type LucideIcon,
+  Lock, Unlock, Ban, Pencil, Plus, Check, AlertTriangle, Eye, Circle, ChevronRight, Download, Trash2, Undo2, X, Columns2, type LucideIcon,
 } from "lucide-react";
 import { useStore, type RoomStore, type EditFeedback } from "../../app/store";
 import { formatExcelNumber } from "../../app/numberFormat";
@@ -37,10 +37,12 @@ const WORKBOOK_VIEW_STYLES: { id: WorkbookViewStyle; label: string; hint: string
 ];
 const WORKBOOK_VIEW_STORAGE_KEY = "noderoom:workbook-view-style";
 
-export function Artifact({ roomId, me, artId, onArt, collab, style }: {
+function ArtifactSurface({ roomId, me, artId, onArt, collab, style, surfaceKey = "primary", headerExtra }: {
   roomId: string; me: Actor; artId: string; onArt: (id: string) => void;
   collab?: { running: boolean; done: boolean; onRun: () => void };
   style?: CSSProperties;
+  surfaceKey?: "primary" | "secondary";
+  headerExtra?: ReactNode;
 }) {
   const store = useStore();
   const arts = store.listArtifacts(roomId);
@@ -83,9 +85,9 @@ export function Artifact({ roomId, me, artId, onArt, collab, style }: {
   const openArtifact = (a: Art) => { onArt(a.id); setTab(tabForArt(a.id)); };
 
   return (
-    <div className="r-panel artifact" style={style} data-testid="artifact-panel">
+    <div className="r-panel artifact" style={style} data-testid={surfaceKey === "secondary" ? "artifact-panel-secondary" : "artifact-panel"}>
       <div className="r-panel-head">
-        <div className="r-tabs" data-testid="artifact-tabs">
+        <div className="r-tabs" data-testid={surfaceKey === "secondary" ? "artifact-tabs-secondary" : "artifact-tabs"}>
           {TABS.filter((t) => artFor(t.id)).map((t) => (
             <button key={t.id} className="r-tab" data-active={String(activeTab === t.id)} onClick={() => pick(t.id)}>
               <t.Icon size={13} /> {t.label}
@@ -93,6 +95,7 @@ export function Artifact({ roomId, me, artId, onArt, collab, style }: {
           ))}
         </div>
         <span className="grow" />
+        {headerExtra}
         <span className="r-tag public"><Users size={11} /> Shared</span>
       </div>
 
@@ -107,6 +110,89 @@ export function Artifact({ roomId, me, artId, onArt, collab, style }: {
       {activeTab === "wall" && wall && <Wall roomId={roomId} me={me} art={wall} />}
 
       <TraceStrip roomId={roomId} me={me} />
+    </div>
+  );
+}
+
+/**
+ * Artifact — the center Work Surface. Wraps one or two ArtifactSurface panes so the
+ * stage can show a primary surface (e.g. the Q3 model) beside a secondary reference
+ * surface (a proof, source doc, or the wiki) WITHOUT leaving the center stage — the
+ * "split mode" gap from docs/synthesis/specs/A_UI_SHELL.md (TARGET_2026_06 L197).
+ * RoomShell's prop contract is unchanged; split state is local and defaults off.
+ */
+export function Artifact(props: {
+  roomId: string; me: Actor; artId: string; onArt: (id: string) => void;
+  collab?: { running: boolean; done: boolean; onRun: () => void };
+  style?: CSSProperties;
+}) {
+  const { roomId, me, artId, onArt, collab, style } = props;
+  const store = useStore();
+  const arts = store.listArtifacts(roomId);
+  const [splitId, setSplitId] = useState<string | null>(null);
+  const canSplit = arts.length >= 2;
+  // Keep the split target valid: collapse if it vanished or folded back onto the primary.
+  const splitting = canSplit && !!splitId && splitId !== artId && arts.some((a) => a.id === splitId);
+  const openSplit = () => {
+    const candidate =
+      arts.find((a) => a.id !== artId && a.title === WIKI_TITLE) ??
+      arts.find((a) => a.id !== artId);
+    if (candidate) setSplitId(candidate.id);
+  };
+  const splitToggle = (
+    <button
+      className="r-iconbtn"
+      type="button"
+      data-testid="artifact-split-toggle"
+      aria-pressed={splitting}
+      disabled={!canSplit}
+      title={splitting ? "Close split view" : "Split the work surface"}
+      aria-label={splitting ? "Close split view" : "Split the work surface"}
+      style={canSplit ? undefined : { opacity: 0.4, cursor: "not-allowed" }}
+      onClick={() => (splitting ? setSplitId(null) : openSplit())}
+    >
+      <Columns2 size={14} />
+    </button>
+  );
+  const closeSplit = (
+    <button
+      className="r-iconbtn"
+      type="button"
+      data-testid="artifact-split-close"
+      title="Close split view"
+      aria-label="Close split view"
+      onClick={() => setSplitId(null)}
+    >
+      <X size={14} />
+    </button>
+  );
+  return (
+    <div
+      data-testid="work-surface"
+      data-split={String(splitting)}
+      style={{ ...style, display: "flex", minWidth: 0, minHeight: 0, gap: splitting ? 10 : 0 }}
+    >
+      <ArtifactSurface
+        roomId={roomId}
+        me={me}
+        artId={artId}
+        onArt={onArt}
+        collab={collab}
+        surfaceKey="primary"
+        headerExtra={splitToggle}
+        style={{ flex: 1, minWidth: 0 }}
+      />
+      {splitting && splitId && (
+        <ArtifactSurface
+          roomId={roomId}
+          me={me}
+          artId={splitId}
+          onArt={(id) => setSplitId(id)}
+          surfaceKey="secondary"
+          headerExtra={closeSplit}
+          style={{ flex: 1, minWidth: 0 }}
+        />
+      )}
     </div>
   );
 }

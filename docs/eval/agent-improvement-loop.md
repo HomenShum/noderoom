@@ -1,32 +1,33 @@
 # Agent Improvement Loop
 
-Generated: 2026-06-11T20:06:52.722Z
+Generated: 2026-06-13T09:09:10.604Z
 
 Source pattern: https://developers.openai.com/cookbook/examples/agents_sdk/agent_improvement_loop
 
 NodeRoom adapts the cookbook loop as: traces -> human/model feedback -> reusable evals -> gate -> Codex handoff -> next harness change.
 
-Latest run artifact: `docs/eval/agent-improvement-loop/20260611T195744Z.json`
+Latest run artifact: `docs/eval/agent-improvement-loop/20260613T090856Z.json`
 
-Summary: 13 pass, 0 fail, 4 skip.
+Summary: 10 pass, 0 fail, 8 skip.
 
 ## Step Results
 
 | Step | Lane | Status | Duration | Command |
 |---|---|---:|---:|---|
-| Professional workflow catalog shape | deterministic | PASS | 2.2s | `npm run eval:professional` |
-| Professional catalog proof gate | deterministic | PASS | 0.7s | `npm run eval:professional:catalog-proofs` |
-| Professional proof ledger | deterministic | PASS | 0.9s | `npm run eval:professional:proofs` |
-| GTM/finance workflow evals | deterministic | PASS | 2.7s | `npx vitest run tests/workflowEvals.test.ts` |
-| Collaboration ladder L1-L6 | deterministic | PASS | 1.8s | `npm run ladder -- --record` |
+| Professional workflow catalog shape | deterministic | PASS | 2.0s | `npm run eval:professional` |
+| Professional catalog proof gate | deterministic | PASS | 0.8s | `npm run eval:professional:catalog-proofs` |
+| Professional proof ledger | deterministic | PASS | 1.2s | `npm run eval:professional:proofs` |
+| GTM/finance workflow evals | deterministic | PASS | 2.8s | `npx vitest run tests/workflowEvals.test.ts` |
+| Collaboration ladder L1-L6 | deterministic | PASS | 1.7s | `npm run ladder -- --record` |
 | MM-banking credit decision evals | deterministic | PASS | 1.5s | `npm run eval:credit -- --record` |
-| Eval regression diff | deterministic | PASS | 0.8s | `npm run eval:diff` |
+| Official benchmark readiness | deterministic | PASS | 0.9s | `npm run benchmark:official:readiness` |
+| Eval regression diff | deterministic | PASS | 0.9s | `npm run eval:diff` |
 | Convex query/action/mutation boundaries | deterministic | PASS | 1.7s | `npm run convex:boundaries` |
 | Architecture budget review | deterministic | PASS | 1.0s | `npm run architecture:budget` |
-| OpenRouter free-auto discovery | live | PASS | 1.8s | `npm run openrouter:free -- --limit=5` |
-| Professional live-provider catalog champion | live | PASS | 472.1s | `npm run eval:professional:live-catalog -- --real deepseek/deepseek-v4-flash --require-full --retry-failed 2 --json-out docs/eval/professional-live-catalog.json` |
-| Chat-first GTM live runtime | live | PASS | 47.1s | `npm run eval:chat-intake:live -- --json-out docs/eval/chat-intake-live.json --timeout-ms 240000` |
-| Provider parser live smoke | live | PASS | 14.1s | `npm run provider-parser:smoke` |
+| OpenRouter free-auto discovery | live | SKIP | 0.0s | `npm run openrouter:free -- --limit=5` |
+| Professional live-provider catalog champion | live | SKIP | 0.0s | `npm run eval:professional:live-catalog -- --real deepseek/deepseek-v4-flash --require-full --retry-failed 2 --json-out docs/eval/professional-live-catalog.json` |
+| Chat-first GTM live runtime | live | SKIP | 0.0s | `npm run eval:chat-intake:live -- --json-out docs/eval/chat-intake-live.json --timeout-ms 240000` |
+| Provider parser live smoke | live | SKIP | 0.0s | `npm run provider-parser:smoke` |
 | Convex /free job smoke | full-live | SKIP | 0.0s | `npm run free-job:smoke` |
 | V2 multi-model benchmark | full-live | SKIP | 0.0s | `npm run benchmark -- --model-timeout-ms=180000 --model-reserve-ms=15000 --row-hard-timeout-ms=210000` |
 | Free-auto router ladder | full-live | SKIP | 0.0s | `npm run ladder:free` |
@@ -82,7 +83,7 @@ Root-cause labels used for HALO diagnosis:
 | Eval candidate | Trust | Gate | Architecture fit | Handoff decision |
 |---|---|---|---|---|
 | candidate-gtm-pitchbook-match | candidate | advisory | existing_capability | more_research: missing research packet evidence; candidate evals are advisory only |
-| research-validated-finance-reconcile | research_validated | advisory | small_gap | implementation: demoted: architecture budget is red (forbidden surfaces dirty / review required) â€” human approval before any implementation handoff |
+| research-validated-finance-reconcile | research_validated | advisory | small_gap | implementation: demoted: architecture budget is red (forbidden surfaces dirty / review required) — human approval before any implementation handoff |
 | contested-eval-harness-expansion | contested | advisory | existing_capability | eval_fixture: contested claims must stay advisory until resolved or explicitly modeled |
 
 ## Codex Handoff
@@ -106,7 +107,10 @@ Forbidden without human approval:
 ### Recommendations
 
 - Resolve architecture budget review items or rerun with explicit handoff evidence before implementation.
-- Run skipped gemini-ui-review once prerequisites are present: pass --ui-media=<screenshot-or-video> and set GOOGLE_GENERATIVE_AI_API_KEY.
+- Run skipped free-route-discovery once prerequisites are present: pass --live and set OPENROUTER_API_KEY to discover current free-auto candidates.
+- Run skipped professional-live-catalog once prerequisites are present: pass --live and set OPENROUTER_API_KEY to prove the professional catalog with the cheap champion route.
+- Run skipped chat-intake-live-runtime once prerequisites are present: pass --live and set OPENROUTER_API_KEY to run the chat-intake room runtime against a real route.
+- Run skipped provider-parser-smoke once prerequisites are present: pass --live; script will skip providers without keys.
 - Persist each new live trace into a durable eval fixture before promoting README charts.
 - Keep provider benchmarks behind row-level hard timeouts so one stuck free model cannot block the loop.
 - Add browser-visible multi-user checks for public/private chat, artifact references, proposals, and trace accept-all.

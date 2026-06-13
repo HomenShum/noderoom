@@ -762,7 +762,7 @@ Professional proof state:
 
 This section is generated from `docs/qa/production-matrix.json`. When the system grows, append or update a matrix row, then run `npm run qa:matrix`; CI can run `npm run qa:matrix:check` to catch stale docs.
 
-<sub>22 feature guarantees tracked | 5 green | 16 yellow | 1 red | 1 live model route(s) cleared L1-L4 in the latest recorded ladder.</sub>
+<sub>23 feature guarantees tracked | 5 green | 16 yellow | 2 red | 1 live model route(s) cleared L1-L4 in the latest recorded ladder.</sub>
 
 ![QA coverage graph](docs/eval/qa-coverage.svg)
 
@@ -788,6 +788,7 @@ This section is generated from `docs/qa/production-matrix.json`. When the system
 | Public gold demo | Yellow | Manifest check, public fixture downloader/cache hash, LiteParse/provider extraction, formula/citation/page or bbox validators, CellPayload evidence, and trace read/write-set validators all pass. |
 | Finance model gold pack | Yellow | Current solve batch stays fresh; guide zero-write, collaborate human-agent injection, withheld-data reconstruction, XLSX export/reopen, formula AST/value tie-out, citation coverage, and trace completeness lanes are added. |
 | NodeRoomBench + eval trust | Yellow | Eval store records required metadata; eval:diff catches regressions, removed cases, model swaps, and check redefinitions; external benchmark adapters run benchmark-faithful mode without hidden gold access, evaluator edits, public answer lookup, or hardcoded cases. |
+| Official benchmark readiness | Red | Readiness report exists; strict mode passes only when BankerToolBench and SpreadsheetBench adapters/runs are implemented without hidden-gold access, answer lookup, benchmark hardcoding, or evaluator mutation. |
 | Unified NodeAgent jobs | Yellow | Interactive /ask and /free both create or reuse agentJobs, artifact writes emit receipts, job details are browser-visible, notebook graph mutations enqueue embeddings, and live browser/backend smoke proves linked runs/steps. |
 | Agent improvement loop | Yellow | Deterministic loop passes, live provider/Convex/UI media lanes run when keys are present, and failures generate a handoff before chart promotion. |
 | Demo/media evidence quality | Yellow | Gemini 3.5 Flash batch-judges every GIF/MP4 after capture/render refresh; P0 defects block publishing and P1 defects stay visible until fixed. |

@@ -25,6 +25,7 @@
     "typecheck": "tsc --noEmit",
     "convex:dev": "convex dev",
     "benchmark": "tsx scripts/benchmark/run.ts",
+    "benchmark:official:readiness": "tsx scripts/official-benchmark-readiness.ts",
     "benchmark:free": "tsx scripts/benchmark/run.ts openrouter/free-auto --free-auto-top=5 --no-merge --model-timeout-ms=180000 --model-reserve-ms=15000 --row-hard-timeout-ms=210000",
     "benchmark:charts": "tsx scripts/benchmark/charts.ts",
     "eval:model-matrix": "tsx scripts/model-eval-matrix.ts",

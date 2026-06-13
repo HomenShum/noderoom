@@ -1,12 +1,12 @@
 # Agent Improvement Loop
 
-Generated: 2026-06-13T10:28:56.324Z
+Generated: 2026-06-13T10:37:38.701Z
 
 Source pattern: https://developers.openai.com/cookbook/examples/agents_sdk/agent_improvement_loop
 
 NodeRoom adapts the cookbook loop as: traces -> human/model feedback -> reusable evals -> gate -> Codex handoff -> next harness change.
 
-Latest run artifact: `docs/eval/agent-improvement-loop/20260613T102827Z.json`
+Latest run artifact: `docs/eval/agent-improvement-loop/20260613T103714Z.json`
 
 Summary: 16 pass, 0 fail, 8 skip.
 
@@ -14,19 +14,19 @@ Summary: 16 pass, 0 fail, 8 skip.
 
 | Step | Lane | Status | Duration | Command |
 |---|---|---:|---:|---|
-| Professional workflow catalog shape | deterministic | PASS | 3.3s | `npm run eval:professional` |
-| Professional catalog proof gate | deterministic | PASS | 1.3s | `npm run eval:professional:catalog-proofs` |
-| Professional proof ledger | deterministic | PASS | 1.1s | `npm run eval:professional:proofs` |
-| GTM/finance workflow evals | deterministic | PASS | 2.5s | `npx vitest run tests/workflowEvals.test.ts` |
-| Collaboration ladder L1-L6 | deterministic | PASS | 1.2s | `npm run ladder -- --record` |
-| MM-banking credit decision evals | deterministic | PASS | 1.0s | `npm run eval:credit -- --record` |
-| Official benchmark readiness | deterministic | PASS | 0.8s | `npm run benchmark:official:readiness` |
-| BankerToolBench official ingest fixture | deterministic | PASS | 2.2s | `npx vitest run tests/bankerToolBenchAdapter.test.ts` |
-| BankerToolBench sandbox stage fixture | deterministic | PASS | 2.3s | `npx vitest run tests/bankerToolBenchStage.test.ts` |
-| SpreadsheetBench official ingest fixture | deterministic | PASS | 2.2s | `npx vitest run tests/spreadsheetBenchAdapter.test.ts` |
-| SpreadsheetBench sandbox stage fixture | deterministic | PASS | 2.2s | `npx vitest run tests/spreadsheetBenchStage.test.ts` |
-| SpreadsheetBench workbook score fixture | deterministic | PASS | 2.4s | `npx vitest run tests/spreadsheetBenchScorer.test.ts` |
-| SpreadsheetBench staged runner fixture | deterministic | PASS | 2.9s | `npx vitest run tests/spreadsheetBenchRunner.test.ts` |
+| Professional workflow catalog shape | deterministic | PASS | 1.6s | `npm run eval:professional` |
+| Professional catalog proof gate | deterministic | PASS | 0.6s | `npm run eval:professional:catalog-proofs` |
+| Professional proof ledger | deterministic | PASS | 0.8s | `npm run eval:professional:proofs` |
+| GTM/finance workflow evals | deterministic | PASS | 2.2s | `npx vitest run tests/workflowEvals.test.ts` |
+| Collaboration ladder L1-L6 | deterministic | PASS | 1.1s | `npm run ladder -- --record` |
+| MM-banking credit decision evals | deterministic | PASS | 0.9s | `npm run eval:credit -- --record` |
+| Official benchmark readiness | deterministic | PASS | 0.7s | `npm run benchmark:official:readiness` |
+| BankerToolBench official ingest fixture | deterministic | PASS | 1.9s | `npx vitest run tests/bankerToolBenchAdapter.test.ts` |
+| BankerToolBench sandbox stage fixture | deterministic | PASS | 1.9s | `npx vitest run tests/bankerToolBenchStage.test.ts` |
+| SpreadsheetBench official ingest fixture | deterministic | PASS | 1.8s | `npx vitest run tests/spreadsheetBenchAdapter.test.ts` |
+| SpreadsheetBench sandbox stage fixture | deterministic | PASS | 1.8s | `npx vitest run tests/spreadsheetBenchStage.test.ts` |
+| SpreadsheetBench workbook score fixture | deterministic | PASS | 2.7s | `npx vitest run tests/spreadsheetBenchScorer.test.ts` |
+| SpreadsheetBench staged runner fixture | deterministic | PASS | 3.2s | `npx vitest run tests/spreadsheetBenchRunner.test.ts` |
 | Eval regression diff | deterministic | PASS | 0.8s | `npm run eval:diff` |
 | Convex query/action/mutation boundaries | deterministic | PASS | 1.4s | `npm run convex:boundaries` |
 | Architecture budget review | deterministic | PASS | 0.8s | `npm run architecture:budget` |

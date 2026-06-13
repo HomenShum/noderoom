@@ -1028,8 +1028,13 @@ ingest, sandbox-staging, candidate-output, edit/export/reopen, model-planning, a
 The official V1 smoke (`docs/eval/spreadsheetbench-v1-model-edit-plan-live-smoke.json`) deliberately
 shows the next harder truth: the model chose a missing sheet name on a real staged task, and the
 harness now counts that as a failed task with model call, tokens, cost, trajectory, and error instead
-of dropping it into a warning. These artifacts are not official benchmark scores until run across
-official bundles under the benchmark policy.
+of dropping it into a warning. The N=5 live smoke
+(`docs/eval/spreadsheetbench-v1-model-edit-plan-n5-live-smoke.json`) repeats that official task five
+times and records `taskCount: 5`, `caseCount: 1`, `passRate: 0`, p95 latency 4.462s,
+`providerCostUsd: 0.0078935`, three invalid-sheet candidate-generation failures, and two scored
+partial candidates. That is the agent-path drift signal: same task and model, different paths, all
+captured in the benchmark report instead of summarized away. These artifacts are not official
+benchmark scores until run across official bundles under the benchmark policy.
 
 BankerToolBench now has the same first boundary in place: `npm run
 benchmark:bankertoolbench:ingest` scans an already-downloaded BTB bundle (`tasks.jsonl`,

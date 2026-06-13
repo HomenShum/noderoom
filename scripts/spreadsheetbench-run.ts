@@ -11,6 +11,7 @@ const mode = (optionValue("--mode") ?? "copy-input-baseline") as SpreadsheetBenc
 const modelId = optionValue("--model");
 const modelTimeoutMs = numberOption("--model-timeout-ms") ?? 120_000;
 const limit = numberOption("--limit");
+const repeats = numberOption("--repeats") ?? 1;
 const maxMismatches = numberOption("--max-mismatches") ?? 20;
 const clean = args.includes("--clean");
 const compareStyles = args.includes("--compare-styles");
@@ -20,7 +21,7 @@ const allowedModes: SpreadsheetBenchRunnerMode[] = ["copy-input-baseline", "appl
 if (!stageRoot || !outputRoot || !allowedModes.includes(mode)) {
   console.error([
     "Usage:",
-    "  npm run benchmark:spreadsheetbench:run -- --stage-root <staged-dir> --output-root <candidate-output-dir> [--mode copy-input-baseline|apply-agent-patch|model-edit-plan] [--model <route>] [--limit 3] [--clean] [--json-out <path>]",
+    "  npm run benchmark:spreadsheetbench:run -- --stage-root <staged-dir> --output-root <candidate-output-dir> [--mode copy-input-baseline|apply-agent-patch|model-edit-plan] [--model <route>] [--limit 3] [--repeats 5] [--clean] [--json-out <path>]",
     "",
     "copy-input-baseline proves runner/export/scoring plumbing.",
     "apply-agent-patch reads agent/edit-plan.json, edits the workbook, emits a candidate, then opens evaluator metadata.",
@@ -45,6 +46,7 @@ const report = await runStagedSpreadsheetBench({
   modelName: modelId,
   modelTimeoutMs,
   limit,
+  repeats,
   clean,
   compareStyles,
   maxMismatches,

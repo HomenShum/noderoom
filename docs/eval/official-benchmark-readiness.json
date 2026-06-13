@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedAt": "2026-06-13T10:28:39.026Z",
+  "generatedAt": "2026-06-13T10:37:22.349Z",
   "summary": {
     "total": 3,
     "ready": 0,
@@ -145,13 +145,13 @@
           "capability": "official_gold_isolation",
           "state": "partial",
           "evidence": "src/eval/spreadsheetBenchStage.ts",
-          "blocker": "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; one passing fixture smoke and one official V1 failed-path model smoke exist, but official full-bundle sandboxing and output policy proof are still missing."
+          "blocker": "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; one passing fixture smoke and one official V1 N=5 failed/partial model smoke exist, but official full-bundle sandboxing and output policy proof are still missing."
         },
         {
           "capability": "official_runner_adapter",
           "state": "partial",
           "evidence": "src/eval/spreadsheetBenchRunner.ts",
-          "blocker": "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; one official V1 failed-path smoke now records model usage/cost/error, but full-bundle runs, benchmark policy, retries, and process sandbox proof remain incomplete."
+          "blocker": "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; an official V1 N=5 smoke now records pass rate, p95 latency, model usage/cost, scored partial candidates, and failure taxonomy, but larger full-bundle runs, benchmark retry policy, process sandbox proof, and route selection remain incomplete."
         },
         {
           "capability": "trajectory_capture",
@@ -183,8 +183,8 @@
       ],
       "ready": false,
       "blockers": [
-        "official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; one passing fixture smoke and one official V1 failed-path model smoke exist, but official full-bundle sandboxing and output policy proof are still missing.",
-        "official_runner_adapter: A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; one official V1 failed-path smoke now records model usage/cost/error, but full-bundle runs, benchmark policy, retries, and process sandbox proof remain incomplete.",
+        "official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; one passing fixture smoke and one official V1 N=5 failed/partial model smoke exist, but official full-bundle sandboxing and output policy proof are still missing.",
+        "official_runner_adapter: A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; an official V1 N=5 smoke now records pass rate, p95 latency, model usage/cost, scored partial candidates, and failure taxonomy, but larger full-bundle runs, benchmark retry policy, process sandbox proof, and route selection remain incomplete.",
         "formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.",
         "format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy and full style coverage are not complete."
       ]
@@ -219,13 +219,13 @@
           "capability": "official_gold_isolation",
           "state": "partial",
           "evidence": "src/eval/spreadsheetBenchStage.ts",
-          "blocker": "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; model-edit smoke evidence exists for V1, but chart/visual grading and process sandboxing are still missing."
+          "blocker": "SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; V1 N=5 model-edit smoke evidence exists, but V2 chart/visual grading, V2 official model runs, and process sandboxing are still missing."
         },
         {
           "capability": "official_runner_adapter",
           "state": "partial",
           "evidence": "src/eval/spreadsheetBenchRunner.ts",
-          "blocker": "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; V1 model smoke evidence exists, but V2 official runs, benchmark policy, retries, process sandbox proof, and chart lane remain incomplete."
+          "blocker": "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; V1 N=5 model smoke evidence exists, but V2 official runs, benchmark retry policy, process sandbox proof, route selection, and chart lane remain incomplete."
         },
         {
           "capability": "trajectory_capture",
@@ -262,8 +262,8 @@
       ],
       "ready": false,
       "blockers": [
-        "official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; model-edit smoke evidence exists for V1, but chart/visual grading and process sandboxing are still missing.",
-        "official_runner_adapter: A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; V1 model smoke evidence exists, but V2 official runs, benchmark policy, retries, process sandbox proof, and chart lane remain incomplete.",
+        "official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; V1 N=5 model-edit smoke evidence exists, but V2 chart/visual grading, V2 official model runs, and process sandboxing are still missing.",
+        "official_runner_adapter: A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from staged agent directories and score them afterward; V1 N=5 model smoke evidence exists, but V2 official runs, benchmark retry policy, process sandbox proof, route selection, and chart lane remain incomplete.",
         "formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.",
         "format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy, chart rendering, and visual grading are not complete.",
         "chart_visual_grade: No VLM/chart-visual evaluator is wired into benchmark-faithful mode."

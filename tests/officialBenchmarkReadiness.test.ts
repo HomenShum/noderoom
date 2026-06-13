@@ -95,6 +95,7 @@ describe("official benchmark readiness", () => {
         evidence: "src/eval/spreadsheetBenchRunner.ts",
       });
       expect(runner?.blocker).toContain("model-edit-plan");
+      expect(runner?.blocker).toContain("N=5");
       expect(xlsx).toMatchObject({
         state: "implemented",
         evidence: "src/eval/spreadsheetBenchRunner.ts",

@@ -15,6 +15,7 @@ export type SpreadsheetBenchRunnerOptions = {
   model?: AgentModel;
   modelName?: string;
   modelTimeoutMs?: number;
+  repeats?: number;
   limit?: number;
   clean?: boolean;
   compareStyles?: boolean;
@@ -27,6 +28,7 @@ export type SpreadsheetBenchRunnerTaskResult = {
   track: SpreadsheetBenchTrack;
   category?: string;
   mode: SpreadsheetBenchRunnerMode;
+  attemptIndex: number;
   taskDir: string;
   agentManifest: string;
   evaluatorManifest: string;
@@ -70,6 +72,18 @@ export type SpreadsheetBenchRunnerReport = {
   taskCount: number;
   passCount: number;
   averageOverall: number;
+  caseCount: number;
+  repeatCount: number;
+  attemptCount: number;
+  passRate: number;
+  stats: {
+    latencyMs: {
+      p50: number;
+      p95: number;
+      max: number;
+    };
+    failureCounts: Record<string, number>;
+  };
   harness: {
     toolPolicy: "agent_dir_only_until_candidate";
     evaluatorAccess: "after_candidate_emit_only";
@@ -133,21 +147,25 @@ export async function runStagedSpreadsheetBench(options: SpreadsheetBenchRunnerO
   mkdirSync(outputRoot, { recursive: true });
 
   const tasks = findStagedTasks(stageRoot).slice(0, options.limit ?? Number.POSITIVE_INFINITY);
+  const repeatCount = Math.max(1, Math.trunc(options.repeats ?? 1));
   const warnings: string[] = [];
   const results: SpreadsheetBenchRunnerTaskResult[] = [];
-  for (const task of tasks) {
-    try {
-      const result = await runTask(stageRoot, outputRoot, task, options);
-      if (result.error) warnings.push(`${result.taskDir}: ${result.error.message}`);
-      results.push(result);
-    } catch (error) {
-      warnings.push(`${rel(stageRoot, task.taskDir)}: ${error instanceof Error ? error.message : String(error)}`);
+  for (let repeat = 1; repeat <= repeatCount; repeat++) {
+    for (const task of tasks) {
+      try {
+        const result = await runTask(stageRoot, outputRoot, task, options, { attemptIndex: repeat, repeatCount });
+        if (result.error) warnings.push(`${result.taskDir}#${repeat}: ${result.error.message}`);
+        results.push(result);
+      } catch (error) {
+        warnings.push(`${rel(stageRoot, task.taskDir)}#${repeat}: ${error instanceof Error ? error.message : String(error)}`);
+      }
     }
   }
   const averageOverall = results.length
     ? Number((results.reduce((sum, result) => sum + (result.score?.scores.overall ?? 0), 0) / results.length).toFixed(6))
     : 0;
   const usage = aggregateUsage(results);
+  const stats = aggregateStats(results);
   return {
     schema: 1,
     generatedAt: options.generatedAt,
@@ -157,6 +175,11 @@ export async function runStagedSpreadsheetBench(options: SpreadsheetBenchRunnerO
     taskCount: results.length,
     passCount: results.filter((result) => result.score?.pass).length,
     averageOverall,
+    caseCount: tasks.length,
+    repeatCount,
+    attemptCount: results.length,
+    passRate: results.length ? Number((results.filter((result) => result.score?.pass).length / results.length).toFixed(6)) : 0,
+    stats,
     harness: {
       toolPolicy: "agent_dir_only_until_candidate",
       evaluatorAccess: "after_candidate_emit_only",
@@ -190,13 +213,18 @@ async function runTask(
   outputRoot: string,
   task: StagedTaskPaths,
   options: SpreadsheetBenchRunnerOptions,
+  attempt: { attemptIndex: number; repeatCount: number },
 ): Promise<SpreadsheetBenchRunnerTaskResult> {
   const started = Date.now();
   const trajectory: SpreadsheetBenchRunnerTaskResult["trajectory"] = [];
   const agent = readJson<AgentManifest>(task.agentManifestPath);
   trajectory.push({ step: "read_agent_manifest", detail: rel(stageRoot, task.agentManifestPath) });
   const generationStarted = Date.now();
-  const taskOutDir = join(outputRoot, rel(join(stageRoot, "tasks"), task.taskDir));
+  const taskOutDir = join(
+    outputRoot,
+    rel(join(stageRoot, "tasks"), task.taskDir),
+    attempt.repeatCount > 1 ? `attempt-${String(attempt.attemptIndex).padStart(2, "0")}` : "",
+  );
   const candidateWorkbook = emitCandidateWorkbook({
     stageRoot,
     taskDir: task.taskDir,
@@ -218,6 +246,7 @@ async function runTask(
       task,
       agent,
       mode: options.mode,
+      attemptIndex: attempt.attemptIndex,
       phase: "candidate_generation",
       message: error instanceof Error ? error.message : String(error),
       model: modelFailure?.model,
@@ -253,6 +282,7 @@ async function runTask(
       task,
       agent,
       mode: options.mode,
+      attemptIndex: attempt.attemptIndex,
       phase: "scoring",
       message: error instanceof Error ? error.message : String(error),
       candidateWorkbook: rel(outputRoot, resolvedCandidateWorkbook),
@@ -272,6 +302,7 @@ async function runTask(
     track: agent.track,
     category: agent.category,
     mode: options.mode,
+    attemptIndex: attempt.attemptIndex,
     taskDir: rel(stageRoot, task.taskDir),
     agentManifest: rel(stageRoot, task.agentManifestPath),
     evaluatorManifest: rel(stageRoot, task.evaluatorManifestPath),
@@ -293,6 +324,7 @@ function failedTaskResult(args: {
   task: StagedTaskPaths;
   agent: AgentManifest;
   mode: SpreadsheetBenchRunnerMode;
+  attemptIndex: number;
   phase: "candidate_generation" | "scoring";
   message: string;
   candidateWorkbook?: string;
@@ -308,6 +340,7 @@ function failedTaskResult(args: {
     track: args.agent.track,
     category: args.agent.category,
     mode: args.mode,
+    attemptIndex: args.attemptIndex,
     taskDir: rel(args.stageRoot, args.task.taskDir),
     agentManifest: rel(args.stageRoot, args.task.agentManifestPath),
     evaluatorManifest: rel(args.stageRoot, args.task.evaluatorManifestPath),
@@ -612,6 +645,30 @@ function aggregateUsage(results: SpreadsheetBenchRunnerTaskResult[]) {
   const outputTokens = results.reduce((sum, result) => sum + (result.model?.usage.outputTokens ?? 0), 0);
   const costUsd = Number(results.reduce((sum, result) => sum + (result.model?.costUsd ?? 0), 0).toFixed(8));
   return { calls, inputTokens, outputTokens, costUsd };
+}
+
+function aggregateStats(results: SpreadsheetBenchRunnerTaskResult[]): SpreadsheetBenchRunnerReport["stats"] {
+  const latencies = results.map((result) => result.timingsMs.total).sort((a, b) => a - b);
+  const failureCounts: Record<string, number> = {};
+  for (const result of results) {
+    if (!result.error) continue;
+    const key = `${result.error.phase}:${result.error.message}`;
+    failureCounts[key] = (failureCounts[key] ?? 0) + 1;
+  }
+  return {
+    latencyMs: {
+      p50: percentile(latencies, 0.5),
+      p95: percentile(latencies, 0.95),
+      max: latencies.at(-1) ?? 0,
+    },
+    failureCounts,
+  };
+}
+
+function percentile(values: number[], quantile: number): number {
+  if (values.length === 0) return 0;
+  const index = Math.min(values.length - 1, Math.ceil(values.length * quantile) - 1);
+  return values[index] ?? 0;
 }
 
 function resolveManifestPath(base: string, manifestPath: string | undefined): string {

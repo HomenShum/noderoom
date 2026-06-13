@@ -1,0 +1,613 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T10:34:38.478Z",
+  "stageRoot": "staged-v1",
+  "outputRoot": "run-v1-model-edit-n5",
+  "mode": "model-edit-plan",
+  "taskCount": 5,
+  "passCount": 0,
+  "averageOverall": 0.135833,
+  "caseCount": 1,
+  "repeatCount": 5,
+  "attemptCount": 5,
+  "passRate": 0,
+  "stats": {
+    "latencyMs": {
+      "p50": 1426,
+      "p95": 4462,
+      "max": 4462
+    },
+    "failureCounts": {
+      "candidate_generation:edit-plan references missing sheet: Sheet1": 3
+    }
+  },
+  "harness": {
+    "toolPolicy": "agent_dir_only_until_candidate",
+    "evaluatorAccess": "after_candidate_emit_only",
+    "budget": {
+      "modelCalls": 5,
+      "inputTokens": 33880,
+      "outputTokens": 894,
+      "providerCostUsd": 0.0078935
+    }
+  },
+  "warnings": [
+    "tasks/13-1#1: edit-plan references missing sheet: Sheet1",
+    "tasks/13-1#2: edit-plan references missing sheet: Sheet1",
+    "tasks/13-1#3: edit-plan references missing sheet: Sheet1"
+  ],
+  "results": [
+    {
+      "taskId": "13-1",
+      "track": "spreadsheetbench-v1",
+      "mode": "model-edit-plan",
+      "attemptIndex": 1,
+      "taskDir": "tasks/13-1",
+      "agentManifest": "tasks/13-1/agent/task.json",
+      "evaluatorManifest": "tasks/13-1/evaluator/evaluator.json",
+      "error": {
+        "phase": "candidate_generation",
+        "message": "edit-plan references missing sheet: Sheet1"
+      },
+      "model": {
+        "name": "gpt-5.4-nano",
+        "calls": 1,
+        "usage": {
+          "inputTokens": 6776,
+          "outputTokens": 27
+        },
+        "costUsd": 0.0013889500000000001
+      },
+      "timingsMs": {
+        "modelPlanning": 1213,
+        "candidateGeneration": 1266,
+        "scoring": 0,
+        "total": 1266
+      },
+      "trajectory": [
+        {
+          "step": "read_agent_manifest",
+          "detail": "tasks/13-1/agent/task.json"
+        },
+        {
+          "step": "snapshot_agent_workbook",
+          "detail": "1 sheet(s), 240 cell(s)"
+        },
+        {
+          "step": "call_model_for_edit_plan",
+          "detail": "gpt-5.4-nano"
+        }
+      ]
+    },
+    {
+      "taskId": "13-1",
+      "track": "spreadsheetbench-v1",
+      "mode": "model-edit-plan",
+      "attemptIndex": 2,
+      "taskDir": "tasks/13-1",
+      "agentManifest": "tasks/13-1/agent/task.json",
+      "evaluatorManifest": "tasks/13-1/evaluator/evaluator.json",
+      "error": {
+        "phase": "candidate_generation",
+        "message": "edit-plan references missing sheet: Sheet1"
+      },
+      "model": {
+        "name": "gpt-5.4-nano",
+        "calls": 1,
+        "usage": {
+          "inputTokens": 6776,
+          "outputTokens": 27
+        },
+        "costUsd": 0.0013889500000000001
+      },
+      "timingsMs": {
+        "modelPlanning": 818,
+        "candidateGeneration": 837,
+        "scoring": 0,
+        "total": 837
+      },
+      "trajectory": [
+        {
+          "step": "read_agent_manifest",
+          "detail": "tasks/13-1/agent/task.json"
+        },
+        {
+          "step": "snapshot_agent_workbook",
+          "detail": "1 sheet(s), 240 cell(s)"
+        },
+        {
+          "step": "call_model_for_edit_plan",
+          "detail": "gpt-5.4-nano"
+        }
+      ]
+    },
+    {
+      "taskId": "13-1",
+      "track": "spreadsheetbench-v1",
+      "mode": "model-edit-plan",
+      "attemptIndex": 3,
+      "taskDir": "tasks/13-1",
+      "agentManifest": "tasks/13-1/agent/task.json",
+      "evaluatorManifest": "tasks/13-1/evaluator/evaluator.json",
+      "error": {
+        "phase": "candidate_generation",
+        "message": "edit-plan references missing sheet: Sheet1"
+      },
+      "model": {
+        "name": "gpt-5.4-nano",
+        "calls": 1,
+        "usage": {
+          "inputTokens": 6776,
+          "outputTokens": 147
+        },
+        "costUsd": 0.00153895
+      },
+      "timingsMs": {
+        "modelPlanning": 1403,
+        "candidateGeneration": 1426,
+        "scoring": 0,
+        "total": 1426
+      },
+      "trajectory": [
+        {
+          "step": "read_agent_manifest",
+          "detail": "tasks/13-1/agent/task.json"
+        },
+        {
+          "step": "snapshot_agent_workbook",
+          "detail": "1 sheet(s), 240 cell(s)"
+        },
+        {
+          "step": "call_model_for_edit_plan",
+          "detail": "gpt-5.4-nano"
+        }
+      ]
+    },
+    {
+      "taskId": "13-1",
+      "track": "spreadsheetbench-v1",
+      "mode": "model-edit-plan",
+      "attemptIndex": 4,
+      "taskDir": "tasks/13-1",
+      "agentManifest": "tasks/13-1/agent/task.json",
+      "evaluatorManifest": "tasks/13-1/evaluator/evaluator.json",
+      "candidateWorkbook": "13-1/attempt-04/candidate-01-1_13-1_init.xlsx",
+      "score": {
+        "schema": 1,
+        "generatedAt": "2026-06-13T10:34:38.478Z",
+        "taskId": "13-1",
+        "candidateWorkbook": "candidate-01-1_13-1_init.xlsx",
+        "goldWorkbook": "01-1_13-1_golden.xlsx",
+        "answerPosition": "A3:D32",
+        "ranges": [
+          "'LISTS'!A3:D32"
+        ],
+        "totals": {
+          "comparedCells": 120,
+          "valueMatches": 81,
+          "formulaCells": 1,
+          "formulaMatches": 0,
+          "styleCells": 0,
+          "styleMatches": 0,
+          "mismatches": 40,
+          "missingSheets": 0
+        },
+        "scores": {
+          "value": 0.675,
+          "formula": 0,
+          "style": null,
+          "overall": 0.3375
+        },
+        "pass": false,
+        "warnings": [
+          "mismatch list capped at 20/40"
+        ],
+        "mismatches": [
+          {
+            "kind": "formula",
+            "sheet": "LISTS",
+            "cell": "D10",
+            "actual": "=SUM(D3:D9)"
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "B15",
+            "expected": "2024-02-22T00:00:00.000Z",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "C15",
+            "expected": "REAS",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "D15",
+            "expected": "1545",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "B16",
+            "expected": "2024-02-22T00:00:00.000Z",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "C16",
+            "expected": "RETER",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "D16",
+            "expected": "950",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "A17",
+            "expected": "3",
+            "actual": "=SORTBY(LET(datesAndRefs,UNIQUE(RANGES!B:B&\"|\"&RANGES!D:D),rows,SORTBY(FILTER(HSTACK(INDEX(TEXTBEFORE(RANGES!B:B&\"\", \"\"),SEQUENCE(0)), SE..."
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "B17",
+            "expected": "2024-03-03T00:00:00.000Z",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "C17",
+            "expected": "REAS",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "D17",
+            "expected": "771",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "B18",
+            "expected": "2024-03-03T00:00:00.000Z",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "C18",
+            "expected": "REEPS",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "D18",
+            "expected": "274",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "B19",
+            "expected": "2024-03-03T00:00:00.000Z",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "C19",
+            "expected": "RETER",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "D19",
+            "expected": "1215",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "D20",
+            "expected": "4755",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "B25",
+            "expected": "2024-02-24T00:00:00.000Z",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "C25",
+            "expected": "REAS",
+            "actual": ""
+          }
+        ]
+      },
+      "model": {
+        "name": "gpt-5.4-nano",
+        "calls": 1,
+        "usage": {
+          "inputTokens": 6776,
+          "outputTokens": 109
+        },
+        "costUsd": 0.00149145
+      },
+      "timingsMs": {
+        "modelPlanning": 1538,
+        "candidateGeneration": 1604,
+        "scoring": 51,
+        "total": 1655
+      },
+      "trajectory": [
+        {
+          "step": "read_agent_manifest",
+          "detail": "tasks/13-1/agent/task.json"
+        },
+        {
+          "step": "snapshot_agent_workbook",
+          "detail": "1 sheet(s), 240 cell(s)"
+        },
+        {
+          "step": "call_model_for_edit_plan",
+          "detail": "gpt-5.4-nano"
+        },
+        {
+          "step": "emit_candidate_workbook",
+          "detail": "13-1/attempt-04/candidate-01-1_13-1_init.xlsx"
+        },
+        {
+          "step": "read_evaluator_manifest",
+          "detail": "tasks/13-1/evaluator/evaluator.json"
+        },
+        {
+          "step": "score_candidate",
+          "detail": "40 mismatch(es)"
+        }
+      ]
+    },
+    {
+      "taskId": "13-1",
+      "track": "spreadsheetbench-v1",
+      "mode": "model-edit-plan",
+      "attemptIndex": 5,
+      "taskDir": "tasks/13-1",
+      "agentManifest": "tasks/13-1/agent/task.json",
+      "evaluatorManifest": "tasks/13-1/evaluator/evaluator.json",
+      "candidateWorkbook": "13-1/attempt-05/candidate-01-1_13-1_init.xlsx",
+      "score": {
+        "schema": 1,
+        "generatedAt": "2026-06-13T10:34:38.478Z",
+        "taskId": "13-1",
+        "candidateWorkbook": "candidate-01-1_13-1_init.xlsx",
+        "goldWorkbook": "01-1_13-1_golden.xlsx",
+        "answerPosition": "A3:D32",
+        "ranges": [
+          "'LISTS'!A3:D32"
+        ],
+        "totals": {
+          "comparedCells": 120,
+          "valueMatches": 82,
+          "formulaCells": 1,
+          "formulaMatches": 0,
+          "styleCells": 0,
+          "styleMatches": 0,
+          "mismatches": 39,
+          "missingSheets": 0
+        },
+        "scores": {
+          "value": 0.683333,
+          "formula": 0,
+          "style": null,
+          "overall": 0.3416665
+        },
+        "pass": false,
+        "warnings": [
+          "mismatch list capped at 20/39"
+        ],
+        "mismatches": [
+          {
+            "kind": "formula",
+            "sheet": "LISTS",
+            "cell": "D10",
+            "actual": "=SUM(D3:D9)"
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "B15",
+            "expected": "2024-02-22T00:00:00.000Z",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "C15",
+            "expected": "REAS",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "D15",
+            "expected": "1545",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "B16",
+            "expected": "2024-02-22T00:00:00.000Z",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "C16",
+            "expected": "RETER",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "D16",
+            "expected": "950",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "B17",
+            "expected": "2024-03-03T00:00:00.000Z",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "C17",
+            "expected": "REAS",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "D17",
+            "expected": "771",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "B18",
+            "expected": "2024-03-03T00:00:00.000Z",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "C18",
+            "expected": "REEPS",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "D18",
+            "expected": "274",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "B19",
+            "expected": "2024-03-03T00:00:00.000Z",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "C19",
+            "expected": "RETER",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "D19",
+            "expected": "1215",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "D20",
+            "expected": "4755",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "B25",
+            "expected": "2024-02-24T00:00:00.000Z",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "C25",
+            "expected": "REAS",
+            "actual": ""
+          },
+          {
+            "kind": "value",
+            "sheet": "LISTS",
+            "cell": "D25",
+            "expected": "1990",
+            "actual": ""
+          }
+        ]
+      },
+      "model": {
+        "name": "gpt-5.4-nano",
+        "calls": 1,
+        "usage": {
+          "inputTokens": 6776,
+          "outputTokens": 584
+        },
+        "costUsd": 0.0020851999999999997
+      },
+      "timingsMs": {
+        "modelPlanning": 4393,
+        "candidateGeneration": 4428,
+        "scoring": 34,
+        "total": 4462
+      },
+      "trajectory": [
+        {
+          "step": "read_agent_manifest",
+          "detail": "tasks/13-1/agent/task.json"
+        },
+        {
+          "step": "snapshot_agent_workbook",
+          "detail": "1 sheet(s), 240 cell(s)"
+        },
+        {
+          "step": "call_model_for_edit_plan",
+          "detail": "gpt-5.4-nano"
+        },
+        {
+          "step": "emit_candidate_workbook",
+          "detail": "13-1/attempt-05/candidate-01-1_13-1_init.xlsx"
+        },
+        {
+          "step": "read_evaluator_manifest",
+          "detail": "tasks/13-1/evaluator/evaluator.json"
+        },
+        {
+          "step": "score_candidate",
+          "detail": "39 mismatch(es)"
+        }
+      ]
+    }
+  ]
+}

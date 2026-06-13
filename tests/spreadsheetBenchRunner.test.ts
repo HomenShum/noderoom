@@ -49,7 +49,11 @@ describe("SpreadsheetBench staged runner", () => {
     expect(report).toMatchObject({
       mode: "copy-input-baseline",
       taskCount: 1,
+      caseCount: 1,
+      repeatCount: 1,
+      attemptCount: 1,
       passCount: 0,
+      passRate: 0,
       harness: {
         toolPolicy: "agent_dir_only_until_candidate",
         evaluatorAccess: "after_candidate_emit_only",
@@ -113,7 +117,11 @@ describe("SpreadsheetBench staged runner", () => {
     expect(report).toMatchObject({
       mode: "apply-agent-patch",
       taskCount: 1,
+      caseCount: 1,
+      repeatCount: 1,
+      attemptCount: 1,
       passCount: 1,
+      passRate: 1,
       averageOverall: 1,
       harness: {
         toolPolicy: "agent_dir_only_until_candidate",
@@ -185,7 +193,11 @@ describe("SpreadsheetBench staged runner", () => {
     expect(report).toMatchObject({
       mode: "model-edit-plan",
       taskCount: 1,
+      caseCount: 1,
+      repeatCount: 1,
+      attemptCount: 1,
       passCount: 1,
+      passRate: 1,
       averageOverall: 1,
       harness: {
         toolPolicy: "agent_dir_only_until_candidate",
@@ -260,7 +272,11 @@ describe("SpreadsheetBench staged runner", () => {
     expect(report).toMatchObject({
       mode: "model-edit-plan",
       taskCount: 1,
+      caseCount: 1,
+      repeatCount: 1,
+      attemptCount: 1,
       passCount: 0,
+      passRate: 0,
       averageOverall: 0,
       harness: {
         budget: { modelCalls: 1, inputTokens: 33, outputTokens: 11, providerCostUsd: 0 },
@@ -284,6 +300,79 @@ describe("SpreadsheetBench staged runner", () => {
       "call_model_for_edit_plan",
     ]);
     expect(readFileSync(join(out, "13-4", "model-edit-plan.json"), "utf8").toLowerCase()).not.toContain("gold");
+  });
+
+  it("accounts repeated model edit attempts with pass rate, p95, and failure counts", async () => {
+    const source = tempRoot("source");
+    const stage = tempRoot("stage");
+    const out = tempRoot("out");
+    mkdirSync(join(source, "spreadsheet", "13-5"), { recursive: true });
+    writeJson(join(source, "dataset.json"), [
+      {
+        id: "13-5",
+        instruction: "Change the workbook value to 2.",
+        spreadsheet_path: "spreadsheet/13-5",
+        answer_position: "Actual!B2:B2",
+        answer_sheet: "Actual",
+      },
+    ]);
+    await writeWorkbookWithSheet(join(source, "spreadsheet", "13-5", "1_13-5_init.xlsx"), "Actual", 1);
+    await writeWorkbookWithSheet(join(source, "spreadsheet", "13-5", "1_13-5_golden.xlsx"), "Actual", 2);
+    stageSpreadsheetBenchBundle(source, {
+      track: "spreadsheetbench-v1",
+      outputRoot: stage,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+    const planner: AgentModel = {
+      name: "repeated-bad-spreadsheetbench-planner",
+      async next() {
+        return {
+          text: JSON.stringify({ schema: 1, operations: [{ sheet: "Sheet1", cell: "B2", value: 2 }] }),
+          toolCalls: [],
+          done: true,
+          usage: { inputTokens: 33, outputTokens: 11 },
+        };
+      },
+    };
+
+    const report = await runStagedSpreadsheetBench({
+      stageRoot: stage,
+      outputRoot: out,
+      mode: "model-edit-plan",
+      model: planner,
+      repeats: 3,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    const failureKey = "candidate_generation:edit-plan references missing sheet: Sheet1";
+    expect(report).toMatchObject({
+      mode: "model-edit-plan",
+      taskCount: 3,
+      caseCount: 1,
+      repeatCount: 3,
+      attemptCount: 3,
+      passCount: 0,
+      passRate: 0,
+      averageOverall: 0,
+      stats: {
+        failureCounts: { [failureKey]: 3 },
+      },
+      harness: {
+        budget: { modelCalls: 3, inputTokens: 99, outputTokens: 33, providerCostUsd: 0 },
+      },
+    });
+    expect(report.stats.latencyMs.p50).toBeGreaterThanOrEqual(0);
+    expect(report.stats.latencyMs.p95).toBeGreaterThanOrEqual(report.stats.latencyMs.p50);
+    expect(report.results.map((result) => result.attemptIndex)).toEqual([1, 2, 3]);
+    expect(report.results.map((result) => result.error?.message)).toEqual([
+      "edit-plan references missing sheet: Sheet1",
+      "edit-plan references missing sheet: Sheet1",
+      "edit-plan references missing sheet: Sheet1",
+    ]);
+    expect(existsSync(join(out, "13-5", "attempt-01", "model-edit-plan.json"))).toBe(true);
+    expect(readFileSync(join(out, "13-5", "attempt-01", "model-edit-plan.json"), "utf8").toLowerCase()).not.toContain("gold");
   });
 });
 

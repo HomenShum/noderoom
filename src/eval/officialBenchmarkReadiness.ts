@@ -239,7 +239,7 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; official V1 N=5 and retry-policy smokes now record fair larger workbook snapshots, raw model output, simple SUM result caching, pass rate, p95 latency, model usage/cost, workspace manifests, scored partial candidates, retry exhaustion, failure taxonomy, and local Node permission sandbox proof, but larger full-bundle runs, Docker/Harbor sandbox proof, and route selection remain incomplete.",
+        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; official V1 N=5 and retry-policy smokes now record fair larger workbook snapshots, raw model output, broader deterministic formula result caching (including SUM/AVERAGE/MIN/MAX/COUNT/COUNTA, IF/IFERROR, ROUND variants, and SUMIF/COUNTIF), pass rate, p95 latency, model usage/cost, workspace manifests, scored partial candidates, retry exhaustion, failure taxonomy, and local Node permission sandbox proof, but larger full-bundle runs, Docker/Harbor sandbox proof, and route selection remain incomplete.",
     },
     xlsx_import_export: {
       capability: "xlsx_import_export",
@@ -251,7 +251,7 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "The SpreadsheetBench runner caches deterministic results for a local formula subset covering arithmetic, same-sheet cell refs/ranges, and SUM/AVERAGE/MIN/MAX/COUNT before export/reopen scoring; a full Excel-compatible recompute engine is not complete.",
+        "The SpreadsheetBench runner caches deterministic results for a local formula subset covering arithmetic, same-sheet cell refs/ranges, SUM/AVERAGE/MIN/MAX/COUNT/COUNTA, ABS, ROUND/ROUNDUP/ROUNDDOWN, IF/IFERROR, and SUMIF/COUNTIF before export/reopen scoring; a full Excel-compatible recompute engine is not complete.",
     },
     format_diff: {
       capability: "format_diff",
@@ -279,7 +279,7 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; V1 N=5 and retry-policy model smoke evidence exists with fair larger snapshots, raw model output, simple SUM result caching, workspace manifests, local Node permission sandbox proof, and static V2 chart-package scoring, but V2 official model runs, Docker/Harbor sandbox proof, route selection, and rendered/VLM chart grading remain incomplete.",
+        "A copy-input baseline, deterministic edit-plan worker, and model-edit-plan worker emit candidate workbooks from per-attempt agent workspaces and score them afterward; V1 N=5 and retry-policy model smoke evidence exists with fair larger snapshots, raw model output, broader deterministic formula result caching (including SUM/AVERAGE/MIN/MAX/COUNT/COUNTA, IF/IFERROR, ROUND variants, and SUMIF/COUNTIF), workspace manifests, local Node permission sandbox proof, and static V2 chart-package scoring, but V2 official model runs, Docker/Harbor sandbox proof, route selection, and rendered/VLM chart grading remain incomplete.",
     },
     xlsx_import_export: {
       capability: "xlsx_import_export",
@@ -291,7 +291,7 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
       state: "partial",
       evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "The SpreadsheetBench runner caches deterministic results for a local formula subset covering arithmetic, same-sheet cell refs/ranges, and SUM/AVERAGE/MIN/MAX/COUNT before export/reopen scoring; full Excel-compatible recompute, chart formulas, external refs, and volatile functions are not complete.",
+        "The SpreadsheetBench runner caches deterministic results for a local formula subset covering arithmetic, same-sheet cell refs/ranges, SUM/AVERAGE/MIN/MAX/COUNT/COUNTA, ABS, ROUND/ROUNDUP/ROUNDDOWN, IF/IFERROR, and SUMIF/COUNTIF before export/reopen scoring; full Excel-compatible recompute, chart formulas, external refs, and volatile functions are not complete.",
     },
     format_diff: {
       capability: "format_diff",

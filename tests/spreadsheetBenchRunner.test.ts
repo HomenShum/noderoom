@@ -263,6 +263,72 @@ describe("SpreadsheetBench staged runner", () => {
     expect(candidateManifest).toContain("AVERAGE");
   });
 
+  it("caches deterministic results for conditional, rounding, and criteria formulas", async () => {
+    const source = tempRoot("source");
+    const stage = tempRoot("stage");
+    const out = tempRoot("out");
+    mkdirSync(join(source, "spreadsheet", "13-13"), { recursive: true });
+    await writeBusinessFormulaWorkbook(join(source, "spreadsheet", "13-13", "1_13-13_init.xlsx"), false);
+    await writeBusinessFormulaWorkbook(join(source, "spreadsheet", "13-13", "1_13-13_golden.xlsx"), true);
+    writeJson(join(source, "dataset.json"), [
+      {
+        id: "13-13",
+        instruction: "Write the business formulas for conditional rounding and region criteria.",
+        spreadsheet_path: "spreadsheet/13-13",
+        answer_position: "Sheet1!E2:K2",
+        answer_sheet: "Sheet1",
+      },
+    ]);
+    stageSpreadsheetBenchBundle(source, {
+      track: "spreadsheetbench-v1",
+      outputRoot: stage,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+    writeJson(join(stage, "tasks", "13-13", "agent", "edit-plan.json"), {
+      schema: 1,
+      operations: [
+        { sheet: "Sheet1", cell: "E2", formula: "IF(A2>100,ROUND(ABS(B2),1),0)" },
+        { sheet: "Sheet1", cell: "F2", formula: "SUMIF(C2:C4,\"North\",D2:D4)" },
+        { sheet: "Sheet1", cell: "G2", formula: "COUNTIF(A2:A4,\">=80\")" },
+        { sheet: "Sheet1", cell: "H2", formula: "COUNTA(C2:C4)" },
+        { sheet: "Sheet1", cell: "I2", formula: "IFERROR(1/0,99)" },
+        { sheet: "Sheet1", cell: "J2", formula: "ROUNDUP(B3,1)" },
+        { sheet: "Sheet1", cell: "K2", formula: "ROUNDDOWN(B3,1)" },
+      ],
+    });
+
+    const report = await runStagedSpreadsheetBench({
+      stageRoot: stage,
+      outputRoot: out,
+      mode: "apply-agent-patch",
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(report.passCount).toBe(1);
+    expect(report.results[0].score?.totals).toMatchObject({
+      comparedCells: 7,
+      valueMatches: 7,
+      formulaCells: 7,
+      formulaMatches: 7,
+      mismatches: 0,
+    });
+    const candidate = new ExcelJS.Workbook();
+    await candidate.xlsx.readFile(join(out, report.results[0].candidateWorkbook!));
+    const sheet = candidate.getWorksheet("Sheet1")!;
+    expect(sheet.getCell("E2").value).toMatchObject({ formula: "IF(A2>100,ROUND(ABS(B2),1),0)", result: 12.3 });
+    expect(sheet.getCell("F2").value).toMatchObject({ formula: "SUMIF(C2:C4,\"North\",D2:D4)", result: 40 });
+    expect(sheet.getCell("G2").value).toMatchObject({ formula: "COUNTIF(A2:A4,\">=80\")", result: 2 });
+    expect(sheet.getCell("H2").value).toMatchObject({ formula: "COUNTA(C2:C4)", result: 3 });
+    expect(sheet.getCell("I2").value).toMatchObject({ formula: "IFERROR(1/0,99)", result: 99 });
+    expect(sheet.getCell("J2").value).toMatchObject({ formula: "ROUNDUP(B3,1)", result: 2.8 });
+    expect(sheet.getCell("K2").value).toMatchObject({ formula: "ROUNDDOWN(B3,1)", result: 2.7 });
+    const candidateManifest = readFileSync(join(out, "13-13", "candidate-manifest.json"), "utf8");
+    expect(candidateManifest).toContain("SUMIF");
+    expect(candidateManifest).toContain("IFERROR");
+  });
+
   it("asks a model for an edit plan and records usage before evaluator scoring", async () => {
     const source = tempRoot("source");
     const stage = tempRoot("stage");
@@ -810,5 +876,29 @@ async function writeFormulaSubsetWorkbook(path: string, completed: boolean) {
   sheet.getCell("D2").value = completed ? { formula: "AVERAGE(A2:A3)", result: 15 } : "";
   sheet.getCell("E2").value = completed ? { formula: "MAX(A2:A3)-MIN(A2:A3)", result: 10 } : "";
   sheet.getCell("F2").value = completed ? { formula: "COUNT(A2:A3)", result: 2 } : "";
+  await workbook.xlsx.writeFile(path);
+}
+
+async function writeBusinessFormulaWorkbook(path: string, completed: boolean) {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Sheet1");
+  sheet.getCell("A2").value = 120;
+  sheet.getCell("A3").value = 80;
+  sheet.getCell("A4").value = 55;
+  sheet.getCell("B2").value = -12.345;
+  sheet.getCell("B3").value = 2.718;
+  sheet.getCell("C2").value = "North";
+  sheet.getCell("C3").value = "South";
+  sheet.getCell("C4").value = "North";
+  sheet.getCell("D2").value = 10;
+  sheet.getCell("D3").value = 20;
+  sheet.getCell("D4").value = 30;
+  sheet.getCell("E2").value = completed ? { formula: "IF(A2>100,ROUND(ABS(B2),1),0)", result: 12.3 } : "";
+  sheet.getCell("F2").value = completed ? { formula: "SUMIF(C2:C4,\"North\",D2:D4)", result: 40 } : "";
+  sheet.getCell("G2").value = completed ? { formula: "COUNTIF(A2:A4,\">=80\")", result: 2 } : "";
+  sheet.getCell("H2").value = completed ? { formula: "COUNTA(C2:C4)", result: 3 } : "";
+  sheet.getCell("I2").value = completed ? { formula: "IFERROR(1/0,99)", result: 99 } : "";
+  sheet.getCell("J2").value = completed ? { formula: "ROUNDUP(B3,1)", result: 2.8 } : "";
+  sheet.getCell("K2").value = completed ? { formula: "ROUNDDOWN(B3,1)", result: 2.7 } : "";
   await workbook.xlsx.writeFile(path);
 }

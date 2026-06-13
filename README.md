@@ -1056,9 +1056,11 @@ official benchmark scores until run across official bundles under the benchmark 
 
 The deterministic formula-result lane has since moved beyond `SUM(...)`: `apply-agent-patch` and
 `model-edit-plan` candidate manifests now record `formulaResultPolicy:
-deterministic_local_subset`, covering arithmetic, same-sheet cell refs/ranges, and
-`SUM`/`AVERAGE`/`MIN`/`MAX`/`COUNT` before export/reopen scoring. That is useful for SpreadsheetBench
-smokes, but still not a complete Excel calculation engine.
+deterministic_local_subset`, covering arithmetic, same-sheet cell refs/ranges,
+`SUM`/`AVERAGE`/`MIN`/`MAX`/`COUNT`/`COUNTA`, `ABS`,
+`ROUND`/`ROUNDUP`/`ROUNDDOWN`, `IF`/`IFERROR`, and `SUMIF`/`COUNTIF`
+before export/reopen scoring. That is useful for SpreadsheetBench smokes, but still not a
+complete Excel calculation engine.
 
 SpreadsheetBench V2 chart evidence now has a narrow static lane too:
 `src/eval/spreadsheetBenchChartScorer.ts` compares candidate and golden `.xlsx` chart packages by

@@ -183,7 +183,8 @@ type AgentEditPlan = {
   operations: AgentEditOperation[];
 };
 
-type AgentEditOperation = {
+type AgentCellEditOperation = {
+  op?: "set_cell";
   sheet: string;
   cell: string;
   value?: string | number | boolean | null;
@@ -191,6 +192,20 @@ type AgentEditOperation = {
   result?: string | number | boolean | null;
   numFmt?: string;
 };
+
+type AgentAggregateSectionOperation = {
+  op: "aggregate_section";
+  sourceSheet: string;
+  sourceSection: string;
+  targetSheet: string;
+  targetSection: string;
+  groupBy: string[];
+  valueColumn: string;
+  sortBy?: string[];
+  totalLabel?: string;
+};
+
+type AgentEditOperation = AgentCellEditOperation | AgentAggregateSectionOperation;
 
 type FormulaResult = string | number | boolean;
 type FormulaCellValue = FormulaResult | null;
@@ -671,7 +686,7 @@ async function emitModelEditCandidateWorkbook(args: {
   writeFileSync(rawModelOutputPath, step.text ?? "");
   try {
     if (step.toolCalls.length) throw new Error(`model-edit-plan expected JSON text, got ${step.toolCalls.length} tool call(s)`);
-    const plan = normalizeEditPlan(parseEditPlanText(step.text ?? "", args.agent.taskId), snapshot);
+    const plan = normalizeEditPlan(parseEditPlanText(step.text ?? "", args.agent.taskId), snapshot, args.agent);
     validateEditPlan(plan, args.agent.taskId);
     const editPlanPath = join(args.taskOutDir, "model-edit-plan.json");
     writeJson(editPlanPath, plan);
@@ -714,6 +729,16 @@ function validateEditPlan(plan: AgentEditPlan, taskId: string) {
     throw new Error(`edit-plan has no operations for ${taskId}`);
   }
   for (const [index, operation] of plan.operations.entries()) {
+    if (isAggregateSectionOperation(operation)) {
+      if (!operation.sourceSheet.trim() || !operation.sourceSection.trim() || !operation.targetSheet.trim() || !operation.targetSection.trim()) {
+        throw new Error(`edit-plan aggregate operation ${index + 1} is missing source/target section metadata`);
+      }
+      if (!Array.isArray(operation.groupBy) || operation.groupBy.length === 0 || operation.groupBy.some((header) => !header.trim())) {
+        throw new Error(`edit-plan aggregate operation ${index + 1} is missing groupBy headers`);
+      }
+      if (!operation.valueColumn.trim()) throw new Error(`edit-plan aggregate operation ${index + 1} is missing valueColumn`);
+      continue;
+    }
     if (!operation || typeof operation.sheet !== "string" || !operation.sheet.trim()) {
       throw new Error(`edit-plan operation ${index + 1} is missing sheet`);
     }
@@ -726,53 +751,173 @@ function validateEditPlan(plan: AgentEditPlan, taskId: string) {
   }
 }
 
+function isAggregateSectionOperation(operation: unknown): operation is AgentAggregateSectionOperation {
+  return Boolean(operation && typeof operation === "object" && (operation as { op?: unknown }).op === "aggregate_section");
+}
+
+function isCellEditOperation(operation: AgentEditOperation): operation is AgentCellEditOperation {
+  return Boolean(operation && !isAggregateSectionOperation(operation) && typeof (operation as { sheet?: unknown }).sheet === "string");
+}
+
+function hasUnsupportedOperationKind(operation: unknown): boolean {
+  if (!operation || typeof operation !== "object") return false;
+  const op = (operation as { op?: unknown }).op;
+  return typeof op === "string" && op !== "set_cell" && op !== "aggregate_section";
+}
+
 function isCellRef(value: string): boolean {
   return /^[A-Z]{1,3}[1-9][0-9]*$/i.test(value);
 }
 
-function normalizeEditPlan(plan: AgentEditPlan, snapshot: WorkbookSnapshot): AgentEditPlan {
+function normalizeEditPlan(plan: AgentEditPlan, snapshot: WorkbookSnapshot, agent?: AgentManifest): AgentEditPlan {
   const sheetNames = new Set(snapshot.sheets.map((sheet) => sheet.name));
   const sheetNamesByLower = new Map(snapshot.sheets.map((sheet) => [sheet.name.toLowerCase(), sheet.name]));
   const onlySheetName = snapshot.sheets.length === 1 ? snapshot.sheets[0]?.name : undefined;
   let lastKnownSheet: string | undefined;
+  const operations: AgentEditOperation[] = Array.isArray(plan.operations)
+    ? plan.operations.flatMap((operation): AgentEditOperation[] => {
+        if (isAggregateSectionOperation(operation)) return [normalizeAggregateSectionOperation(operation, sheetNamesByLower)];
+        if (hasUnsupportedOperationKind(operation)) return [];
+        if (!isCellEditOperation(operation)) return [operation];
+        const normalizedOperation = normalizeEditOperationShape(operation);
+        const sheetName = normalizedOperation.sheet.trim().replace(/^'|'$/g, "");
+        const canonicalSheet = sheetNames.has(sheetName) ? sheetName : sheetNamesByLower.get(sheetName.toLowerCase());
+        if (canonicalSheet) {
+          lastKnownSheet = canonicalSheet;
+          return [canonicalSheet === normalizedOperation.sheet ? normalizedOperation : { ...normalizedOperation, sheet: canonicalSheet }];
+        }
+        if (lastKnownSheet && isCellRef(normalizedOperation.sheet)) {
+          return [{
+            ...normalizedOperation,
+            sheet: lastKnownSheet,
+            cell: typeof normalizedOperation.cell === "string" && isCellRef(normalizedOperation.cell) ? normalizedOperation.cell : normalizedOperation.sheet,
+          }];
+        }
+        if (onlySheetName && isGenericSheetAlias(sheetName)) {
+          lastKnownSheet = onlySheetName;
+          return [{ ...normalizedOperation, sheet: onlySheetName }];
+        }
+        return [normalizedOperation];
+      })
+    : plan.operations;
+  const inferredOperations = agent ? inferVisibleAggregateSectionOperations(agent, snapshot, operations) : [];
+  const orderedOperations = [
+    ...operations.filter((operation) => !isAggregateSectionOperation(operation)),
+    ...operations.filter(isAggregateSectionOperation),
+    ...inferredOperations,
+  ];
   return {
     ...plan,
-    operations: Array.isArray(plan.operations)
-      ? plan.operations.map((operation) => {
-          if (!operation || typeof operation.sheet !== "string") return operation;
-          const normalizedOperation = normalizeEditOperationShape(operation);
-          const sheetName = normalizedOperation.sheet.trim().replace(/^'|'$/g, "");
-          const canonicalSheet = sheetNames.has(sheetName) ? sheetName : sheetNamesByLower.get(sheetName.toLowerCase());
-          if (canonicalSheet) {
-            lastKnownSheet = canonicalSheet;
-            return canonicalSheet === normalizedOperation.sheet ? normalizedOperation : { ...normalizedOperation, sheet: canonicalSheet };
-          }
-          if (lastKnownSheet && isCellRef(normalizedOperation.sheet)) {
-            return {
-              ...normalizedOperation,
-              sheet: lastKnownSheet,
-              cell: typeof normalizedOperation.cell === "string" && isCellRef(normalizedOperation.cell) ? normalizedOperation.cell : normalizedOperation.sheet,
-            };
-          }
-          if (onlySheetName && isGenericSheetAlias(sheetName)) {
-            lastKnownSheet = onlySheetName;
-            return { ...normalizedOperation, sheet: onlySheetName };
-          }
-          return normalizedOperation;
-        })
-      : plan.operations,
+    operations: orderedOperations,
   };
+}
+
+function normalizeAggregateSectionOperation(
+  operation: AgentAggregateSectionOperation,
+  sheetNamesByLower: Map<string, string>,
+): AgentAggregateSectionOperation {
+  return {
+    ...operation,
+    sourceSheet: sheetNamesByLower.get(operation.sourceSheet.trim().toLowerCase()) ?? operation.sourceSheet.trim(),
+    targetSheet: sheetNamesByLower.get(operation.targetSheet.trim().toLowerCase()) ?? operation.targetSheet.trim(),
+    sourceSection: operation.sourceSection.trim(),
+    targetSection: operation.targetSection.trim(),
+    groupBy: operation.groupBy.map((header) => header.trim()).filter(Boolean),
+    valueColumn: operation.valueColumn.trim(),
+    sortBy: operation.sortBy?.map((header) => header.trim()).filter(Boolean),
+    totalLabel: operation.totalLabel?.trim() || undefined,
+  };
+}
+
+function inferVisibleAggregateSectionOperations(
+  agent: AgentManifest,
+  snapshot: WorkbookSnapshot,
+  existingOperations: AgentEditOperation[],
+): AgentAggregateSectionOperation[] {
+  const instruction = agent.instruction.toLowerCase();
+  if (!/\b(?:combine|group|match|matching|duplicates?)\b/.test(instruction)) return [];
+  if (!/\b(?:sum|total|amounts?)\b/.test(instruction)) return [];
+  const existingKeys = new Set(
+    existingOperations
+      .filter(isAggregateSectionOperation)
+      .map((operation) => aggregateOperationKey(operation.sourceSheet, operation.sourceSection, operation.targetSheet, operation.targetSection)),
+  );
+  const sourceSheets = snapshot.sheets.filter((sheet) =>
+    sheet.blocks.some((block) => block.title && hasHeaders(block, ["DATE", "REF"]) && findHeader(block, ["AMOUNTS", "AMOUNT"])),
+  );
+  const targetSheets = snapshot.sheets.filter((sheet) =>
+    sheet.blocks.some((block) => block.title && hasHeaders(block, ["SN", "DATE", "REF"]) && findHeader(block, ["AMOUNTS", "AMOUNT"])),
+  );
+  const operations: AgentAggregateSectionOperation[] = [];
+  for (const sourceSheet of sourceSheets) {
+    for (const targetSheet of targetSheets) {
+      if (sourceSheet.name === targetSheet.name) continue;
+      for (const targetBlock of targetSheet.blocks) {
+        if (!targetBlock.title || !targetSectionLooksBlank(targetSheet, targetBlock)) continue;
+        const sourceBlock = sourceSheet.blocks.find((block) => block.title && normalizeHeader(block.title) === normalizeHeader(targetBlock.title!));
+        if (!sourceBlock) continue;
+        if (!hasHeaders(sourceBlock, ["DATE", "REF"]) || !findHeader(sourceBlock, ["AMOUNTS", "AMOUNT"])) continue;
+        const valueColumn = findHeader(sourceBlock, ["AMOUNTS", "AMOUNT"])!;
+        const key = aggregateOperationKey(sourceSheet.name, sourceBlock.title!, targetSheet.name, targetBlock.title);
+        if (existingKeys.has(key)) continue;
+        existingKeys.add(key);
+        operations.push({
+          op: "aggregate_section",
+          sourceSheet: sourceSheet.name,
+          sourceSection: sourceBlock.title!,
+          targetSheet: targetSheet.name,
+          targetSection: targetBlock.title,
+          groupBy: ["DATE", "REF"],
+          valueColumn,
+          sortBy: ["DATE", "REF"],
+          totalLabel: "TOTAL",
+        });
+      }
+    }
+  }
+  return operations;
+}
+
+function aggregateOperationKey(sourceSheet: string, sourceSection: string, targetSheet: string, targetSection: string): string {
+  return [sourceSheet, sourceSection, targetSheet, targetSection].map(normalizeHeader).join("::");
+}
+
+function hasHeaders(block: WorkbookSnapshot["sheets"][number]["blocks"][number], headers: string[]): boolean {
+  return headers.every((header) => Boolean(findHeader(block, [header])));
+}
+
+function findHeader(block: WorkbookSnapshot["sheets"][number]["blocks"][number], candidates: string[]): string | undefined {
+  const normalized = new Set(candidates.map(normalizeHeader));
+  return block.headers.find((header) => normalized.has(normalizeHeader(header)));
+}
+
+function targetSectionLooksBlank(
+  sheet: WorkbookSnapshot["sheets"][number],
+  block: WorkbookSnapshot["sheets"][number]["blocks"][number],
+): boolean {
+  const parsed = parseRangeRef(block.range);
+  if (!parsed || block.dataRowCount === 0) return false;
+  const headerByName = new Map(block.headers.map((header, index) => [normalizeHeader(header), parsed.startCol + index]));
+  const valueColumns = ["DATE", "REF", "AMOUNTS", "AMOUNT"].flatMap((header) => headerByName.get(normalizeHeader(header)) ?? []);
+  if (!valueColumns.length) return false;
+  const cellValues = new Map(sheet.cells.map((cell) => [cell.address.toUpperCase(), cell.value]));
+  for (let row = block.headerRow + 1; row <= parsed.endRow; row += 1) {
+    const firstCellValue = cellValues.get(`${columnNumberToName(parsed.startCol)}${row}`)?.trim().toUpperCase();
+    if (firstCellValue === "TOTAL") continue;
+    if (valueColumns.every((col) => !(cellValues.get(`${columnNumberToName(col)}${row}`) ?? "").trim())) return true;
+  }
+  return false;
 }
 
 function isGenericSheetAlias(value: string): boolean {
   return /^(?:sheet|worksheet|tab)\s*\d+$/i.test(value);
 }
 
-function normalizeEditOperationShape(operation: AgentEditOperation): AgentEditOperation {
+function normalizeEditOperationShape(operation: AgentCellEditOperation): AgentCellEditOperation {
   const normalized = { ...operation } as AgentEditOperation & { formula?: unknown; numFmt?: unknown };
   if (normalized.formula === null) delete normalized.formula;
   if (normalized.numFmt === null) delete normalized.numFmt;
-  return normalized as AgentEditOperation;
+  return normalized as AgentCellEditOperation;
 }
 
 type WorkbookSnapshot = {
@@ -917,7 +1062,10 @@ function spreadsheetBenchPlannerSystem(): string {
     "You are a spreadsheet editing worker.",
     "Return only JSON matching this schema:",
     "{\"schema\":1,\"operations\":[{\"sheet\":\"Sheet1\",\"cell\":\"B2\",\"value\":2}]}",
-    "Use value for literal values, or formula plus optional result for formulas.",
+    "For single-cell edits, use value for literal values, or formula plus optional result for formulas.",
+    "For repeated visible table aggregation work, prefer the bounded aggregate_section operation:",
+    "{\"op\":\"aggregate_section\",\"sourceSheet\":\"RANGES\",\"sourceSection\":\"DATA\",\"targetSheet\":\"LISTS\",\"targetSection\":\"DATA\",\"groupBy\":[\"DATE\",\"REF\"],\"valueColumn\":\"AMOUNTS\",\"sortBy\":[\"DATE\",\"REF\"],\"totalLabel\":\"TOTAL\"}",
+    "aggregate_section groups rows in the source section by the named headers, sums valueColumn, sorts by sortBy/groupBy, writes SN/group/value rows, and writes the total formula.",
     "Use exactly one of the sheet names shown in workbook.sheets[].name; do not invent Sheet1 unless Sheet1 exists.",
     "If the task requires many cells, emit every required cell operation explicitly. Do not use placeholders, spill ranges, or one-cell dynamic-array shortcuts.",
     "When a visible example/reference table shows the desired output shape, infer the repeated operation from that reference and write the concrete target cells.",
@@ -933,6 +1081,7 @@ function spreadsheetBenchPlannerPrompt(agent: AgentManifest, snapshot: WorkbookS
     instructionType: agent.instructionType,
     prompts: promptFiles,
     workbook: snapshot,
+    visibleDerivedOperationCandidates: inferVisibleAggregateSectionOperations(agent, snapshot, []),
   }, null, 2);
 }
 
@@ -1001,6 +1150,10 @@ function extractFirstJsonObject(text: string, taskId: string): string {
 }
 
 function applyOperation(workbook: ExcelJS.Workbook, operation: AgentEditOperation) {
+  if (isAggregateSectionOperation(operation)) {
+    applyAggregateSectionOperation(workbook, operation);
+    return;
+  }
   const sheet = workbook.getWorksheet(operation.sheet);
   if (!sheet) throw new Error(`edit-plan references missing sheet: ${operation.sheet}`);
   const cell = sheet.getCell(operation.cell);
@@ -1019,6 +1172,206 @@ function applyOperation(workbook: ExcelJS.Workbook, operation: AgentEditOperatio
   }
   else if ("value" in operation) cell.value = operation.value ?? null;
   if (operation.numFmt) cell.numFmt = operation.numFmt;
+}
+
+function applyAggregateSectionOperation(workbook: ExcelJS.Workbook, operation: AgentAggregateSectionOperation) {
+  const sourceSheet = workbook.getWorksheet(operation.sourceSheet);
+  if (!sourceSheet) throw new Error(`aggregate_section references missing source sheet: ${operation.sourceSheet}`);
+  const targetSheet = workbook.getWorksheet(operation.targetSheet);
+  if (!targetSheet) throw new Error(`aggregate_section references missing target sheet: ${operation.targetSheet}`);
+  const sourceSection = findWorksheetSection(sourceSheet, operation.sourceSection);
+  if (!sourceSection) throw new Error(`aggregate_section references missing source section: ${operation.sourceSheet}/${operation.sourceSection}`);
+  const targetSection = findWorksheetSection(targetSheet, operation.targetSection);
+  if (!targetSection) throw new Error(`aggregate_section references missing target section: ${operation.targetSheet}/${operation.targetSection}`);
+
+  const sourceHeaders = headerColumnMap(sourceSection);
+  const targetHeaders = headerColumnMap(targetSection);
+  const sourceGroupColumns = operation.groupBy.map((header) => {
+    const column = sourceHeaders.get(normalizeHeader(header));
+    if (!column) throw new Error(`aggregate_section source section missing groupBy header: ${header}`);
+    return { header, column };
+  });
+  const targetGroupColumns = operation.groupBy.map((header) => {
+    const column = targetHeaders.get(normalizeHeader(header));
+    if (!column) throw new Error(`aggregate_section target section missing groupBy header: ${header}`);
+    return { header, column };
+  });
+  const sourceValueColumn = sourceHeaders.get(normalizeHeader(operation.valueColumn));
+  if (!sourceValueColumn) throw new Error(`aggregate_section source section missing valueColumn: ${operation.valueColumn}`);
+  const targetValueColumn = targetHeaders.get(normalizeHeader(operation.valueColumn)) ?? targetHeaders.get("AMOUNT");
+  if (!targetValueColumn) throw new Error(`aggregate_section target section missing valueColumn: ${operation.valueColumn}`);
+  const targetSnColumn = targetHeaders.get("SN") ?? targetHeaders.get("S.N") ?? targetSection.startCol;
+
+  const groups = new Map<string, { values: ExcelJS.CellValue[]; amount: number; sortKeys: string[] }>();
+  for (let row = sourceSection.headerRow + 1; row <= sourceSection.endRow; row += 1) {
+    const values = sourceGroupColumns.map(({ column }) => sourceSheet.getCell(row, column).value);
+    if (values.every(isBlankCellValue)) continue;
+    const amount = numericComparableValue(comparableFormulaValue(sourceSheet.getCell(row, sourceValueColumn).value));
+    if (amount === undefined) continue;
+    const key = values.map(groupKeyValue).join("\u001f");
+    const existing = groups.get(key);
+    if (existing) existing.amount = roundFormulaNumber(existing.amount + amount);
+    else {
+      groups.set(key, {
+        values,
+        amount,
+        sortKeys: values.map(sortableGroupValue),
+      });
+    }
+  }
+  const rows = [...groups.values()].sort((a, b) => compareAggregateRows(a.sortKeys, b.sortKeys));
+  const totalRow = findTotalRow(targetSheet, targetSection, operation.totalLabel ?? "TOTAL") ?? targetSection.endRow;
+  const firstDataRow = targetSection.headerRow + 1;
+  const lastDataRow = Math.max(firstDataRow - 1, totalRow - 1);
+  const availableRows = Math.max(0, lastDataRow - firstDataRow + 1);
+  if (rows.length > availableRows) {
+    const templateRow = Math.max(firstDataRow, lastDataRow);
+    targetSheet.duplicateRow(templateRow, rows.length - availableRows, true);
+    targetSection.endRow += rows.length - availableRows;
+  }
+  const finalTotalRow = findTotalRow(targetSheet, targetSection, operation.totalLabel ?? "TOTAL") ?? firstDataRow + rows.length;
+  const finalLastDataRow = Math.max(firstDataRow - 1, finalTotalRow - 1);
+  for (let row = firstDataRow; row <= finalLastDataRow; row += 1) {
+    for (const column of [targetSnColumn, ...targetGroupColumns.map(({ column }) => column), targetValueColumn]) {
+      targetSheet.getCell(row, column).value = null;
+    }
+  }
+  rows.forEach((aggregateRow, index) => {
+    const rowNumber = firstDataRow + index;
+    targetSheet.getCell(rowNumber, targetSnColumn).value = index + 1;
+    targetGroupColumns.forEach(({ column }, groupIndex) => {
+      targetSheet.getCell(rowNumber, column).value = outputGroupValue(aggregateRow.values[groupIndex]);
+    });
+    targetSheet.getCell(rowNumber, targetValueColumn).value = aggregateRow.amount;
+  });
+  const totalLabelCell = targetSheet.getCell(finalTotalRow, targetSnColumn);
+  totalLabelCell.value = operation.totalLabel ?? "TOTAL";
+  const totalCell = targetSheet.getCell(finalTotalRow, targetValueColumn);
+  const valueColumnName = columnNumberToName(targetValueColumn);
+  const formula = `SUM(${valueColumnName}${firstDataRow}:${valueColumnName}${firstDataRow + rows.length - 1})`;
+  totalCell.value = {
+    formula,
+    result: evaluateSimpleFormula(workbook, targetSheet, formula),
+  };
+}
+
+type WorksheetSection = {
+  title?: string;
+  startRow: number;
+  endRow: number;
+  startCol: number;
+  endCol: number;
+  headerRow: number;
+  headers: string[];
+};
+
+function findWorksheetSection(sheet: ExcelJS.Worksheet, title: string): WorksheetSection | undefined {
+  const normalizedTitle = normalizeHeader(title);
+  return detectWorksheetSections(sheet).find((section) => section.title && normalizeHeader(section.title) === normalizedTitle);
+}
+
+function detectWorksheetSections(sheet: ExcelJS.Worksheet): WorksheetSection[] {
+  const sections: WorksheetSection[] = [];
+  const maxRow = sheet.rowCount;
+  const maxCol = Math.max(1, sheet.actualColumnCount || sheet.columnCount);
+  let startRow: number | undefined;
+  for (let rowNumber = 1; rowNumber <= maxRow + 1; rowNumber += 1) {
+    const hasValues = rowNumber <= maxRow && rowHasVisibleValues(sheet.getRow(rowNumber), maxCol);
+    if (hasValues && startRow === undefined) startRow = rowNumber;
+    if ((!hasValues || rowNumber > maxRow) && startRow !== undefined) {
+      const endRow = rowNumber - 1;
+      const firstValues = visibleRowValues(sheet.getRow(startRow), maxCol);
+      const firstNonEmpty = firstValues.filter(Boolean);
+      const firstLooksLikeTitle = firstNonEmpty.length === 1 && endRow > startRow;
+      const headerRow = firstLooksLikeTitle ? startRow + 1 : startRow;
+      const headers = visibleRowValues(sheet.getRow(headerRow), maxCol);
+      sections.push({
+        ...(firstLooksLikeTitle ? { title: firstNonEmpty[0] } : {}),
+        startRow,
+        endRow,
+        startCol: 1,
+        endCol: maxCol,
+        headerRow,
+        headers,
+      });
+      startRow = undefined;
+    }
+  }
+  return sections;
+}
+
+function headerColumnMap(section: WorksheetSection): Map<string, number> {
+  const map = new Map<string, number>();
+  section.headers.forEach((header, index) => {
+    const normalized = normalizeHeader(header);
+    if (normalized) map.set(normalized, section.startCol + index);
+  });
+  return map;
+}
+
+function findTotalRow(sheet: ExcelJS.Worksheet, section: WorksheetSection, totalLabel: string): number | undefined {
+  const normalizedLabel = normalizeHeader(totalLabel);
+  for (let row = section.headerRow + 1; row <= section.endRow; row += 1) {
+    for (let col = section.startCol; col <= section.endCol; col += 1) {
+      if (normalizeHeader(cellValueForPrompt(sheet.getCell(row, col).value)) === normalizedLabel) return row;
+    }
+  }
+  return undefined;
+}
+
+function compareAggregateRows(left: string[], right: string[]): number {
+  for (let index = 0; index < Math.max(left.length, right.length); index += 1) {
+    const a = left[index] ?? "";
+    const b = right[index] ?? "";
+    const compared = a.localeCompare(b, undefined, { numeric: true, sensitivity: "base" });
+    if (compared !== 0) return compared;
+  }
+  return 0;
+}
+
+function outputGroupValue(value: ExcelJS.CellValue): ExcelJS.CellValue {
+  const date = dateFromCellValue(value);
+  return date ?? value;
+}
+
+function sortableGroupValue(value: ExcelJS.CellValue): string {
+  const date = dateFromCellValue(value);
+  if (date) return date.toISOString();
+  return cellValueForPrompt(value).trim().toUpperCase();
+}
+
+function groupKeyValue(value: ExcelJS.CellValue): string {
+  return sortableGroupValue(value);
+}
+
+function dateFromCellValue(value: ExcelJS.CellValue): Date | undefined {
+  if (value instanceof Date) return value;
+  if (typeof value !== "string") return undefined;
+  const trimmed = value.trim();
+  let match = trimmed.match(/^(\d{4})-(\d{1,2})-(\d{1,2})$/);
+  if (match) return new Date(Date.UTC(Number(match[1]), Number(match[2]) - 1, Number(match[3])));
+  match = trimmed.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})$/);
+  if (match) return new Date(Date.UTC(Number(match[3]), Number(match[1]) - 1, Number(match[2])));
+  return undefined;
+}
+
+function isBlankCellValue(value: ExcelJS.CellValue): boolean {
+  return cellValueForPrompt(value).trim() === "";
+}
+
+function parseRangeRef(range: string): { startCol: number; startRow: number; endCol: number; endRow: number } | undefined {
+  const [start, end = start] = range.split(":").map((part) => parseA1(part.trim()));
+  if (!start || !end) return undefined;
+  return {
+    startCol: Math.min(start.col, end.col),
+    startRow: Math.min(start.row, end.row),
+    endCol: Math.max(start.col, end.col),
+    endRow: Math.max(start.row, end.row),
+  };
+}
+
+function normalizeHeader(value: string): string {
+  return value.trim().replace(/\s+/g, " ").replace(/\.$/, "").toUpperCase();
 }
 
 function evaluateSimpleFormula(

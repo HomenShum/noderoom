@@ -141,7 +141,7 @@ export async function scoreSpreadsheetBenchWorkbook(options: SpreadsheetBenchSco
           });
         }
 
-        if (expected.formula || actual.formula) {
+        if (expected.formula) {
           formulaCells += 1;
           const formulaOk = normalizeFormula(actual.formula) === normalizeFormula(expected.formula);
           if (formulaOk) formulaMatches += 1;

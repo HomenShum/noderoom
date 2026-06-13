@@ -1027,15 +1027,18 @@ The checked-in live smoke (`docs/eval/spreadsheetbench-model-edit-plan-live-smok
 staged task with `gpt-5.4-nano` and recorded trajectory, timing, and cost. These artifacts prove
 ingest, sandbox-staging, candidate-output, edit/export/reopen, model-planning, and diff plumbing.
 The official V1 smoke (`docs/eval/spreadsheetbench-v1-model-edit-plan-live-smoke.json`) deliberately
-shows the next harder truth: the model can choose the wrong spreadsheet path on a real staged task,
-and the harness records the model call, tokens, cost, trajectory, parser repair, and score evidence
+showed the next harder truth: a model can choose the wrong spreadsheet path on a real staged task,
+and the harness must record model call, tokens, cost, trajectory, parser repair, and score evidence
 instead of summarizing it away. The N=5 live smoke
-(`docs/eval/spreadsheetbench-v1-model-edit-plan-n5-live-smoke.json`) repeats that official task five
-times and now records `taskCount: 5`, `caseCount: 1`, `passRate: 0`, p95 latency 17.161s,
-times and now records `taskCount: 5`, `caseCount: 1`, `passRate: 0`, p95 latency 7.51s,
-`providerCostUsd: 0.01079625`, zero candidate-generation failures, and five scored partial
-candidates with average overall `0.4` and best overall `0.675`. That is the agent-path drift signal: same task and model,
-different edit paths and scores, all captured in the benchmark report instead of summarized away.
+(`docs/eval/spreadsheetbench-v1-model-edit-plan-n5-live-smoke.json`) now repeats that official task
+five times and records `taskCount: 5`, `caseCount: 1`, `passRate: 1`, p95 latency 4.593s,
+`providerCostUsd: 0.01059125`, zero failure counts, and average overall `1`. The harness improvement
+is visible in the artifacts: the planner sees agent-visible `aggregate_section` candidates for
+section-level table grouping, unsupported invented operations are dropped, section rewrites apply
+after scalar cell edits, and the scorer only enforces formula equality when the evaluator gold cell
+actually contains a formula. That is a benchmark-path lesson, not a broad official-readiness claim:
+larger held-out V1 runs, V2 rendered chart grading, Docker/Harbor isolation, and route selection are
+still tracked as blockers below.
 The contamination gate
 (`npm run benchmark:contamination`) now scans agent-facing benchmark manifests, candidate manifests,
 agent-workspace manifests, and generated edit plans for evaluator-only gold/rubric/canary metadata; checked-in smokes show 0

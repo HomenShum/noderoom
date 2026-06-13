@@ -72,6 +72,33 @@ describe("SpreadsheetBench workbook scorer", () => {
     expect(score.scores.overall).toBeLessThan(1);
   });
 
+  it("does not penalize a value-equivalent candidate formula when gold stores a scalar result", async () => {
+    const root = tempRoot();
+    const candidate = join(root, "candidate.xlsx");
+    const gold = join(root, "gold.xlsx");
+    await writeFormulaVsScalarWorkbook(candidate, "formula");
+    await writeFormulaVsScalarWorkbook(gold, "scalar");
+
+    const score = await scoreSpreadsheetBenchWorkbook({
+      taskId: "fixture/formula-scalar-equivalence",
+      candidateWorkbookPath: candidate,
+      goldWorkbookPath: gold,
+      answerPosition: "'Model'!B2:C2",
+      maxMismatches: 10,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(score.pass).toBe(true);
+    expect(score.totals).toMatchObject({
+      comparedCells: 2,
+      valueMatches: 2,
+      formulaCells: 0,
+      formulaMatches: 0,
+      mismatches: 0,
+    });
+    expect(score.scores).toMatchObject({ value: 1, formula: null, overall: 1 });
+  });
+
   it("scores row, column, and merge layout drift when style comparison is enabled", async () => {
     const root = tempRoot();
     const candidate = join(root, "candidate.xlsx");
@@ -162,6 +189,14 @@ async function writeWorkbook(path: string, args: { value: number; formula: strin
   sheet.getCell("C2").value = { formula: args.formula, result: args.value * 2 };
   sheet.getCell("C2").numFmt = args.numFmt;
   sheet.getCell("C2").font = { bold: args.bold };
+  await workbook.xlsx.writeFile(path);
+}
+
+async function writeFormulaVsScalarWorkbook(path: string, mode: "formula" | "scalar") {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Model");
+  sheet.getCell("B2").value = 12;
+  sheet.getCell("C2").value = mode === "formula" ? { formula: "B2*2", result: 24 } : 24;
   await workbook.xlsx.writeFile(path);
 }
 

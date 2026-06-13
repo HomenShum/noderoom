@@ -486,6 +486,110 @@ describe("SpreadsheetBench staged runner", () => {
     expect(readFileSync(join(out, "13-9", "model-edit-plan.json"), "utf8")).toContain("\"sheet\": \"LISTS\"");
   });
 
+  it("infers and applies visible section aggregation without opening evaluator gold", async () => {
+    const source = tempRoot("source");
+    const stage = tempRoot("stage");
+    const out = tempRoot("out");
+    mkdirSync(join(source, "spreadsheet", "13-13"), { recursive: true });
+    await writeAggregateSectionsWorkbook(join(source, "spreadsheet", "13-13", "1_13-13_init.xlsx"), false);
+    await writeAggregateSectionsWorkbook(join(source, "spreadsheet", "13-13", "1_13-13_golden.xlsx"), true);
+    writeJson(join(source, "dataset.json"), [
+      {
+        id: "13-13",
+        instruction:
+          "Combine data from the RANGES sheet to the LISTS sheet by matching duplicates based on the DATE and REF columns, sum the AMOUNTS, use the completed STAGE section as a format reference, delete old LISTS ranges, and sort by DATE then REF.",
+        spreadsheet_path: "spreadsheet/13-13",
+        answer_position: "LISTS!A8:D10",
+        answer_sheet: "LISTS",
+      },
+    ]);
+    stageSpreadsheetBenchBundle(source, {
+      track: "spreadsheetbench-v1",
+      outputRoot: stage,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+    const planner: AgentModel = {
+      name: "aggregate-section-aware-planner",
+      async next({ messages }) {
+        const payload = JSON.parse(messages[0]?.content ?? "{}") as {
+          visibleDerivedOperationCandidates?: Array<{
+            op: string;
+            sourceSheet: string;
+            sourceSection: string;
+            targetSheet: string;
+            targetSection: string;
+            groupBy: string[];
+            valueColumn: string;
+          }>;
+        };
+        expect(payload.visibleDerivedOperationCandidates).toEqual([
+          expect.objectContaining({
+            op: "aggregate_section",
+            sourceSheet: "RANGES",
+            sourceSection: "DATA",
+            targetSheet: "LISTS",
+            targetSection: "DATA",
+            groupBy: ["DATE", "REF"],
+            valueColumn: "AMOUNTS",
+          }),
+        ]);
+        expect(JSON.stringify(payload).toLowerCase()).not.toContain("gold");
+        return {
+          text: JSON.stringify({
+            schema: 1,
+            operations: [
+              {
+                op: "aggregate_section",
+                sourceSheet: "RANGES",
+                sourceSection: "DATA",
+                targetSheet: "LISTS",
+                targetSection: "DATA",
+                groupBy: ["DATE", "REF"],
+                valueColumn: "AMOUNTS",
+                sortBy: ["DATE", "REF"],
+                totalLabel: "TOTAL",
+              },
+              { sheet: "LISTS", cell: "B8", value: "" },
+              { sheet: "LISTS", cell: "A7", value: "SN" },
+              { op: "clear_section", sheet: "LISTS", section: "STAGE" },
+            ],
+          }),
+          toolCalls: [],
+          done: true,
+          usage: { inputTokens: 150, outputTokens: 20 },
+        };
+      },
+    };
+
+    const report = await runStagedSpreadsheetBench({
+      stageRoot: stage,
+      outputRoot: out,
+      mode: "model-edit-plan",
+      model: planner,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(report.passCount).toBe(1);
+    expect(report.results[0].score?.pass).toBe(true);
+    const normalizedPlan = JSON.parse(readFileSync(join(out, "13-13", "model-edit-plan.json"), "utf8"));
+    expect(normalizedPlan.operations).toEqual(expect.arrayContaining([
+      expect.objectContaining({
+        op: "aggregate_section",
+        sourceSheet: "RANGES",
+        sourceSection: "DATA",
+        targetSheet: "LISTS",
+        targetSection: "DATA",
+      }),
+    ]));
+    expect(normalizedPlan.operations.at(-1)).toMatchObject({ op: "aggregate_section", targetSection: "DATA" });
+    expect(normalizedPlan.operations).not.toEqual(expect.arrayContaining([
+      expect.objectContaining({ op: "clear_section" }),
+    ]));
+    expect(readFileSync(join(out, "13-13", "candidate-manifest.json"), "utf8").toLowerCase()).not.toContain("gold");
+  });
+
   it("normalizes cell refs that the model accidentally emits in the sheet field", async () => {
     const source = tempRoot("source");
     const stage = tempRoot("stage");
@@ -982,6 +1086,46 @@ async function writeTwoSheetStarvationWorkbook(path: string, targetValue: number
   lists.getCell("A1").value = "target";
   lists.getCell("B2").value = targetValue;
   await workbook.xlsx.writeFile(path);
+}
+
+async function writeAggregateSectionsWorkbook(path: string, completed: boolean) {
+  const workbook = new ExcelJS.Workbook();
+  const ranges = workbook.addWorksheet("RANGES");
+  ranges.getCell("C1").value = "STAGE";
+  setRowValues(ranges, 2, ["S.N", "DATE", "BATCH", "REF", "AMOUNTS"]);
+  setRowValues(ranges, 3, [1, "2024-01-01", "S1", "AAA", 1]);
+  setRowValues(ranges, 4, [2, "2024-01-01", "S2", "AAA", 2]);
+  ranges.getCell("C6").value = "DATA";
+  setRowValues(ranges, 7, ["S.N", "DATE", "BATCH", "REF", "AMOUNTS"]);
+  setRowValues(ranges, 8, [1, "01/02/2024", "B1", "AAA", 5]);
+  setRowValues(ranges, 9, [2, "2024-01-02", "B2", "AAA", 7]);
+  setRowValues(ranges, 10, [3, "2024-01-03", "B3", "BBB", 2]);
+
+  const lists = workbook.addWorksheet("LISTS");
+  lists.getCell("C1").value = "STAGE";
+  setRowValues(lists, 2, ["SN", "DATE", "REF", "AMOUNTS"]);
+  setRowValues(lists, 3, [1, new Date(Date.UTC(2024, 0, 1)), "AAA", 3]);
+  lists.getCell("A4").value = "TOTAL";
+  lists.getCell("D4").value = { formula: "SUM(D3:D3)", result: 3 };
+  lists.getCell("C6").value = "DATA";
+  setRowValues(lists, 7, ["SN", "DATE", "REF", "AMOUNTS"]);
+  if (completed) {
+    setRowValues(lists, 8, [1, new Date(Date.UTC(2024, 0, 2)), "AAA", 12]);
+    setRowValues(lists, 9, [2, new Date(Date.UTC(2024, 0, 3)), "BBB", 2]);
+    lists.getCell("A10").value = "TOTAL";
+    lists.getCell("D10").value = { formula: "SUM(D8:D9)", result: 14 };
+  } else {
+    setRowValues(lists, 8, [1, "", "", ""]);
+    setRowValues(lists, 9, [2, "", "", ""]);
+    lists.getCell("A10").value = "TOTAL";
+  }
+  await workbook.xlsx.writeFile(path);
+}
+
+function setRowValues(sheet: ExcelJS.Worksheet, row: number, values: ExcelJS.CellValue[]) {
+  values.forEach((value, index) => {
+    sheet.getCell(row, index + 1).value = value;
+  });
 }
 
 async function writeFormulaSemanticsWorkbook(path: string, completed: boolean) {

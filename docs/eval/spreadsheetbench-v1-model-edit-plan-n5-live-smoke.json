@@ -1,19 +1,19 @@
 {
   "schema": 1,
-  "generatedAt": "2026-06-13T13:26:58.228Z",
+  "generatedAt": "2026-06-13T13:43:08.679Z",
   "stageRoot": "staged-v1",
   "outputRoot": "run-v1-model-edit-n5",
   "mode": "model-edit-plan",
   "taskCount": 5,
-  "passCount": 0,
-  "averageOverall": 0.4,
+  "passCount": 5,
+  "averageOverall": 1,
   "caseCount": 1,
   "caseRunCount": 5,
-  "casePassCount": 0,
-  "casePassRate": 0,
+  "casePassCount": 5,
+  "casePassRate": 1,
   "repeatCount": 5,
   "attemptCount": 5,
-  "passRate": 0,
+  "passRate": 1,
   "retryPolicy": {
     "maxRetries": 0,
     "retryOn": [
@@ -30,9 +30,9 @@
   },
   "stats": {
     "latencyMs": {
-      "p50": 2989,
-      "p95": 7510,
-      "max": 7510
+      "p50": 2502,
+      "p95": 4593,
+      "max": 4593
     },
     "failureCounts": {}
   },
@@ -41,9 +41,9 @@
     "evaluatorAccess": "after_candidate_emit_only",
     "budget": {
       "modelCalls": 5,
-      "inputTokens": 44425,
-      "outputTokens": 1529,
-      "providerCostUsd": 0.01079625
+      "inputTokens": 46000,
+      "outputTokens": 1113,
+      "providerCostUsd": 0.01059125
     }
   },
   "warnings": [],
@@ -56,9 +56,9 @@
         1
       ],
       "finalAttemptIndex": 1,
-      "pass": false,
-      "stopReason": "failed_score",
-      "bestOverall": 0.341666
+      "pass": true,
+      "stopReason": "passed",
+      "bestOverall": 1
     },
     {
       "taskId": "13-1",
@@ -68,9 +68,9 @@
         2
       ],
       "finalAttemptIndex": 2,
-      "pass": false,
-      "stopReason": "failed_score",
-      "bestOverall": 0.341666
+      "pass": true,
+      "stopReason": "passed",
+      "bestOverall": 1
     },
     {
       "taskId": "13-1",
@@ -80,9 +80,9 @@
         3
       ],
       "finalAttemptIndex": 3,
-      "pass": false,
-      "stopReason": "failed_score",
-      "bestOverall": 0.304167
+      "pass": true,
+      "stopReason": "passed",
+      "bestOverall": 1
     },
     {
       "taskId": "13-1",
@@ -92,9 +92,9 @@
         4
       ],
       "finalAttemptIndex": 4,
-      "pass": false,
-      "stopReason": "failed_score",
-      "bestOverall": 0.675
+      "pass": true,
+      "stopReason": "passed",
+      "bestOverall": 1
     },
     {
       "taskId": "13-1",
@@ -104,9 +104,9 @@
         5
       ],
       "finalAttemptIndex": 5,
-      "pass": false,
-      "stopReason": "failed_score",
-      "bestOverall": 0.3375
+      "pass": true,
+      "stopReason": "passed",
+      "bestOverall": 1
     }
   ],
   "results": [
@@ -123,7 +123,7 @@
       "candidateWorkbook": "13-1/attempt-01/candidate-01-1_13-1_init.xlsx",
       "score": {
         "schema": 1,
-        "generatedAt": "2026-06-13T13:26:58.228Z",
+        "generatedAt": "2026-06-13T13:43:08.679Z",
         "taskId": "13-1",
         "candidateWorkbook": "candidate-01-1_13-1_init.xlsx",
         "goldWorkbook": "01-1_13-1_golden.xlsx",
@@ -133,182 +133,41 @@
         ],
         "totals": {
           "comparedCells": 120,
-          "valueMatches": 82,
-          "formulaCells": 3,
+          "valueMatches": 120,
+          "formulaCells": 0,
           "formulaMatches": 0,
           "styleCells": 0,
           "styleMatches": 0,
           "styleLayoutItems": 0,
           "styleLayoutMatches": 0,
-          "mismatches": 41,
+          "mismatches": 0,
           "missingSheets": 0
         },
         "scores": {
-          "value": 0.683333,
-          "formula": 0,
+          "value": 1,
+          "formula": null,
           "style": null,
           "chartPackage": null,
-          "overall": 0.3416665
+          "overall": 1
         },
-        "pass": false,
-        "warnings": [
-          "mismatch list capped at 20/41"
-        ],
-        "mismatches": [
-          {
-            "kind": "formula",
-            "sheet": "LISTS",
-            "cell": "D10",
-            "actual": "=SUM(D3:D9)"
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B15",
-            "expected": "2024-02-22T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C15",
-            "expected": "REAS",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D15",
-            "expected": "1545",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B16",
-            "expected": "2024-02-22T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C16",
-            "expected": "RETER",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D16",
-            "expected": "950",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B17",
-            "expected": "2024-03-03T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C17",
-            "expected": "REAS",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D17",
-            "expected": "771",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B18",
-            "expected": "2024-03-03T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C18",
-            "expected": "REEPS",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D18",
-            "expected": "274",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B19",
-            "expected": "2024-03-03T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C19",
-            "expected": "RETER",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D19",
-            "expected": "1215",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D20",
-            "expected": "4755",
-            "actual": ""
-          },
-          {
-            "kind": "formula",
-            "sheet": "LISTS",
-            "cell": "D20",
-            "actual": "=SUM(D15:D19)"
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B25",
-            "expected": "2024-02-24T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C25",
-            "expected": "REAS",
-            "actual": ""
-          }
-        ]
+        "pass": true,
+        "warnings": [],
+        "mismatches": []
       },
       "model": {
         "name": "gpt-5.4-nano",
         "calls": 1,
         "usage": {
-          "inputTokens": 8885,
-          "outputTokens": 140
+          "inputTokens": 9200,
+          "outputTokens": 182
         },
-        "costUsd": 0.001952
+        "costUsd": 0.0020675
       },
       "timingsMs": {
-        "modelPlanning": 2977,
-        "candidateGeneration": 3110,
-        "scoring": 48,
-        "total": 3159
+        "modelPlanning": 2358,
+        "candidateGeneration": 2466,
+        "scoring": 36,
+        "total": 2502
       },
       "trajectory": [
         {
@@ -337,7 +196,7 @@
         },
         {
           "step": "score_candidate",
-          "detail": "41 cell mismatch(es)"
+          "detail": "0 cell mismatch(es)"
         }
       ]
     },
@@ -354,7 +213,7 @@
       "candidateWorkbook": "13-1/attempt-02/candidate-01-1_13-1_init.xlsx",
       "score": {
         "schema": 1,
-        "generatedAt": "2026-06-13T13:26:58.228Z",
+        "generatedAt": "2026-06-13T13:43:08.679Z",
         "taskId": "13-1",
         "candidateWorkbook": "candidate-01-1_13-1_init.xlsx",
         "goldWorkbook": "01-1_13-1_golden.xlsx",
@@ -364,183 +223,41 @@
         ],
         "totals": {
           "comparedCells": 120,
-          "valueMatches": 82,
-          "formulaCells": 1,
+          "valueMatches": 120,
+          "formulaCells": 0,
           "formulaMatches": 0,
           "styleCells": 0,
           "styleMatches": 0,
           "styleLayoutItems": 0,
           "styleLayoutMatches": 0,
-          "mismatches": 39,
+          "mismatches": 0,
           "missingSheets": 0
         },
         "scores": {
-          "value": 0.683333,
-          "formula": 0,
+          "value": 1,
+          "formula": null,
           "style": null,
           "chartPackage": null,
-          "overall": 0.3416665
+          "overall": 1
         },
-        "pass": false,
-        "warnings": [
-          "mismatch list capped at 20/39"
-        ],
-        "mismatches": [
-          {
-            "kind": "formula",
-            "sheet": "LISTS",
-            "cell": "D10",
-            "actual": "=SUM(D3:D9)"
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B15",
-            "expected": "2024-02-22T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C15",
-            "expected": "REAS",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D15",
-            "expected": "1545",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B16",
-            "expected": "2024-02-22T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C16",
-            "expected": "RETER",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D16",
-            "expected": "950",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B17",
-            "expected": "2024-03-03T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C17",
-            "expected": "REAS",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D17",
-            "expected": "771",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B18",
-            "expected": "2024-03-03T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C18",
-            "expected": "REEPS",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D18",
-            "expected": "274",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B19",
-            "expected": "2024-03-03T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C19",
-            "expected": "RETER",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D19",
-            "expected": "1215",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D20",
-            "expected": "4755",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B25",
-            "expected": "2024-02-24T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C25",
-            "expected": "REAS",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D25",
-            "expected": "1990",
-            "actual": ""
-          }
-        ]
+        "pass": true,
+        "warnings": [],
+        "mismatches": []
       },
       "model": {
         "name": "gpt-5.4-nano",
         "calls": 1,
         "usage": {
-          "inputTokens": 8885,
-          "outputTokens": 872
+          "inputTokens": 9200,
+          "outputTokens": 398
         },
-        "costUsd": 0.002867
+        "costUsd": 0.0023375
       },
       "timingsMs": {
-        "modelPlanning": 7423,
-        "candidateGeneration": 7488,
-        "scoring": 22,
-        "total": 7510
+        "modelPlanning": 4513,
+        "candidateGeneration": 4568,
+        "scoring": 24,
+        "total": 4593
       },
       "trajectory": [
         {
@@ -569,7 +286,7 @@
         },
         {
           "step": "score_candidate",
-          "detail": "39 cell mismatch(es)"
+          "detail": "0 cell mismatch(es)"
         }
       ]
     },
@@ -586,7 +303,7 @@
       "candidateWorkbook": "13-1/attempt-03/candidate-01-1_13-1_init.xlsx",
       "score": {
         "schema": 1,
-        "generatedAt": "2026-06-13T13:26:58.228Z",
+        "generatedAt": "2026-06-13T13:43:08.679Z",
         "taskId": "13-1",
         "candidateWorkbook": "candidate-01-1_13-1_init.xlsx",
         "goldWorkbook": "01-1_13-1_golden.xlsx",
@@ -596,183 +313,41 @@
         ],
         "totals": {
           "comparedCells": 120,
-          "valueMatches": 73,
-          "formulaCells": 3,
+          "valueMatches": 120,
+          "formulaCells": 0,
           "formulaMatches": 0,
           "styleCells": 0,
           "styleMatches": 0,
           "styleLayoutItems": 0,
           "styleLayoutMatches": 0,
-          "mismatches": 50,
+          "mismatches": 0,
           "missingSheets": 0
         },
         "scores": {
-          "value": 0.608333,
-          "formula": 0,
+          "value": 1,
+          "formula": null,
           "style": null,
           "chartPackage": null,
-          "overall": 0.3041665
+          "overall": 1
         },
-        "pass": false,
-        "warnings": [
-          "mismatch list capped at 20/50"
-        ],
-        "mismatches": [
-          {
-            "kind": "formula",
-            "sheet": "LISTS",
-            "cell": "D10",
-            "actual": "=SUM(D3:D9)"
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "A11",
-            "expected": "",
-            "actual": "1"
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B11",
-            "expected": "",
-            "actual": "2024-02-22T00:00:00.000Z"
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C11",
-            "expected": "",
-            "actual": "REAS"
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D11",
-            "expected": "",
-            "actual": "420"
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "A12",
-            "expected": "",
-            "actual": "2"
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B12",
-            "expected": "",
-            "actual": "2024-02-22T00:00:00.000Z"
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C12",
-            "expected": "",
-            "actual": "RETER"
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D12",
-            "expected": "",
-            "actual": "340"
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B15",
-            "expected": "2024-02-22T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C15",
-            "expected": "REAS",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D15",
-            "expected": "1545",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B16",
-            "expected": "2024-02-22T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C16",
-            "expected": "RETER",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D16",
-            "expected": "950",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B17",
-            "expected": "2024-03-03T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C17",
-            "expected": "REAS",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D17",
-            "expected": "771",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B18",
-            "expected": "2024-03-03T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C18",
-            "expected": "REEPS",
-            "actual": ""
-          }
-        ]
+        "pass": true,
+        "warnings": [],
+        "mismatches": []
       },
       "model": {
         "name": "gpt-5.4-nano",
         "calls": 1,
         "usage": {
-          "inputTokens": 8885,
-          "outputTokens": 290
+          "inputTokens": 9200,
+          "outputTokens": 182
         },
-        "costUsd": 0.0021395
+        "costUsd": 0.0020675
       },
       "timingsMs": {
-        "modelPlanning": 2923,
-        "candidateGeneration": 2968,
-        "scoring": 21,
-        "total": 2989
+        "modelPlanning": 1915,
+        "candidateGeneration": 1956,
+        "scoring": 38,
+        "total": 1996
       },
       "trajectory": [
         {
@@ -801,7 +376,7 @@
         },
         {
           "step": "score_candidate",
-          "detail": "50 cell mismatch(es)"
+          "detail": "0 cell mismatch(es)"
         }
       ]
     },
@@ -818,7 +393,7 @@
       "candidateWorkbook": "13-1/attempt-04/candidate-01-1_13-1_init.xlsx",
       "score": {
         "schema": 1,
-        "generatedAt": "2026-06-13T13:26:58.228Z",
+        "generatedAt": "2026-06-13T13:43:08.679Z",
         "taskId": "13-1",
         "candidateWorkbook": "candidate-01-1_13-1_init.xlsx",
         "goldWorkbook": "01-1_13-1_golden.xlsx",
@@ -828,184 +403,41 @@
         ],
         "totals": {
           "comparedCells": 120,
-          "valueMatches": 81,
+          "valueMatches": 120,
           "formulaCells": 0,
           "formulaMatches": 0,
           "styleCells": 0,
           "styleMatches": 0,
           "styleLayoutItems": 0,
           "styleLayoutMatches": 0,
-          "mismatches": 39,
+          "mismatches": 0,
           "missingSheets": 0
         },
         "scores": {
-          "value": 0.675,
+          "value": 1,
           "formula": null,
           "style": null,
           "chartPackage": null,
-          "overall": 0.675
+          "overall": 1
         },
-        "pass": false,
-        "warnings": [
-          "mismatch list capped at 20/39"
-        ],
-        "mismatches": [
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D10",
-            "expected": "1860",
-            "actual": "SUM(D3:D9)"
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B15",
-            "expected": "2024-02-22T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C15",
-            "expected": "REAS",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D15",
-            "expected": "1545",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B16",
-            "expected": "2024-02-22T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C16",
-            "expected": "RETER",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D16",
-            "expected": "950",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B17",
-            "expected": "2024-03-03T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C17",
-            "expected": "REAS",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D17",
-            "expected": "771",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B18",
-            "expected": "2024-03-03T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C18",
-            "expected": "REEPS",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D18",
-            "expected": "274",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B19",
-            "expected": "2024-03-03T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C19",
-            "expected": "RETER",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D19",
-            "expected": "1215",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D20",
-            "expected": "4755",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B25",
-            "expected": "2024-02-24T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C25",
-            "expected": "REAS",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D25",
-            "expected": "1990",
-            "actual": ""
-          }
-        ]
+        "pass": true,
+        "warnings": [],
+        "mismatches": []
       },
       "model": {
         "name": "gpt-5.4-nano",
         "calls": 1,
         "usage": {
-          "inputTokens": 8885,
-          "outputTokens": 130
+          "inputTokens": 9200,
+          "outputTokens": 226
         },
-        "costUsd": 0.0019395
+        "costUsd": 0.0021225
       },
       "timingsMs": {
-        "modelPlanning": 1561,
-        "candidateGeneration": 1605,
-        "scoring": 25,
-        "total": 1631
+        "modelPlanning": 2494,
+        "candidateGeneration": 2537,
+        "scoring": 18,
+        "total": 2556
       },
       "trajectory": [
         {
@@ -1034,7 +466,7 @@
         },
         {
           "step": "score_candidate",
-          "detail": "39 cell mismatch(es)"
+          "detail": "0 cell mismatch(es)"
         }
       ]
     },
@@ -1051,7 +483,7 @@
       "candidateWorkbook": "13-1/attempt-05/candidate-01-1_13-1_init.xlsx",
       "score": {
         "schema": 1,
-        "generatedAt": "2026-06-13T13:26:58.228Z",
+        "generatedAt": "2026-06-13T13:43:08.679Z",
         "taskId": "13-1",
         "candidateWorkbook": "candidate-01-1_13-1_init.xlsx",
         "goldWorkbook": "01-1_13-1_golden.xlsx",
@@ -1061,182 +493,41 @@
         ],
         "totals": {
           "comparedCells": 120,
-          "valueMatches": 81,
-          "formulaCells": 3,
+          "valueMatches": 120,
+          "formulaCells": 0,
           "formulaMatches": 0,
           "styleCells": 0,
           "styleMatches": 0,
           "styleLayoutItems": 0,
           "styleLayoutMatches": 0,
-          "mismatches": 42,
+          "mismatches": 0,
           "missingSheets": 0
         },
         "scores": {
-          "value": 0.675,
-          "formula": 0,
+          "value": 1,
+          "formula": null,
           "style": null,
           "chartPackage": null,
-          "overall": 0.3375
+          "overall": 1
         },
-        "pass": false,
-        "warnings": [
-          "mismatch list capped at 20/42"
-        ],
-        "mismatches": [
-          {
-            "kind": "formula",
-            "sheet": "LISTS",
-            "cell": "D10",
-            "actual": "=SUM(D3:D9)"
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B15",
-            "expected": "2024-02-22T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C15",
-            "expected": "REAS",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D15",
-            "expected": "1545",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B16",
-            "expected": "2024-02-22T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C16",
-            "expected": "RETER",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D16",
-            "expected": "950",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B17",
-            "expected": "2024-03-03T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C17",
-            "expected": "REAS",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D17",
-            "expected": "771",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B18",
-            "expected": "2024-03-03T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C18",
-            "expected": "REEPS",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D18",
-            "expected": "274",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B19",
-            "expected": "2024-03-03T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C19",
-            "expected": "RETER",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D19",
-            "expected": "1215",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "D20",
-            "expected": "4755",
-            "actual": ""
-          },
-          {
-            "kind": "formula",
-            "sheet": "LISTS",
-            "cell": "D20",
-            "actual": "=SUM(D15:D19)"
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "B25",
-            "expected": "2024-02-24T00:00:00.000Z",
-            "actual": ""
-          },
-          {
-            "kind": "value",
-            "sheet": "LISTS",
-            "cell": "C25",
-            "expected": "REAS",
-            "actual": ""
-          }
-        ]
+        "pass": true,
+        "warnings": [],
+        "mismatches": []
       },
       "model": {
         "name": "gpt-5.4-nano",
         "calls": 1,
         "usage": {
-          "inputTokens": 8885,
-          "outputTokens": 97
+          "inputTokens": 9200,
+          "outputTokens": 125
         },
-        "costUsd": 0.00189825
+        "costUsd": 0.00199625
       },
       "timingsMs": {
-        "modelPlanning": 1267,
-        "candidateGeneration": 1301,
-        "scoring": 24,
-        "total": 1326
+        "modelPlanning": 1448,
+        "candidateGeneration": 1483,
+        "scoring": 17,
+        "total": 1501
       },
       "trajectory": [
         {
@@ -1265,7 +556,7 @@
         },
         {
           "step": "score_candidate",
-          "detail": "42 cell mismatch(es)"
+          "detail": "0 cell mismatch(es)"
         }
       ]
     }

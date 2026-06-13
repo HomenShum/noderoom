@@ -1100,10 +1100,12 @@ workbook packaging, but it is not a rendered screenshot grade, a layout-quality 
 Gemini/VLM visual grade. `npm run benchmark:spreadsheetbench:chart-visual:probe` now records that
 remaining blocker in `docs/eval/spreadsheetbench-chart-visual-probe.json`: the checked-in artifact
 is `renderer_unavailable`, with no LibreOffice/soffice renderer, no candidate/gold screenshot pair,
-no Gemini key, and no accepted VLM report. The refreshed V2 score/run smokes still show the static
-signal explicitly: copy-input candidates miss two evaluator-only chart/drawing package parts per
-sampled task, dropping runner best-overall scores from workbook-only near-passes to chart-aware
-failures while the V2 staged/run contamination smokes stay at 0 leaks.
+and no accepted VLM report. When screenshot paths are supplied, the probe records SHA-256, byte
+count, and PNG dimensions for both candidate and gold images before any VLM report can pass. The
+refreshed V2 score/run smokes still show the static signal explicitly: copy-input candidates miss
+two evaluator-only chart/drawing package parts per sampled task, dropping runner best-overall scores
+from workbook-only near-passes to chart-aware failures while the V2 staged/run contamination smokes
+stay at 0 leaks.
 
 BankerToolBench now has the same first boundary in place: `npm run
 benchmark:bankertoolbench:ingest` scans an already-downloaded BTB bundle (`tasks.jsonl`,

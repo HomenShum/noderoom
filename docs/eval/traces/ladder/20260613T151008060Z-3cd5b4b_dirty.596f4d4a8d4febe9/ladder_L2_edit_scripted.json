@@ -1,0 +1,100 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T15:10:08.060Z",
+  "commitSha": "3cd5b4b",
+  "worktreeHash": "596f4d4a8d4febe9",
+  "gitDirty": true,
+  "suite": "ladder",
+  "caseId": "ladder:L2_edit:scripted",
+  "score": 1,
+  "checks": {
+    "targetValue": true,
+    "readBeforeWrite": true,
+    "notExhausted": true
+  },
+  "checkDetails": {},
+  "result": {
+    "pass": true,
+    "checkDetails": {},
+    "requestedModel": "scripted",
+    "resolvedModel": "scripted",
+    "resolvedModels": [
+      "scripted"
+    ],
+    "rung": "L2_edit",
+    "level": 2,
+    "ms": 2,
+    "tools": 4,
+    "cost": 0,
+    "stopReason": "done",
+    "reason": "",
+    "checks": {
+      "targetValue": true,
+      "readBeforeWrite": true,
+      "notExhausted": true
+    }
+  },
+  "trace": [
+    {
+      "step": 0,
+      "tool": "propose_lock",
+      "args": {
+        "elementIds": [
+          "r_ni__variance"
+        ],
+        "reason": "recompute variance"
+      },
+      "result": {
+        "ok": true,
+        "lockId": "lock_21"
+      },
+      "ms": 1
+    },
+    {
+      "step": 1,
+      "tool": "read_range",
+      "args": {
+        "elementIds": [
+          "r_ni__variance"
+        ]
+      },
+      "result": [
+        {
+          "id": "r_ni__variance",
+          "value": "",
+          "version": 1,
+          "locked": {
+            "by": "Room NodeAgent",
+            "reason": "recompute variance"
+          }
+        }
+      ],
+      "ms": 0
+    },
+    {
+      "step": 2,
+      "tool": "edit_cell",
+      "args": {
+        "elementId": "r_ni__variance",
+        "value": "+22.4%",
+        "baseVersion": 1
+      },
+      "result": {
+        "ok": true,
+        "version": 2
+      },
+      "ms": 1
+    },
+    {
+      "step": 3,
+      "tool": "release_lock",
+      "args": {
+        "lockId": "lock_21"
+      },
+      "result": {
+        "merged": []
+      },
+      "ms": 0
+    }
+  ]
+}

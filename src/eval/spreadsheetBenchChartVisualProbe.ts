@@ -1,5 +1,6 @@
+import { createHash } from "node:crypto";
 import { spawnSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, readFileSync, statSync } from "node:fs";
 import { basename } from "node:path";
 
 export type SpreadsheetBenchChartVisualProbeStatus =
@@ -31,8 +32,8 @@ export type SpreadsheetBenchChartVisualProbe = {
   };
   imagePair: {
     required: true;
-    candidateImage?: string;
-    goldImage?: string;
+    candidateImage?: SpreadsheetBenchChartVisualImageEvidence;
+    goldImage?: SpreadsheetBenchChartVisualImageEvidence;
     available: boolean;
   };
   vlm: {
@@ -43,6 +44,14 @@ export type SpreadsheetBenchChartVisualProbe = {
     reportAccepted: boolean;
   };
   warnings: string[];
+};
+
+export type SpreadsheetBenchChartVisualImageEvidence = {
+  path: string;
+  sha256: string;
+  bytes: number;
+  width?: number;
+  height?: number;
 };
 
 export type SpreadsheetBenchChartVisualProbeOptions = {
@@ -74,6 +83,8 @@ export function runSpreadsheetBenchChartVisualProbe(
   const selected = candidates.find((candidate) => candidate.ok)?.command;
   const candidateImageAvailable = Boolean(options.candidateImagePath && existsSync(options.candidateImagePath));
   const goldImageAvailable = Boolean(options.goldImagePath && existsSync(options.goldImagePath));
+  const candidateImage = options.candidateImagePath && candidateImageAvailable ? imageEvidence(options.candidateImagePath) : undefined;
+  const goldImage = options.goldImagePath && goldImageAvailable ? imageEvidence(options.goldImagePath) : undefined;
   const imagePairAvailable = candidateImageAvailable && goldImageAvailable;
   const vlmReport = readVlmReport(options.vlmReportPath);
   const apiKeyPresent = Boolean(env.GOOGLE_GENERATIVE_AI_API_KEY || env.GOOGLE_API_KEY);
@@ -111,8 +122,8 @@ export function runSpreadsheetBenchChartVisualProbe(
     },
     imagePair: {
       required: true,
-      ...(options.candidateImagePath ? { candidateImage: basename(options.candidateImagePath) } : {}),
-      ...(options.goldImagePath ? { goldImage: basename(options.goldImagePath) } : {}),
+      ...(candidateImage ? { candidateImage } : {}),
+      ...(goldImage ? { goldImage } : {}),
       available: imagePairAvailable,
     },
     vlm: {
@@ -123,6 +134,27 @@ export function runSpreadsheetBenchChartVisualProbe(
       reportAccepted,
     },
     warnings,
+  };
+}
+
+function imageEvidence(path: string): SpreadsheetBenchChartVisualImageEvidence {
+  const content = readFileSync(path);
+  const dimensions = pngDimensions(content);
+  return {
+    path: basename(path),
+    sha256: createHash("sha256").update(content).digest("hex"),
+    bytes: statSync(path).size,
+    ...dimensions,
+  };
+}
+
+function pngDimensions(content: Buffer): { width?: number; height?: number } {
+  const pngSignature = "89504e470d0a1a0a";
+  if (content.length < 24 || content.subarray(0, 8).toString("hex") !== pngSignature) return {};
+  if (content.subarray(12, 16).toString("ascii") !== "IHDR") return {};
+  return {
+    width: content.readUInt32BE(16),
+    height: content.readUInt32BE(20),
   };
 }
 

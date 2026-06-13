@@ -31,8 +31,8 @@ describe("SpreadsheetBench chart visual probe", () => {
     const candidate = join(root, "candidate.png");
     const gold = join(root, "gold.png");
     const vlmReport = join(root, "vlm-report.json");
-    writeFileSync(candidate, "candidate image");
-    writeFileSync(gold, "gold image");
+    writeFileSync(candidate, fakePng(640, 360));
+    writeFileSync(gold, fakePng(640, 360));
     writeFileSync(vlmReport, JSON.stringify({
       verifier: "spreadsheetbench_chart_visual_vlm",
       status: "judged",
@@ -58,7 +58,30 @@ describe("SpreadsheetBench chart visual probe", () => {
     expect(report.status).toBe("chart_visual_grade_proven");
     expect(report.pass).toBe(true);
     expect(report.renderer.selected).toBe("soffice --version");
-    expect(report.imagePair).toMatchObject({ candidateImage: "candidate.png", goldImage: "gold.png", available: true });
+    expect(report.imagePair.available).toBe(true);
+    expect(report.imagePair.candidateImage).toMatchObject({
+      path: "candidate.png",
+      bytes: 24,
+      width: 640,
+      height: 360,
+    });
+    expect(report.imagePair.candidateImage?.sha256).toMatch(/^[a-f0-9]{64}$/);
+    expect(report.imagePair.goldImage).toMatchObject({
+      path: "gold.png",
+      bytes: 24,
+      width: 640,
+      height: 360,
+    });
     expect(report.vlm.reportAccepted).toBe(true);
   });
 });
+
+function fakePng(width: number, height: number): Buffer {
+  const buffer = Buffer.alloc(24);
+  Buffer.from("89504e470d0a1a0a", "hex").copy(buffer, 0);
+  buffer.writeUInt32BE(13, 8);
+  buffer.write("IHDR", 12, "ascii");
+  buffer.writeUInt32BE(width, 16);
+  buffer.writeUInt32BE(height, 20);
+  return buffer;
+}

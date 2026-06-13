@@ -553,6 +553,17 @@ describe("SpreadsheetBench staged runner", () => {
               { sheet: "LISTS", cell: "B8", value: "" },
               { sheet: "LISTS", cell: "A7", value: "SN" },
               { op: "clear_section", sheet: "LISTS", section: "STAGE" },
+              {
+                op: "sort_unique_rows",
+                sheet: "LISTS",
+                sourceRange: "A1:D10",
+                targetCell: "A2",
+                keyColumns: ["B", "C"],
+                outputColumns: ["B", "C", "D"],
+                sortBy: "C",
+                sortDirection: "asc",
+                includeIndex: true,
+              },
             ],
           }),
           toolCalls: [],
@@ -586,8 +597,128 @@ describe("SpreadsheetBench staged runner", () => {
     expect(normalizedPlan.operations.at(-1)).toMatchObject({ op: "aggregate_section", targetSection: "DATA" });
     expect(normalizedPlan.operations).not.toEqual(expect.arrayContaining([
       expect.objectContaining({ op: "clear_section" }),
+      expect.objectContaining({ op: "sort_unique_rows" }),
     ]));
     expect(readFileSync(join(out, "13-13", "candidate-manifest.json"), "utf8").toLowerCase()).not.toContain("gold");
+  });
+
+  it("infers and materializes visible date filters instead of unsupported dynamic formulas", async () => {
+    const source = tempRoot("source");
+    const stage = tempRoot("stage");
+    const out = tempRoot("out");
+    mkdirSync(join(source, "spreadsheet", "17-35"), { recursive: true });
+    await writeFilterRowsWorkbook(join(source, "spreadsheet", "17-35", "1_17-35_init.xlsx"), false);
+    await writeFilterRowsWorkbook(join(source, "spreadsheet", "17-35", "1_17-35_golden.xlsx"), true);
+    writeJson(join(source, "dataset.json"), [
+      {
+        id: "17-35",
+        instruction:
+          "Display the dates based on the start and end date criteria entered in cells I2 and J2. I have a data range from A1 to E8, the criteria range in cells I2 and J2, and I want the filtered results to start from cell I6.",
+        spreadsheet_path: "spreadsheet/17-35",
+        answer_position: "I6:M7",
+        answer_sheet: "FILTER 5b",
+      },
+    ]);
+    stageSpreadsheetBenchBundle(source, {
+      track: "spreadsheetbench-v1",
+      outputRoot: stage,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+    const planner: AgentModel = {
+      name: "filter-formula-planner",
+      async next({ messages }) {
+        const payload = JSON.parse(messages[0]?.content ?? "{}") as {
+          visibleDerivedOperationCandidates?: Array<{ op: string; sourceRange?: string; targetCell?: string }>;
+        };
+        expect(payload.visibleDerivedOperationCandidates).toEqual([
+          expect.objectContaining({ op: "filter_rows", sourceRange: "A1:E8", targetCell: "I6" }),
+        ]);
+        return {
+          text: JSON.stringify({
+            schema: 1,
+            operations: [{ sheet: "FILTER 5b", cell: "I6", value: "=FILTER(A1:E8,(A1:A8>=I2)*(A1:A8<=J2))" }],
+          }),
+          toolCalls: [],
+          done: true,
+          usage: { inputTokens: 140, outputTokens: 20 },
+        };
+      },
+    };
+
+    const report = await runStagedSpreadsheetBench({
+      stageRoot: stage,
+      outputRoot: out,
+      mode: "model-edit-plan",
+      model: planner,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(report.passCount).toBe(1);
+    const normalizedPlan = JSON.parse(readFileSync(join(out, "17-35", "model-edit-plan.json"), "utf8"));
+    expect(normalizedPlan.operations.at(-1)).toMatchObject({ op: "filter_rows", targetCell: "I6" });
+  });
+
+  it("infers and applies visible unique REF sorting after partial scalar model output", async () => {
+    const source = tempRoot("source");
+    const stage = tempRoot("stage");
+    const out = tempRoot("out");
+    mkdirSync(join(source, "spreadsheet", "22-47"), { recursive: true });
+    await writeSortUniqueRowsWorkbook(join(source, "spreadsheet", "22-47", "1_22-47_init.xlsx"), false);
+    await writeSortUniqueRowsWorkbook(join(source, "spreadsheet", "22-47", "1_22-47_golden.xlsx"), true);
+    writeJson(join(source, "dataset.json"), [
+      {
+        id: "22-47",
+        instruction:
+          "The sort should skip empty cells, headers, and duplicate items, where duplicates are defined by identical entries in both column B and C. The final answer should be output in columns G and H, and sort only column H sorted lowest to highest.",
+        spreadsheet_path: "spreadsheet/22-47",
+        answer_position: "F2:H5",
+        answer_sheet: "sheet1",
+      },
+    ]);
+    stageSpreadsheetBenchBundle(source, {
+      track: "spreadsheetbench-v1",
+      outputRoot: stage,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+    const planner: AgentModel = {
+      name: "short-prefix-sort-planner",
+      async next({ messages }) {
+        const payload = JSON.parse(messages[0]?.content ?? "{}") as {
+          visibleDerivedOperationCandidates?: Array<{ op: string; sourceRange?: string; targetCell?: string }>;
+        };
+        expect(payload.visibleDerivedOperationCandidates).toEqual([
+          expect.objectContaining({ op: "sort_unique_rows", sourceRange: "A1:C8", targetCell: "F2" }),
+        ]);
+        return {
+          text: JSON.stringify({
+            schema: 1,
+            operations: [
+              { sheet: "sheet1", cell: "G2", value: "ZED" },
+              { sheet: "sheet1", cell: "H2", value: 999 },
+            ],
+          }),
+          toolCalls: [],
+          done: true,
+          usage: { inputTokens: 160, outputTokens: 20 },
+        };
+      },
+    };
+
+    const report = await runStagedSpreadsheetBench({
+      stageRoot: stage,
+      outputRoot: out,
+      mode: "model-edit-plan",
+      model: planner,
+      clean: true,
+      generatedAt: "2026-06-13T00:00:00.000Z",
+    });
+
+    expect(report.passCount).toBe(1);
+    const normalizedPlan = JSON.parse(readFileSync(join(out, "22-47", "model-edit-plan.json"), "utf8"));
+    expect(normalizedPlan.operations.at(-1)).toMatchObject({ op: "sort_unique_rows", targetCell: "F2" });
   });
 
   it("normalizes cell refs that the model accidentally emits in the sheet field", async () => {
@@ -1122,10 +1253,48 @@ async function writeAggregateSectionsWorkbook(path: string, completed: boolean) 
   await workbook.xlsx.writeFile(path);
 }
 
-function setRowValues(sheet: ExcelJS.Worksheet, row: number, values: ExcelJS.CellValue[]) {
+function setRowValues(sheet: ExcelJS.Worksheet, row: number, values: ExcelJS.CellValue[], startColumn = 1) {
   values.forEach((value, index) => {
-    sheet.getCell(row, index + 1).value = value;
+    sheet.getCell(row, startColumn + index).value = value;
   });
+}
+
+async function writeFilterRowsWorkbook(path: string, completed: boolean) {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("FILTER 5b");
+  setRowValues(sheet, 1, ["DATE", "SUPPLIER", "TAX", "INV", "AMOUNT"]);
+  setRowValues(sheet, 2, [new Date(Date.UTC(2023, 2, 20)), "BEFORE", 1, 10, 100]);
+  setRowValues(sheet, 3, [new Date(Date.UTC(2023, 2, 24)), "IN-A", 2, 20, 200]);
+  setRowValues(sheet, 4, [new Date(Date.UTC(2023, 3, 4)), "IN-B", 3, 30, 300]);
+  setRowValues(sheet, 5, [new Date(Date.UTC(2024, 4, 1)), "AFTER", 4, 40, 400]);
+  sheet.getCell("I2").value = new Date(Date.UTC(2023, 2, 22));
+  sheet.getCell("J2").value = new Date(Date.UTC(2024, 3, 23));
+  setRowValues(sheet, 5, ["DATE", "SUPPLIER", "TAX", "INV", "AMOUNT"], 9);
+  if (completed) {
+    setRowValues(sheet, 6, [new Date(Date.UTC(2023, 2, 24)), "IN-A", 2, 20, 200], 9);
+    setRowValues(sheet, 7, [new Date(Date.UTC(2023, 3, 4)), "IN-B", 3, 30, 300], 9);
+  }
+  await workbook.xlsx.writeFile(path);
+}
+
+async function writeSortUniqueRowsWorkbook(path: string, completed: boolean) {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("sheet1");
+  setRowValues(sheet, 1, ["ITEM", "NAME", "REF", "", "", "ITEM", "NAME", "REF"]);
+  setRowValues(sheet, 2, [1, "BETA", 30]);
+  setRowValues(sheet, 3, [2, "ALPHA", 10]);
+  setRowValues(sheet, 4, [3, "BETA", 30]);
+  setRowValues(sheet, 5, ["ITEM", "NAME", "REF"]);
+  setRowValues(sheet, 6, [1, "GAMMA", 20]);
+  setRowValues(sheet, 7, [2, "", ""]);
+  setRowValues(sheet, 8, [3, "DELTA", 40]);
+  if (completed) {
+    setRowValues(sheet, 2, [1, "ALPHA", 10], 6);
+    setRowValues(sheet, 3, [2, "GAMMA", 20], 6);
+    setRowValues(sheet, 4, [3, "BETA", 30], 6);
+    setRowValues(sheet, 5, [4, "DELTA", 40], 6);
+  }
+  await workbook.xlsx.writeFile(path);
 }
 
 async function writeFormulaSemanticsWorkbook(path: string, completed: boolean) {

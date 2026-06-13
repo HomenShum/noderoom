@@ -1,0 +1,8 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T14:07:52.740Z",
+  "root": "run-v1-model-edit-3task",
+  "checkedFiles": 12,
+  "leakCount": 0,
+  "leaks": []
+}

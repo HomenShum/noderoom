@@ -1036,9 +1036,16 @@ five times and records `taskCount: 5`, `caseCount: 1`, `passRate: 1`, p95 latenc
 is visible in the artifacts: the planner sees agent-visible `aggregate_section` candidates for
 section-level table grouping, unsupported invented operations are dropped, section rewrites apply
 after scalar cell edits, and the scorer only enforces formula equality when the evaluator gold cell
-actually contains a formula. That is a benchmark-path lesson, not a broad official-readiness claim:
-larger held-out V1 runs, V2 rendered chart grading, Docker/Harbor isolation, and route selection are
-still tracked as blockers below.
+actually contains a formula. A broader official V1 three-task smoke
+(`docs/eval/spreadsheetbench-v1-model-edit-plan-3task-live-smoke.json`) now passes 3/3 with
+`gpt-5.4-nano`, average overall `1`, p95 latency 2.989s, `$0.00921785` spend, zero failure counts,
+and 0 candidate-output leaks
+(`docs/eval/spreadsheetbench-v1-run-3task-contamination-smoke.json`). That run exercises the next
+two spreadsheet-harness lessons: deterministic structural operators for visible date filters
+(`filter_rows`) and visible duplicate-removal/sort tables (`sort_unique_rows`) belong in the
+harness tool contract, not as fragile one-cell dynamic formulas or short prefix writes. This is a
+benchmark-path lesson, not a broad official-readiness claim: larger held-out V1 runs, V2 rendered
+chart grading, Docker/Harbor isolation, and route selection are still tracked as blockers below.
 The contamination gate
 (`npm run benchmark:contamination`) now scans agent-facing benchmark manifests, candidate manifests,
 agent-workspace manifests, and generated edit plans for evaluator-only gold/rubric/canary metadata; checked-in smokes show 0

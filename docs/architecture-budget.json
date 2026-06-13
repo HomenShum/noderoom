@@ -76,6 +76,7 @@
         "docs/eval/**",
         "docs/qa/**",
         "docs/skills/**",
+        "docs/synthesis/**",
         "evals/**",
         ".tmp-qa/**",
         "scripts/agent-improvement-loop.ts",

@@ -63,6 +63,19 @@ Do not claim a feature is production-complete until it has:
 | Multi-file research | Cross-file workflow need is documented. | Eval for using several uploaded artifacts as context without leaking private files into room public traces. | Public/private source boundaries are asserted in tests. |
 | QA matrix continuity | `docs/qa/production-matrix.json` and generated docs exist. | Require every new feature to append/update the QA matrix and generated README visualization. | CI fails if matrix docs are stale. |
 
+SpreadsheetBench addendum: the harness now has a broader official V1 three-task
+live smoke on the locally staged corpus. `gpt-5.4-nano` records 3/3 pass,
+average overall 1.0, p95 2.989s, $0.00921785 spend, zero failure counts, and
+0 candidate-output leaks in
+`docs/eval/spreadsheetbench-v1-model-edit-plan-3task-live-smoke.json` plus
+`docs/eval/spreadsheetbench-v1-run-3task-contamination-smoke.json`. The new
+`filter_rows` and `sort_unique_rows` structural operators cover visible date
+filtering and visible duplicate-removal/sort tables without evaluator-gold
+access. Remaining gap stays the same: run larger held-out official bundles and
+add Docker/Harbor isolation, route selection, V2 rendered chart grading, and
+BankerToolBench production verifier integration before claiming official
+benchmark readiness.
+
 ## P1: UI Operations
 
 | Gap | Current state | Needed proof | Acceptance gate |

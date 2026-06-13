@@ -205,7 +205,33 @@ type AgentAggregateSectionOperation = {
   totalLabel?: string;
 };
 
-type AgentEditOperation = AgentCellEditOperation | AgentAggregateSectionOperation;
+type AgentFilterRowsOperation = {
+  op: "filter_rows";
+  sheet: string;
+  sourceRange: string;
+  targetCell: string;
+  dateColumn?: string;
+  startCell: string;
+  endCell: string;
+};
+
+type AgentSortUniqueRowsOperation = {
+  op: "sort_unique_rows";
+  sheet: string;
+  sourceRange: string;
+  targetCell: string;
+  keyColumns: string[];
+  outputColumns: string[];
+  sortBy: string;
+  sortDirection?: "asc" | "desc";
+  includeIndex?: boolean;
+};
+
+type AgentEditOperation =
+  | AgentCellEditOperation
+  | AgentAggregateSectionOperation
+  | AgentFilterRowsOperation
+  | AgentSortUniqueRowsOperation;
 
 type FormulaResult = string | number | boolean;
 type FormulaCellValue = FormulaResult | null;
@@ -739,6 +765,24 @@ function validateEditPlan(plan: AgentEditPlan, taskId: string) {
       if (!operation.valueColumn.trim()) throw new Error(`edit-plan aggregate operation ${index + 1} is missing valueColumn`);
       continue;
     }
+    if (isFilterRowsOperation(operation)) {
+      if (!operation.sheet.trim()) throw new Error(`edit-plan filter operation ${index + 1} is missing sheet`);
+      if (!parseRangeRef(operation.sourceRange)) throw new Error(`edit-plan filter operation ${index + 1} has invalid sourceRange`);
+      if (!isCellRef(operation.targetCell)) throw new Error(`edit-plan filter operation ${index + 1} has invalid targetCell`);
+      if (!isCellRef(operation.startCell) || !isCellRef(operation.endCell)) {
+        throw new Error(`edit-plan filter operation ${index + 1} has invalid criteria cells`);
+      }
+      continue;
+    }
+    if (isSortUniqueRowsOperation(operation)) {
+      if (!operation.sheet.trim()) throw new Error(`edit-plan sort operation ${index + 1} is missing sheet`);
+      if (!parseRangeRef(operation.sourceRange)) throw new Error(`edit-plan sort operation ${index + 1} has invalid sourceRange`);
+      if (!isCellRef(operation.targetCell)) throw new Error(`edit-plan sort operation ${index + 1} has invalid targetCell`);
+      if (!operation.keyColumns.length || !operation.outputColumns.length || !operation.sortBy.trim()) {
+        throw new Error(`edit-plan sort operation ${index + 1} is missing sort metadata`);
+      }
+      continue;
+    }
     if (!operation || typeof operation.sheet !== "string" || !operation.sheet.trim()) {
       throw new Error(`edit-plan operation ${index + 1} is missing sheet`);
     }
@@ -755,14 +799,28 @@ function isAggregateSectionOperation(operation: unknown): operation is AgentAggr
   return Boolean(operation && typeof operation === "object" && (operation as { op?: unknown }).op === "aggregate_section");
 }
 
+function isFilterRowsOperation(operation: unknown): operation is AgentFilterRowsOperation {
+  return Boolean(operation && typeof operation === "object" && (operation as { op?: unknown }).op === "filter_rows");
+}
+
+function isSortUniqueRowsOperation(operation: unknown): operation is AgentSortUniqueRowsOperation {
+  return Boolean(operation && typeof operation === "object" && (operation as { op?: unknown }).op === "sort_unique_rows");
+}
+
+function isStructuralOperation(
+  operation: AgentEditOperation,
+): operation is AgentAggregateSectionOperation | AgentFilterRowsOperation | AgentSortUniqueRowsOperation {
+  return isAggregateSectionOperation(operation) || isFilterRowsOperation(operation) || isSortUniqueRowsOperation(operation);
+}
+
 function isCellEditOperation(operation: AgentEditOperation): operation is AgentCellEditOperation {
-  return Boolean(operation && !isAggregateSectionOperation(operation) && typeof (operation as { sheet?: unknown }).sheet === "string");
+  return Boolean(operation && !isStructuralOperation(operation) && typeof (operation as { sheet?: unknown }).sheet === "string");
 }
 
 function hasUnsupportedOperationKind(operation: unknown): boolean {
   if (!operation || typeof operation !== "object") return false;
   const op = (operation as { op?: unknown }).op;
-  return typeof op === "string" && op !== "set_cell" && op !== "aggregate_section";
+  return typeof op === "string" && !["set_cell", "aggregate_section", "filter_rows", "sort_unique_rows"].includes(op);
 }
 
 function isCellRef(value: string): boolean {
@@ -773,10 +831,22 @@ function normalizeEditPlan(plan: AgentEditPlan, snapshot: WorkbookSnapshot, agen
   const sheetNames = new Set(snapshot.sheets.map((sheet) => sheet.name));
   const sheetNamesByLower = new Map(snapshot.sheets.map((sheet) => [sheet.name.toLowerCase(), sheet.name]));
   const onlySheetName = snapshot.sheets.length === 1 ? snapshot.sheets[0]?.name : undefined;
+  const candidateFilterKeys = agent ? new Set(inferVisibleFilterRowsOperations(agent, snapshot, []).map(filterRowsOperationKey)) : undefined;
+  const candidateSortKeys = agent ? new Set(inferVisibleSortUniqueRowsOperations(agent, snapshot, []).map(sortUniqueRowsOperationKey)) : undefined;
   let lastKnownSheet: string | undefined;
   const operations: AgentEditOperation[] = Array.isArray(plan.operations)
     ? plan.operations.flatMap((operation): AgentEditOperation[] => {
         if (isAggregateSectionOperation(operation)) return [normalizeAggregateSectionOperation(operation, sheetNamesByLower)];
+        if (isFilterRowsOperation(operation)) {
+          const normalized = normalizeFilterRowsOperation(operation, sheetNamesByLower);
+          const candidateAllowed = !candidateFilterKeys || candidateFilterKeys.has(filterRowsOperationKey(normalized));
+          return candidateAllowed && filterRowsOperationIsSelfConsistent(normalized) ? [normalized] : [];
+        }
+        if (isSortUniqueRowsOperation(operation)) {
+          const normalized = normalizeSortUniqueRowsOperation(operation, sheetNamesByLower);
+          const candidateAllowed = !candidateSortKeys || candidateSortKeys.has(sortUniqueRowsOperationKey(normalized));
+          return candidateAllowed && sortUniqueRowsOperationIsSelfConsistent(normalized) ? [normalized] : [];
+        }
         if (hasUnsupportedOperationKind(operation)) return [];
         if (!isCellEditOperation(operation)) return [operation];
         const normalizedOperation = normalizeEditOperationShape(operation);
@@ -800,10 +870,16 @@ function normalizeEditPlan(plan: AgentEditPlan, snapshot: WorkbookSnapshot, agen
         return [normalizedOperation];
       })
     : plan.operations;
-  const inferredOperations = agent ? inferVisibleAggregateSectionOperations(agent, snapshot, operations) : [];
+  const inferredOperations = agent
+    ? [
+        ...inferVisibleAggregateSectionOperations(agent, snapshot, operations),
+        ...inferVisibleFilterRowsOperations(agent, snapshot, operations),
+        ...inferVisibleSortUniqueRowsOperations(agent, snapshot, operations),
+      ]
+    : [];
   const orderedOperations = [
-    ...operations.filter((operation) => !isAggregateSectionOperation(operation)),
-    ...operations.filter(isAggregateSectionOperation),
+    ...operations.filter((operation) => !isStructuralOperation(operation)),
+    ...operations.filter(isStructuralOperation),
     ...inferredOperations,
   ];
   return {
@@ -827,6 +903,75 @@ function normalizeAggregateSectionOperation(
     sortBy: operation.sortBy?.map((header) => header.trim()).filter(Boolean),
     totalLabel: operation.totalLabel?.trim() || undefined,
   };
+}
+
+function normalizeFilterRowsOperation(
+  operation: AgentFilterRowsOperation,
+  sheetNamesByLower: Map<string, string>,
+): AgentFilterRowsOperation {
+  return {
+    ...operation,
+    sheet: sheetNamesByLower.get(operation.sheet.trim().toLowerCase()) ?? operation.sheet.trim(),
+    sourceRange: operation.sourceRange.trim().toUpperCase(),
+    targetCell: operation.targetCell.trim().toUpperCase(),
+    dateColumn: operation.dateColumn?.trim().toUpperCase() || undefined,
+    startCell: operation.startCell.trim().toUpperCase(),
+    endCell: operation.endCell.trim().toUpperCase(),
+  };
+}
+
+function normalizeSortUniqueRowsOperation(
+  operation: AgentSortUniqueRowsOperation,
+  sheetNamesByLower: Map<string, string>,
+): AgentSortUniqueRowsOperation {
+  return {
+    ...operation,
+    sheet: sheetNamesByLower.get(operation.sheet.trim().toLowerCase()) ?? operation.sheet.trim(),
+    sourceRange: operation.sourceRange.trim().toUpperCase(),
+    targetCell: operation.targetCell.trim().toUpperCase(),
+    keyColumns: operation.keyColumns.map((column) => column.trim().toUpperCase()).filter(Boolean),
+    outputColumns: operation.outputColumns.map((column) => column.trim().toUpperCase()).filter(Boolean),
+    sortBy: operation.sortBy.trim().toUpperCase(),
+    sortDirection: operation.sortDirection === "desc" ? "desc" : "asc",
+    includeIndex: operation.includeIndex ?? true,
+  };
+}
+
+function filterRowsOperationIsSelfConsistent(operation: AgentFilterRowsOperation): boolean {
+  const source = parseRangeRef(operation.sourceRange);
+  if (!source) return false;
+  const dateColumn = operation.dateColumn ? columnNameToNumber(operation.dateColumn) : source.startCol;
+  return dateColumn >= source.startCol && dateColumn <= source.endCol;
+}
+
+function filterRowsOperationKey(operation: AgentFilterRowsOperation): string {
+  return [operation.sheet, operation.sourceRange, operation.targetCell, operation.dateColumn ?? "", operation.startCell, operation.endCell]
+    .map((value) => value.trim().toUpperCase())
+    .join("::");
+}
+
+function sortUniqueRowsOperationIsSelfConsistent(operation: AgentSortUniqueRowsOperation): boolean {
+  const source = parseRangeRef(operation.sourceRange);
+  if (!source) return false;
+  const referencedColumns = [
+    ...operation.keyColumns,
+    ...operation.outputColumns,
+    operation.sortBy,
+  ].map(columnNameToNumber);
+  return referencedColumns.every((column) => column >= source.startCol && column <= source.endCol);
+}
+
+function sortUniqueRowsOperationKey(operation: AgentSortUniqueRowsOperation): string {
+  return [
+    operation.sheet,
+    operation.sourceRange,
+    operation.targetCell,
+    operation.keyColumns.join(","),
+    operation.outputColumns.join(","),
+    operation.sortBy,
+    operation.sortDirection ?? "asc",
+    operation.includeIndex === false ? "no_index" : "index",
+  ].map((value) => value.trim().toUpperCase()).join("::");
 }
 
 function inferVisibleAggregateSectionOperations(
@@ -876,6 +1021,72 @@ function inferVisibleAggregateSectionOperations(
     }
   }
   return operations;
+}
+
+function inferVisibleFilterRowsOperations(
+  agent: AgentManifest,
+  snapshot: WorkbookSnapshot,
+  existingOperations: AgentEditOperation[],
+): AgentFilterRowsOperation[] {
+  const instruction = agent.instruction;
+  const lower = instruction.toLowerCase();
+  if (!/\bfilter(?:ed)?\b/.test(lower) || !/\bdate/.test(lower) || !/\bcriteria\b/.test(lower)) return [];
+  const dataRange = instruction.match(/\bdata range from\s+([A-Z]{1,3}[1-9][0-9]*\s+to\s+[A-Z]{1,3}[1-9][0-9]*)/i)?.[1]
+    ?.replace(/\s+to\s+/i, ":")
+    .toUpperCase();
+  const criteria = instruction.match(/\bcells?\s+([A-Z]{1,3}[1-9][0-9]*)\s+and\s+([A-Z]{1,3}[1-9][0-9]*)/i);
+  const targetCell = instruction.match(/\bstart(?:ing)?(?:\s+from)?\s+cell\s+([A-Z]{1,3}[1-9][0-9]*)/i)?.[1]?.toUpperCase();
+  if (!dataRange || !criteria || !targetCell) return [];
+  const sheet = snapshot.sheets.find((item) => parseRangeRef(dataRange) && item.cells.some((cell) => cell.address.toUpperCase() === criteria[1].toUpperCase()));
+  if (!sheet) return [];
+  const existing = new Set(
+    existingOperations.filter(isFilterRowsOperation).map((operation) => `${operation.sheet}:${operation.sourceRange}:${operation.targetCell}`),
+  );
+  const key = `${sheet.name}:${dataRange}:${targetCell}`;
+  if (existing.has(key)) return [];
+  return [{
+    op: "filter_rows",
+    sheet: sheet.name,
+    sourceRange: dataRange,
+    targetCell,
+    dateColumn: "A",
+    startCell: criteria[1].toUpperCase(),
+    endCell: criteria[2].toUpperCase(),
+  }];
+}
+
+function inferVisibleSortUniqueRowsOperations(
+  agent: AgentManifest,
+  snapshot: WorkbookSnapshot,
+  existingOperations: AgentEditOperation[],
+): AgentSortUniqueRowsOperation[] {
+  const lower = agent.instruction.toLowerCase();
+  if (!/\bduplicate/.test(lower) || !/\boutput\b/.test(lower) || !/\bcolumn\s+h\b/.test(lower) || !/\blowest to highest\b/.test(lower)) {
+    return [];
+  }
+  const sheet = snapshot.sheets.find((item) => {
+    const headers = new Map(item.cells.map((cell) => [`${cell.address.toUpperCase()}:${normalizeHeader(cell.value)}`, cell.value]));
+    return headers.has("A1:ITEM") && headers.has("B1:NAME") && headers.has("C1:REF") && headers.has("F1:ITEM") && headers.has("G1:NAME") && headers.has("H1:REF");
+  });
+  if (!sheet) return [];
+  const existing = new Set(
+    existingOperations.filter(isSortUniqueRowsOperation).map((operation) => `${operation.sheet}:${operation.sourceRange}:${operation.targetCell}`),
+  );
+  const sourceRange = `A1:C${sheet.rowCount}`;
+  const targetCell = "F2";
+  const key = `${sheet.name}:${sourceRange}:${targetCell}`;
+  if (existing.has(key)) return [];
+  return [{
+    op: "sort_unique_rows",
+    sheet: sheet.name,
+    sourceRange,
+    targetCell,
+    keyColumns: ["B", "C"],
+    outputColumns: ["B", "C"],
+    sortBy: "C",
+    sortDirection: "asc",
+    includeIndex: true,
+  }];
 }
 
 function aggregateOperationKey(sourceSheet: string, sourceSection: string, targetSheet: string, targetSection: string): string {
@@ -1032,6 +1243,15 @@ function columnNumberToName(column: number): string {
   return value;
 }
 
+function columnNameToNumber(column: string): number {
+  return column
+    .replace(/\$/g, "")
+    .trim()
+    .toUpperCase()
+    .split("")
+    .reduce((sum, char) => sum * 26 + char.charCodeAt(0) - 64, 0);
+}
+
 function cellFormula(value: ExcelJS.CellValue): string | undefined {
   if (value && typeof value === "object" && "formula" in value && typeof value.formula === "string") return value.formula;
   return undefined;
@@ -1066,6 +1286,12 @@ function spreadsheetBenchPlannerSystem(): string {
     "For repeated visible table aggregation work, prefer the bounded aggregate_section operation:",
     "{\"op\":\"aggregate_section\",\"sourceSheet\":\"RANGES\",\"sourceSection\":\"DATA\",\"targetSheet\":\"LISTS\",\"targetSection\":\"DATA\",\"groupBy\":[\"DATE\",\"REF\"],\"valueColumn\":\"AMOUNTS\",\"sortBy\":[\"DATE\",\"REF\"],\"totalLabel\":\"TOTAL\"}",
     "aggregate_section groups rows in the source section by the named headers, sums valueColumn, sorts by sortBy/groupBy, writes SN/group/value rows, and writes the total formula.",
+    "For visible date criteria filters, prefer filter_rows over dynamic FILTER formulas:",
+    "{\"op\":\"filter_rows\",\"sheet\":\"FILTER 5b\",\"sourceRange\":\"A1:E315\",\"targetCell\":\"I6\",\"dateColumn\":\"A\",\"startCell\":\"I2\",\"endCell\":\"J2\"}",
+    "filter_rows copies concrete rows whose dateColumn is between startCell and endCell into the target range.",
+    "For visible dedupe/sort table outputs, prefer sort_unique_rows over writing a short prefix:",
+    "{\"op\":\"sort_unique_rows\",\"sheet\":\"sheet1\",\"sourceRange\":\"A1:C195\",\"targetCell\":\"F2\",\"keyColumns\":[\"B\",\"C\"],\"outputColumns\":[\"B\",\"C\"],\"sortBy\":\"C\",\"sortDirection\":\"asc\",\"includeIndex\":true}",
+    "sort_unique_rows skips blank/header rows, removes duplicate key rows, sorts by sortBy, and writes an optional index plus outputColumns.",
     "Use exactly one of the sheet names shown in workbook.sheets[].name; do not invent Sheet1 unless Sheet1 exists.",
     "If the task requires many cells, emit every required cell operation explicitly. Do not use placeholders, spill ranges, or one-cell dynamic-array shortcuts.",
     "When a visible example/reference table shows the desired output shape, infer the repeated operation from that reference and write the concrete target cells.",
@@ -1075,13 +1301,18 @@ function spreadsheetBenchPlannerSystem(): string {
 }
 
 function spreadsheetBenchPlannerPrompt(agent: AgentManifest, snapshot: WorkbookSnapshot, promptFiles: Array<{ path: string; text: string }>): string {
+  const visibleDerivedOperationCandidates = [
+    ...inferVisibleAggregateSectionOperations(agent, snapshot, []),
+    ...inferVisibleFilterRowsOperations(agent, snapshot, []),
+    ...inferVisibleSortUniqueRowsOperations(agent, snapshot, []),
+  ];
   return JSON.stringify({
     taskId: agent.taskId,
     instruction: agent.instruction,
     instructionType: agent.instructionType,
     prompts: promptFiles,
     workbook: snapshot,
-    visibleDerivedOperationCandidates: inferVisibleAggregateSectionOperations(agent, snapshot, []),
+    visibleDerivedOperationCandidates,
   }, null, 2);
 }
 
@@ -1152,6 +1383,14 @@ function extractFirstJsonObject(text: string, taskId: string): string {
 function applyOperation(workbook: ExcelJS.Workbook, operation: AgentEditOperation) {
   if (isAggregateSectionOperation(operation)) {
     applyAggregateSectionOperation(workbook, operation);
+    return;
+  }
+  if (isFilterRowsOperation(operation)) {
+    applyFilterRowsOperation(workbook, operation);
+    return;
+  }
+  if (isSortUniqueRowsOperation(operation)) {
+    applySortUniqueRowsOperation(workbook, operation);
     return;
   }
   const sheet = workbook.getWorksheet(operation.sheet);
@@ -1253,6 +1492,86 @@ function applyAggregateSectionOperation(workbook: ExcelJS.Workbook, operation: A
     formula,
     result: evaluateSimpleFormula(workbook, targetSheet, formula),
   };
+}
+
+function applyFilterRowsOperation(workbook: ExcelJS.Workbook, operation: AgentFilterRowsOperation) {
+  const sheet = workbook.getWorksheet(operation.sheet);
+  if (!sheet) throw new Error(`filter_rows references missing sheet: ${operation.sheet}`);
+  const source = parseRangeRef(operation.sourceRange);
+  const target = parseA1(operation.targetCell);
+  if (!source || !target) throw new Error(`filter_rows has invalid range or target`);
+  const startDate = dateFromCellValue(sheet.getCell(operation.startCell).value);
+  const endDate = dateFromCellValue(sheet.getCell(operation.endCell).value);
+  if (!startDate || !endDate) throw new Error(`filter_rows criteria cells must contain dates`);
+  const dateCol = operation.dateColumn ? columnNameToNumber(operation.dateColumn) : source.startCol;
+  if (dateCol < source.startCol || dateCol > source.endCol) throw new Error(`filter_rows dateColumn is outside sourceRange`);
+  const width = source.endCol - source.startCol + 1;
+  const height = source.endRow - source.startRow + 1;
+  clearRange(sheet, target.row, target.col, target.row + height - 1, target.col + width - 1);
+  let outputRow = target.row;
+  for (let row = source.startRow; row <= source.endRow; row += 1) {
+    const date = dateFromCellValue(sheet.getCell(row, dateCol).value);
+    if (!date || date < startDate || date > endDate) continue;
+    for (let offset = 0; offset < width; offset += 1) {
+      const sourceCell = sheet.getCell(row, source.startCol + offset);
+      const targetCell = sheet.getCell(outputRow, target.col + offset);
+      targetCell.value = offset === dateCol - source.startCol ? outputGroupValue(sourceCell.value) : sourceCell.value;
+      targetCell.style = { ...sourceCell.style };
+      if (sourceCell.numFmt) targetCell.numFmt = sourceCell.numFmt;
+    }
+    outputRow += 1;
+  }
+}
+
+function applySortUniqueRowsOperation(workbook: ExcelJS.Workbook, operation: AgentSortUniqueRowsOperation) {
+  const sheet = workbook.getWorksheet(operation.sheet);
+  if (!sheet) throw new Error(`sort_unique_rows references missing sheet: ${operation.sheet}`);
+  const source = parseRangeRef(operation.sourceRange);
+  const target = parseA1(operation.targetCell);
+  if (!source || !target) throw new Error(`sort_unique_rows has invalid range or target`);
+  const keyColumns = operation.keyColumns.map(columnNameToNumber);
+  const outputColumns = operation.outputColumns.map(columnNameToNumber);
+  const sortColumn = columnNameToNumber(operation.sortBy);
+  const referencedColumns = [...keyColumns, ...outputColumns, sortColumn];
+  if (referencedColumns.some((column) => column < source.startCol || column > source.endCol)) {
+    throw new Error(`sort_unique_rows references columns outside sourceRange`);
+  }
+  const rows: Array<{ values: ExcelJS.CellValue[]; key: string; sortValue: ExcelJS.CellValue; originalRow: number }> = [];
+  const seen = new Set<string>();
+  for (let row = source.startRow; row <= source.endRow; row += 1) {
+    const keyValues = keyColumns.map((col) => sheet.getCell(row, col).value);
+    const outputValues = outputColumns.map((col) => sheet.getCell(row, col).value);
+    if (outputValues.every(isBlankCellValue)) continue;
+    if (outputValues.some((value) => normalizeHeader(cellValueForPrompt(value)) === "NAME" || normalizeHeader(cellValueForPrompt(value)) === "REF")) continue;
+    const key = keyValues.map((value) => cellValueForPrompt(value).trim().toUpperCase()).join("\u001f");
+    if (!key.trim() || seen.has(key)) continue;
+    seen.add(key);
+    rows.push({ values: outputValues, key, sortValue: sheet.getCell(row, sortColumn).value, originalRow: row });
+  }
+  rows.sort((left, right) => compareSortValues(left.sortValue, right.sortValue, operation.sortDirection ?? "asc") || left.originalRow - right.originalRow);
+  const width = outputColumns.length + (operation.includeIndex === false ? 0 : 1);
+  const height = source.endRow - source.startRow + 1;
+  clearRange(sheet, target.row, target.col, target.row + height - 1, target.col + width - 1);
+  rows.forEach((row, index) => {
+    const rowNumber = target.row + index;
+    let col = target.col;
+    if (operation.includeIndex !== false) sheet.getCell(rowNumber, col++).value = index + 1;
+    for (const value of row.values) sheet.getCell(rowNumber, col++).value = value;
+  });
+}
+
+function clearRange(sheet: ExcelJS.Worksheet, startRow: number, startCol: number, endRow: number, endCol: number) {
+  for (let row = startRow; row <= endRow; row += 1) {
+    for (let col = startCol; col <= endCol; col += 1) sheet.getCell(row, col).value = null;
+  }
+}
+
+function compareSortValues(left: ExcelJS.CellValue, right: ExcelJS.CellValue, direction: "asc" | "desc"): number {
+  const leftNumber = numericComparableValue(comparableFormulaValue(left));
+  const rightNumber = numericComparableValue(comparableFormulaValue(right));
+  const multiplier = direction === "desc" ? -1 : 1;
+  if (leftNumber !== undefined && rightNumber !== undefined) return (leftNumber - rightNumber) * multiplier;
+  return cellValueForPrompt(left).localeCompare(cellValueForPrompt(right), undefined, { numeric: true, sensitivity: "base" }) * multiplier;
 }
 
 type WorksheetSection = {

@@ -30,11 +30,15 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
   // QA P0: below 981px the side panels render as fixed overlays over chat (styles.css), so they
   // start CLOSED — chat is the default single pane and the top-bar toggles are the panel switcher.
   const isCompact = typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(max-width: 980px)").matches;
+  // 981-1199px is the June-target "Room button" band: the binder is summoned over the stage (overlay,
+  // see styles.css) so the center Work Surface + Copilot keep full width. It starts closed; the
+  // top-bar binder toggle is the Room button that opens it.
+  const isMid = typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(min-width: 981px) and (max-width: 1199px)").matches;
   // Panels are a VIEWPORT decision, not a role/mode decision. The old `live && !isCompact` init read
   // `live` (= isHost via canRunCollab) at mount — still false on a RELOAD while Convex queries load —
   // so every returning visitor (tour already seen, nothing to force panels open) landed in a chat-only
   // layout. Caught by the walkthrough capturer's reload path; see FRICTION_LOG 2026-06-09.
-  const [show, setShow] = useState({ left: !isCompact, stage: true, copilot: !isCompact });
+  const [show, setShow] = useState({ left: !isCompact && !isMid, stage: true, copilot: !isCompact });
   const [codeCopied, setCodeCopied] = useState(false);
   const [layout, setLayout] = useState({ left: 248, stage: 1, right: 380 });
   const [copilotTab, setCopilotTab] = useState<"public" | "private">("public");
@@ -156,8 +160,10 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
   };
   const toggleBinder = () => {
     setShow((s) => {
-      if (!isCompact) return { ...s, left: !s.left, stage: true };
-      return { left: !s.left, stage: true, copilot: false };
+      // Mobile: the binder replaces the chat pane. Desktop + Room-button band (981-1199): just toggle
+      // the binder — at 981-1199 it floats as an overlay (styles.css), so Copilot is never displaced.
+      if (isCompact) return { left: !s.left, stage: true, copilot: false };
+      return { ...s, left: !s.left, stage: true };
     });
   };
   const showWorkSurface = () => {
@@ -175,11 +181,23 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
   };
   const startResize = (target: "left" | "right", startX: number) => {
     const start = layout;
+    // Stage floor: cap panel drag so the center Work Surface can't be squeezed below ~760px on desktop.
+    // When the floor is unachievable at the current width (narrow desktops), fall back to the normal
+    // max instead of forcing horizontal overflow. The binder counts as 0 when it floats (<=1199px).
+    const STAGE_FLOOR = 760, EDGES = 30;
     const move = (ev: PointerEvent) => {
       const dx = ev.clientX - startX;
       setLayout((cur) => {
-        if (target === "left") return { ...cur, left: clamp(start.left + dx, 176, 380) };
-        return { ...cur, right: clamp(start.right - dx, 280, 560) };
+        const vw = typeof window !== "undefined" ? window.innerWidth : 1440;
+        if (target === "left") {
+          const floorCap = vw - cur.right - STAGE_FLOOR - EDGES;
+          const cap = floorCap >= 176 ? Math.min(380, floorCap) : 380;
+          return { ...cur, left: clamp(start.left + dx, 176, cap) };
+        }
+        const leftInFlow = isCompact || isMid ? 0 : cur.left;
+        const floorCap = vw - leftInFlow - STAGE_FLOOR - EDGES;
+        const cap = floorCap >= 280 ? Math.min(560, floorCap) : 560;
+        return { ...cur, right: clamp(start.right - dx, 280, cap) };
       });
     };
     const up = () => {

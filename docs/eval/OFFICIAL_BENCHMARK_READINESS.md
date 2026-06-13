@@ -1,6 +1,6 @@
 # Official Benchmark Readiness
 
-Generated: 2026-06-13T09:36:52.138Z
+Generated: 2026-06-13T09:50:12.757Z
 
 This is the benchmark-faithful gate for the public targets we care about most: BankerToolBench and SpreadsheetBench. It is deliberately stricter than NodeRoom's internal professional evals. Internal green runs do not imply an official benchmark claim.
 
@@ -15,7 +15,7 @@ This is the benchmark-faithful gate for the public targets we care about most: B
 
 - Ready official benchmarks: 0/3
 - Blocked official benchmarks: 3/3
-- Missing/partial capabilities: `chart_visual_grade`, `docker_sandbox`, `format_diff`, `formula_recompute`, `mcp_financial_tools`, `official_gold_isolation`, `official_runner_adapter`, `official_task_ingest`, `pptx_docx_pdf_outputs`, `rubric_weighted_scoring`, `xlsx_import_export`
+- Missing/partial capabilities: `chart_visual_grade`, `docker_sandbox`, `format_diff`, `formula_recompute`, `mcp_financial_tools`, `official_gold_isolation`, `official_runner_adapter`, `pptx_docx_pdf_outputs`, `rubric_weighted_scoring`, `xlsx_import_export`
 
 ## Benchmark Contracts
 
@@ -29,9 +29,9 @@ Scoring shape: Agentic verifier opens deliverables and scores weighted binary ru
 
 | Capability | State | Evidence / blocker |
 |---|---|---|
-| `official_task_ingest` | missing | No official benchmark task downloader/cache/manifest runner is wired yet. |
-| `official_gold_isolation` | partial | `docs/TARGET_2026_06.md` |
-| `official_runner_adapter` | missing | No Harbor/BankerToolBench or SpreadsheetBench runner adapter exists in this repo. |
+| `official_task_ingest` | implemented | `src/eval/bankerToolBenchAdapter.ts` |
+| `official_gold_isolation` | partial | `src/eval/bankerToolBenchStage.ts` |
+| `official_runner_adapter` | missing | No Harbor-compatible NodeRoom runner adapter exists yet; the current BTB support stops at official bundle ingest and staged manifests. |
 | `trajectory_capture` | implemented | `evals/evalStore.ts` |
 | `cost_latency_retries` | implemented | `evals/financeModelLive.ts` |
 | `xlsx_import_export` | partial | `src/app/spreadsheetParser.ts` |
@@ -39,18 +39,17 @@ Scoring shape: Agentic verifier opens deliverables and scores weighted binary ru
 | `pptx_docx_pdf_outputs` | missing | No official pitch-deck/report deliverable generation and verifier handoff is wired. |
 | `mcp_financial_tools` | missing | BTB SEC/market-data/logo MCP tool servers are not adapted into NodeRoom's tool registry. |
 | `docker_sandbox` | external | BTB requires Docker/Harbor execution outside the Vite/Convex app runtime. |
-| `rubric_weighted_scoring` | missing | No official weighted rubric scorer adapter exists. |
+| `rubric_weighted_scoring` | partial | `src/eval/bankerToolBenchAdapter.ts` |
 
 Blockers:
-- official_task_ingest: No official benchmark task downloader/cache/manifest runner is wired yet.
-- official_gold_isolation: Internal eval policy forbids hidden gold leaks, but official benchmark adapters do not yet enforce this boundary.
-- official_runner_adapter: No Harbor/BankerToolBench or SpreadsheetBench runner adapter exists in this repo.
+- official_gold_isolation: BankerToolBench staging separates final prompts/input files from evaluator-only prompt context, formatting context, canary, weighted rubric, and golden outputs; Harbor/Docker execution and verifier handoff are still missing.
+- official_runner_adapter: No Harbor-compatible NodeRoom runner adapter exists yet; the current BTB support stops at official bundle ingest and staged manifests.
 - xlsx_import_export: Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.
 - formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.
 - pptx_docx_pdf_outputs: No official pitch-deck/report deliverable generation and verifier handoff is wired.
 - mcp_financial_tools: BTB SEC/market-data/logo MCP tool servers are not adapted into NodeRoom's tool registry.
 - docker_sandbox: BTB requires Docker/Harbor execution outside the Vite/Convex app runtime.
-- rubric_weighted_scoring: No official weighted rubric scorer adapter exists.
+- rubric_weighted_scoring: Weighted rubric metadata is parsed and isolated for the evaluator, but Gandalf/Harbor verifier execution and score import are not wired.
 
 ### SpreadsheetBench
 
@@ -64,17 +63,17 @@ Scoring shape: Online-judge style multi-test-case evaluation; the agent must pro
 |---|---|---|
 | `official_task_ingest` | implemented | `src/eval/spreadsheetBenchAdapter.ts` |
 | `official_gold_isolation` | partial | `src/eval/spreadsheetBenchStage.ts` |
-| `official_runner_adapter` | partial | `src/eval/spreadsheetBenchStage.ts` |
+| `official_runner_adapter` | partial | `src/eval/spreadsheetBenchRunner.ts` |
 | `trajectory_capture` | implemented | `evals/evalStore.ts` |
 | `cost_latency_retries` | implemented | `evals/financeModelLive.ts` |
-| `xlsx_import_export` | partial | `src/app/spreadsheetParser.ts` |
+| `xlsx_import_export` | partial | `src/eval/spreadsheetBenchRunner.ts` |
 | `formula_recompute` | partial | `evals/financeModelLive.ts` |
 | `format_diff` | partial | `src/eval/spreadsheetBenchScorer.ts` |
 
 Blockers:
 - official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; model execution sandboxing and output diff enforcement are still missing.
-- official_runner_adapter: Local staging and workbook scoring exist, but no model execution/export sandbox is wired yet.
-- xlsx_import_export: Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.
+- official_runner_adapter: A copy-input baseline runner emits candidate workbooks from staged agent directories and scores them afterward, but no model/edit/export worker is wired yet.
+- xlsx_import_export: The baseline runner emits and reopens candidate workbooks; model-generated workbook edits and official output packaging are not complete.
 - formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.
 - format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy and full style coverage are not complete.
 
@@ -90,18 +89,18 @@ Scoring shape: Workflow-level grading across exact cell values/formulas/formats 
 |---|---|---|
 | `official_task_ingest` | implemented | `src/eval/spreadsheetBenchAdapter.ts` |
 | `official_gold_isolation` | partial | `src/eval/spreadsheetBenchStage.ts` |
-| `official_runner_adapter` | partial | `src/eval/spreadsheetBenchStage.ts` |
+| `official_runner_adapter` | partial | `src/eval/spreadsheetBenchRunner.ts` |
 | `trajectory_capture` | implemented | `evals/evalStore.ts` |
 | `cost_latency_retries` | implemented | `evals/financeModelLive.ts` |
-| `xlsx_import_export` | partial | `src/app/spreadsheetParser.ts` |
+| `xlsx_import_export` | partial | `src/eval/spreadsheetBenchRunner.ts` |
 | `formula_recompute` | partial | `evals/financeModelLive.ts` |
 | `format_diff` | partial | `src/eval/spreadsheetBenchScorer.ts` |
 | `chart_visual_grade` | missing | No VLM/chart-visual evaluator is wired into benchmark-faithful mode. |
 
 Blockers:
 - official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; chart/visual grading and model execution sandboxing are still missing.
-- official_runner_adapter: Local staging and workbook scoring exist, but no model execution/export sandbox or chart lane is wired yet.
-- xlsx_import_export: Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.
+- official_runner_adapter: A copy-input baseline runner emits candidate workbooks from staged agent directories and scores them afterward, but no model/edit/export worker or chart lane is wired yet.
+- xlsx_import_export: The baseline runner emits and reopens candidate workbooks; model-generated workbook edits and official output packaging are not complete.
 - formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.
 - format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy, chart rendering, and visual grading are not complete.
 - chart_visual_grade: No VLM/chart-visual evaluator is wired into benchmark-faithful mode.

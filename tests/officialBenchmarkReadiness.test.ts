@@ -27,6 +27,35 @@ describe("official benchmark readiness", () => {
     expect(btb?.ready).toBe(false);
   });
 
+  it("records BankerToolBench ingest and gold-isolated staging progress without promoting readiness", () => {
+    const btb = officialBenchmarkReadiness().find((item) => item.id === "bankertoolbench");
+    const ingest = btb?.capabilities.find((capability) => capability.capability === "official_task_ingest");
+    const gold = btb?.capabilities.find((capability) => capability.capability === "official_gold_isolation");
+    const rubric = btb?.capabilities.find((capability) => capability.capability === "rubric_weighted_scoring");
+    const runner = btb?.capabilities.find((capability) => capability.capability === "official_runner_adapter");
+
+    expect(ingest).toMatchObject({
+      state: "implemented",
+      evidence: "src/eval/bankerToolBenchAdapter.ts",
+    });
+    expect(gold).toMatchObject({
+      state: "partial",
+      evidence: "src/eval/bankerToolBenchStage.ts",
+    });
+    expect(rubric).toMatchObject({
+      state: "partial",
+      evidence: "src/eval/bankerToolBenchAdapter.ts",
+    });
+    expect(runner).toMatchObject({
+      state: "missing",
+    });
+    expect(btb?.ready).toBe(false);
+    expect(btb?.blockers).toEqual(expect.arrayContaining([
+      expect.stringContaining("official_runner_adapter"),
+      expect.stringContaining("docker_sandbox"),
+    ]));
+  });
+
   it("requires SpreadsheetBench spreadsheet-native grading beyond internal finance evals", () => {
     const spreadsheet = officialBenchmarkReadiness().filter((item) => item.id.startsWith("spreadsheetbench"));
 
@@ -51,6 +80,7 @@ describe("official benchmark readiness", () => {
       const gold = item.capabilities.find((capability) => capability.capability === "official_gold_isolation");
       const runner = item.capabilities.find((capability) => capability.capability === "official_runner_adapter");
       const format = item.capabilities.find((capability) => capability.capability === "format_diff");
+      const xlsx = item.capabilities.find((capability) => capability.capability === "xlsx_import_export");
 
       expect(ingest).toMatchObject({
         state: "implemented",
@@ -62,7 +92,11 @@ describe("official benchmark readiness", () => {
       });
       expect(runner).toMatchObject({
         state: "partial",
-        evidence: "src/eval/spreadsheetBenchStage.ts",
+        evidence: "src/eval/spreadsheetBenchRunner.ts",
+      });
+      expect(xlsx).toMatchObject({
+        state: "partial",
+        evidence: "src/eval/spreadsheetBenchRunner.ts",
       });
       expect(format).toMatchObject({
         state: "partial",
@@ -83,8 +117,8 @@ describe("official benchmark readiness", () => {
     expect(summary.blocked).toBeGreaterThan(0);
     expect(summary.missingCapabilities).toEqual(expect.arrayContaining([
       "official_runner_adapter",
-      "official_task_ingest",
       "format_diff",
     ]));
+    expect(summary.missingCapabilities).not.toContain("official_task_ingest");
   });
 });

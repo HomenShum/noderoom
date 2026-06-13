@@ -1012,10 +1012,23 @@ SpreadsheetBench V1/V2 now has a local official-bundle ingest adapter (`npm run
 benchmark:spreadsheetbench:ingest`) that separates agent-visible workbooks/prompts from
 evaluator-only golden files and scorer metadata, a staging adapter (`npm run
 benchmark:spreadsheetbench:stage`) that writes separate `agent/` and `evaluator/` manifests, and a
-local workbook scoring adapter (`npm run benchmark:spreadsheetbench:score`) that reopens
-candidate/golden workbooks and compares values, formulas, and optional style fingerprints. Smoke
-artifacts cover the V1 verified-400 bundle and the V2 public example bundle. Those artifacts prove
-ingest, sandbox-staging, and diff plumbing; they are not model scores.
+baseline runner (`npm run benchmark:spreadsheetbench:run`) that emits candidate workbooks from the
+staged `agent/` directory before opening the evaluator manifest. A local workbook scoring adapter
+(`npm run benchmark:spreadsheetbench:score`) then reopens candidate/golden workbooks and compares
+values, formulas, and optional style fingerprints. Smoke artifacts cover the V1 verified-400 bundle
+and the V2 public example bundle. Those artifacts prove ingest, sandbox-staging, candidate-output,
+and diff plumbing; they are not model scores.
+
+BankerToolBench now has the same first boundary in place: `npm run
+benchmark:bankertoolbench:ingest` scans an already-downloaded BTB bundle (`tasks.jsonl`,
+`task-data/`, optional `golden-outputs/`) and parses input files plus weighted rubric metadata
+without putting rubric, canary, or golden-output paths into the agent-facing task payload. `npm run
+benchmark:bankertoolbench:stage` writes separate `agent/` and `evaluator/` manifests; the agent
+side contains only the official default `final_prompt` plus input files, while the evaluator side
+holds prompt context, formatting context, canary, weighted rubric, and golden outputs. Checked-in
+smoke artifacts prove that boundary on a local BTB-shaped fixture. This is still not a BTB score:
+Harbor/Docker execution, MCP financial tools, Gandalf verifier replay, and multi-file deliverable
+packaging remain red gates.
 
 ## Benchmark Harness / v3 Composite-Synthesis Run
 

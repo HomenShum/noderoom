@@ -1,0 +1,84 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T09:48:14.354Z",
+  "sourceRoot": "btb-fixture",
+  "taskCount": 1,
+  "inputFileCount": 2,
+  "evaluatorGoldenFileCount": 1,
+  "rubricCriterionCount": 2,
+  "weightedRubricTotal": 6,
+  "productCounts": {
+    "M&A": 1
+  },
+  "workflowCategoryCounts": {
+    "Buyer Screen": 1
+  },
+  "goldIsolation": {
+    "agentTaskGoldenPathLeaks": 0,
+    "agentTasksExposeGoldenOutputs": false,
+    "agentTaskRubricLeaks": 0,
+    "agentTasksExposeRubricMetadata": false,
+    "agentTaskCanaryLeaks": 0,
+    "agentTasksExposeCanary": false
+  },
+  "warnings": [],
+  "sampleAgentTasks": [
+    {
+      "id": "0fc7bc3c-a111-4222-8333-444455556666",
+      "harborTaskId": "btb-0fc7bc3c",
+      "product": "M&A",
+      "workflowCategory": "Buyer Screen",
+      "workflowSubcategory": "Public comps",
+      "instruction": "Build a buyer screen and short memo.",
+      "inputFiles": [
+        "task-data/0fc7bc3c-a111-4222-8333-444455556666/Inputs/model.xlsx",
+        "task-data/0fc7bc3c-a111-4222-8333-444455556666/Inputs/source.pdf"
+      ],
+      "hasPromptContext": true,
+      "hasFormattingContext": true
+    }
+  ],
+  "tasks": [
+    {
+      "id": "0fc7bc3c-a111-4222-8333-444455556666",
+      "harborTaskId": "btb-0fc7bc3c",
+      "sourceTasksJsonl": "tasks.jsonl",
+      "agentTask": {
+        "id": "0fc7bc3c-a111-4222-8333-444455556666",
+        "harborTaskId": "btb-0fc7bc3c",
+        "product": "M&A",
+        "workflowCategory": "Buyer Screen",
+        "workflowSubcategory": "Public comps",
+        "instruction": "Build a buyer screen and short memo.",
+        "inputFiles": [
+          "task-data/0fc7bc3c-a111-4222-8333-444455556666/Inputs/model.xlsx",
+          "task-data/0fc7bc3c-a111-4222-8333-444455556666/Inputs/source.pdf"
+        ],
+        "hasPromptContext": true,
+        "hasFormattingContext": true
+      },
+      "evaluatorMetadata": {
+        "promptContext": "Use only the provided data room files.",
+        "formattingContext": "Return an Excel workbook and memo.",
+        "canary": "CANARY-BTB-123",
+        "rubricItems": [
+          {
+            "criterion": "Uses revenue multiple correctly",
+            "weight": 5,
+            "category": "Excel"
+          },
+          {
+            "criterion": "Memo includes risks",
+            "weight": 1,
+            "category": "Memo"
+          }
+        ],
+        "weightedRubricTotal": 6
+      },
+      "evaluatorGoldenFiles": [
+        "golden-outputs/0fc7bc3c-a111-4222-8333-444455556666/answer.xlsx"
+      ],
+      "warnings": []
+    }
+  ]
+}

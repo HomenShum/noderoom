@@ -186,6 +186,33 @@ const CAPABILITY_STATUS: Record<BenchmarkCapability, CapabilityReadiness> = {
 };
 
 const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<Record<BenchmarkCapability, CapabilityReadiness>>>> = {
+  bankertoolbench: {
+    official_task_ingest: {
+      capability: "official_task_ingest",
+      state: "implemented",
+      evidence: "src/eval/bankerToolBenchAdapter.ts",
+    },
+    official_gold_isolation: {
+      capability: "official_gold_isolation",
+      state: "partial",
+      evidence: "src/eval/bankerToolBenchStage.ts",
+      blocker:
+        "BankerToolBench staging separates final prompts/input files from evaluator-only prompt context, formatting context, canary, weighted rubric, and golden outputs; Harbor/Docker execution and verifier handoff are still missing.",
+    },
+    official_runner_adapter: {
+      capability: "official_runner_adapter",
+      state: "missing",
+      blocker:
+        "No Harbor-compatible NodeRoom runner adapter exists yet; the current BTB support stops at official bundle ingest and staged manifests.",
+    },
+    rubric_weighted_scoring: {
+      capability: "rubric_weighted_scoring",
+      state: "partial",
+      evidence: "src/eval/bankerToolBenchAdapter.ts",
+      blocker:
+        "Weighted rubric metadata is parsed and isolated for the evaluator, but Gandalf/Harbor verifier execution and score import are not wired.",
+    },
+  },
   "spreadsheetbench-v1": {
     official_task_ingest: {
       capability: "official_task_ingest",
@@ -202,9 +229,16 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
     official_runner_adapter: {
       capability: "official_runner_adapter",
       state: "partial",
-      evidence: "src/eval/spreadsheetBenchStage.ts",
+      evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "Local staging and workbook scoring exist, but no model execution/export sandbox is wired yet.",
+        "A copy-input baseline runner emits candidate workbooks from staged agent directories and scores them afterward, but no model/edit/export worker is wired yet.",
+    },
+    xlsx_import_export: {
+      capability: "xlsx_import_export",
+      state: "partial",
+      evidence: "src/eval/spreadsheetBenchRunner.ts",
+      blocker:
+        "The baseline runner emits and reopens candidate workbooks; model-generated workbook edits and official output packaging are not complete.",
     },
     format_diff: {
       capability: "format_diff",
@@ -230,9 +264,16 @@ const BENCHMARK_CAPABILITY_STATUS: Partial<Record<OfficialBenchmarkId, Partial<R
     official_runner_adapter: {
       capability: "official_runner_adapter",
       state: "partial",
-      evidence: "src/eval/spreadsheetBenchStage.ts",
+      evidence: "src/eval/spreadsheetBenchRunner.ts",
       blocker:
-        "Local staging and workbook scoring exist, but no model execution/export sandbox or chart lane is wired yet.",
+        "A copy-input baseline runner emits candidate workbooks from staged agent directories and scores them afterward, but no model/edit/export worker or chart lane is wired yet.",
+    },
+    xlsx_import_export: {
+      capability: "xlsx_import_export",
+      state: "partial",
+      evidence: "src/eval/spreadsheetBenchRunner.ts",
+      blocker:
+        "The baseline runner emits and reopens candidate workbooks; model-generated workbook edits and official output packaging are not complete.",
     },
     format_diff: {
       capability: "format_diff",

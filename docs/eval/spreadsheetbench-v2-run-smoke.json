@@ -1,0 +1,243 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T09:41:13.114Z",
+  "stageRoot": "staged-v2",
+  "outputRoot": "run-v2",
+  "mode": "copy-input-baseline",
+  "taskCount": 2,
+  "passCount": 0,
+  "averageOverall": 0.993716,
+  "harness": {
+    "toolPolicy": "agent_dir_only_until_candidate",
+    "evaluatorAccess": "after_candidate_emit_only",
+    "budget": {
+      "modelCalls": 0,
+      "providerCostUsd": 0
+    }
+  },
+  "warnings": [],
+  "results": [
+    {
+      "taskId": "Debugging/01_01",
+      "track": "spreadsheetbench-v2",
+      "category": "Debugging",
+      "mode": "copy-input-baseline",
+      "taskDir": "tasks/Debugging_01_01",
+      "agentManifest": "tasks/Debugging_01_01/agent/task.json",
+      "evaluatorManifest": "tasks/Debugging_01_01/evaluator/evaluator.json",
+      "candidateWorkbook": "Debugging_01_01/candidate-01-Double Counting_input.xlsx",
+      "score": {
+        "schema": 1,
+        "generatedAt": "2026-06-13T09:41:13.114Z",
+        "taskId": "Debugging/01_01",
+        "candidateWorkbook": "candidate-01-Double Counting_input.xlsx",
+        "goldWorkbook": "01-01_golden.xlsx",
+        "answerPosition": "'Ex 1 - LBO'!B1:AK95,'Ex 2 - Valuation Bridge'!B2:C36,'Ex 3 - PF P&L'!B1:I30,'Ex 4 - Organic Operating Model'!B1:AF41,'Ex 5 - M&A'!B1:AB81,'Ex 6 - Amdocs Historical M&A'!B2:J19,'Ex 7 - SOFR'!B2:E79,'Ex 8 - Public Comps'!B2:F37,'Ex 9 - Transaction Comps'!B2:G24,'Ex 10 - Balance Sheet'!B2:F33,'Ex 11 - Income Statement'!B2:K28,'Ex 12 - Cash Flow Statement'!B2:G44",
+        "ranges": [
+          "'Ex 1 - LBO'!B1:AK95",
+          "'Ex 2 - Valuation Bridge'!B2:C36",
+          "'Ex 3 - PF P&L'!B1:I30",
+          "'Ex 4 - Organic Operating Model'!B1:AF41",
+          "'Ex 5 - M&A'!B1:AB81",
+          "'Ex 6 - Amdocs Historical M&A'!B2:J19",
+          "'Ex 7 - SOFR'!B2:E79",
+          "'Ex 8 - Public Comps'!B2:F37",
+          "'Ex 9 - Transaction Comps'!B2:G24",
+          "'Ex 10 - Balance Sheet'!B2:F33",
+          "'Ex 11 - Income Statement'!B2:K28",
+          "'Ex 12 - Cash Flow Statement'!B2:G44"
+        ],
+        "totals": {
+          "comparedCells": 8668,
+          "valueMatches": 8656,
+          "formulaCells": 1933,
+          "formulaMatches": 1911,
+          "styleCells": 0,
+          "styleMatches": 0,
+          "mismatches": 34,
+          "missingSheets": 0
+        },
+        "scores": {
+          "value": 0.998616,
+          "formula": 0.988619,
+          "style": null,
+          "overall": 0.9936175
+        },
+        "pass": false,
+        "warnings": [
+          "mismatch list capped at 5/34"
+        ],
+        "mismatches": [
+          {
+            "kind": "value",
+            "sheet": "Ex 1 - LBO",
+            "cell": "AF17",
+            "expected": "2.4x/19%",
+            "actual": "2.4x/20%"
+          },
+          {
+            "kind": "formula",
+            "sheet": "Ex 1 - LBO",
+            "cell": "X20",
+            "expected": "=+P65+P76+P85",
+            "actual": "=P91"
+          },
+          {
+            "kind": "formula",
+            "sheet": "Ex 1 - LBO",
+            "cell": "Y20",
+            "expected": "=+Q65+Q76+Q85",
+            "actual": "=Q91"
+          },
+          {
+            "kind": "formula",
+            "sheet": "Ex 1 - LBO",
+            "cell": "Z20",
+            "expected": "=+R65+R76+R85",
+            "actual": "=R91"
+          },
+          {
+            "kind": "formula",
+            "sheet": "Ex 1 - LBO",
+            "cell": "AA20",
+            "expected": "=+S65+S76+S85",
+            "actual": "=S91"
+          }
+        ]
+      },
+      "timingsMs": {
+        "candidateGeneration": 3,
+        "scoring": 523,
+        "total": 527
+      },
+      "trajectory": [
+        {
+          "step": "read_agent_manifest",
+          "detail": "tasks/Debugging_01_01/agent/task.json"
+        },
+        {
+          "step": "emit_candidate_workbook",
+          "detail": "Debugging_01_01/candidate-01-Double Counting_input.xlsx"
+        },
+        {
+          "step": "read_evaluator_manifest",
+          "detail": "tasks/Debugging_01_01/evaluator/evaluator.json"
+        },
+        {
+          "step": "score_candidate",
+          "detail": "34 mismatch(es)"
+        }
+      ]
+    },
+    {
+      "taskId": "Debugging/02_01",
+      "track": "spreadsheetbench-v2",
+      "category": "Debugging",
+      "mode": "copy-input-baseline",
+      "taskDir": "tasks/Debugging_02_01",
+      "agentManifest": "tasks/Debugging_02_01/agent/task.json",
+      "evaluatorManifest": "tasks/Debugging_02_01/evaluator/evaluator.json",
+      "candidateWorkbook": "Debugging_02_01/candidate-01-Embedded Hardcode_input.xlsx",
+      "score": {
+        "schema": 1,
+        "generatedAt": "2026-06-13T09:41:13.114Z",
+        "taskId": "Debugging/02_01",
+        "candidateWorkbook": "candidate-01-Embedded Hardcode_input.xlsx",
+        "goldWorkbook": "01-01_golden.xlsx",
+        "answerPosition": "'Ex 1 - LBO'!B1:AK95,'Ex 2 - Valuation Bridge'!B2:C36,'Ex 3 - PF P&L'!B1:I30,'Ex 4 - Organic Operating Model'!B1:AF41,'Ex 5 - M&A'!B1:AB81,'Ex 6 - Amdocs Historical M&A'!B2:J19,'Ex 7 - SOFR'!B2:E79,'Ex 8 - Public Comps'!B2:F37,'Ex 9 - Transaction Comps'!B2:G24,'Ex 10 - Balance Sheet'!B2:F33,'Ex 11 - Income Statement'!B2:K28,'Ex 12 - Cash Flow Statement'!B2:G44",
+        "ranges": [
+          "'Ex 1 - LBO'!B1:AK95",
+          "'Ex 2 - Valuation Bridge'!B2:C36",
+          "'Ex 3 - PF P&L'!B1:I30",
+          "'Ex 4 - Organic Operating Model'!B1:AF41",
+          "'Ex 5 - M&A'!B1:AB81",
+          "'Ex 6 - Amdocs Historical M&A'!B2:J19",
+          "'Ex 7 - SOFR'!B2:E79",
+          "'Ex 8 - Public Comps'!B2:F37",
+          "'Ex 9 - Transaction Comps'!B2:G24",
+          "'Ex 10 - Balance Sheet'!B2:F33",
+          "'Ex 11 - Income Statement'!B2:K28",
+          "'Ex 12 - Cash Flow Statement'!B2:G44"
+        ],
+        "totals": {
+          "comparedCells": 8668,
+          "valueMatches": 8637,
+          "formulaCells": 1933,
+          "formulaMatches": 1916,
+          "styleCells": 0,
+          "styleMatches": 0,
+          "mismatches": 48,
+          "missingSheets": 0
+        },
+        "scores": {
+          "value": 0.996424,
+          "formula": 0.991205,
+          "style": null,
+          "overall": 0.9938145
+        },
+        "pass": false,
+        "warnings": [
+          "mismatch list capped at 5/48"
+        ],
+        "mismatches": [
+          {
+            "kind": "value",
+            "sheet": "Ex 1 - LBO",
+            "cell": "X18",
+            "expected": "14.2033949536391",
+            "actual": "14.2"
+          },
+          {
+            "kind": "formula",
+            "sheet": "Ex 1 - LBO",
+            "cell": "X18",
+            "expected": "=C18"
+          },
+          {
+            "kind": "value",
+            "sheet": "Ex 1 - LBO",
+            "cell": "Y18",
+            "expected": "14.2033949536391",
+            "actual": "14.2"
+          },
+          {
+            "kind": "formula",
+            "sheet": "Ex 1 - LBO",
+            "cell": "Y18",
+            "expected": "=$C$20"
+          },
+          {
+            "kind": "value",
+            "sheet": "Ex 1 - LBO",
+            "cell": "Z18",
+            "expected": "14.2033949536391",
+            "actual": "14.2"
+          }
+        ]
+      },
+      "timingsMs": {
+        "candidateGeneration": 2,
+        "scoring": 374,
+        "total": 376
+      },
+      "trajectory": [
+        {
+          "step": "read_agent_manifest",
+          "detail": "tasks/Debugging_02_01/agent/task.json"
+        },
+        {
+          "step": "emit_candidate_workbook",
+          "detail": "Debugging_02_01/candidate-01-Embedded Hardcode_input.xlsx"
+        },
+        {
+          "step": "read_evaluator_manifest",
+          "detail": "tasks/Debugging_02_01/evaluator/evaluator.json"
+        },
+        {
+          "step": "score_candidate",
+          "detail": "48 mismatch(es)"
+        }
+      ]
+    }
+  ]
+}

@@ -148,6 +148,22 @@ const steps: StepSpec[] = [
     timeoutMs: 120_000,
   },
   {
+    id: "bankertoolbench-ingest-fixture",
+    label: "BankerToolBench official ingest fixture",
+    lane: "deterministic",
+    command: "npx",
+    args: ["vitest", "run", "tests/bankerToolBenchAdapter.test.ts"],
+    timeoutMs: 120_000,
+  },
+  {
+    id: "bankertoolbench-stage-fixture",
+    label: "BankerToolBench sandbox stage fixture",
+    lane: "deterministic",
+    command: "npx",
+    args: ["vitest", "run", "tests/bankerToolBenchStage.test.ts"],
+    timeoutMs: 120_000,
+  },
+  {
     id: "spreadsheetbench-ingest-fixture",
     label: "SpreadsheetBench official ingest fixture",
     lane: "deterministic",
@@ -169,6 +185,14 @@ const steps: StepSpec[] = [
     lane: "deterministic",
     command: "npx",
     args: ["vitest", "run", "tests/spreadsheetBenchScorer.test.ts"],
+    timeoutMs: 120_000,
+  },
+  {
+    id: "spreadsheetbench-runner-fixture",
+    label: "SpreadsheetBench staged runner fixture",
+    lane: "deterministic",
+    command: "npx",
+    args: ["vitest", "run", "tests/spreadsheetBenchRunner.test.ts"],
     timeoutMs: 120_000,
   },
   {

@@ -385,6 +385,7 @@
         "tests/financeModelReliability.test.ts",
         "tests/spreadsheetBenchAdapter.test.ts",
         "tests/spreadsheetBenchStage.test.ts",
+        "tests/spreadsheetBenchRunner.test.ts",
         "tests/spreadsheetBenchScorer.test.ts"
       ],
       "liveChecks": [
@@ -399,6 +400,7 @@
         { "type": "test", "ref": "tests/benchmarkHarness.test.ts" },
         { "type": "test", "ref": "tests/spreadsheetBenchAdapter.test.ts" },
         { "type": "test", "ref": "tests/spreadsheetBenchStage.test.ts" },
+        { "type": "test", "ref": "tests/spreadsheetBenchRunner.test.ts" },
         { "type": "test", "ref": "tests/spreadsheetBenchScorer.test.ts" }
       ],
       "nextReview": "Add a NodeRoomBench package outline with cases, artifacts, gold, runners, validators, allowed/disallowed harness policy, and runner-level contamination checks."
@@ -411,8 +413,11 @@
       "productionGate": "Readiness report exists; strict mode passes only when BankerToolBench and SpreadsheetBench adapters/runs are implemented without hidden-gold access, answer lookup, benchmark hardcoding, or evaluator mutation.",
       "deterministicChecks": [
         "tests/officialBenchmarkReadiness.test.ts",
+        "tests/bankerToolBenchAdapter.test.ts",
+        "tests/bankerToolBenchStage.test.ts",
         "tests/spreadsheetBenchAdapter.test.ts",
         "tests/spreadsheetBenchStage.test.ts",
+        "tests/spreadsheetBenchRunner.test.ts",
         "tests/spreadsheetBenchScorer.test.ts",
         "npm run benchmark:official:readiness"
       ],
@@ -424,25 +429,38 @@
       "evidence": [
         { "type": "doc", "ref": "docs/eval/OFFICIAL_BENCHMARK_READINESS.md" },
         { "type": "data", "ref": "docs/eval/official-benchmark-readiness.json" },
+        { "type": "data", "ref": "docs/eval/bankertoolbench-ingest-smoke.json" },
+        { "type": "data", "ref": "docs/eval/bankertoolbench-stage-smoke.json" },
         { "type": "data", "ref": "docs/eval/spreadsheetbench-v1-ingest-smoke.json" },
         { "type": "data", "ref": "docs/eval/spreadsheetbench-v2-ingest-smoke.json" },
         { "type": "data", "ref": "docs/eval/spreadsheetbench-v1-stage-smoke.json" },
         { "type": "data", "ref": "docs/eval/spreadsheetbench-v2-stage-smoke.json" },
+        { "type": "data", "ref": "docs/eval/spreadsheetbench-v1-run-smoke.json" },
+        { "type": "data", "ref": "docs/eval/spreadsheetbench-v2-run-smoke.json" },
         { "type": "data", "ref": "docs/eval/spreadsheetbench-v1-score-smoke.json" },
         { "type": "data", "ref": "docs/eval/spreadsheetbench-v2-score-smoke.json" },
         { "type": "script", "ref": "scripts/official-benchmark-readiness.ts" },
+        { "type": "script", "ref": "scripts/bankertoolbench-ingest.ts" },
+        { "type": "script", "ref": "scripts/bankertoolbench-stage.ts" },
         { "type": "script", "ref": "scripts/spreadsheetbench-ingest.ts" },
         { "type": "script", "ref": "scripts/spreadsheetbench-stage.ts" },
+        { "type": "script", "ref": "scripts/spreadsheetbench-run.ts" },
         { "type": "script", "ref": "scripts/spreadsheetbench-score.ts" },
+        { "type": "code", "ref": "src/eval/bankerToolBenchAdapter.ts" },
+        { "type": "code", "ref": "src/eval/bankerToolBenchStage.ts" },
         { "type": "code", "ref": "src/eval/spreadsheetBenchAdapter.ts" },
         { "type": "code", "ref": "src/eval/spreadsheetBenchStage.ts" },
+        { "type": "code", "ref": "src/eval/spreadsheetBenchRunner.ts" },
         { "type": "code", "ref": "src/eval/spreadsheetBenchScorer.ts" },
         { "type": "test", "ref": "tests/officialBenchmarkReadiness.test.ts" },
+        { "type": "test", "ref": "tests/bankerToolBenchAdapter.test.ts" },
+        { "type": "test", "ref": "tests/bankerToolBenchStage.test.ts" },
         { "type": "test", "ref": "tests/spreadsheetBenchAdapter.test.ts" },
         { "type": "test", "ref": "tests/spreadsheetBenchStage.test.ts" },
+        { "type": "test", "ref": "tests/spreadsheetBenchRunner.test.ts" },
         { "type": "test", "ref": "tests/spreadsheetBenchScorer.test.ts" }
       ],
-      "nextReview": "Next official slice: run a model/export worker inside the staged agent directory, emit candidate workbooks, and score them with the existing evaluator manifest; keep BTB Harbor/Docker smoke separate."
+      "nextReview": "Next official slice: replace the SpreadsheetBench copy-input baseline with a model/edit worker inside the staged agent directory, emit edited candidate workbooks, and score them with the existing evaluator manifest; then add a BTB Harbor/Docker smoke that imports Gandalf verifier results without exposing rubric/canary/golden files to the agent."
     },
     {
       "id": "unified_nodeagent_jobs",

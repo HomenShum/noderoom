@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generatedAt": "2026-06-13T09:36:52.138Z",
+  "generatedAt": "2026-06-13T09:50:12.757Z",
   "summary": {
     "total": 3,
     "ready": 0,
@@ -13,7 +13,6 @@
       "mcp_financial_tools",
       "official_gold_isolation",
       "official_runner_adapter",
-      "official_task_ingest",
       "pptx_docx_pdf_outputs",
       "rubric_weighted_scoring",
       "xlsx_import_export"
@@ -46,19 +45,19 @@
       "capabilities": [
         {
           "capability": "official_task_ingest",
-          "state": "missing",
-          "blocker": "No official benchmark task downloader/cache/manifest runner is wired yet."
+          "state": "implemented",
+          "evidence": "src/eval/bankerToolBenchAdapter.ts"
         },
         {
           "capability": "official_gold_isolation",
           "state": "partial",
-          "evidence": "docs/TARGET_2026_06.md",
-          "blocker": "Internal eval policy forbids hidden gold leaks, but official benchmark adapters do not yet enforce this boundary."
+          "evidence": "src/eval/bankerToolBenchStage.ts",
+          "blocker": "BankerToolBench staging separates final prompts/input files from evaluator-only prompt context, formatting context, canary, weighted rubric, and golden outputs; Harbor/Docker execution and verifier handoff are still missing."
         },
         {
           "capability": "official_runner_adapter",
           "state": "missing",
-          "blocker": "No Harbor/BankerToolBench or SpreadsheetBench runner adapter exists in this repo."
+          "blocker": "No Harbor-compatible NodeRoom runner adapter exists yet; the current BTB support stops at official bundle ingest and staged manifests."
         },
         {
           "capability": "trajectory_capture",
@@ -99,21 +98,21 @@
         },
         {
           "capability": "rubric_weighted_scoring",
-          "state": "missing",
-          "blocker": "No official weighted rubric scorer adapter exists."
+          "state": "partial",
+          "evidence": "src/eval/bankerToolBenchAdapter.ts",
+          "blocker": "Weighted rubric metadata is parsed and isolated for the evaluator, but Gandalf/Harbor verifier execution and score import are not wired."
         }
       ],
       "ready": false,
       "blockers": [
-        "official_task_ingest: No official benchmark task downloader/cache/manifest runner is wired yet.",
-        "official_gold_isolation: Internal eval policy forbids hidden gold leaks, but official benchmark adapters do not yet enforce this boundary.",
-        "official_runner_adapter: No Harbor/BankerToolBench or SpreadsheetBench runner adapter exists in this repo.",
+        "official_gold_isolation: BankerToolBench staging separates final prompts/input files from evaluator-only prompt context, formatting context, canary, weighted rubric, and golden outputs; Harbor/Docker execution and verifier handoff are still missing.",
+        "official_runner_adapter: No Harbor-compatible NodeRoom runner adapter exists yet; the current BTB support stops at official bundle ingest and staged manifests.",
         "xlsx_import_export: Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.",
         "formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.",
         "pptx_docx_pdf_outputs: No official pitch-deck/report deliverable generation and verifier handoff is wired.",
         "mcp_financial_tools: BTB SEC/market-data/logo MCP tool servers are not adapted into NodeRoom's tool registry.",
         "docker_sandbox: BTB requires Docker/Harbor execution outside the Vite/Convex app runtime.",
-        "rubric_weighted_scoring: No official weighted rubric scorer adapter exists."
+        "rubric_weighted_scoring: Weighted rubric metadata is parsed and isolated for the evaluator, but Gandalf/Harbor verifier execution and score import are not wired."
       ]
     },
     {
@@ -151,8 +150,8 @@
         {
           "capability": "official_runner_adapter",
           "state": "partial",
-          "evidence": "src/eval/spreadsheetBenchStage.ts",
-          "blocker": "Local staging and workbook scoring exist, but no model execution/export sandbox is wired yet."
+          "evidence": "src/eval/spreadsheetBenchRunner.ts",
+          "blocker": "A copy-input baseline runner emits candidate workbooks from staged agent directories and scores them afterward, but no model/edit/export worker is wired yet."
         },
         {
           "capability": "trajectory_capture",
@@ -167,8 +166,8 @@
         {
           "capability": "xlsx_import_export",
           "state": "partial",
-          "evidence": "src/app/spreadsheetParser.ts",
-          "blocker": "Import exists; official export/reopen diffing and workbook-level answer packaging are not complete."
+          "evidence": "src/eval/spreadsheetBenchRunner.ts",
+          "blocker": "The baseline runner emits and reopens candidate workbooks; model-generated workbook edits and official output packaging are not complete."
         },
         {
           "capability": "formula_recompute",
@@ -186,8 +185,8 @@
       "ready": false,
       "blockers": [
         "official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; model execution sandboxing and output diff enforcement are still missing.",
-        "official_runner_adapter: Local staging and workbook scoring exist, but no model execution/export sandbox is wired yet.",
-        "xlsx_import_export: Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.",
+        "official_runner_adapter: A copy-input baseline runner emits candidate workbooks from staged agent directories and scores them afterward, but no model/edit/export worker is wired yet.",
+        "xlsx_import_export: The baseline runner emits and reopens candidate workbooks; model-generated workbook edits and official output packaging are not complete.",
         "formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.",
         "format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy and full style coverage are not complete."
       ]
@@ -227,8 +226,8 @@
         {
           "capability": "official_runner_adapter",
           "state": "partial",
-          "evidence": "src/eval/spreadsheetBenchStage.ts",
-          "blocker": "Local staging and workbook scoring exist, but no model execution/export sandbox or chart lane is wired yet."
+          "evidence": "src/eval/spreadsheetBenchRunner.ts",
+          "blocker": "A copy-input baseline runner emits candidate workbooks from staged agent directories and scores them afterward, but no model/edit/export worker or chart lane is wired yet."
         },
         {
           "capability": "trajectory_capture",
@@ -243,8 +242,8 @@
         {
           "capability": "xlsx_import_export",
           "state": "partial",
-          "evidence": "src/app/spreadsheetParser.ts",
-          "blocker": "Import exists; official export/reopen diffing and workbook-level answer packaging are not complete."
+          "evidence": "src/eval/spreadsheetBenchRunner.ts",
+          "blocker": "The baseline runner emits and reopens candidate workbooks; model-generated workbook edits and official output packaging are not complete."
         },
         {
           "capability": "formula_recompute",
@@ -267,8 +266,8 @@
       "ready": false,
       "blockers": [
         "official_gold_isolation: SpreadsheetBench staging separates agent-visible files from evaluator-only gold/scorer metadata; chart/visual grading and model execution sandboxing are still missing.",
-        "official_runner_adapter: Local staging and workbook scoring exist, but no model execution/export sandbox or chart lane is wired yet.",
-        "xlsx_import_export: Import exists; official export/reopen diffing and workbook-level answer packaging are not complete.",
+        "official_runner_adapter: A copy-input baseline runner emits candidate workbooks from staged agent directories and scores them afterward, but no model/edit/export worker or chart lane is wired yet.",
+        "xlsx_import_export: The baseline runner emits and reopens candidate workbooks; model-generated workbook edits and official output packaging are not complete.",
         "formula_recompute: Finance eval recomputes supported formulas; full Excel-compatible official recompute is not complete.",
         "format_diff: The scorer can diff a stable ExcelJS style fingerprint when enabled; official format-grading policy, chart rendering, and visual grading are not complete.",
         "chart_visual_grade: No VLM/chart-visual evaluator is wired into benchmark-faithful mode."

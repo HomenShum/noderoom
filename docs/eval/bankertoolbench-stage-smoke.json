@@ -1,0 +1,38 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-13T09:48:22.076Z",
+  "sourceRoot": "btb-fixture",
+  "outputRoot": "staged-btb",
+  "scannedTaskCount": 1,
+  "stagedTaskCount": 1,
+  "skippedTaskCount": 0,
+  "agentFileCount": 2,
+  "evaluatorGoldenFileCount": 1,
+  "rubricCriterionCount": 2,
+  "weightedRubricTotal": 6,
+  "isolation": {
+    "agentDirectoryGoldenFileCount": 0,
+    "agentManifestGoldenPathLeaks": 0,
+    "agentManifestRubricLeaks": 0,
+    "agentManifestCanaryLeaks": 0,
+    "agentEvaluatorPathOverlap": false
+  },
+  "warnings": [],
+  "tasks": [
+    {
+      "id": "0fc7bc3c-a111-4222-8333-444455556666",
+      "harborTaskId": "btb-0fc7bc3c",
+      "taskDir": "tasks/btb-0fc7bc3c",
+      "agentManifest": "tasks/btb-0fc7bc3c/agent/task.json",
+      "evaluatorManifest": "tasks/btb-0fc7bc3c/evaluator/evaluator.json",
+      "agentInputFiles": [
+        "tasks/btb-0fc7bc3c/agent/inputs/01-model.xlsx",
+        "tasks/btb-0fc7bc3c/agent/inputs/02-source.pdf"
+      ],
+      "evaluatorGoldenFiles": [
+        "tasks/btb-0fc7bc3c/evaluator/golden-outputs/01-answer.xlsx"
+      ],
+      "warnings": []
+    }
+  ]
+}

@@ -638,6 +638,25 @@ input { font-family: inherit; }
   .r-panel.left { width: 224px; }
   .r-panel.right { width: 340px; }
 }
+/* 1200-1439 (June target): a NARROW binder reclaims width for the work surface so the stage holds its
+   ~760px floor; hovering peeks the binder back to full so files stay one motion away. Its resize
+   handle is hidden — width is the band's job here, not a drag. */
+@media (min-width: 1200px) and (max-width: 1439px) {
+  .r-panel.left { width: 150px !important; transition: width .16s var(--ease-out-expo); }
+  .r-panel.left:hover { width: 248px !important; }
+  .r-panel.left + .r-resize { display: none; }
+}
+/* 981-1199 (June target "Room button"): the binder is summoned OVER the stage so the center Work
+   Surface and Copilot keep their full width. The top-bar binder toggle is the Room button; the binder
+   starts closed (RoomShell isMid) and floats when opened. */
+@media (min-width: 981px) and (max-width: 1199px) {
+  .r-panel.left {
+    position: fixed; inset: 60px auto 10px 10px; z-index: 50;
+    width: 248px !important; max-width: calc(100vw - 20px);
+    box-shadow: var(--shadow-lg);
+  }
+  .r-panel.left + .r-resize { display: none; }
+}
 /* Tablet/phone (QA P0 fix): chat is the default single pane, and a MOUNTED side panel floats over
    it as a fixed overlay — the top-bar toggles stay visible and become the panel switcher. The old
    rule display:none'd the panels AND the toggles, making Spreadsheet/Wiki/Research/Note/Wall

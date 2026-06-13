@@ -84,10 +84,22 @@ for (const vp of VIEWPORTS) {
       expect(Math.min(b!.width, b!.height), `panel toggle ${i} meets the >=24px floor`).toBeGreaterThanOrEqual(24);
     }
 
-    if (vp.width > 980) {
-      await expect(leftRail, "Room Binder visible on desktop").toBeVisible();
+    if (vp.width > 1199) {
+      // Full desktop: binder + Copilot both in flow (the binder is a narrow rail at 1200-1439).
+      await expect(leftRail, "Room Binder visible on full desktop").toBeVisible();
       await expect(copilot, "Copilot visible on desktop").toBeVisible();
       await expect(publicChat(page).getByTestId("chat-composer")).toBeVisible();
+    } else if (vp.width > 980) {
+      // 981-1199 "Room button" band: the binder is summoned over the stage; Copilot stays in flow.
+      await expect(leftRail, "Room Binder behind the Room button at 981-1199").toBeHidden();
+      await expect(copilot, "Copilot stays in flow at 981-1199").toBeVisible();
+      await expect(publicChat(page).getByTestId("chat-composer")).toBeVisible();
+
+      await toggleButtons.nth(0).click();
+      await expect(leftRail, "Room button opens the binder overlay").toBeVisible();
+      await expect(copilot, "Copilot remains usable while the binder overlays").toBeVisible();
+      await toggleButtons.nth(0).click();
+      await expect(leftRail).toBeHidden();
     } else {
       await expect(leftRail, "Room Binder starts closed on compact screens").toBeHidden();
       await expect(copilot, "Copilot starts closed on compact screens").toBeHidden();

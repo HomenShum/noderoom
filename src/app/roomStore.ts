@@ -41,6 +41,10 @@ export function createFreshRoom(title: string, hostName: string): { roomId: stri
   return { roomId: room.id, me };
 }
 
+export function enterDemoRoomAsHost(_hostName?: string): { roomId: string; me: Actor } {
+  return { roomId: demo.roomId, me: demo.members.homen };
+}
+
 export function joinRoomByCode(code: string, name: string): { roomId: string; me: Actor } | null {
   const res = engine.joinRoom({ code: code.trim(), name: name.trim() || "Guest" });
   if (!res) return null;

@@ -1,0 +1,73 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-startup-diligence-war-room",
+    "class": "readme_walkthrough",
+    "title": "Startup Diligence War Room",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\startup-diligence-war-room.mp4",
+    "relPath": "docs/walkthroughs/startup-diligence-war-room.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:startup-diligence-war-room"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/startup-diligence-war-room.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 17669353,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough effectively demonstrates a multi-agent startup diligence workflow, showcasing research enrichment, public/private agent collaboration, and downstream handoffs with clear UI state changes.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "The video clearly shows the transition from a shared spreadsheet to a research queue and private agent workspace."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Demonstrates the full flow from pending accounts to enrichment, multi-agent execution, and final handoff drafts."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "The dark-mode interface is well-structured with clear visual boundaries between the spreadsheet, research tab, and copilot."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Perfectly aligns with the NodeRoom concept of combining spreadsheets, private/public agents, and execution traces."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Shows real-time UI updates, loading states, and trace logs instead of simulated mockups."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Most text is readable, though the trace log in the bottom-left corner is quite small."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for financial analysts and GTM teams conducting automated company research and diligence."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately depicts agent processing times, pending states, and the necessity of human approval for handoffs."
+      }
+    },
+    "observedEvidence": [
+      "Spreadsheet view with live collaboration controls",
+      "Research tab showing pending and completed account enrichment",
+      "Copilot panel with public/private chat toggle",
+      "Multi-agent command execution and trace logs",
+      "Handoff approval buttons (Email, Slack, etc.)"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:07",
+        "severity": "P2",
+        "observed": "The trace log text in the bottom-left panel is small and difficult to read at standard browser resolutions.",
+        "fix": "Increase the font size of the trace log or provide a zoom-in overlay for that section."
+      }
+    ],
+    "suggestedReadmeCaption": "Run collaborative startup diligence with automated research enrichment, private agent reasoning, and human-in-the-loop handoffs."
+  },
+  "score": 8,
+  "maxScore": 16
+}

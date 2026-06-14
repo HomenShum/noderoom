@@ -1,0 +1,72 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-startup-diligence-war-room",
+    "class": "readme_walkthrough",
+    "title": "Startup Diligence War Room",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\startup-diligence-war-room.mp4",
+    "relPath": "docs/walkthroughs/startup-diligence-war-room.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:startup-diligence-war-room"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/startup-diligence-war-room.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 18678139,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough effectively demonstrates a multi-lane agent workspace for startup diligence, showing real-time spreadsheet updates, agent traces, and human-in-the-loop approval gates.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "The interface clearly shows the integration of spreadsheets, agent lanes, and execution traces, though the layout is dense."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Demonstrates the end-to-end flow from pending accounts to completed enrichment and draft handoffs."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark-mode interface, though the high density of panels can feel slightly overwhelming."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns well with the product's core concepts of shared workspaces, public/private agents, and visible traces."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Shows authentic UI interactions, live status changes, and realistic data inputs."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Most text is readable, though small spreadsheet cells and log entries require close attention."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly applicable to financial analysts and GTM teams performing structured company research."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately depicts agents generating drafts for human approval rather than executing actions autonomously."
+      }
+    },
+    "observedEvidence": [
+      "Interactive spreadsheet with status columns",
+      "Copilot panel with public and private lanes",
+      "Live room trace showing background agent execution",
+      "Handoff panel with draft export options"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:03",
+        "severity": "P2",
+        "observed": "Small text size in spreadsheet cells and status chips limits quick readability.",
+        "fix": "Slightly increase the default font size or apply a subtle zoom on the active panel."
+      }
+    ],
+    "suggestedReadmeCaption": "Collaborative startup diligence room featuring multi-lane agent execution, live spreadsheet synchronization, and human-in-the-loop approval gates."
+  },
+  "score": 8,
+  "maxScore": 16
+}

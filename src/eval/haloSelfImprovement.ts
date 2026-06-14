@@ -1,5 +1,5 @@
-import { estimateChars } from "../agent/compaction";
-import type { AgentMessage, AgentResult, AgentTraceEvent } from "../agent/types";
+import { estimateChars } from "../nodeagent/core/contextCompactor";
+import type { AgentMessage, AgentResult, AgentTraceEvent } from "../nodeagent/core/types";
 
 export type HaloSelfImprovementRunMetric = {
   caseId: string;

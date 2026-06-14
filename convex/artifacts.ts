@@ -16,6 +16,7 @@ import type { MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { actorProofV, actorV, getElement, activeLockOn, lockCoveringElement, LOCK_TTL_MS, requireActorInRoom, requireActorProof, requireArtifactInRoom, type ActorValue } from "./lib";
 import { syncSpreadsheetIndexFromDb, syncSpreadsheetIndexFromSeed } from "./spreadsheetIndexLib";
+import { planAndRecordRebase } from "./semanticRebase";
 
 const MAX_ARTIFACT_TITLE_CHARS = 180;
 const MAX_ARTIFACT_SEED_ELEMENTS = 20_000;
@@ -180,6 +181,8 @@ type ApplyCellEditArgs = {
   actor: ActorValue;
   jobId?: Id<"agentJobs">;
   runId?: Id<"agentRuns">;
+  /** Internal: set when this apply IS a semantic-rebase auto-merge, so it does not re-trigger rebase. */
+  _rebased?: boolean;
 };
 
 type ProposalOp = {
@@ -275,6 +278,32 @@ async function applyCellEditCore(ctx: MutationCtx, a: ApplyCellEditArgs) {
     const el = await getElement(ctx, a.artifactId, a.elementId);
     const actual = el?.version ?? 0;
     if (actual !== a.baseVersion) {
+      // Per-element CAS rejected a stale write. For an AGENT write, complete the no-clobber wedge:
+      // build a durable semantic-conflict packet, classify it, and rebase — auto-merge the safe ones
+      // through the CAS spine, route the rest to a review proposal (or record under auto-allow). A
+      // human's own stale write stays a plain conflict (humans drive their own retries).
+      if (a.actor.kind === "agent" && !a._rebased) {
+        const rebaseRoom = await ctx.db.get(a.roomId);
+        const rebase = await planAndRecordRebase(ctx, {
+          roomId: a.roomId,
+          artifactId: a.artifactId,
+          artifactKind: art.kind,
+          elementId: a.elementId,
+          kind,
+          proposedValue: a.value,
+          baseVersion: a.baseVersion,
+          currentValue: el?.value,
+          currentVersion: actual,
+          currentUpdatedBy: el?.updatedBy,
+          actor: a.actor,
+          autoAllow: !!rebaseRoom?.autoAllow,
+        });
+        // The full loop completes via review: an approved rebased proposal re-runs the CAS in
+        // resolveProposal (the "final CAS from resolution"). Deterministic auto-merge (autoMergeOp)
+        // never fires for a single-element same-element conflict — classify routes those to review —
+        // so there is nothing to commit inline here; the durable packet + proposal are the outcome.
+        return { ok: false as const, reason: "conflict" as const, expected: a.baseVersion, actual, rebase };
+      }
       return { ok: false as const, reason: "conflict" as const, expected: a.baseVersion, actual };
     }
     if (blocksFormulaScalar(el?.value, a.value, a.actor, kind)) {

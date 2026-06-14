@@ -1,0 +1,14 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-startup-diligence-war-room",
+    "class": "readme_walkthrough",
+    "title": "Startup Diligence War Room",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\startup-diligence-war-room.mp4",
+    "relPath": "docs/walkthroughs/startup-diligence-war-room.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:startup-diligence-war-room"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "error",
+  "error": "Failed after 3 attempts. Last error: Cannot connect to API: getaddrinfo ENOTFOUND generativelanguage.googleapis.com"
+}

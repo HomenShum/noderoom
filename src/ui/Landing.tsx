@@ -31,7 +31,7 @@ export function Landing({
   const [joinErr, setJoinErr] = useState<string | null>(null);
   const live = mode === "live";
   const shownError = joinError ?? joinErr;
-  const displayName = () => name.trim() || (live ? "Guest" : "Guest");
+  const displayName = () => name.trim() || "Guest";
 
   const tryJoin = () => {
     setJoinErr(null);
@@ -60,18 +60,18 @@ export function Landing({
           <h1 className="r-h1">A room where you and <span className="accent">NodeAgents</span> edit together.</h1>
           <p className="r-lede">
             Public chat, a private NodeAgent, and a shared spreadsheet / note / post-it wall - with a
-            <b> lock -&gt; draft -&gt; smart-merge</b> model so a human and an agent never clobber each other.
+            <b> lock {"->"} draft {"->"} smart-merge</b> model so a human and an agent never clobber each other.
           </p>
           <button className="r-btn" style={{ marginBottom: 4 }} disabled={busy} onClick={() => { window.location.hash = "story"; }}>
             <PlayCircle size={15} /> See how it works - the 7-layer walkthrough
           </button>
           <label className="r-field" style={{ maxWidth: 320 }}>
             <span className="r-field-label">Display name</span>
-            <input className="r-text-input" placeholder="e.g. Priya" value={name} onChange={(e) => setName(e.target.value)} />
+            <input data-testid="display-name" className="r-text-input" placeholder="e.g. Priya" value={name} onChange={(e) => setName(e.target.value)} />
           </label>
           <div className="r-cta-row">
-            <button className="r-btn primary" disabled={busy} onClick={enterDemo}>
-              Enter the Q3 diligence room -&gt;
+            <button data-testid="start-demo-room" className="r-btn primary" disabled={busy} onClick={enterDemo}>
+              {live ? "Start a fresh diligence room ->" : "Enter the diligence room ->"}
             </button>
             <div className="r-join-inline">
               <input
@@ -81,16 +81,17 @@ export function Landing({
                 onChange={(e) => { setJoin(e.target.value); setJoinErr(null); }}
                 onKeyDown={(e) => { if (e.key === "Enter") tryJoin(); }}
                 aria-label="Room code"
+                data-testid="join-room-code"
               />
-              <button className="r-btn" disabled={busy} onClick={tryJoin}>Join</button>
+              <button data-testid="join-room" className="r-btn" disabled={busy} onClick={tryJoin}>Join</button>
             </div>
-            <button className="r-btn ghost" disabled={busy} onClick={createRoom}>Create a room</button>
+            <button data-testid="create-room" className="r-btn ghost" disabled={busy} onClick={createRoom}>Create room</button>
           </div>
           {shownError && <div className="r-join-error" role="alert">{shownError}</div>}
 
           <div className="r-feature-grid">
             <div className="r-feature"><div className="fi"><Table2 size={16} /></div><h3>Shared artifacts</h3><p>A spreadsheet, note, and post-it wall every member and agent edits live.</p></div>
-            <div className="r-feature"><div className="fi"><Lock size={16} /></div><h3>Lock -&gt; draft -&gt; merge</h3><p>An agent claims a range, others draft around it, and it smart-merges on unlock - no clobbering.</p></div>
+            <div className="r-feature"><div className="fi"><Lock size={16} /></div><h3>Lock {"->"} draft {"->"} merge</h3><p>An agent claims a range, others draft around it, and it smart-merges on unlock - no clobbering.</p></div>
             <div className="r-feature"><div className="fi"><History size={16} /></div><h3>Per-room trace</h3><p>Every change, by hand or agent, is recorded as a versioned delta you can audit.</p></div>
           </div>
         </div>

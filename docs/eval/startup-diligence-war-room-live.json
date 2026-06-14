@@ -1,0 +1,118 @@
+{
+  "schema": 1,
+  "updatedAt": "2026-06-14",
+  "demoTarget": "Startup Diligence War Room",
+  "sourceReview": "D:/VSCode Projects/noderoom/6-14-2026-deep-review.txt",
+  "currentEvidenceLevel": "mixed-live-shell-plus-deterministic-agent-package",
+  "claim": "NodeRoom can present a startup-banking diligence room where multiple users coordinate account intake, source-backed research, runway/milestone work, no-clobber review, private banker judgment, and draft-only downstream handoff.",
+  "latestCapture": {
+    "capturedAt": "2026-06-14T23:28:41.080Z",
+    "baseUrl": "http://127.0.0.1:5178",
+    "liveJoinSegments": 13,
+    "warRoomSegments": 19,
+    "rendered": true,
+    "mediaJudgeRunId": "20260614T233419Z",
+    "mediaJudgeModel": "gemini-3.5-flash",
+    "verdict": "publish",
+    "scores": {
+      "startup-diligence-live-join": "10.9/16",
+      "startup-diligence-war-room": "11.7/16"
+    },
+    "remainingDefects": [
+      {
+        "severity": "P2",
+        "asset": "docs/walkthroughs/startup-diligence-live-join.mp4",
+        "finding": "The transition between user perspectives is rapid; acceptable for publish, but next polish should add a subtle transition or longer pause."
+      },
+      {
+        "severity": "P2",
+        "asset": "docs/walkthroughs/startup-diligence-war-room.mp4",
+        "finding": "Room Trace is still dense during rapid scanning; acceptable for publish, but next polish should add more separation between trace events."
+      },
+      {
+        "severity": "P2",
+        "asset": "docs/walkthroughs/startup-diligence-war-room.mp4",
+        "finding": "The Public-to-Private copilot switch is subtle; acceptable for publish, but next polish should add a stronger privacy-state transition."
+      }
+    ]
+  },
+  "media": [
+    {
+      "id": "startup-diligence-live-join",
+      "path": "docs/walkthroughs/startup-diligence-live-join.mp4",
+      "mode": "live-convex-browser",
+      "proves": [
+        "fresh Startup Banking Diligence War Room creation",
+        "room-code join path",
+        "three-user room choreography",
+        "shared startup-diligence chat asks"
+      ],
+      "doesNotYetProve": [
+        "live provider research/tool calls",
+        "live CellPayload writes from the provider path",
+        "live runway chart artifact generation"
+      ]
+    },
+    {
+      "id": "startup-diligence-war-room",
+      "path": "docs/walkthroughs/startup-diligence-war-room.mp4",
+      "mode": "deterministic-memory-ui",
+      "proves": [
+        "startup-specific multi-agent workbench UI",
+        "CardioNova intake and five-company batch story",
+        "research/finance/review lanes streaming concurrently",
+        "no-clobber, private-lane, and draft-handoff affordances"
+      ],
+      "doesNotYetProve": [
+        "nondeterministic live-provider completion",
+        "Convex agentJobs row for the entire startup package",
+        "provider route N=5/p95 score for this workflow"
+      ]
+    }
+  ],
+  "requiredChecks": [
+    {
+      "id": "account_upsert",
+      "status": "planned-for-live-eval",
+      "evidenceRequired": "Browser state plus trace row showing CardioNova/five-company re-import updates existing rows instead of duplicating."
+    },
+    {
+      "id": "cited_cellpayloads",
+      "status": "planned-for-live-eval",
+      "evidenceRequired": "CellPayload objects include source refs, confidence/freshness, and reviewed/needs_review state."
+    },
+    {
+      "id": "human_edit_preserved",
+      "status": "planned-for-live-eval",
+      "evidenceRequired": "A user edits an affected cell during agent work; stale write becomes proposal/draft instead of overwrite."
+    },
+    {
+      "id": "concurrent_lanes",
+      "status": "media-proven-deterministic-pending-live",
+      "evidenceRequired": "Distinct lane ids, statuses, receipts, and final sealed handoff in agentJobs/agentOperationEvents."
+    },
+    {
+      "id": "private_boundary",
+      "status": "planned-for-live-eval",
+      "evidenceRequired": "Second user cannot read private banker concerns until explicit promotion."
+    },
+    {
+      "id": "runway_milestone_chart",
+      "status": "helper-built-pending-room-workflow",
+      "evidenceRequired": "Runway chart artifact generated from deterministic math with sourced assumptions."
+    },
+    {
+      "id": "downstream_draft_only",
+      "status": "ui-and-helper-built-pending-click-through",
+      "evidenceRequired": "Gmail/Notion/Slack/Linear/LinkedIn/CRM actions produce approval-gated drafts only; no OAuth side effects."
+    },
+    {
+      "id": "route_trace_cost_runtime",
+      "status": "planned-for-live-eval",
+      "evidenceRequired": "agent run/job rows record model/resolved model, route, latency, token/cost, and stop reason."
+    }
+  ],
+  "nextAcceptanceGate": [
+    "run a live Convex/provider eval that writes JSON evidence for each required check"
+  ]
+}

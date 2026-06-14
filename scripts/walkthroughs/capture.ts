@@ -29,6 +29,10 @@ type FeatureOut = { id: string; title: string; skipped: boolean; error?: string;
 
 const VARS = ["r_rev", "r_cogs", "r_gp", "r_opex", "r_ni"].map((r) => `${r}__variance`);
 
+function normalizeCaptureCode(raw: string): string {
+  return raw.toUpperCase().replace(/[^A-Z0-9]/g, "").slice(0, 12);
+}
+
 async function settle(page: Page, ms = 420) { await page.waitForTimeout(ms); }
 
 async function shoot(page: Page, dir: string, n: number): Promise<string> {
@@ -45,6 +49,18 @@ async function center(page: Page, sel: string): Promise<{ x: number; y: number }
   return { x: Math.round(b.x + b.width / 2), y: Math.round(b.y + b.height / 2) };
 }
 
+async function setInputByTestId(page: Page, testId: string, value: string) {
+  const loc = page.getByTestId(testId);
+  await loc.waitFor({ state: "visible", timeout: 30_000 });
+  await loc.evaluate((node, nextValue) => {
+    const input = node as HTMLInputElement | HTMLTextAreaElement;
+    const setter = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(input), "value")?.set;
+    setter?.call(input, nextValue);
+    input.dispatchEvent(new Event("input", { bubbles: true }));
+    input.dispatchEvent(new Event("change", { bubbles: true }));
+  }, value);
+}
+
 async function waitAfter(page: Page, a: After | undefined) {
   if (!a) return settle(page);
   if ("textSel" in a) {
@@ -58,10 +74,12 @@ async function waitAfter(page: Page, a: After | undefined) {
 }
 
 async function createRoom(ctx: BrowserContext, code: string): Promise<Page> {
+  const roomCode = normalizeCaptureCode(code);
   const page = await ctx.newPage();
-  await page.goto(`${BASE}/?create=${code}&name=Maya`, { waitUntil: "domcontentloaded" });
+  await page.goto(`${BASE}/?create=${roomCode}&name=Maya`, { waitUntil: "domcontentloaded" });
   await page.locator('[data-testid="public-chat-panel"] [data-testid="chat-composer"]').waitFor({ timeout: 60_000 });
   await page.getByTestId("tour-skip").click({ timeout: 8000 }).catch(() => {});
+  await page.locator('[data-testid="artifact-tabs"] button', { hasText: /Q3 variance/i }).first().click({ timeout: 15_000 }).catch(() => {});
   await page.locator('[data-cell-key="r_rev__variance"]').waitFor({ timeout: 30_000 });
   await page.addStyleTag({ content: "*::-webkit-scrollbar{display:none!important} .r-tour{display:none!important} body{zoom:1.15}" });
   await settle(page, 800);
@@ -106,9 +124,10 @@ async function uploadWalkthroughWorkbook(page: Page) {
 }
 
 async function seedResearch(page: Page, code: string, companies = DEFAULT_SEED_COMPANIES) {
+  const roomCode = normalizeCaptureCode(code);
   // The room's OWN session token (from the browser) authorizes seeding a research artifact.
-  const sess = JSON.parse(await page.evaluate((k) => localStorage.getItem(k) ?? "{}", `noderoom:live:${code}`));
-  if (!sess.token) throw new Error(`seedResearch: no session in localStorage for ${code}`);
+  const sess = JSON.parse(await page.evaluate((k) => localStorage.getItem(k) ?? "{}", `noderoom:live:${roomCode}`));
+  if (!sess.token) throw new Error(`seedResearch: no session in localStorage for ${roomCode}`);
   const url = readFileSync(join(ROOT, ".env.local"), "utf8").match(/VITE_CONVEX_URL=(.+)/)![1].trim();
   const client = new ConvexHttpClient(url);
   const proof = { actor: { kind: "user" as const, id: String(sess.memberId), name: String(sess.name) }, token: String(sess.token) };
@@ -116,7 +135,7 @@ async function seedResearch(page: Page, code: string, companies = DEFAULT_SEED_C
   await client.mutation(api.artifacts.addResearchRows, {
     roomId: sess.roomId, artifactId: artId, requester: proof, rows: companies,
   });
-  console.log(`  [seed] research artifact ${String(artId)} created in ${code}`);
+  console.log(`  [seed] research artifact ${String(artId)} created in ${roomCode}`);
   await page.reload({ waitUntil: "domcontentloaded" });
   await page.getByTestId("tour-skip").click({ timeout: 8000 }).catch(() => {});
   await page.locator('[data-testid="public-chat-panel"] [data-testid="chat-composer"]').waitFor({ timeout: 30_000 });
@@ -132,15 +151,193 @@ async function seedResearch(page: Page, code: string, companies = DEFAULT_SEED_C
   await settle(page, 800);
 }
 
+async function captureStartupJoinRoom(
+  ctx: BrowserContext,
+  code: string,
+  dir: string,
+  segments: Segment[],
+  nextFrame: () => number,
+) {
+  const roomCode = normalizeCaptureCode(code);
+  const chrome = "*::-webkit-scrollbar{display:none!important} .r-tour{display:none!important} body{zoom:1.15} .r-file .fn{font-size:14px!important}.r-file .fm{font-size:12.5px!important}.r-trace{max-height:360px!important}.r-trace-item .tt{font-size:18px!important}.r-trace-item .td{font-size:14px!important}.r-trace-detail{font-size:14.5px!important}";
+  const host = await ctx.newPage();
+  await host.goto(BASE, { waitUntil: "domcontentloaded" });
+  await host.evaluate(() => { try { localStorage.setItem("noderoom:tour:v1", "done"); } catch { /* ignore */ } });
+  await host.addStyleTag({ content: chrome });
+  await setInputByTestId(host, "display-name", "Maya");
+  await settle(host, 500);
+  segments.push({
+    frame: await shoot(host, dir, nextFrame()),
+    caption: "Maya starts a fresh startup-banking diligence room from the landing page",
+    cursor: null,
+    click: false,
+    kind: "state",
+    holdMs: 2600,
+  });
+  const startCur = await center(host, '[data-testid="start-demo-room"]');
+  segments.push({
+    frame: await shoot(host, dir, nextFrame()),
+    caption: "Create a new room for the diligence batch",
+    cursor: startCur,
+    click: true,
+    kind: "action",
+    holdMs: 950,
+  });
+  await host.goto(`${BASE}/?create=${roomCode}&name=Maya`, { waitUntil: "domcontentloaded" });
+  await host.locator('[data-testid="public-chat-panel"] [data-testid="chat-composer"]').waitFor({ timeout: 60_000 });
+  await host.getByTestId("tour-skip").click({ timeout: 8000 }).catch(() => {});
+  await host.locator(".r-research").waitFor({ timeout: 30_000 });
+  await host.addStyleTag({ content: chrome }).catch(() => {});
+  await settle(host, 900);
+  segments.push({
+    frame: await shoot(host, dir, nextFrame()),
+    caption: "The host lands in a live war room with company research, memo, wall, runway sheet, and invite code",
+    cursor: null,
+    click: false,
+    kind: "result",
+    holdMs: 2400,
+  });
+  const copyCur = await center(host, ".r-roomcode");
+  segments.push({
+    frame: await shoot(host, dir, nextFrame()),
+    caption: "The room code is the shareable join path for the team",
+    cursor: copyCur,
+    click: true,
+    kind: "action",
+    holdMs: 950,
+  });
+  await host.locator(".r-roomcode").click();
+  await settle(host, 500);
+  segments.push({
+    frame: await shoot(host, dir, nextFrame()),
+    caption: `Code ${roomCode} is ready to send to the diligence team`,
+    cursor: null,
+    click: false,
+    kind: "result",
+    holdMs: 1700,
+  });
+
+  const joiner = await ctx.newPage();
+  await joiner.goto(BASE, { waitUntil: "domcontentloaded" });
+  await joiner.evaluate(() => { try { localStorage.setItem("noderoom:tour:v1", "done"); } catch { /* ignore */ } });
+  await joiner.addStyleTag({ content: chrome });
+  await setInputByTestId(joiner, "display-name", "Priya");
+  await setInputByTestId(joiner, "join-room-code", roomCode);
+  await settle(joiner, 500);
+  segments.push({
+    frame: await shoot(joiner, dir, nextFrame()),
+    caption: "Switch to Priya's browser: she enters the shared room code from the landing page",
+    cursor: null,
+    click: false,
+    kind: "state",
+    holdMs: 1900,
+  });
+  const joinCur = await center(joiner, '[data-testid="join-room"]');
+  segments.push({
+    frame: await shoot(joiner, dir, nextFrame()),
+    caption: "Join brings a second user into the same live room session",
+    cursor: joinCur,
+    click: true,
+    kind: "action",
+    holdMs: 950,
+  });
+  await joiner.evaluate((code) => {
+    try { localStorage.removeItem(`noderoom:live:${code}`); } catch { /* ignore */ }
+  }, roomCode);
+  await joiner.goto(`${BASE}/?room=${roomCode}&name=Priya`, { waitUntil: "domcontentloaded" });
+  await joiner.locator('[data-testid="public-chat-panel"] [data-testid="chat-composer"]').waitFor({ timeout: 60_000 });
+  await joiner.getByTestId("tour-skip").click({ timeout: 8000 }).catch(() => {});
+  await joiner.locator(".r-research").waitFor({ timeout: 30_000 });
+  await joiner.addStyleTag({ content: chrome }).catch(() => {});
+  await settle(joiner, 900);
+  segments.push({
+    frame: await shoot(joiner, dir, nextFrame()),
+    caption: "The joiner sees the same diligence artifacts and live room state",
+    cursor: null,
+    click: false,
+    kind: "result",
+    holdMs: 2300,
+  });
+  const composer = joiner.locator('[data-testid="public-chat-panel"] [data-testid="chat-composer"]').first();
+  const composerCur = await center(joiner, '[data-testid="public-chat-panel"] [data-testid="chat-composer"]');
+  segments.push({
+    frame: await shoot(joiner, dir, nextFrame()),
+    caption: "Teammates can coordinate asks for multiple agents in room chat",
+    cursor: composerCur,
+    click: false,
+    kind: "action",
+    holdMs: 900,
+  });
+  await composer.click();
+  await composer.fill("I'm in - bulk run CardioNova plus the five startup-banking companies.");
+  await composer.press("Enter");
+  await waitAfter(joiner, { textSel: '[data-testid="public-chat-panel"] [data-testid="chat-feed"]', includes: "CardioNova", timeoutMs: 20_000 });
+  segments.push({
+    frame: await shoot(joiner, dir, nextFrame()),
+    caption: "Priya's bulk diligence ask lands in the shared room, next to the artifacts and trace",
+    cursor: null,
+    click: false,
+    kind: "result",
+    holdMs: 2400,
+  });
+
+  const banker = await ctx.newPage();
+  await banker.goto(BASE, { waitUntil: "domcontentloaded" });
+  await banker.evaluate(() => { try { localStorage.setItem("noderoom:tour:v1", "done"); } catch { /* ignore */ } });
+  await banker.addStyleTag({ content: chrome });
+  await setInputByTestId(banker, "display-name", "Alex");
+  await setInputByTestId(banker, "join-room-code", roomCode);
+  await settle(banker, 500);
+  segments.push({
+    frame: await shoot(banker, dir, nextFrame()),
+    caption: "Switch to Alex's browser: the banker joins to own runway and milestone questions",
+    cursor: null,
+    click: false,
+    kind: "state",
+    holdMs: 2400,
+  });
+  const bankerJoinCur = await center(banker, '[data-testid="join-room"]');
+  segments.push({
+    frame: await shoot(banker, dir, nextFrame()),
+    caption: "A third user enters the same live diligence room by code",
+    cursor: bankerJoinCur,
+    click: true,
+    kind: "action",
+    holdMs: 950,
+  });
+  await banker.evaluate((code) => {
+    try { localStorage.removeItem(`noderoom:live:${code}`); } catch { /* ignore */ }
+  }, roomCode);
+  await banker.goto(`${BASE}/?room=${roomCode}&name=Alex`, { waitUntil: "domcontentloaded" });
+  await banker.locator('[data-testid="public-chat-panel"] [data-testid="chat-composer"]').waitFor({ timeout: 60_000 });
+  await banker.getByTestId("tour-skip").click({ timeout: 8000 }).catch(() => {});
+  await banker.locator(".r-research").waitFor({ timeout: 30_000 });
+  await banker.addStyleTag({ content: chrome }).catch(() => {});
+  await settle(banker, 900);
+  const bankerComposer = banker.locator('[data-testid="public-chat-panel"] [data-testid="chat-composer"]').first();
+  await bankerComposer.click();
+  await bankerComposer.fill("I'll own runway and milestone questions for CardioNova and the top two companies.");
+  await bankerComposer.press("Enter");
+  await waitAfter(banker, { textSel: '[data-testid="public-chat-panel"] [data-testid="chat-feed"]', includes: "runway and milestone", timeoutMs: 20_000 });
+  segments.push({
+    frame: await shoot(banker, dir, nextFrame()),
+    caption: "The live room now has three users, shared startup diligence asks, and one durable artifact set",
+    cursor: null,
+    click: false,
+    kind: "result",
+    holdMs: 2400,
+  });
+}
+
 /** Deterministic in-browser demo engine at the SAME prod URL — same UI, scripted agent. */
 async function memoryDemo(ctx: BrowserContext): Promise<Page> {
   const page = await ctx.newPage();
   await page.goto(`${BASE}/?mode=memory`, { waitUntil: "domcontentloaded" });
   await page.evaluate(() => { try { localStorage.setItem("noderoom:tour:v1", "done"); } catch { /* ignore */ } });
-  await page.getByRole("button", { name: /Enter the Q3 diligence room/i }).click({ timeout: 30_000 });
+  await page.getByTestId("start-demo-room").click({ timeout: 30_000 });
   await page.locator('[data-testid="public-chat-panel"] [data-testid="chat-composer"]').waitFor({ timeout: 30_000 });
   await page.getByTestId("tour-skip").click({ timeout: 5000 }).catch(() => {});
-  await page.addStyleTag({ content: "*::-webkit-scrollbar{display:none!important} .r-tour{display:none!important} body{zoom:1.15}" });
+  await page.addStyleTag({ content: "*::-webkit-scrollbar{display:none!important} .r-tour{display:none!important} body{zoom:1.15} .r-file .fn{font-size:14px!important}.r-file .fm{font-size:12.5px!important}.r-trace{max-height:360px!important}.r-trace-item .tt{font-size:18px!important}.r-trace-item .td{font-size:14px!important}.r-trace-detail{font-size:14.5px!important}" });
   await settle(page, 800);
   return page;
 }
@@ -148,13 +345,18 @@ async function memoryDemo(ctx: BrowserContext): Promise<Page> {
 async function runFeature(spec: FeatureSpec, attempt: number): Promise<FeatureOut> {
   const browser = await chromium.launch();
   const ctx = await browser.newContext({ viewport: VIEW, deviceScaleFactor: 2 });
-  const code = `GIF-${spec.id.slice(0, 4).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`;
+  const code = normalizeCaptureCode(`GIF${spec.id.slice(0, 4).toUpperCase()}${Math.random().toString(36).slice(2, 6).toUpperCase()}`);
   const dir = spec.id;
   rmSync(join(PUB, "frames", dir), { recursive: true, force: true });
   mkdirSync(join(PUB, "frames", dir), { recursive: true });
   const segments: Segment[] = [];
   let n = 0;
   try {
+    if (spec.setup === "startupJoinRoom") {
+      await captureStartupJoinRoom(ctx, code, dir, segments, () => ++n);
+      await browser.close();
+      return { id: spec.id, title: spec.title, skipped: false, segments };
+    }
     const page = spec.setup === "memoryDemo" ? await memoryDemo(ctx) : await createRoom(ctx, code);
     if (spec.setup === "seedResearchRoom") await seedResearch(page, code, spec.seedCompanies);
     // Close panels the story doesn't use — the remaining panels (and their text) render larger.

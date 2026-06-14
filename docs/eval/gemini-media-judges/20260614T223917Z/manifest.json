@@ -1,0 +1,29 @@
+{
+  "runId": "20260614T223917Z",
+  "generatedAt": "2026-06-14T22:39:17.882Z",
+  "model": "gemini-3.5-flash",
+  "primaryOnly": true,
+  "all": false,
+  "includeIgnored": true,
+  "only": "startup-diligence",
+  "assets": [
+    {
+      "id": "docs-walkthroughs-startup-diligence-live-join",
+      "class": "readme_walkthrough",
+      "title": "Startup Diligence Live Join",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\startup-diligence-live-join.mp4",
+      "relPath": "docs/walkthroughs/startup-diligence-live-join.mp4",
+      "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+      "duplicateGroup": "walkthrough:startup-diligence-live-join"
+    },
+    {
+      "id": "docs-walkthroughs-startup-diligence-war-room",
+      "class": "readme_walkthrough",
+      "title": "Startup Diligence War Room",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\startup-diligence-war-room.mp4",
+      "relPath": "docs/walkthroughs/startup-diligence-war-room.mp4",
+      "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+      "duplicateGroup": "walkthrough:startup-diligence-war-room"
+    }
+  ]
+}

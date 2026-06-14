@@ -96,6 +96,14 @@ the empty state, the cursor glide to each click (with a ripple), the loading sta
 result, with step captions and a progress bar. Regenerate any time with `npm run walkthroughs`
 (capture) + `npm run walkthroughs:render`.
 
+### Flagship: Startup diligence war room
+![Startup diligence war room: agents research, chart runway, preserve human edits, and prepare handoff drafts](docs/walkthroughs/startup-diligence-war-room.gif)
+<sub>Deterministic memory-mode walkthrough of the startup-diligence product story: CardioNova intake, a five-company banking watchlist, concurrent research/finance/review lanes, cited cells, runway/milestone work, no-clobber proof, private banker lane, and draft-only downstream handoff. This is the flagship product walkthrough; live-provider proof is tracked separately in [`docs/eval/startup-diligence-war-room-live.md`](docs/eval/startup-diligence-war-room-live.md).</sub>
+
+### Live startup room join
+![Fresh startup diligence room with teammates joining by code](docs/walkthroughs/startup-diligence-live-join.gif)
+<sub>Live Convex walkthrough: a fresh Startup Banking Diligence War Room is created, the room code is shared, Priya joins to bulk-run CardioNova plus the startup-banking list, and Alex joins to own runway/milestone questions. This proves the live create/join/multi-user room shell; the richer agent package above is intentionally deterministic until the live provider eval is fully green.</sub>
+
 ### Join a live room & chat
 ![Join a live room and chat — walkthrough](docs/walkthroughs/chat.gif)
 
@@ -954,7 +962,7 @@ Professional proof state:
 
 This section is generated from `docs/qa/production-matrix.json`. When the system grows, append or update a matrix row, then run `npm run qa:matrix`; CI can run `npm run qa:matrix:check` to catch stale docs.
 
-<sub>23 feature guarantees tracked | 5 green | 16 yellow | 2 red | 1 live model route(s) cleared L1-L4 in the latest recorded ladder.</sub>
+<sub>24 feature guarantees tracked | 5 green | 17 yellow | 2 red | 1 live model route(s) cleared L1-L4 in the latest recorded ladder.</sub>
 
 ![QA coverage graph](docs/eval/qa-coverage.svg)
 
@@ -962,6 +970,7 @@ This section is generated from `docs/qa/production-matrix.json`. When the system
 
 | Feature area | Status | Required production gate |
 |---|---|---|
+| Startup diligence demo | Yellow | README links the startup media, the walkthrough scripts match the latest target, Gemini judges the recaptured clips, and a live provider/Convex eval records cited cells, preserved human edit, route trace, cost/runtime, private boundary, and downstream draft-only behavior. |
 | Files + spreadsheet | Yellow | Parser fixtures, provider parser adapter tests, live file preview smoke, and Convex raw-file canonicalization. |
 | Public/private chat + agent | Yellow | Scope separation tests, room member proof, and browser smoke for public/private panels. |
 | Trace + proposals | Green | Host-only controls, proposal resolution tests, UI consent modal, and no silent direct-write bypass. |

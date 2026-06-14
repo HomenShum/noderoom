@@ -1,48 +1,74 @@
-# NodeRoom — source of truth (design-intent ↔ repo reality)
+# NodeRoom Source Of Truth
 
-One page. If a slide, README, or design note names something this table doesn't, the table wins.
+One page. If a slide, README, or design note names something this table does not, this table wins.
 
-**The wedge (one sentence):** NodeRoom is the live room where humans and AI agents do startup-banking diligence together — multiple people ask, multiple agents research with cited sources, findings stream into a shared sheet, **no write silently clobbers another**, and every agent change is traceable and reviewable.
+## Wedge
 
-## ✅ Source-of-truth landed (2026-06-14)
-`src/nodeagent/**` is now the canonical source tree. The old `src/agent/**` tree was removed after the repo import graph moved to nodeagent, and the previous `src/shared/formulaEngine.ts` / `src/engine/semanticRebase.ts` entrypoints were folded into nodeagent-owned modules.
+NodeRoom is the live room where humans and AI agents do startup-banking diligence together: multiple people ask, multiple agents research with cited sources, findings land in a shared sheet, no write silently clobbers another, and every agent change is traceable and reviewable.
 
-## Vocabulary reconciliation
+## Landed Source Of Truth
+
+`src/nodeagent/**` is the canonical source tree. The old `src/agent/**` tree was removed after the repo import graph moved to NodeAgent, and the previous shared formula/rebase entrypoints were folded into nodeagent-owned modules.
+
+## Vocabulary Reconciliation
+
 Design-intent names now live in `src/nodeagent/**`. Convex remains the durable backend, but frontend code, tests, scripts, and evals should import nodeagent modules directly.
 
 | Design-intent name | Repo reality | Status |
 |---|---|---|
-| `src/nodeagent/{core,models,skills,guardrails}` namespace | canonical implementation under `src/nodeagent/**` | aligned |
-| **Pi Agent Core / pi-ai** runtime | custom `runAgent` loop in `src/nodeagent/core/runtime.ts` on the **AI SDK**, run inside a Convex `"use node"` action | aligned to repo reality |
-| **Linkup** search SDK + `linkupLogs` | `src/nodeagent/skills/search/fetchSource.ts` — SSRF-hardened bounded URL fetch (https-only, private-IP reject, 5s/200KB caps, egress allowlist) | roadmap dep, current bounded fetch is live |
-| OpenRouter **adaptive routing matrix** (extract/speed/deep/code tiers) | two env knobs — `AGENT_MODEL` (interactive) + `AGENT_RESEARCH_MODEL` (research, deepseek-v4-flash) + `openRouterFreeModels.ts` ranking | divergent naming — simpler reality, no formal matrix |
-| MCP server exposing `nodeagent_*` tools | none — tools are guarded by Convex permissions + schema; `.mcp.json` has only the standard Convex MCP | absent — **do not build** (no consumer) |
-| `.agent/` (AGENT.md / routing_matrix.json / rebase_rules.md) | truth lives in `src/nodeagent/models/prompts/systemPrompt.ts`, `src/nodeagent/skills/spreadsheet/cellMutator.ts`, and `docs/NODEAGENT_ARCHITECTURE.md` | absent — **do not create** (would duplicate + drift) |
-| Convex Workflow + Workpool durable jobs | `@convex-dev/workflow` + `@convex-dev/workpool`, wired in `convex.config.ts` / `agentWorkflows.ts` / `agentJobs.ts` | **built + live-proven** |
-| Formula engine | `src/nodeagent/core/formulaEngine.ts` (test-covered, imported by UI/engine) | **built + tested** |
-| Semantic Rebase (Compare → Reason → Swap) | `SmartResolver` (`merge.ts`) + `drafts.mergeBlockedDrafts` (deterministic half). LLM resolver / durable packet tables / validators are **open**. | **built (deterministic) + target (LLM)** |
-| Downstream connectors (Linear/Notion/Gmail/Slack/LinkedIn) + per-company auto-charts | none — shown as "ready-to-hand-off" cards only | **roadmap** (correctly labeled in deck + proof ledger) |
+| `src/nodeagent/{core,models,skills,guardrails}` namespace | Canonical implementation under `src/nodeagent/**`. | aligned |
+| Pi Agent Core / pi-ai runtime | Custom `runAgent` loop in `src/nodeagent/core/runtime.ts` on the AI SDK, run inside Convex `"use node"` actions. | aligned to repo reality |
+| Linkup search SDK + `linkupLogs` | `src/nodeagent/skills/search/fetchSource.ts`: SSRF-hardened bounded URL fetch with https-only, private-IP rejection, timeout, byte caps, and egress allowlist. | roadmap dependency; current bounded fetch is live |
+| OpenRouter adaptive routing matrix | `AGENT_MODEL`, `AGENT_RESEARCH_MODEL`, model catalog helpers, and OpenRouter free/paid discovery scripts. | simpler than the design notes |
+| MCP server exposing `nodeagent_*` tools | None. Tools are guarded by Convex permissions and schemas. | absent; do not build until there is a consumer |
+| `.agent/` rules directory | Truth lives in `src/nodeagent/models/prompts/systemPrompt.ts`, `src/nodeagent/skills/spreadsheet/cellMutator.ts`, and `docs/NODEAGENT_ARCHITECTURE.md`. | absent; avoid duplicate drift |
+| Convex Workflow + Workpool durable jobs | `@convex-dev/workflow` and `@convex-dev/workpool` are wired through Convex config/job files. | built |
+| Formula engine | `src/nodeagent/core/formulaEngine.ts`, imported by UI/engine and test-covered. | built and tested |
+| Semantic Rebase | `SmartResolver` plus deterministic draft merge path. LLM resolver packet tables remain target-state. | partially built |
+| Downstream connectors | `downstreamPublish` prepares Gmail, Notion, Slack, Linear, LinkedIn, and CRM draft artifacts only. | draft handoff; live OAuth is roadmap |
 
-## What's real and strongest (don't undersell these)
-- **No-clobber wedge** — per-cell CAS rejects stale writes as data; agent edits in review mode become host-approvable proposals; durable traces. Proven: `tests/noClobberWedge.test.ts` (sequenced) + live `e2e/three-user-collab.spec.ts`. **built + tested + live-proven.**
-- **Finance 3-statement solve** — 5/5 on deepseek-v4-flash, all 13 checks, base/distractor/concurrent-edit. **built + tested + live-proven** — the strongest proof in the repo.
-- **Professional-workflow runtime** — 21/21 GTM + finance catalog + 21/21 live-runtime with production locks + evidence. **built + tested + live-proven.**
-- **Company deep-research loop** (`companyResearchPlan`) — per pending/stale row: read → `fetch_source` ×2 → source-backed CellPayload (evidence/confidence/freshness) → `needs_review` on weak sources, with duplicate-prevention upsert. **built + tested.**
-- **Private streaming agent** — `convex/streaming.ts` + `/stream-private-reply` (token-by-token, persisted). **built + tested.** (Not public token streaming — do not claim that.)
+## Strongest Current Claims
 
-## Authority docs (read these, in order)
-1. [ARCHITECTURE.md](ARCHITECTURE.md) — layer map + the managed-write contract.
-2. [NODEAGENT_ARCHITECTURE.md](NODEAGENT_ARCHITECTURE.md) / [AGENT_RUNTIME.md](AGENT_RUNTIME.md) — the real `runAgent` harness.
-3. [architecture/CONVEX_AS_LEDGER.md](architecture/CONVEX_AS_LEDGER.md) — Convex-as-ledger boundaries + B1/B2 scaling.
-4. [AGENT_EVAL.md](AGENT_EVAL.md) — how the agent is evaluated (SpreadsheetBench · BankerToolBench · HALO · eval:diff gate).
-5. [demo/STARTUP_DILIGENCE_PROOF_LEDGER.md](demo/STARTUP_DILIGENCE_PROOF_LEDGER.md) — the war-room claim ledger.
-6. [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md) · [GAPS_NOT_DONE.md](GAPS_NOT_DONE.md) · [WEDGE.md](WEDGE.md) — readiness, gaps, the frozen wedge.
-7. [showcase/noderoom-diligence-deck.html](showcase/noderoom-diligence-deck.html) — the slide deck.
+- No-clobber wedge: per-cell CAS, locks, proposals, and traces prevent silent overwrites. Evidence: `tests/noClobberWedge.test.ts`, `tests/multiUserCoordinationProof.test.ts`, `convex/artifacts.ts`, `convex/locks.ts`.
+- Finance and professional workflows: internal GTM/finance catalog, finance model, SpreadsheetBench-like, BankerToolBench-like, and OpenRouter-on-Convex harness tests are present. These are internal benchmark-faithful gates, not official public scores.
+- Company research loop: `companyResearchPlan` and world-model context builders read pending/stale rows, fetch bounded sources, write evidence/review state, and preserve CRM fields.
+- Private streaming agent: private replies stream to the requester's lane and persist. Do not claim generalized public token streaming.
+- Multi-agent workbench: visible memory-mode demo and judged media exist. Startup diligence now has a two-clip evidence path: live create/join plus scripted synthesis/private/downstream.
+- Fresh startup room: live mode now starts a new "Startup Banking Diligence War Room" by default. The `startup-diligence-live-join` walkthrough proves teammate join-by-code; `startup-diligence-war-room` proves the broader diligence workflow.
 
-## Do NOT (the real, current guardrails)
-- **Do not recreate legacy agent entrypoints.** New agent work belongs under `src/nodeagent/**`; legacy path reintroduction is blocked by `tests/nodeagentImportGuards.test.ts`.
-- **Do not bypass Convex as the durable backend.** `src/nodeagent/**` owns the agent implementation surface; Convex still owns durable jobs, permissions, locks, writes, streams, and audit persistence.
-- **Still genuine roadmap (do not build now):** 5 *live* OAuth connectors (Linear/Notion/Gmail/Slack/LinkedIn) — `downstreamPublish` prepares hand-off drafts, but live OAuth needs the user's accounts + creds · per-company auto-charting beyond the runway chart · a net-new spreadsheet runtime.
+## Authority Docs
 
-## Verification snapshot (2026-06-14 ~13:27 PDT)
-`tests/nodeagentAlignment.test.ts` ✅ · `tests/nodeagentImportGuards.test.ts` ✅ · `tsc --noEmit` **0 errors** ✅ · production import graph on `src/nodeagent/**` ✅ · legacy migrated files removed ✅.
+1. [ARCHITECTURE.md](ARCHITECTURE.md) - layer map and managed-write contract.
+2. [NODEAGENT_ARCHITECTURE.md](NODEAGENT_ARCHITECTURE.md) and [AGENT_RUNTIME.md](AGENT_RUNTIME.md) - the real agent harness.
+3. [architecture/CONVEX_AS_LEDGER.md](architecture/CONVEX_AS_LEDGER.md) - Convex-as-ledger boundaries and scaling rules.
+4. [AGENT_EVAL.md](AGENT_EVAL.md) - agent evaluation method.
+5. [demo/STARTUP_DILIGENCE_DEMO_PLAN.md](demo/STARTUP_DILIGENCE_DEMO_PLAN.md) - the next public demo script.
+6. [demo/STARTUP_DILIGENCE_PROOF_LEDGER.md](demo/STARTUP_DILIGENCE_PROOF_LEDGER.md) - claim-by-claim proof ledger.
+7. [demo/NEXT_PRODUCT_DEMO_PUSH_REVIEW.md](demo/NEXT_PRODUCT_DEMO_PUSH_REVIEW.md) - latest repo/browser review for the next push.
+8. [PRODUCTION_READINESS.md](PRODUCTION_READINESS.md), [GAPS_NOT_DONE.md](GAPS_NOT_DONE.md), and [WEDGE.md](WEDGE.md) - readiness, gaps, and the frozen wedge.
+9. [showcase/noderoom-diligence-deck.html](showcase/noderoom-diligence-deck.html) - lightweight deck scaffold.
+
+## Do Not
+
+- Do not recreate legacy agent entrypoints. New agent work belongs under `src/nodeagent/**`; legacy path reintroduction is blocked by import guards.
+- Do not bypass Convex as durable backend. NodeAgent owns the agent implementation surface; Convex owns durable jobs, permissions, locks, writes, streams, and audit persistence.
+- Do not imply JPM or bank affiliation. Use "startup-banking diligence" or "JPM-style workflow reference" only.
+- Do not claim live OAuth connectors until user-authorized adapters exist and pass live tests.
+- Do not claim official SpreadsheetBench or BankerToolBench scores until official fixtures, adapters, runs, and scorer outputs are recorded.
+- Do not claim full production LiteParse/OCR worker coverage beyond the installed adapter/smoke lane.
+
+## Current Verification Snapshot
+
+2026-06-14, local repo:
+
+- `npm run typecheck -- --pretty false`: pass.
+- `npx tsc --noEmit --project convex\tsconfig.json --pretty false`: pass.
+- `npm run build`: pass.
+- `npm test -- --run`: 88 files, 500 tests pass.
+- `npm run content:fluency:check`: pass.
+
+Browser/media evidence:
+
+- Direct Playwright create/join verification renders the Startup Banking Diligence War Room with Mercury/Ramp/Brex research rows, a fresh room code, Maya and Priya in the same room, Priya's chat message, no guided-tour overlay, and Gmail/Notion/Slack/Linear/LinkedIn/CRM handoffs.
+- `docs/walkthroughs/startup-diligence-live-join.mp4` shows a host creating a fresh room and a second user joining by code.
+- `docs/walkthroughs/startup-diligence-war-room.mp4` shows the scripted research/enrichment, private lane, and downstream draft handoff story.

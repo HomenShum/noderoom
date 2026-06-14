@@ -1,0 +1,72 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-startup-diligence-live-join",
+    "class": "readme_walkthrough",
+    "title": "Startup Diligence Live Join",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\startup-diligence-live-join.mp4",
+    "relPath": "docs/walkthroughs/startup-diligence-live-join.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:startup-diligence-live-join"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/startup-diligence-live-join.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 8513132,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The video successfully demonstrates a multi-user live join workflow for a startup banking diligence room, showing the creation, code sharing, and collaborative chat interface.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "The walkthrough clearly shows Maya creating a room, copying the code, and Priya joining the same room."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Demonstrates the full sequence from room creation to sharing the code and collaborating in real-time."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "The dark mode UI is modern and well-structured, though the density of information is high."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with the NodeRoom concept of shared workspaces, live agents, and collaborative room traces."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Captured directly from the web application, showing realistic user interactions and state updates."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Most text and UI elements are readable, though some smaller labels require close attention."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for financial analysts and deal teams coordinating startup diligence."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately represents the multi-user synchronization and chat functionality without simulated effects."
+      }
+    },
+    "observedEvidence": [
+      "Landing page with room creation button",
+      "Diligence room dashboard with code 'GIFSTARMAX5'",
+      "Second user entering code to join",
+      "Shared chat and synchronized room state"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:08",
+        "severity": "P2",
+        "observed": "Abrupt transition between Maya's view and Priya's landing page view.",
+        "fix": "Add a brief fade transition or visual separator to clarify the perspective switch."
+      }
+    ],
+    "suggestedReadmeCaption": "See how multiple team members can instantly join a shared startup diligence room using a unique room code to collaborate with NodeAgents."
+  },
+  "score": 8,
+  "maxScore": 16
+}

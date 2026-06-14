@@ -1,4 +1,4 @@
-export type DownstreamTarget = "gmail" | "notion" | "slack" | "linear" | "csv";
+export type DownstreamTarget = "gmail" | "notion" | "slack" | "linear" | "linkedin" | "csv";
 export type DownstreamDestination = "gmail" | "notion" | "slack" | "linear" | "linkedin" | "crm_csv";
 export type DiligenceDownstreamDestination = DownstreamDestination;
 
@@ -81,6 +81,27 @@ export function buildDownstreamDiligenceDrafts(input: DiligencePublishInput): Do
       sourceArtifactIds: input.artifactIds,
       status: "external_adapter_required",
     },
+    {
+      target: "slack",
+      title: `Slack recap: ${input.company} diligence`,
+      body,
+      sourceArtifactIds: input.artifactIds,
+      status: "external_adapter_required",
+    },
+    {
+      target: "linear",
+      title: `Linear follow-up: ${input.company} diligence`,
+      body,
+      sourceArtifactIds: input.artifactIds,
+      status: "external_adapter_required",
+    },
+    {
+      target: "linkedin",
+      title: `LinkedIn research note: ${input.company} diligence`,
+      body,
+      sourceArtifactIds: input.artifactIds,
+      status: "external_adapter_required",
+    },
   ];
 }
 
@@ -94,7 +115,9 @@ export function prepareDownstreamDraft(target: Exclude<DownstreamTarget, "csv">,
       ? "Create Notion page"
       : target === "slack"
         ? "Prepare Slack post"
-        : "Prepare Linear issue";
+        : target === "linear"
+          ? "Prepare Linear issue"
+          : "Draft LinkedIn note";
   return {
     target,
     title: target === "gmail" ? `Draft update: ${input.title}` : input.title,
@@ -106,14 +129,14 @@ export function prepareDownstreamDraft(target: Exclude<DownstreamTarget, "csv">,
 
 export function prepareDownstreamDrafts(
   input: DownstreamDraftInput,
-  targets: Array<Exclude<DownstreamTarget, "csv">> = ["gmail", "notion", "slack", "linear"],
+  targets: Array<Exclude<DownstreamTarget, "csv">> = ["gmail", "notion", "slack", "linear", "linkedin"],
 ): PreparedDownstreamDraft[] {
   return targets.map((target) => prepareDownstreamDraft(target, input));
 }
 
 export function createDiligenceDownstreamDrafts(
   artifact: DownstreamArtifact,
-  destinations: DownstreamDestination[] = ["gmail", "notion", "slack", "linear", "crm_csv"],
+  destinations: DownstreamDestination[] = ["gmail", "notion", "slack", "linear", "linkedin", "crm_csv"],
 ): DiligenceDownstreamDraft[] {
   const sourceBlock = artifact.sourceUrls.length ? `\n\nSources:\n${artifact.sourceUrls.map((url) => `- ${url}`).join("\n")}` : "";
   return destinations.map((destination) => {

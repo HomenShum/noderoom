@@ -1,0 +1,73 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-startup-diligence-live-join",
+    "class": "readme_walkthrough",
+    "title": "Startup Diligence Live Join",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\startup-diligence-live-join.mp4",
+    "relPath": "docs/walkthroughs/startup-diligence-live-join.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:startup-diligence-live-join"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/startup-diligence-live-join.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 10927062,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The video clearly demonstrates multi-user collaboration in a shared diligence room, showing real-time joining and trace updates.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.5,
+        "evidence": "Clear demonstration of room creation, code sharing, and multiple users joining the same session."
+      },
+      "workflowCompleteness": {
+        "score": 1.5,
+        "evidence": "Shows the complete flow from room creation to secondary and tertiary users joining and interacting."
+      },
+      "visualDesign": {
+        "score": 1.4,
+        "evidence": "Polished dark-mode interface with clear visual hierarchy and readable text elements."
+      },
+      "consistency": {
+        "score": 1.5,
+        "evidence": "Aligns perfectly with the NodeRoom concept, featuring the room binder, trace log, and copilot chat."
+      },
+      "evidenceQuality": {
+        "score": 1.5,
+        "evidence": "Authentic capture of the web application interface with realistic user interactions and state updates."
+      },
+      "legibility": {
+        "score": 1.4,
+        "evidence": "Text, room codes, and chat messages remain legible throughout the walkthrough."
+      },
+      "professionalRelevance": {
+        "score": 1.5,
+        "evidence": "Directly demonstrates collaborative startup diligence, highly relevant for finance and banking workflows."
+      },
+      "productionHonesty": {
+        "score": 1.5,
+        "evidence": "Accurately reflects multi-user states, including anonymous join tags and sequential trace events."
+      }
+    },
+    "observedEvidence": [
+      "Room creation by Maya",
+      "Room code sharing",
+      "Priya joining the room",
+      "Alex joining the room",
+      "Real-time updates in the Room Trace log"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:08",
+        "severity": "P2",
+        "observed": "Sudden cut transition between Maya's perspective and Priya's landing page entry.",
+        "fix": "Add a subtle visual transition or label indicating a switch to a different user's browser window."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch how multiple team members seamlessly join a shared startup diligence room using a unique room code to collaborate in real-time."
+  },
+  "score": 11.8,
+  "maxScore": 16
+}

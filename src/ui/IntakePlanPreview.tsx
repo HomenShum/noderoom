@@ -6,7 +6,7 @@ import {
   classifyIntakeMessage,
   type IntakeDecision,
   type PlanPreview,
-} from "../agent/intakePreflight";
+} from "../nodeagent/core/intakePreflight";
 
 const KIND_LABEL: Record<IntakeDecision["kind"], string> = {
   command: "New command",

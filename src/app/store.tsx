@@ -13,12 +13,14 @@ import { createContext, useContext, useMemo, useRef, useState, useEffect, useLay
 import { useQuery, useMutation, useAction } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { engine, demo, useEngineRev, runDemo } from "./roomStore";
-// Specific imports (NOT the ../agent barrel) so the AI-SDK-bearing model.ts never reaches the client bundle.
-import { InMemoryRoomTools } from "../agent/roomTools";
-import { ROOM_TOOLS } from "../agent/tools";
-import { runAgent as runHarness } from "../agent/runtime";
-import { scriptedModel } from "../agent/scripted";
-import type { AgentModel } from "../agent/types";
+// Specific imports (NOT the nodeagent barrel) so Node-only model adapters never reach the client bundle.
+import { runAgent as runHarness } from "../nodeagent/core/runtime";
+import type { AgentModel } from "../nodeagent/core/types";
+import { recomputeVariancePlan, companyResearchPlan } from "../nodeagent/core/plans";
+import { buildResearchContext } from "../nodeagent/core/worldModel";
+import { scriptedModel } from "../nodeagent/models/scripted";
+import { InMemoryRoomTools } from "../nodeagent/skills/integration/noderoomAdapter";
+import { ROOM_TOOLS } from "../nodeagent/skills/spreadsheet/cellMutator";
 
 /** Demo-mode pacing: yield ~`ms` between scripted agent steps so the UI paints every CAS beat.
  *  The steps are real engine mutations — this only makes them watchable (a run that completes in
@@ -26,8 +28,6 @@ import type { AgentModel } from "../agent/types";
 function paced(model: AgentModel, ms: number): AgentModel {
   return { ...model, next: async (args) => { await new Promise((r) => setTimeout(r, ms)); return model.next(args); } };
 }
-import { recomputeVariancePlan, companyResearchPlan } from "../agent/plans";
-import { buildResearchContext } from "../agent/context";
 import { RESEARCH_PLAN } from "../engine/demoRoom";
 import type { Actor, Artifact, ArtifactMeta, Channel, Lock, Member, Message, Room, TraceEvent, AgentSession, Draft, ChangeOp, Proposal, ResearchRowInput } from "../engine/types";
 import type { ArtifactRef } from "../ui/artifactRefs";
@@ -479,10 +479,16 @@ function findExistingResearchRowClient(art: Artifact, row: ResearchRowInput): st
   }) ?? null;
 }
 
+function usableConvexString(value: string | undefined): value is string {
+  return typeof value === "string" && value.trim().length > 0 && !/^(undefined|null|\[object Object\])$/i.test(value.trim());
+}
+
 export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: string; me: Actor; proof: ActorProof; children: ReactNode }) {
   const undoStack = useRef(new Map<string, UndoEntry[]>());
+  const hasValidLiveSession = usableConvexString(roomId) && usableConvexString(me.id) && usableConvexString(proof.token);
   const rid = roomId as never;
-  const data = useQuery(api.rooms.meta, { roomId: rid, requester: proof });
+  const roomQuery = hasValidLiveSession ? { roomId: rid, requester: proof } : "skip";
+  const data = useQuery(api.rooms.meta, roomQuery);
   const metaArtifacts = useMemo(() => (data?.artifacts ?? []) as unknown as MetaArtifact[], [data]);
   // B1: per-artifact cell maps, lifted from the <ArtifactElementsSubscriber> children rendered below.
   const [elementsByArtifact, setElementsByArtifact] = useState<Record<string, ElementsMap>>({});
@@ -492,17 +498,17 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
   const onArtifactUnmount = useCallback((artifactId: string) => {
     setElementsByArtifact((prev) => { if (!(artifactId in prev)) return prev; const next = { ...prev }; delete next[artifactId]; return next; });
   }, []);
-  const pubQuery = { roomId: rid, channel: "public", requester: proof };
-  const privQuery = { roomId: rid, channel: me.id, requester: proof };
+  const pubQuery = hasValidLiveSession ? { roomId: rid, channel: "public", requester: proof } : "skip";
+  const privQuery = hasValidLiveSession ? { roomId: rid, channel: me.id, requester: proof } : "skip";
   const pub = useQuery(api.messages.list, pubQuery) ?? [];
   const priv = useQuery(api.messages.list, privQuery) ?? [];
-  const traces = useQuery(api.collab.traces, { roomId: rid, requester: proof }) ?? [];
-  const runs = useQuery(api.agentRuns.list, { roomId: rid, requester: proof }) ?? [];
-  const jobs = useQuery(api.agentJobs.list, { roomId: rid, requester: proof }) ?? [];
+  const traces = useQuery(api.collab.traces, roomQuery) ?? [];
+  const runs = useQuery(api.agentRuns.list, roomQuery) ?? [];
+  const jobs = useQuery(api.agentJobs.list, roomQuery) ?? [];
   const latestJobId = (jobs as Array<{ _id: string }>)[0]?._id;
   const jobAttempts = useQuery(api.agentJobs.attempts, latestJobId ? { jobId: latestJobId as never, requester: proof } : "skip") ?? [];
   const jobDetail = useQuery(api.agentJobs.detail, latestJobId ? { jobId: latestJobId as never, requester: proof } : "skip");
-  const proposals = useQuery(api.artifacts.listProposals, { roomId: rid, requester: proof }) ?? [];
+  const proposals = useQuery(api.artifacts.listProposals, roomQuery) ?? [];
 
   const applyCellEdit = useMutation(api.artifacts.applyCellEdit).withOptimisticUpdate((local, args) => {
     const elementsQ = { roomId: args.roomId, artifactId: args.artifactId, requester: args.proof };

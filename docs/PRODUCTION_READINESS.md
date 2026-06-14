@@ -18,18 +18,21 @@ workflow gaps such as upload/view E2E, parser/OCR routing policy, resizable
 panels, full browser privacy specs, professional spreadsheet eval expansion,
 and SLO dashboards remain tracked in [`GAPS_NOT_DONE.md`](GAPS_NOT_DONE.md).
 
-## Release gate now wired
+## Release gate status
 
-`npm run prod:gate` runs secret hygiene, moderate-or-higher production audit,
-QA matrix freshness, app and Convex typechecks, unit/runtime tests, deterministic
-memory-mode browser product flows, and the production build. `npm run
-prod:gate:live` adds the live Convex product gate, and `npm run
-prod:gate:live:agent` adds the live provider-agent gate.
+`npm run prod:gate` is wired as a strict local release gate. It runs the
+moderate-or-higher production dependency audit first, then QA matrix freshness,
+content fluency, proof staleness, app and Convex typechecks, unit/runtime tests,
+deterministic memory-mode browser product flows, and the production build.
+`npm run prod:gate:live` adds the live Convex product gate, and
+`npm run prod:gate:live:agent` adds the live provider-agent gate.
 
-The production dependency audit is no longer carrying high/moderate findings:
-Convex/esbuild and ExcelJS/uuid are lifted with narrow package overrides. The
-remaining audit output is the low-severity AI SDK provider-utils advisory that
-requires a semver-major AI SDK/provider migration.
+As of 2026-06-14, this gate is expected to fail at the dependency-audit step.
+`npm audit --omit=dev --audit-level=moderate` reports 14 production advisories:
+6 high, 2 moderate, and 6 low. The high/moderate set currently includes
+Convex/esbuild and ExcelJS/uuid transitive advisories, with some fixes requiring
+upstream releases or semver-major dependency work. Secret scanning also remains
+a pre-release manual requirement until a dedicated scanner is added to the gate.
 
 ## Still open outside the core public-room gates
 

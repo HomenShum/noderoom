@@ -1,0 +1,73 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-startup-diligence-war-room",
+    "class": "readme_walkthrough",
+    "title": "Startup Diligence War Room",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\startup-diligence-war-room.mp4",
+    "relPath": "docs/walkthroughs/startup-diligence-war-room.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:startup-diligence-war-room"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/startup-diligence-war-room.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 19008114,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough effectively demonstrates the multi-agent diligence workflow, showing spreadsheet integration, research enrichment, and private/public agent states with live trace updates.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Shows spreadsheet, research, and copilot tabs clearly, though the interface is dense."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Walks through enrichment, multi-agent execution, and handoff stages."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark theme, but UI is crowded with multiple panels."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Includes spreadsheet, private/public agents, and room trace."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Real UI interactions and live trace updates are visible."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Small text in the trace and chat panels is hard to read without zooming."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Directly models a startup diligence workflow for finance/ops."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Shows agent thinking states and manual handoff approvals."
+      }
+    },
+    "observedEvidence": [
+      "Interactive spreadsheet with financial data",
+      "Research tab showing pending/complete accounts",
+      "Copilot chat interface with public and private modes",
+      "Room trace log updating dynamically",
+      "Handoff draft options (Gmail, Notion, Slack)"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:08",
+        "severity": "P2",
+        "observed": "The Room Trace panel text is very small and dense, making it difficult to read at standard README resolutions.",
+        "fix": "Increase the default font size of the trace panel or zoom in slightly during recording."
+      }
+    ],
+    "suggestedReadmeCaption": "Run multi-agent diligence workflows in NodeRoom, combining shared spreadsheets, automated research enrichment, and secure private drafting with human-in-the-loop handoffs."
+  },
+  "score": 8,
+  "maxScore": 16
+}

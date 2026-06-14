@@ -29,7 +29,7 @@ export type FeatureSpec = {
    *  a Company research artifact with 3 seeded accounts via the room's own session token.
    *  memoryDemo = the deterministic in-browser demo engine at the SAME prod URL (?mode=memory) —
    *  same UI, scripted agent; used where a live-LLM step is too nondeterministic to walk through. */
-  setup: "createRoom" | "seedResearchRoom" | "memoryDemo";
+  setup: "createRoom" | "seedResearchRoom" | "startupJoinRoom" | "memoryDemo";
   /** Real-LLM features get retries (fresh room per attempt); deterministic ones don't need them. */
   retries?: number;
   /** Opt-in specs are SKIPPED by default runs — they need a special server (e.g. the naive
@@ -46,9 +46,18 @@ export type FeatureSpec = {
 };
 
 const CENTER = '[data-testid="public-chat-panel"]';
+const PRIVATE = '[data-testid="private-chat-panel"]';
 const COMPOSER = `${CENTER} [data-testid="chat-composer"]`;
+const PRIVATE_COMPOSER = `${PRIVATE} [data-testid="chat-composer"]`;
 
 export const FEATURES: FeatureSpec[] = [
+  {
+    id: "startup-diligence-live-join",
+    title: "Fresh startup diligence room + teammate join",
+    setup: "startupJoinRoom",
+    optIn: true,
+    steps: [],
+  },
   {
     id: "chat",
     closePanels: ["left", "artifact"],
@@ -154,6 +163,76 @@ export const FEATURES: FeatureSpec[] = [
       { kind: "state", caption: "The proof board compares NodeRoom output against exact public gold answers", holdMs: 3000 },
       { kind: "waitResult", predicate: "textVisible", arg: "HANDOFF SEALED", caption: "Final proof closes the loop: formula, citation, XBRL facts, and human edit preserved", timeoutMs: 16_000 },
       { kind: "state", caption: "The stream is only the view; the manifest, job ledger, trace, and artifact versions are the record", holdMs: 2800 },
+    ],
+  },
+  {
+    id: "startup-diligence-war-room",
+    title: "Startup diligence war-room package",
+    setup: "memoryDemo",
+    closePanels: ["left"],
+    steps: [
+      { kind: "state", caption: "Blank room, not blank agent: the startup-banking room already has sheet, notes, wall, Copilot, and trace", holdMs: 1800 },
+      {
+        kind: "click",
+        sel: '[data-testid="artifact-tabs"] button:has-text("Research")',
+        caption: "Open the company research sheet",
+        afterCaption: "This is the shared queue for CardioNova intake, batch diligence, source refs, and owner review",
+        after: { sel: ".r-research", timeoutMs: 12_000 },
+        afterHoldMs: 1700,
+      },
+      {
+        kind: "click",
+        sel: '[data-testid="research-enrich"]',
+        caption: "Run source-backed enrichment for the startup-banking watchlist",
+        afterCaption: "Rows move to complete with summaries, signals, source links, and freshness",
+        after: { textSel: ".r-research-body", includes: "All complete", timeoutMs: 18_000 },
+        afterHoldMs: 3300,
+      },
+      { kind: "click", sel: COMPOSER, caption: "Use the public room lane for shared analyst work across multiple agents" },
+      {
+        kind: "type",
+        sel: COMPOSER,
+        text: "/demo multi-agent startup diligence: CardioNova intake, bulk five-company research, runway/milestone chart, and no-clobber proof",
+        caption: "One burst prompt becomes concurrent research, finance, review, and handoff lanes",
+        pressEnter: true,
+        afterCaption: "The work queue is now startup-specific: CardioNova, bulk rows, runway chart, and protected edits",
+        afterHoldMs: 2100,
+      },
+      {
+        kind: "waitResult",
+        predicate: "textVisible",
+        arg: "HANDOFF SEALED",
+        caption: "The package seals only after source checks, runway assumptions, and no-clobber proof agree",
+        timeoutMs: 18_000,
+      },
+      {
+        kind: "state",
+        caption: "Pause on the proof board: cited cells, chart assumptions, human edit preservation, and draft-only handoff are visible",
+        holdMs: 3400,
+      },
+      {
+        kind: "click",
+        sel: '[data-testid="copilot-tab-private"]',
+        caption: "Switch to the private NodeAgent lane",
+        afterCaption: "Private work is scoped to the owner until promoted",
+        after: { sel: PRIVATE, timeoutMs: 10_000 },
+      },
+      {
+        kind: "type",
+        sel: PRIVATE_COMPOSER,
+        text: "Privately draft the partner-facing concerns for CardioNova and the top two runway-risk companies before I share anything.",
+        caption: "Ask for private banker judgment without publishing it to the room",
+        pressEnter: true,
+        afterCaption: "The owner lane shows the private ask; nothing is promoted to the room",
+        afterHoldMs: 1800,
+      },
+      {
+        kind: "click",
+        sel: '[data-testid="downstream-gmail"]',
+        caption: "Downstream actions are approval-gated drafts, not silent OAuth sends",
+        afterCaption: "The visible promise is honest: package Gmail, Notion, Slack, Linear, LinkedIn, and CRM drafts; a human approves",
+        afterHoldMs: 2200,
+      },
     ],
   },
   {

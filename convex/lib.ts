@@ -131,6 +131,10 @@ export async function requireActorProof(ctx: DbCtx, roomId: Id<"rooms">, proof: 
   return { kind: "user" as const, id: String(member._id), name: member.name };
 }
 
+export async function getRequiredProductionIdentity(ctx: DbCtx) {
+  return ctx.auth.getUserIdentity();
+}
+
 export async function requireAgentSession(ctx: DbCtx, roomId: Id<"rooms">, sessionId: string, actor: ActorValue) {
   if (actor.kind !== "agent") return;
   const session = await ctx.db.get(sessionId as Id<"agentSessions">);

@@ -4,8 +4,8 @@ import { createHash } from "node:crypto";
 import ExcelJS from "exceljs";
 import { scoreSpreadsheetBenchWorkbook, type SpreadsheetBenchWorkbookScore } from "./spreadsheetBenchScorer";
 import type { SpreadsheetBenchTrack } from "./spreadsheetBenchAdapter";
-import type { AgentModel, TokenUsage } from "../agent/types";
-import { priceRun } from "../agent/model";
+import type { AgentModel, TokenUsage } from "../nodeagent/core/types";
+import { priceRun } from "../nodeagent/models/adapter";
 
 export type SpreadsheetBenchRunnerMode = "copy-input-baseline" | "apply-agent-patch" | "model-edit-plan";
 

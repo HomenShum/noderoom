@@ -1,0 +1,20 @@
+{
+  "runId": "20260614T223224Z",
+  "generatedAt": "2026-06-14T22:32:24.511Z",
+  "model": "gemini-3.5-flash",
+  "primaryOnly": true,
+  "all": false,
+  "includeIgnored": true,
+  "only": "startup-diligence-live-join",
+  "assets": [
+    {
+      "id": "docs-walkthroughs-startup-diligence-live-join",
+      "class": "readme_walkthrough",
+      "title": "Startup Diligence Live Join",
+      "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\startup-diligence-live-join.mp4",
+      "relPath": "docs/walkthroughs/startup-diligence-live-join.mp4",
+      "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+      "duplicateGroup": "walkthrough:startup-diligence-live-join"
+    }
+  ]
+}

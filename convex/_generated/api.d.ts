@@ -31,6 +31,7 @@ import type * as notebookGraph from "../notebookGraph.js";
 import type * as retention from "../retention.js";
 import type * as rooms from "../rooms.js";
 import type * as seed from "../seed.js";
+import type * as semanticRebase from "../semanticRebase.js";
 import type * as spreadsheetIndexLib from "../spreadsheetIndexLib.js";
 import type * as streaming from "../streaming.js";
 import type * as streamingModel from "../streamingModel.js";
@@ -65,6 +66,7 @@ declare const fullApi: ApiFromModules<{
   retention: typeof retention;
   rooms: typeof rooms;
   seed: typeof seed;
+  semanticRebase: typeof semanticRebase;
   spreadsheetIndexLib: typeof spreadsheetIndexLib;
   streaming: typeof streaming;
   streamingModel: typeof streamingModel;

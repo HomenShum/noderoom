@@ -1,0 +1,10 @@
+{
+  "runId": "20260614T223118Z",
+  "generatedAt": "2026-06-14T22:31:18.351Z",
+  "model": "gemini-3.5-flash",
+  "primaryOnly": true,
+  "all": false,
+  "includeIgnored": false,
+  "only": "startup-diligence-live-join",
+  "assets": []
+}

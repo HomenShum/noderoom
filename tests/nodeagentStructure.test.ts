@@ -69,8 +69,7 @@ describe("src/nodeagent architecture surface", () => {
       evidenceUrls: ["https://example.com/source"],
       artifactIds: ["art_company_research"],
     });
-    expect(drafts.map((d) => d.target)).toEqual(["csv", "gmail", "notion"]);
+    expect(drafts.map((d) => d.target)).toEqual(["csv", "gmail", "notion", "slack", "linear", "linkedin"]);
     expect(drafts[0].status).toBe("draft_ready");
   });
 });
-

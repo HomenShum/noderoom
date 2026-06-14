@@ -1,0 +1,73 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-startup-diligence-live-join",
+    "class": "readme_walkthrough",
+    "title": "Startup Diligence Live Join",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\startup-diligence-live-join.mp4",
+    "relPath": "docs/walkthroughs/startup-diligence-live-join.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:startup-diligence-live-join"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/startup-diligence-live-join.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 8513132,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The walkthrough clearly demonstrates a multi-user live join flow for a startup diligence room, showing room creation, code sharing, and real-time collaboration.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.5,
+        "evidence": "Shows Maya creating a room, copying the code, and Priya joining using that code."
+      },
+      "workflowCompleteness": {
+        "score": 1.6,
+        "evidence": "Captures the complete flow from room creation to multi-user collaboration."
+      },
+      "visualDesign": {
+        "score": 1.4,
+        "evidence": "Clean dark mode UI, though some panels are text-dense."
+      },
+      "consistency": {
+        "score": 1.5,
+        "evidence": "Includes the room binder, research tab, room trace, and copilot chat."
+      },
+      "evidenceQuality": {
+        "score": 1.6,
+        "evidence": "Real browser interaction with actual UI elements and state updates."
+      },
+      "legibility": {
+        "score": 1.3,
+        "evidence": "Most text is readable, though sidebar items and room trace are small."
+      },
+      "professionalRelevance": {
+        "score": 1.5,
+        "evidence": "Highly relevant for collaborative financial analysis and startup diligence."
+      },
+      "productionHonesty": {
+        "score": 1.5,
+        "evidence": "Accurately depicts the real-time joining process and UI state changes."
+      }
+    },
+    "observedEvidence": [
+      "Room creation from landing page",
+      "Copying shareable room code",
+      "Second user joining via code",
+      "Shared workspace state synchronization",
+      "Coordinating via copilot chat"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:06",
+        "severity": "P2",
+        "observed": "The room code is slightly small and hard to read quickly.",
+        "fix": "Increase the font size or contrast of the shareable room code badge."
+      }
+    ],
+    "suggestedReadmeCaption": "See how multiple team members can instantly join a shared startup diligence room using a unique room code to collaborate with agents in real-time."
+  },
+  "score": 11.9,
+  "maxScore": 16
+}

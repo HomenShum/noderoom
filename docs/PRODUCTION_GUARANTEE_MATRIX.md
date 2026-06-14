@@ -1,6 +1,6 @@
 # Production Guarantee Matrix
 
-Generated from `docs/qa/production-matrix.json` on 2026-06-13.
+Generated from `docs/qa/production-matrix.json` on 2026-06-14.
 
 **Release rule:** A feature is production-ready only when deterministic tests, live/backend smoke where applicable, traceability, privacy boundaries, and documented failure behavior are all present.
 
@@ -15,6 +15,7 @@ Generated from `docs/qa/production-matrix.json` on 2026-06-13.
 
 | Area | Status | Claim | Production gate | Evidence | Next review |
 |---|---|---|---|---|---|
+| Startup diligence demo | Yellow | The flagship public demo shows the June 2026 startup-banking target: three users, CardioNova intake, five-company diligence, concurrent agent lanes, runway/milestone chart work, no-clobber review, private banker lane, and draft-only downstream handoff. | README links the startup media, the walkthrough scripts match the latest target, Gemini judges the recaptured clips, and a live provider/Convex eval records cited cells, preserved human edit, route trace, cost/runtime, private boundary, and downstream draft-only behavior. | `docs/demo/STARTUP_DILIGENCE_DEMO_PLAN.md`, `docs/demo/STARTUP_DILIGENCE_PROOF_LEDGER.md`, `docs/eval/startup-diligence-war-room-live.json`, `docs/walkthroughs/startup-diligence-war-room.gif`, `docs/walkthroughs/startup-diligence-live-join.gif`, `scripts/walkthroughs/specs.ts`, `scripts/walkthroughs/capture.ts`, `src/ui/Chat.tsx` | Build the live provider/Convex eval that fills the manifest checks; optional media polish can clear the remaining P2 transition, trace-density, and privacy-state notes. |
 | Files + spreadsheet | Yellow | Users can upload/view files and work with parsed spreadsheets in the same room. | Parser fixtures, provider parser adapter tests, live file preview smoke, and Convex raw-file canonicalization. | `tests/spreadsheetParser.test.ts`, `tests/providerParserAdapter.test.ts`, `docs/PROFESSIONAL_SPREADSHEET_WORKFLOWS.md` | Add live Convex File Storage upload/download E2E once deployment auth is finalized. |
 | Public/private chat + agent | Yellow | Public chat, private chat, public room agent, and private agent route messages to the right scope. | Scope separation tests, room member proof, and browser smoke for public/private panels. | `tests/roomEngine.test.ts`, `tests/agentRuntime.test.ts`, `docs/AGENT_RUNTIME.md` | Add browser E2E for public/private routing, optimistic send failure/retry, and stable clientMsgId bubble keys. |
 | Trace + proposals | Green | Room trace supports approve/reject, host accept-all, and host-gated auto-accept with remembered consent. | Host-only controls, proposal resolution tests, UI consent modal, and no silent direct-write bypass. | `tests/roomEngine.test.ts`, `src/ui/RoomShell.tsx`, `src/ui/panels/Artifact.tsx` | Add audit assertion that accept-all records every accepted proposal id. |

@@ -34,7 +34,7 @@ describe("nodeagent compatibility tree", () => {
       bullets: ["2 sourced risks", "1 pending review proposal"],
       artifactUrl: "https://noderoom.test/artifacts/123",
     });
-    expect(drafts.map((draft) => draft.target)).toEqual(["gmail", "notion", "slack", "linear"]);
+    expect(drafts.map((draft) => draft.target)).toEqual(["gmail", "notion", "slack", "linear", "linkedin"]);
     expect(drafts.every((draft) => draft.status === "prepared")).toBe(true);
     expect(drafts[0]?.body).toContain("Artifact: https://noderoom.test/artifacts/123");
   });

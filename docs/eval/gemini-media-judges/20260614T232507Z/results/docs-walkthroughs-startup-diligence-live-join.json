@@ -1,0 +1,73 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-startup-diligence-live-join",
+    "class": "readme_walkthrough",
+    "title": "Startup Diligence Live Join",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\startup-diligence-live-join.mp4",
+    "relPath": "docs/walkthroughs/startup-diligence-live-join.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:startup-diligence-live-join"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/startup-diligence-live-join.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 10912866,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The video successfully demonstrates a multi-user live join workflow in a startup diligence room, showing room creation, code sharing, and real-time collaboration.",
+    "scores": {
+      "featureClarity": {
+        "score": 1.3,
+        "evidence": "The flow of creating a room, copying the code, and having other users join is clearly depicted."
+      },
+      "workflowCompleteness": {
+        "score": 1.4,
+        "evidence": "Shows the complete lifecycle from room creation to multi-user collaboration and chat interaction."
+      },
+      "visualDesign": {
+        "score": 1.2,
+        "evidence": "The dark-themed interface is modern and structured, though the layout is highly dense."
+      },
+      "consistency": {
+        "score": 1.3,
+        "evidence": "Aligns well with NodeRoom's core concepts of shared artifacts, room traces, and collaborative agents."
+      },
+      "evidenceQuality": {
+        "score": 1.4,
+        "evidence": "Captured directly from a live browser session with realistic user interactions and state updates."
+      },
+      "legibility": {
+        "score": 1.1,
+        "evidence": "Some UI text and chat messages are small, but key actions and captions remain readable."
+      },
+      "professionalRelevance": {
+        "score": 1.3,
+        "evidence": "Highly relevant for financial and diligence teams requiring real-time collaborative workspaces."
+      },
+      "productionHonesty": {
+        "score": 1.3,
+        "evidence": "Accurately represents the actual UI state changes and multi-user synchronization without simulated effects."
+      }
+    },
+    "observedEvidence": [
+      "Room creation from landing page",
+      "Copying of the room code",
+      "Second user (Priya) joining via code",
+      "Third user (Alex) joining via code",
+      "Real-time updates in the Room Trace log"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:04",
+        "severity": "P2",
+        "observed": "The dense UI layout makes some sidebar text elements and room trace events small and hard to read.",
+        "fix": "Slightly increase the default font size or zoom level of the browser during recording."
+      }
+    ],
+    "suggestedReadmeCaption": "Watch how multiple team members seamlessly join a shared startup-banking diligence room in real-time using a secure room code."
+  },
+  "score": 10.3,
+  "maxScore": 16
+}

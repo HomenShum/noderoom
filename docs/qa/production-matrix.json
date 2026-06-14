@@ -1,9 +1,39 @@
 {
   "schema": 1,
-  "updatedAt": "2026-06-13",
+  "updatedAt": "2026-06-14",
   "sourceOfTruth": "Append new product or runtime guarantees to features[] and rerun npm run qa:matrix.",
   "releaseRule": "A feature is production-ready only when deterministic tests, live/backend smoke where applicable, traceability, privacy boundaries, and documented failure behavior are all present.",
   "features": [
+    {
+      "id": "startup_diligence_flagship_demo",
+      "area": "Startup diligence demo",
+      "claim": "The flagship public demo shows the June 2026 startup-banking target: three users, CardioNova intake, five-company diligence, concurrent agent lanes, runway/milestone chart work, no-clobber review, private banker lane, and draft-only downstream handoff.",
+      "status": "yellow",
+      "productionGate": "README links the startup media, the walkthrough scripts match the latest target, Gemini judges the recaptured clips, and a live provider/Convex eval records cited cells, preserved human edit, route trace, cost/runtime, private boundary, and downstream draft-only behavior.",
+      "deterministicChecks": [
+        "npm run typecheck -- --pretty false",
+        "npx tsc --noEmit --project convex/tsconfig.json --pretty false"
+      ],
+      "liveChecks": [
+        "npm run walkthroughs -- startup-diligence-live-join",
+        "npm run walkthroughs:render -- startup-diligence-live-join",
+        "npm run walkthroughs -- startup-diligence-war-room",
+        "npm run walkthroughs:render -- startup-diligence-war-room",
+        "npm run media:gemini-judge -- --only startup-diligence --include-ignored",
+        "missing: live provider/Convex startup eval writes docs/eval/startup-diligence-war-room-live.json evidence"
+      ],
+      "evidence": [
+        { "type": "doc", "ref": "docs/demo/STARTUP_DILIGENCE_DEMO_PLAN.md" },
+        { "type": "doc", "ref": "docs/demo/STARTUP_DILIGENCE_PROOF_LEDGER.md" },
+        { "type": "eval", "ref": "docs/eval/startup-diligence-war-room-live.json" },
+        { "type": "media", "ref": "docs/walkthroughs/startup-diligence-war-room.gif" },
+        { "type": "media", "ref": "docs/walkthroughs/startup-diligence-live-join.gif" },
+        { "type": "code", "ref": "scripts/walkthroughs/specs.ts" },
+        { "type": "code", "ref": "scripts/walkthroughs/capture.ts" },
+        { "type": "code", "ref": "src/ui/Chat.tsx" }
+      ],
+      "nextReview": "Build the live provider/Convex eval that fills the manifest checks; optional media polish can clear the remaining P2 transition, trace-density, and privacy-state notes."
+    },
     {
       "id": "files_and_spreadsheets",
       "area": "Files + spreadsheet",

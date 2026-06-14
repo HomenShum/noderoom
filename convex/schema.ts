@@ -148,6 +148,29 @@ export default defineSchema({
     resolvedAt: v.optional(v.number()),
   }).index("by_room_status", ["roomId", "status"]),
 
+  // Durable semantic-rebase ledger: a stale agent write the CAS spine couldn't apply is built into a
+  // SemanticConflictPacket, classified (auto-merge / review / forbidden), and recorded here — the
+  // live-Convex completion of the no-clobber wedge.
+  semanticConflicts: defineTable({
+    roomId: v.id("rooms"),
+    artifactId: v.id("artifacts"),
+    trigger: v.string(),
+    conflictKind: v.string(),
+    overlap: v.string(),
+    elementIds: v.array(v.string()),
+    tier: v.string(),
+    action: v.string(),
+    decision: v.string(),
+    canAutoCommit: v.boolean(),
+    outcome: v.union(v.literal("auto_merged"), v.literal("needs_review"), v.literal("recorded"), v.literal("rejected")),
+    reasons: v.array(v.string()),
+    proposalIds: v.optional(v.array(v.string())),
+    packet: v.any(),
+    actor,
+    createdAt: v.number(),
+    resolvedAt: v.optional(v.number()),
+  }).index("by_room", ["roomId", "createdAt"]),
+
   agentSessions: defineTable({
     roomId: v.id("rooms"),
     agentId: v.string(),

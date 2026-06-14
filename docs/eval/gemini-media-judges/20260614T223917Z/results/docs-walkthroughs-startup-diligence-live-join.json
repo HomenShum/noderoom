@@ -1,0 +1,73 @@
+{
+  "asset": {
+    "id": "docs-walkthroughs-startup-diligence-live-join",
+    "class": "readme_walkthrough",
+    "title": "Startup Diligence Live Join",
+    "path": "D:\\VSCode Projects\\cafecorner_nodebench\\nodebench_ai4\\noderoom\\docs\\walkthroughs\\startup-diligence-live-join.mp4",
+    "relPath": "docs/walkthroughs/startup-diligence-live-join.mp4",
+    "purpose": "README live walkthrough clip. Judge whether the feature is obvious, visually consistent, and credible as evidence.",
+    "duplicateGroup": "walkthrough:startup-diligence-live-join"
+  },
+  "model": "gemini-3.5-flash",
+  "status": "judged",
+  "mediaPath": "docs/walkthroughs/startup-diligence-live-join.mp4",
+  "mediaType": "video/mp4",
+  "bytes": 8513132,
+  "judge": {
+    "verdict": "publish",
+    "summary": "The video demonstrates creating a collaborative diligence room and having a second user join via a room code, showing real-time state synchronization.",
+    "scores": {
+      "featureClarity": {
+        "score": 1,
+        "evidence": "Shows room creation and joining via code clearly, though transitions are quick."
+      },
+      "workflowCompleteness": {
+        "score": 1,
+        "evidence": "Covers the end-to-end flow of creating, sharing, joining, and interacting."
+      },
+      "visualDesign": {
+        "score": 1,
+        "evidence": "Clean dark mode interface with clear layout, though dense with information."
+      },
+      "consistency": {
+        "score": 1,
+        "evidence": "Aligns with NodeRoom's multi-agent and collaborative workspace concept."
+      },
+      "evidenceQuality": {
+        "score": 1,
+        "evidence": "Captured from a live working web application with realistic data."
+      },
+      "legibility": {
+        "score": 1,
+        "evidence": "Text and codes are readable, though some UI elements are small."
+      },
+      "professionalRelevance": {
+        "score": 1,
+        "evidence": "Highly relevant for startup diligence and financial collaboration use cases."
+      },
+      "productionHonesty": {
+        "score": 1,
+        "evidence": "Accurately depicts the multi-user joining process without simulated effects."
+      }
+    },
+    "observedEvidence": [
+      "Room creation from landing page",
+      "Room code generation and copying",
+      "Second user joining via code",
+      "Synchronized workspace state",
+      "Chat interaction"
+    ],
+    "missingEvidence": [],
+    "defects": [
+      {
+        "ts": "00:09",
+        "severity": "P2",
+        "observed": "The transition to the second user's perspective (Priya) is abrupt.",
+        "fix": "Add a brief visual transition or clearer label to distinguish user perspectives."
+      }
+    ],
+    "suggestedReadmeCaption": "Collaborate in real-time with teammates and NodeAgents by sharing a secure room code."
+  },
+  "score": 8,
+  "maxScore": 16
+}

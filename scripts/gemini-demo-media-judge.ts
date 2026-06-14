@@ -17,6 +17,7 @@ import { z } from "zod";
 
 const ROOT = process.cwd();
 const args = process.argv.slice(2);
+const invokedCommand = ["npm", "run", "media:gemini-judge", "--", ...args].map(quoteCommandArg).join(" ");
 const model = optionValue("--model") ?? process.env.GEMINI_MEDIA_JUDGE_MODEL ?? "gemini-3.5-flash";
 const runId = optionValue("--run-id") ?? timestampId(new Date());
 const only = optionValue("--only")?.toLowerCase();
@@ -314,7 +315,7 @@ function buildAggregate(results: AssetResult[]) {
     runId,
     generatedAt: new Date().toISOString(),
     model,
-    command: "npm run media:gemini-judge -- --all",
+    command: invokedCommand,
     notes: [
       "GIF assets are converted to temporary MP4 with ffmpeg before upload.",
       "This media judge is evidence-quality QA; it does not replace backend/browser production gates.",
@@ -375,7 +376,7 @@ function renderSummary(aggregate: ReturnType<typeof buildAggregate>): string {
   lines.push("## Re-run");
   lines.push("");
   lines.push("```bash");
-  lines.push("npm run media:gemini-judge -- --all");
+  lines.push(aggregate.command);
   lines.push("```");
   lines.push("");
   return lines.join("\n");
@@ -406,6 +407,11 @@ function trackedRelPaths(): Set<string> {
 
 function isTracked(path: string): boolean {
   return tracked.has(slash(relative(ROOT, path)));
+}
+
+function quoteCommandArg(arg: string): string {
+  if (/^[A-Za-z0-9_./:@=-]+$/.test(arg)) return arg;
+  return JSON.stringify(arg);
 }
 
 function mediaTypeFor(path: string): string {

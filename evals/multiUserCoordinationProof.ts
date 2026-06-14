@@ -1,10 +1,10 @@
 import { mkdir, writeFile } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
-import { InMemoryRoomTools, PRODUCTION_ROOM_TOOLS } from "../src/agent";
+import { InMemoryRoomTools, PRODUCTION_ROOM_TOOLS } from "../src/nodeagent/index";
 import { buildDemoRoom, type DemoRoom } from "../src/engine/demoRoom";
 import { RoomEngine } from "../src/engine/roomEngine";
-import type { AgentTool } from "../src/agent/types";
+import type { AgentTool } from "../src/nodeagent/core/types";
 
 type Scenario = {
   id: string;

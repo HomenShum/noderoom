@@ -11,9 +11,9 @@ import {
   type ProviderExtraction,
   type ProviderParserAdapter,
   type ProviderUploadResult,
-} from "../app/providerParserAdapter";
-import type { ProviderFileCacheMeta, ProviderParser } from "../engine/types";
-import type { UploadedArtifactInput } from "../app/store";
+} from "../../app/providerParserAdapter";
+import type { ProviderFileCacheMeta, ProviderParser } from "../../engine/types";
+import type { UploadedArtifactInput } from "../../app/store";
 
 export type ProviderParserSource = {
   bytes?: Uint8Array;
@@ -143,7 +143,7 @@ export function createLiveProviderParserAdapter(options: LiveProviderParserOptio
         cachedAt: now(),
       };
     },
-    async extract(args): Promise<ProviderExtraction> {
+    async extract(args: Parameters<ProviderParserAdapter["extract"]>[0]): Promise<ProviderExtraction> {
       const source = sourceCache.has(args.file.storageId)
         ? sourceCache.get(args.file.storageId)
         : await options.loadSource?.(args.file);

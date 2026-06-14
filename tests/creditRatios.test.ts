@@ -11,7 +11,7 @@ import { describe, it, expect } from "vitest";
 import {
   dscr, leverage, ltv, interestCoverage, fixedChargeCoverage, debtYield,
   normalizeEbitda, testCovenant, foots, spreadByPeriod,
-} from "../src/agent/creditRatios";
+} from "../src/nodeagent/skills/finance/creditRatios";
 
 describe("Cascade Components term-loan underwrite — clean FY2024 spread (happy path)", () => {
   it("computes the 5-Cs ratios a credit committee underwrites", () => {

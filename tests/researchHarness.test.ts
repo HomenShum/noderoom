@@ -7,12 +7,12 @@
 import { describe, it, expect } from "vitest";
 import { RoomEngine } from "../src/engine/roomEngine";
 import type { Actor } from "../src/engine/types";
-import { InMemoryRoomTools } from "../src/agent/roomTools";
-import { runAgent } from "../src/agent/runtime";
-import { scriptedModel } from "../src/agent/scripted";
-import { companyResearchPlan } from "../src/agent/plans";
-import { buildResearchContext } from "../src/agent/context";
-import { ROOM_TOOLS } from "../src/agent/tools";
+import { InMemoryRoomTools } from "../src/nodeagent/skills/integration/noderoomAdapter";
+import { runAgent } from "../src/nodeagent/core/runtime";
+import { scriptedModel } from "../src/nodeagent/models/scripted";
+import { companyResearchPlan } from "../src/nodeagent/core/plans";
+import { buildResearchContext } from "../src/nodeagent/core/worldModel";
+import { ROOM_TOOLS } from "../src/nodeagent/skills/spreadsheet/cellMutator";
 import type { CellPayload } from "../src/engine/types";
 
 const COMPANIES = [

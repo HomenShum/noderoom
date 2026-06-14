@@ -21,12 +21,12 @@
  */
 import { RoomEngine } from "../src/engine/roomEngine";
 import type { CellEvidence, CellPayload } from "../src/engine/types";
-import { InMemoryRoomTools } from "../src/agent/roomTools";
-import { PRODUCTION_ROOM_TOOLS, ROOM_TOOLS } from "../src/agent/tools";
-import { MANAGED_LOCK_SYSTEM_PROMPT } from "../src/agent/systemPrompt";
-import { AgentRunError, runAgent } from "../src/agent/runtime";
-import { scriptedModel, lastVersions, type Planner } from "../src/agent/scripted";
-import type { AgentMessage, AgentModel, AgentTraceEvent, RoomTools } from "../src/agent/types";
+import { InMemoryRoomTools } from "../src/nodeagent/skills/integration/noderoomAdapter";
+import { PRODUCTION_ROOM_TOOLS, ROOM_TOOLS } from "../src/nodeagent/skills/spreadsheet/cellMutator";
+import { MANAGED_LOCK_SYSTEM_PROMPT } from "../src/nodeagent/models/prompts/systemPrompt";
+import { AgentRunError, runAgent } from "../src/nodeagent/core/runtime";
+import { scriptedModel, lastVersions, type Planner } from "../src/nodeagent/models/scripted";
+import type { AgentMessage, AgentModel, AgentTraceEvent, RoomTools } from "../src/nodeagent/core/types";
 import { appendEvalRuns, computeCaseSetHash, DEFAULT_STORE, runKey, type EvalRunRecord } from "./evalStore";
 import { readGitIdentity } from "./gitIdentity";
 import { mkdirSync, writeFileSync } from "node:fs";
@@ -512,7 +512,7 @@ if (isCli) {
   const route = optionValue("--real");
   const lockMode: ChatIntakeLockMode = process.argv.includes("--managed-locks") ? "runtime_managed_lock" : "explicit_agent_lock";
   const agent = route
-    ? (await import("../src/agent/model")).model(route)
+    ? (await import("../src/nodeagent/models/adapter")).model(route)
     : scriptedModel(
       lockMode === "runtime_managed_lock" ? chatIntakeManagedCapturePlan() : chatIntakeCapturePlan(),
       lockMode === "runtime_managed_lock" ? "scripted-chat-intake-managed" : "scripted-chat-intake",

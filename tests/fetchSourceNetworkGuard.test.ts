@@ -9,7 +9,7 @@ vi.mock("node:dns/promises", () => ({ lookup: lookupMock }));
 vi.mock("undici", () => ({ Agent: undiciMocks.Agent, fetch: undiciMocks.fetch }));
 
 async function fetchSourceReal() {
-  return (await import("../src/agent/fetchSource")).fetchSourceReal;
+  return (await import("../src/nodeagent/skills/search/fetchSource")).fetchSourceReal;
 }
 
 describe("fetch_source network guard", () => {

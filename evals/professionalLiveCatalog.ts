@@ -2,7 +2,7 @@ import "../scripts/benchmark/loadEnv";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname } from "node:path";
 import { pathToFileURL } from "node:url";
-import { judge } from "../src/agent/model";
+import { judge } from "../src/nodeagent/models/adapter";
 import { appendEvalRuns, computeCaseSetHash, DEFAULT_STORE, runKey, type EvalRunRecord } from "./evalStore";
 import { readGitIdentity } from "./gitIdentity";
 import {

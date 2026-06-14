@@ -51,7 +51,7 @@ Semantic Rebase / Compare-Reason-Swap sits above this lifecycle. CAS and
 `SmartResolver` protect physical writes and stale drafts; CRS classifies the
 business-meaning conflict before a risky resolution can become a proposal or a
 fresh final CAS write. The current policy scaffold lives in
-`src/engine/semanticRebase.ts`; the detailed runtime plan and open gaps are in
+`src/nodeagent/skills/spreadsheet/semanticRebase.ts`; the detailed runtime plan and open gaps are in
 [`architecture/SEMANTIC_REBASE_CRS.md`](architecture/SEMANTIC_REBASE_CRS.md).
 
 ## Engine ↔ Convex mapping (production)
@@ -67,7 +67,7 @@ The in-memory `RoomEngine` is the deterministic implementation of `convex/schema
 | `proposeLock` / `releaseLock` | `locks` table mutations; `releaseLock` calls deterministic `mergeBlockedDrafts` |
 | `mergeDraft` → deterministic resolver | deterministic Convex mutation flow today; an LLM resolver remains a future seam |
 | `opId` / `clientMsgId` idempotency | `withIndex().unique()`-then-insert (Convex has no DB unique constraint) |
-| scripted agents | `pi-agent-core` loop in a `"use node"` action; tools = `read_range` / `propose_lock` / `edit` / `create_draft`; conflicts come back as tool errors → the model re-reads + retries |
+| scripted agents | custom `runAgent` loop (`src/nodeagent/core/runtime.ts`, AI SDK) in a `"use node"` action; tools = `read_range` / `propose_lock` / `edit` / `create_draft`; conflicts come back as tool errors → the model re-reads + retries |
 
 **Why app-level CAS, not just Convex OCC:** Convex's internal OCC serializes physical writes and
 auto-retries low-level conflicts, but two clients that both read `v1` and write different values will
@@ -150,7 +150,10 @@ checkpoints into the same Workflow/Workpool continuation path. The detailed targ
 design, including `NodeAgentRequest`, `NodeAgentResult`, notebook graph tables,
 the action/query/mutation operation ledger, leases, tool permissions, mutation
 receipts, and embedding sync, lives in
-[`docs/NODEAGENT_ARCHITECTURE.md`](NODEAGENT_ARCHITECTURE.md).
+[`docs/NODEAGENT_ARCHITECTURE.md`](NODEAGENT_ARCHITECTURE.md). The concrete
+import/source map for the review-requested `src/nodeagent/**` tree lives in
+[`docs/NODEAGENT_SOURCE_MAP.md`](NODEAGENT_SOURCE_MAP.md); that tree is now the
+canonical agent source tree while Convex remains the durable runtime.
 
 ## OpenRouter-on-Convex benchmark contract
 

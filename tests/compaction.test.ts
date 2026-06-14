@@ -1,11 +1,11 @@
 /** Context compaction — unit (shrinks stale reads, preserves structure) + integration (doesn't break a run). */
 import { describe, it, expect } from "vitest";
-import { compactMessages, estimateChars } from "../src/agent/compaction";
-import type { AgentMessage } from "../src/agent/types";
+import { compactMessages, estimateChars } from "../src/nodeagent/core/contextCompactor";
+import type { AgentMessage } from "../src/nodeagent/core/types";
 import { RoomEngine } from "../src/engine/roomEngine";
 import { buildDemoRoom } from "../src/engine/demoRoom";
-import { InMemoryRoomTools, ROOM_TOOLS, runAgent, scriptedModel } from "../src/agent";
-import { recomputeVariancePlan } from "../src/agent/plans";
+import { InMemoryRoomTools, ROOM_TOOLS, runAgent, scriptedModel } from "../src/nodeagent/index";
+import { recomputeVariancePlan } from "../src/nodeagent/core/plans";
 
 function syntheticHistory(reads: number): AgentMessage[] {
   const msgs: AgentMessage[] = [{ role: "user", content: "TASK + snapshot " + "x".repeat(200) }];

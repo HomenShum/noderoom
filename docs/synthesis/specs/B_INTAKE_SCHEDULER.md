@@ -1,7 +1,7 @@
 # Intake classifier + preflight planner + scheduler (queue vs parallel subagent vs steering)
 
 Status note after the target implementation pass: the typed deterministic layer landed as
-`src/agent/intakePreflight.ts` with unit coverage in `tests/intakePreflightScheduler.test.ts`.
+`src/nodeagent/core/intakePreflight.ts` with unit coverage in `tests/intakePreflightScheduler.test.ts`.
 It classifies command-like messages, expands affected sets, and blocks privacy/formula/budget unsafe
 plans before provider spend. The live `/ask` and `/free` entrypoints do not yet render or enforce a
 first-class PlanPreview artifact; that remains the production wiring backlog.
@@ -12,28 +12,28 @@ Build a three-stage front door for every `/ask` (and command-like chat message):
 
 ## Current state (already built — do not re-spec)
 
-- **Exact-goal idempotency / dedupe** — `src/agent/idempotency.ts:25-41` (`runIdempotencyKey` FNV-1a over normalized `roomId|artifactId|actorId|goal`; `findReusableRun` reuses in-flight OR <60s-finished). Atomic race-safe claim at `convex/agentRuns.ts:19-34` (`claimOrReuse`); job-level reuse at `convex/agentJobs.ts:79-81` (`createOrReuse`) and `:233-235` (`startFreeAuto`). Covers the EXACT-goal case only.
+- **Exact-goal idempotency / dedupe** — `src/nodeagent/core/idempotency.ts:25-41` (`runIdempotencyKey` FNV-1a over normalized `roomId|artifactId|actorId|goal`; `findReusableRun` reuses in-flight OR <60s-finished). Atomic race-safe claim at `convex/agentRuns.ts:19-34` (`claimOrReuse`); job-level reuse at `convex/agentJobs.ts:79-81` (`createOrReuse`) and `:233-235` (`startFreeAuto`). Covers the EXACT-goal case only.
 - **Formula-dependency closure** — `expandElementIdsWithSpreadsheetDependencies(ctx, artifactId, elementIds)` called at `convex/locks.ts:22`; backed by `spreadsheetDependencies` (`convex/schema.ts:551-561`, `by_parent`/`by_child`). Runs at LOCK-GRANT time, formula slice only.
-- **Strong reservation (= the "Commit Lease")** — `convex/locks.ts` `proposeLock`/`releaseLock` with `expiresAt = now + LOCK_TTL_MS` (`:42`), janitor `sweepExpiredLocks` (`:116-139`), host `hostForceReleaseLock` "Yoink" (`:147-171`). Managed write acquires+releases inside one tool call (`src/agent/tools.ts:101-119`). This IS the short, commit-scoped strong lease — do NOT rebuild it.
-- **Outcome mechanisms the scheduler selects among** — four-gate `applyCellEdit` (`convex/artifacts.ts`, documented `docs/AGENT_RUNTIME.md:147-174`); blocked → `create_draft` + `mergeBlockedDrafts` deterministic smart-merge (`convex/drafts.ts:39-76`); review-mode → `pendingApproval`/`proposalId` (`roomTools.ts:161`); managed write auto-drafts when blocked (`src/agent/tools.ts:64-99`).
+- **Strong reservation (= the "Commit Lease")** — `convex/locks.ts` `proposeLock`/`releaseLock` with `expiresAt = now + LOCK_TTL_MS` (`:42`), janitor `sweepExpiredLocks` (`:116-139`), host `hostForceReleaseLock` "Yoink" (`:147-171`). Managed write acquires+releases inside one tool call (`src/nodeagent/skills/spreadsheet/cellMutator.ts:101-119`). This IS the short, commit-scoped strong lease — do NOT rebuild it.
+- **Outcome mechanisms the scheduler selects among** — four-gate `applyCellEdit` (`convex/artifacts.ts`, documented `docs/AGENT_RUNTIME.md:147-174`); blocked → `create_draft` + `mergeBlockedDrafts` deterministic smart-merge (`convex/drafts.ts:39-76`); review-mode → `pendingApproval`/`proposalId` (`roomTools.ts:161`); managed write auto-drafts when blocked (`src/nodeagent/skills/spreadsheet/cellMutator.ts:64-99`).
 - **Durable job substrate** — `agentJobs` with full status union, `priority` (always 0 today — `agentJobs.ts:92,254`), `nextRunAt`, `by_status_nextRunAt` index (`schema.ts:245-282`); workflow `maxParallelism: 3` (`convex/agentWorkflows.ts:9`); `cancel`/`retry` controls (`agentJobs.ts:350,372`).
-- **Spend enforcement** — `checkSpendCeiling` (`src/agent/runtime.ts:249-255`), `roomSpendSince`/`globalSpendSince` (`convex/agentRuns.ts:79-111`), `priceStep` real USD (`runtime.ts:274`). The ESTIMATE + authorize-before-spend UX is missing.
-- **Provenance invariant (REUSE, do not rebuild)** — `chatClaimsStayManual` (`evals/chatIntakeRuntime.ts:388`); provenance ladder `user_said > quoted_third_party > room artifact > fetched source > computed` (`docs/eval/FEATURE_EVAL_BACKLOG.md:65`); `fetch_source` "NEVER cite a source you did not fetch" (`src/agent/tools.ts:427`). Negative control `naiveChatIntakePlan` fabricates a source and MUST fail (`chatIntakeRuntime.ts:187-213`).
+- **Spend enforcement** — `checkSpendCeiling` (`src/nodeagent/core/runtime.ts:249-255`), `roomSpendSince`/`globalSpendSince` (`convex/agentRuns.ts:79-111`), `priceStep` real USD (`runtime.ts:274`). The ESTIMATE + authorize-before-spend UX is missing.
+- **Provenance invariant (REUSE, do not rebuild)** — `chatClaimsStayManual` (`evals/chatIntakeRuntime.ts:388`); provenance ladder `user_said > quoted_third_party > room artifact > fetched source > computed` (`docs/eval/FEATURE_EVAL_BACKLOG.md:65`); `fetch_source` "NEVER cite a source you did not fetch" (`src/nodeagent/skills/spreadsheet/cellMutator.ts:427`). Negative control `naiveChatIntakePlan` fabricates a source and MUST fail (`chatIntakeRuntime.ts:187-213`).
 
 ## Net-new work (sequenced)
 
 ### 1. Preflight planner — `computeAffectedSet` at plan time (effort: L)
-- **Files:** new `src/agent/preflight.ts`; new optional fields on `agentJobs` (`convex/schema.ts`): `intendedReadSet?: string[]`, `intendedWriteSet?: string[]`, `expandedAffectedSet?: string[]`, `affectedSetVersion?: number`.
+- **Files:** new `src/nodeagent/core/intakePreflight.ts`; new optional fields on `agentJobs` (`convex/schema.ts`): `intendedReadSet?: string[]`, `intendedWriteSet?: string[]`, `expandedAffectedSet?: string[]`, `affectedSetVersion?: number`.
 - **Do:** `computeAffectedSet(ctx, { roomId, artifactId, writeSet })` = reuse `expandElementIdsWithSpreadsheetDependencies` for formula closure, then read `locks.activeLocks`, `drafts` (`by_room_status`), `proposals` (`by_room_status`), and per-cell presence (step 4) and union them. Keep it CHEAP + DETERMINISTIC — no model call here.
 - **DoD:** given a fixed room fixture, `computeAffectedSet` returns a sorted, deduped element-id set whose formula slice equals the lock-grant expansion for the same write-set; persisted on the job; covered by a unit test asserting byte-identical output across two runs (DETERMINISTIC).
 
 ### 2. Intake classifier — typed proposal only (effort: L)
-- **Files:** new `src/agent/intake.ts` (Zod union + cheap-LLM call); called from `convex/agent.ts:runRoomAgent` entry and `src/app/store.tsx:askAgent` BEFORE `createOrReuseAgentJob`.
+- **Files:** new `src/nodeagent/core/intakePreflight.ts` (Zod union + cheap-LLM call); called from `convex/agent.ts:runRoomAgent` entry and `src/app/store.tsx:askAgent` BEFORE `createOrReuseAgentJob`.
 - **Do:** a deterministic prefilter first (regex/command heuristics — `/ask`, `/enrich`, imperative verbs) so non-command chatter NEVER triggers a model call (cost open-question below). When the prefilter passes, one cheap model call returns an `IntakeDecision` (union below). The LLM maps intent → target/read/write set; it does NOT spawn/lock/write. Classifier model calls count against `roomSpendSince`/`globalSpendSince`.
 - **DoD:** classifier output validates against the Zod schema or the run fails closed (HONEST_STATUS); a scripted plan covers each union variant; off-target output (e.g. emitting `parallel_subagent` for an overlapping write-set) is REJECTED by the scheduler, not the classifier.
 
 ### 3. Scheduler — conflict-class → existing outcome (effort: L)
-- **Files:** new `src/agent/scheduler.ts`; drives `agentJobs.priority`, `nextRunAt`, new `dependsOnJobId?: Id<"agentJobs">`.
+- **Files:** new `src/nodeagent/core/intakePreflight.ts`; drives `agentJobs.priority`, `nextRunAt`, new `dependsOnJobId?: Id<"agentJobs">`.
 - **Do:** consume preflight + classifier output; map conflict-class to an action (table below) using ONLY existing mechanisms. `formula_protected` → dependency-closure lock + `approvalPolicy=host_review` (NOT a new class/table). `privacy_boundary` → existing `evidencePolicy` (`schema.ts:37`) + chat-intake `privateChannelOnly`. `queue_after_dependency` sets `dependsOnJobId` + `nextRunAt`.
 - **DoD:** for each conflict-class, the scheduler emits the documented outcome and NEVER a weakened/parallel gate (`NODEAGENT_ARCHITECTURE.md:37`); negative-control plan (spawns parallel on overlap / writes a human-active cell / queues an independent job) MUST fail the rung.
 
@@ -43,7 +43,7 @@ Build a three-stage front door for every `/ask` (and command-like chat message):
 - **DoD:** a human edit to a cell with a live agent intent-claim succeeds with NO gate; presence row auto-expires; a test asserts presence is never read by the four write gates.
 
 ### 5. planHash dedupe extension (effort: M) — requires #1 persisted
-- **Files:** extend `src/agent/idempotency.ts` with `planHash(intent, targetArtifacts, normalizedTargets, sourceRefs, policy)` + an overlap check against in-flight jobs' `expandedAffectedSet`.
+- **Files:** extend `src/nodeagent/core/idempotency.ts` with `planHash(intent, targetArtifacts, normalizedTargets, sourceRefs, policy)` + an overlap check against in-flight jobs' `expandedAffectedSet`.
 - **DoD:** two semantically-equal goals with different wording collapse to one job; an overlapping (not identical) write-set routes to `queue_after_dependency`; sorted-key hashing → deterministic (DETERMINISTIC).
 
 ### 6. PlanPreview / authorize-before-spend card (effort: M)
@@ -57,7 +57,7 @@ Build a three-stage front door for every `/ask` (and command-like chat message):
 ## Interfaces / types
 
 ```ts
-// src/agent/intake.ts — classifier output. LLM PROPOSES; harness acts.
+// src/nodeagent/core/intakePreflight.ts — classifier output. LLM PROPOSES; harness acts.
 export type IntakeKind =
   | "new_command" | "steering_patch" | "parallel_subagent"
   | "wait_for_unlock" | "clarification_needed" | "note_only"
@@ -76,7 +76,7 @@ export interface IntakeDecision {
 }
 // Zod union mirrors this; runtime fails CLOSED if parse fails.
 
-// src/agent/preflight.ts
+// src/nodeagent/core/intakePreflight.ts
 export type ConflictClass =
   | "independent" | "formula_protected" | "human_edit_overlap"
   | "agent_claim_overlap" | "privacy_boundary" | "pending_proposal_overlap";
@@ -88,7 +88,7 @@ export interface PreflightResult {
   runtimeEstimate: { minMs: number; maxMs: number; sampleSize: number };
 }
 
-// src/agent/scheduler.ts — maps conflict → EXISTING outcome
+// src/nodeagent/core/intakePreflight.ts — maps conflict → EXISTING outcome
 export type ScheduleAction =
   | { kind: "spawn_parallel" }                                  // provably-disjoint affected sets only
   | { kind: "cas_commit" }

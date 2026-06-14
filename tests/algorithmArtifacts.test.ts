@@ -3,9 +3,9 @@ import {
   runAlgorithmArtifact,
   type AlgorithmArtifact,
   type AlgorithmArtifactResult,
-} from "../src/agent/algorithmArtifacts";
-import { InMemoryRoomTools } from "../src/agent/roomTools";
-import { PRODUCTION_ROOM_TOOLS } from "../src/agent/tools";
+} from "../src/nodeagent/skills/spreadsheet/algorithmArtifacts";
+import { InMemoryRoomTools } from "../src/nodeagent/skills/integration/noderoomAdapter";
+import { PRODUCTION_ROOM_TOOLS } from "../src/nodeagent/skills/spreadsheet/cellMutator";
 import { RoomEngine } from "../src/engine/roomEngine";
 import { buildDemoRoom } from "../src/engine/demoRoom";
 import type { CellPayload } from "../src/engine/types";

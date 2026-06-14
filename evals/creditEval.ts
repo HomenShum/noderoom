@@ -15,7 +15,7 @@ import { mkdirSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import {
   dscr, leverage, ltv, normalizeEbitda, foots, testCovenant, type RatioResult,
-} from "../src/agent/creditRatios";
+} from "../src/nodeagent/skills/finance/creditRatios";
 import { appendEvalRuns, computeCaseSetHash, DEFAULT_STORE, runKey, type EvalRunRecord } from "./evalStore";
 import { readGitIdentity } from "./gitIdentity";
 

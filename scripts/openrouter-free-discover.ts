@@ -1,8 +1,8 @@
 import "./benchmark/loadEnv";
 import { z } from "zod";
-import { judge } from "../src/agent/model";
-import { model } from "../src/agent/model";
-import { selectOpenRouterFreeModels } from "../src/agent/openRouterFreeModels";
+import { judge } from "../src/nodeagent/models/adapter";
+import { model } from "../src/nodeagent/models/adapter";
+import { selectOpenRouterFreeModels } from "../src/nodeagent/models/openRouterFreeModels";
 
 const limit = parseLimit();
 const smoke = process.argv.includes("--smoke");

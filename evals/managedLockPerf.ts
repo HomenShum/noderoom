@@ -11,10 +11,10 @@ import {
   scriptedModel,
   type AgentMessage,
   type AgentModel,
-} from "../src/agent";
+} from "../src/nodeagent/index";
 import { buildDemoRoom } from "../src/engine/demoRoom";
 import { RoomEngine } from "../src/engine/roomEngine";
-import { recomputeVariancePlan } from "../src/agent/plans";
+import { recomputeVariancePlan } from "../src/nodeagent/core/plans";
 
 const TARGETS = { r_rev__variance: "+24%", r_cogs__variance: "+27.5%" };
 const DEFAULT_JSON_OUT = "docs/eval/managed-lock-performance.json";

@@ -7,7 +7,7 @@ import {
   PRODUCTION_ROOM_TOOLS,
   model as realModel,
   runAgent,
-} from "../src/agent";
+} from "../src/nodeagent/index";
 import { buildDemoRoom } from "../src/engine/demoRoom";
 import { RoomEngine } from "../src/engine/roomEngine";
 import {

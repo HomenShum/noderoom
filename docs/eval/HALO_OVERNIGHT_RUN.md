@@ -89,7 +89,7 @@ Cycle 27/28 recovery proof:
 
 Cycle 8 incident and recovery:
 
-- Cycle 8 failed `typecheck` and `unit-tests` because `src/agent/runtime.ts`
+- Cycle 8 failed `typecheck` and `unit-tests` because `src/nodeagent/core/runtime.ts`
   referenced `pendingToolCalls` before the current declaration was present in
   that runner snapshot.
 - Manual recovery proof after cycle 8 passed: `npm run typecheck -- --pretty

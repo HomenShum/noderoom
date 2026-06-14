@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { classifySemanticConflictPacket, type SemanticConflictPacket } from "../src/engine/semanticRebase";
+import { classifySemanticConflictPacket, type SemanticConflictPacket } from "../src/nodeagent/skills/spreadsheet/semanticRebase";
 import { RoomEngine } from "../src/engine/roomEngine";
 import type { Actor, ArtifactKind, CellPayload, ChangeOp } from "../src/engine/types";
 

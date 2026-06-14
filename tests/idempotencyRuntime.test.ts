@@ -8,7 +8,7 @@ import { convexTest } from "convex-test";
 import { expect, test } from "vitest";
 import schema from "../convex/schema";
 import { internal } from "../convex/_generated/api";
-import { runIdempotencyKey, findReusableRun } from "../src/agent/idempotency";
+import { runIdempotencyKey, findReusableRun } from "../src/nodeagent/core/idempotency";
 
 // In-memory modules, EXCLUDING the "use node" action (AI SDK; not needed for the dedup data layer, won't load in edge-runtime).
 const modules = import.meta.glob("../convex/**/*.ts");

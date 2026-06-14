@@ -12,8 +12,8 @@
  * asserted" template passed NO_FABRICATION vacuously. Synthesis must stay model-owned.
  */
 import { z } from "zod";
-import { fenceUntrusted } from "../../src/agent/context";
-import type { AgentTool, SourceResult } from "../../src/agent/types";
+import { fenceUntrusted } from "../../src/nodeagent/core/worldModel";
+import type { AgentTool, SourceResult } from "../../src/nodeagent/core/types";
 import type { RESEARCH_COMPANIES } from "../../src/engine/demoRoom";
 
 export const RESEARCH_WRITE_COLS = ["status", "summary", "funding", "headcount", "recent_signal", "source", "source2", "last_researched"] as const;

@@ -2,7 +2,7 @@
 import { v } from "convex/values";
 import { internalMutation, internalQuery, query } from "./_generated/server";
 import { actorProofV, requireActorProof } from "./lib";
-import { findReusableRun } from "../src/agent/idempotency";
+import { findReusableRun } from "../src/nodeagent/core/idempotency";
 
 /** Claim a run row up-front (idempotency layer 1): a concurrent duplicate sees this in-flight row
  *  (no stopReason yet) via byKey and bails before racing the same locks/CAS. Finished by `finish`. */

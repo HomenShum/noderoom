@@ -19,13 +19,13 @@ deadlineAt = action start + AGENT_ACTION_BUDGET_MS
 reserveMs  = AGENT_ACTION_RESERVE_MS
 ```
 
-The runtime (`src/agent/runtime.ts`) checks the deadline before each model turn and before tool execution. If there is not enough usable time left, it returns a resumable `handoff` instead of pushing the action into Convex's hard timeout.
+The runtime (`src/nodeagent/core/runtime.ts`) checks the deadline before each model turn and before tool execution. If there is not enough usable time left, it returns a resumable `handoff` instead of pushing the action into Convex's hard timeout.
 
 Deployment note:
 
 ```text
 Convex action module -> standard action runtime
-  -> src/agent/convexModel.ts direct provider HTTP adapter
+  -> src/nodeagent/models/convexModel.ts direct provider HTTP adapter
   -> same AgentModel interface as local evals
 ```
 

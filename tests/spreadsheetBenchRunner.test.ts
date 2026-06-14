@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { afterEach, describe, expect, it } from "vitest";
 import { stageSpreadsheetBenchBundle } from "../src/eval/spreadsheetBenchStage";
 import { runStagedSpreadsheetBench } from "../src/eval/spreadsheetBenchRunner";
-import type { AgentModel } from "../src/agent/types";
+import type { AgentModel } from "../src/nodeagent/core/types";
 
 const roots: string[] = [];
 

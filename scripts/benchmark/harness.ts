@@ -1,4 +1,4 @@
-import type { AgentTraceEvent } from "../../src/agent/types";
+import type { AgentTraceEvent } from "../../src/nodeagent/core/types";
 
 export type FetchEvidence = {
   requestedUrl?: string;

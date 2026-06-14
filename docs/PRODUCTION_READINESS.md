@@ -18,6 +18,19 @@ workflow gaps such as upload/view E2E, parser/OCR routing policy, resizable
 panels, full browser privacy specs, professional spreadsheet eval expansion,
 and SLO dashboards remain tracked in [`GAPS_NOT_DONE.md`](GAPS_NOT_DONE.md).
 
+## Release gate now wired
+
+`npm run prod:gate` runs secret hygiene, moderate-or-higher production audit,
+QA matrix freshness, app and Convex typechecks, unit/runtime tests, deterministic
+memory-mode browser product flows, and the production build. `npm run
+prod:gate:live` adds the live Convex product gate, and `npm run
+prod:gate:live:agent` adds the live provider-agent gate.
+
+The production dependency audit is no longer carrying high/moderate findings:
+Convex/esbuild and ExcelJS/uuid are lifted with narrow package overrides. The
+remaining audit output is the low-severity AI SDK provider-utils advisory that
+requires a semver-major AI SDK/provider migration.
+
 ## Still open outside the core public-room gates
 
 | Area | Status |
@@ -46,9 +59,9 @@ and SLO dashboards remain tracked in [`GAPS_NOT_DONE.md`](GAPS_NOT_DONE.md).
 |---|---|
 | Durable slices + exactly-once journal (no double-bill on retry) | `tests/gatewayAndJournal.test.ts`, `tests/agentJobsRuntime.test.ts` |
 | Idempotency (no concurrent double-run) | `tests/idempotencyRuntime.test.ts` |
-| Per-run + per-slice token **and** USD spend ceilings | `src/agent/runtime.ts` `priceStep` wired into `convex/agent.ts` + `agentJobRunner.ts`; `tests/gatewayAndJournal.test.ts` |
-| Error-path handoff preserves unexecuted tool calls (resume-cursor integrity) | `src/agent/runtime.ts`; `tests/gatewayAndJournal.test.ts` |
-| PII/secret outbound redaction | `src/agent/gateway.ts`; tested |
+| Per-run + per-slice token **and** USD spend ceilings | `src/nodeagent/core/runtime.ts` `priceStep` wired into `convex/agent.ts` + `agentJobRunner.ts`; `tests/gatewayAndJournal.test.ts` |
+| Error-path handoff preserves unexecuted tool calls (resume-cursor integrity) | `src/nodeagent/core/runtime.ts`; `tests/gatewayAndJournal.test.ts` |
+| PII/secret outbound redaction | `src/nodeagent/gateway.ts`; tested |
 
 These are offline or deterministic proofs of the core mechanisms. They do not
 replace live provider/load evidence for OpenRouter data policy, high-concurrency
@@ -58,11 +71,12 @@ lease races, cron SLA, or public abuse behavior under real traffic.
 
 | Gate | Evidence |
 |---|---|
-| **Prompt injection** — room content reaches the model as fenced DATA, never instructions; forged fence-close neutralized | `src/agent/context.ts` `fenceUntrusted` + `systemPrompt.ts` TRUST BOUNDARY; `tests/promptInjection.test.ts` (4/4, incl. a behavioral "agent touches only its target despite a hostile sibling cell") |
+| **Prompt injection** — room content reaches the model as fenced DATA, never instructions; forged fence-close neutralized | `src/nodeagent/core/worldModel.ts` `fenceUntrusted` + `systemPrompt.ts` TRUST BOUNDARY; `tests/promptInjection.test.ts` (4/4, incl. a behavioral "agent touches only its target despite a hostile sibling cell") |
 | **Join rate limit + member cap** (10 joins/min sliding, 32 members/room) | `convex/rooms.ts` |
 | **Room-code entropy floor** (server-enforced `[A-Z0-9]{6,12}`, ≈2.2B space) | `convex/rooms.ts` |
 | **Cumulative daily USD cap per room** (bounds the SUM across `/ask` runs, not just one run) | `convex/agentRuns.ts` `roomSpendSince` + gate in `convex/agent.ts`; `tests/productionGates.test.ts` |
 | **Global monthly USD cap with breach attribution** (`GLOBAL_MAX_USD_PER_MONTH`, default $75 — the $100-experiment gate; the breach error reports distinct rooms so it self-diagnoses as growth vs runaway; bounded read fails closed on truncation) | `convex/agentRuns.ts` `globalSpendSince` + gate in `convex/agent.ts`; `tests/productionGates.test.ts`; env armed on dev **and** prod (`0.50`/slice, `$3`/room-day, `$75`/month) |
+| **Live entry/create/join/leave recovery** | `e2e/live-entry.backend.spec.ts` creates a room, verifies starter sheet/note/wall, joins by code, leaves back to the entry screen, and checks duplicate-create / missing-room errors. |
 | **Telemetry retention** (traces/agentSteps/operation-events pruned past the window, product data untouched) | `convex/retention.ts` + `convex/crons.ts`; `tests/productionGates.test.ts` |
 | Field-length caps (name/title) | `convex/rooms.ts` |
 
@@ -70,7 +84,7 @@ lease races, cron SLA, or public abuse behavior under real traffic.
 
 | Gate | What ships | Why not yet PROVEN |
 |---|---|---|
-| Free-route data-policy filter | `OPENROUTER_REQUIRE_NO_TRAINING=1` excludes routes that *declare* training (`src/agent/openRouterFreeModels.ts` `permitsTraining`) | Whether OpenRouter reliably exposes a per-model training flag — and honors it — is **unconfirmed**; default off so it doesn't filter every model on a missing field. Confirm with OpenRouter, then flip on + prove. |
+| Free-route data-policy filter | `OPENROUTER_REQUIRE_NO_TRAINING=1` excludes routes that *declare* training (`src/nodeagent/models/openRouterFreeModels.ts` `permitsTraining`) | Whether OpenRouter reliably exposes a per-model training flag — and honors it — is **unconfirmed**. The recommended `.env.example` value is on, while the code default remains off so existing deployments do not silently filter every model if the field is missing. Confirm with OpenRouter, then prove with a live provider audit. |
 
 ## NEEDS A LIVE AUDIT — cannot be settled offline
 

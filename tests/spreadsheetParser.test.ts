@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import ExcelJS from "exceljs";
 import { parseSpreadsheetArtifacts } from "../src/app/spreadsheetParser";
-import { InMemoryRoomTools } from "../src/agent/roomTools";
+import { InMemoryRoomTools } from "../src/nodeagent/skills/integration/noderoomAdapter";
 import { RoomEngine } from "../src/engine/roomEngine";
 import type { Actor, CellPayload } from "../src/engine/types";
 

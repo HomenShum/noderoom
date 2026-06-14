@@ -1,5 +1,5 @@
-import type { CellEvidence, CellPayload } from "../engine/types";
-import type { CellView, RoomTools } from "./types";
+import type { CellEvidence, CellPayload } from "../../../engine/types";
+import type { CellView, RoomTools } from "../../core/types";
 
 export type AlgorithmArtifactKind = "spreadsheet_formula";
 export type AlgorithmArtifactLanguage = "formula_dsl" | "noderoom_dsl";

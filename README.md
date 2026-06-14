@@ -10,7 +10,7 @@ through the same versioned concurrency control.**
 
 `multi-panel room` · `public + private agents` · `affected-range lock` · `draft-for-merge` · `per-room traces` · `live Convex + real LLM`
 
-[Why Convex](#why-convex-and-why-not) · [Audience fluency](#audience-world-proof-artifacts) · [Lessons](#lessons-from-building-noderoom) · [Managed locks](#managed-locks-what-to-give-the-agent) · [Multi-user proof](docs/eval/MULTI_USER_COORDINATION_PROOF.md) · [June 2026 target](docs/TARGET_2026_06.md) · [Sequences](#live-collaboration-sequence) · [Why & HALO](docs/WHY_NODEAGENT_AND_HALO.md) · [Quickstart](#quickstart) · [Agent runtime](docs/AGENT_RUNTIME.md) · [Agent eval](docs/AGENT_EVAL.md) · [Model eval matrix](docs/eval/MODEL_EVAL_MATRIX.md) · [Feature eval backlog](docs/eval/FEATURE_EVAL_BACKLOG.md) · [Agent wiki](docs/AGENT_WIKI.md) · [Design](docs/DESIGN.md) · [Stack](docs/STACK.md) · [Walkthrough](docs/WALKTHROUGH.md) · [Architecture](docs/ARCHITECTURE.md) · [Open gaps](docs/GAPS_NOT_DONE.md)
+[Why Convex](#why-convex-and-why-not) · [Audience fluency](#audience-world-proof-artifacts) · [Lessons](#lessons-from-building-noderoom) · [Managed locks](#managed-locks-what-to-give-the-agent) · [Multi-user proof](docs/eval/MULTI_USER_COORDINATION_PROOF.md) · [June 2026 target](docs/TARGET_2026_06.md) · [Sequences](#live-collaboration-sequence) · [Why & HALO](docs/WHY_NODEAGENT_AND_HALO.md) · [Quickstart](#quickstart) · [Agent runtime](docs/AGENT_RUNTIME.md) · [NodeAgent source map](docs/NODEAGENT_SOURCE_MAP.md) · [Agent eval](docs/AGENT_EVAL.md) · [Model eval matrix](docs/eval/MODEL_EVAL_MATRIX.md) · [Feature eval backlog](docs/eval/FEATURE_EVAL_BACKLOG.md) · [Agent wiki](docs/AGENT_WIKI.md) · [Design](docs/DESIGN.md) · [Stack](docs/STACK.md) · [Walkthrough](docs/WALKTHROUGH.md) · [Architecture](docs/ARCHITECTURE.md) · [Open gaps](docs/GAPS_NOT_DONE.md)
 
 [Interview notes](docs/INTERVIEW_NOTES.md) · [Over-engineering audit](docs/OVERENGINEERING_AUDIT.md) · [Improvement roadmap](docs/IMPROVEMENT_ROADMAP.md) · [Next priorities](docs/NEXT_STEPS_PRIORITY.md) · [Operating budget](docs/OPERATING_BUDGET.md) · [Audience workloads](docs/AUDIENCE_WORKLOADS.md)
 
@@ -479,16 +479,16 @@ and [`evals/professionalWorkflows.ts`](evals/professionalWorkflows.ts).
 
 ### How The Agent Harness Evolved
 
-1. **Prompt wrapper -> agent harness.** `src/agent/runtime.ts` is a bounded loop:
+1. **Prompt wrapper -> agent harness.** `src/nodeagent/core/runtime.ts` is a bounded loop:
    context -> one model step -> validated tool calls -> tool results -> repeat.
-   The three seams in [`src/agent/types.ts`](src/agent/types.ts) are model,
+   The three seams in [`src/nodeagent/core/types.ts`](src/nodeagent/core/types.ts) are model,
    tools, and `RoomTools`, so the same loop runs with a scripted model,
    in-memory engine, live Convex backend, and provider routes.
 
 2. **Static prompt -> protocol plus just-in-time context.**
-   [`src/agent/systemPrompt.ts`](src/agent/systemPrompt.ts) carries the rules:
+   [`src/nodeagent/models/prompts/systemPrompt.ts`](src/nodeagent/models/prompts/systemPrompt.ts) carries the rules:
    look first, claim exact ranges, edit with the version read, release, and
-   narrate. [`src/agent/context.ts`](src/agent/context.ts) injects the current
+   narrate. [`src/nodeagent/core/worldModel.ts`](src/nodeagent/core/worldModel.ts) injects the current
    sheet, versions, locks, awareness, and artifact refs. The version tags are
    what make CAS possible.
 
@@ -631,16 +631,20 @@ npm run dev             # now reads/writes live Convex (optimistic); the agent r
 
 # ── Verify ───────────────────────────────────────────────────────────────────
 npm run typecheck   &&   npm test   &&   npm run build      # tsc, full tests, vite build
-npm run test:product:live        # live Convex browser gate: chat, workbook formulas, reactivity, CRS
-npm run test:product:live:agent  # provider-backed 3-user agent/review-mode gate
+npm run test:product:memory      # local browser gate: entry/story, chat, workbook formulas, range fill-down, responsive UX
+npm run test:product:live        # live Convex backend gate: entry/create/join, reactivity, same-cell CAS, semantic rebase
+npm run test:product:live:agent  # live Convex + provider gate: three-user public/private agent and review-mode flow
 ```
 
-The product gates are intentionally broader than the benchmark harness. `test:product:live`
-starts the app against live Convex and proves chat, uploaded-workbook formulas,
-range fill-down, cross-browser reactivity, same-cell CAS convergence, and
-host-reviewed semantic rebase. `test:product:live:agent` adds the three-user
-strict gate: public/private agent lanes, personal room-lane actions, all-artifact
-visibility, and in-cell review proposals. Latest evidence:
+The product gates are intentionally broader than the benchmark harness, but each
+gate owns a different claim. `test:product:memory` proves the local browser UX:
+entry/story navigation, chat, uploaded-workbook formulas, range fill-down,
+semantic review, and responsive surfaces. `test:product:live` starts the app
+against live Convex and proves live entry/create/join, recoverable room errors,
+cross-browser reactivity, same-cell CAS convergence, and host-reviewed semantic
+rebase. `test:product:live:agent` adds
+provider-backed three-user proof: public/private agent lanes, personal room-lane
+actions, all-artifact visibility, and in-cell review proposals. Latest evidence:
 [`docs/eval/THREE_USER_COLLAB.md`](docs/eval/THREE_USER_COLLAB.md).
 
 ## Architecture
@@ -666,7 +670,7 @@ flowchart LR
     AgentAction["runRoomAgent action<br/>ConvexRoomTools"]
   end
 
-  subgraph AgentRuntime["Agent runtime (src/agent)"]
+  subgraph AgentRuntime["Agent runtime (src/nodeagent)"]
     Loop["runAgent loop"]
     Context["JIT context + compaction"]
     Tools["RoomTools port"]
@@ -699,13 +703,13 @@ flowchart LR
 ```
   UI (src/ui)  ──useStore()──▶  src/app/store.tsx  ──▶  RoomEngine (in-memory)   ← no keys
                                        └──────────────▶  Convex (useQuery + CAS) ← live
-  Agent (src/agent)  ──RoomTools──▶  InMemoryRoomTools  |  ConvexRoomTools (convex/)
+  Agent (src/nodeagent)  ──RoomTools──▶  InMemoryRoomTools  |  ConvexRoomTools (convex/)
 ```
 
 1. **The collaboration engine** (`src/engine/`) — the truth. Every artifact is a bag of
    **elements** (`{ id, version, value }`), so locks, CAS, drafts, and smart-merge are **one**
    generic mechanism. Pure, deterministic, 12 scenario tests.
-2. **The agent harness** (`src/agent/`) — context engineering + tool construction + a bounded loop
+2. **The agent harness** (`src/nodeagent/`) — context engineering + tool construction + a bounded loop
    with an **injectable model** (scripted or routed real provider) and a **swappable backend** (in-memory
    or Convex). Context **compaction** keeps long runs bounded. See [`docs/AGENT_RUNTIME.md`](docs/AGENT_RUNTIME.md).
 3. **The store seam** (`src/app/store.tsx`) — the UI calls `useStore()`; one provider is the
@@ -923,7 +927,7 @@ Professional proof state:
 
 - `npm run eval:professional:proofs` now records **5 live-provider**, **16 partial live-provider**, **0 live-provider catalog**, **0 deterministic runtime**, and **0 contract-shape** cases; its live runtime smoke is **21/21**, and lock-mode counts are **21 runtime-managed**, **0 explicit-agent-lock**, and **0 catalog-only**.
 - `npm run benchmark:openrouter-convex -- --strict` is the OpenRouter-on-Convex benchmark contract: **6/6** harness cases pass across durable `agentJobs`, model-step journaling, L1-L7 collaboration/resume, multi-user coordination, SpreadsheetBench route selection, rendered chart visual proof, and Docker workspace isolation. It now emits a closer official-style suite scorecard across **53 configured agent LLM routes** (**41** OpenRouter/internal-alias routes), including **25 current top-paid OpenRouter tool-capable candidates** from the `top-weekly` Models API snapshot. SpreadsheetBench-like N=5, BankerToolBench-like package/verifier, multi-user conflict, and provider-route N=5/p95 are scored separately. Current state is **3/4** official-style suites passing; provider-route N=5/p95 remains blocked for routes without repeated live evidence. Official promotion stays separate: BankerToolBench still needs Harbor/MCP/Gandalf before any official-score claim.
-- **Context compaction** (`src/agent/compaction.ts`) — elides stale `read_range` results (Claude
+- **Context compaction** (`src/nodeagent/core/contextCompactor.ts`) — elides stale `read_range` results (Claude
   "context editing" pattern), preserves the turn structure (Hermes), keeps the latest state + recent turns.
 - **Library stack** (TipTap, dnd-kit, lucide, assistant-ui, the `@convex-dev/*` components) → [`docs/STACK.md`](docs/STACK.md).
 
@@ -1513,10 +1517,11 @@ Model ids are **discovery-verified** (parallel subagents + a live probe correcte
 ```
 noderoom/
 ├── src/
-│   ├── engine/    # collaboration engine — CAS · lock · draft · smart-merge (pure, tested)
-│   ├── agent/     # agent harness — context · tools · runtime · model seam · compaction · plans
-│   ├── app/       # store (engine | Convex seam) · roomStore · main · styles
-│   └── ui/        # Landing · RoomShell · Chat · Artifact · LeftRail
+│   ├── engine/       # collaboration engine — CAS · lock · draft · smart-merge (pure, tested)
+│   ├── nodeagent/    # canonical runtime — core · models · skills · components · guardrails
+│   ├── shared/       # generic non-agent utilities (for example grid helpers)
+│   ├── app/          # store (engine | Convex seam) · roomStore · main · styles
+│   └── ui/           # Landing · RoomShell · Chat · Artifact · LeftRail
 ├── convex/        # live backend — schema + rooms · artifacts(CAS) · locks · drafts · messages · the agent action
 ├── evals/         # golden cases + the eval runner
 ├── demo/          # CLI: collaboration demo + agent demo

@@ -5,7 +5,7 @@ const {
   providerParserModelCandidates,
   runLiveProviderParser,
   sanitizeProviderError,
-} = await import("../src/agent/providerParserLive");
+} = await import("../src/nodeagent/models/providerParserLive");
 import type { CanonicalFileRef } from "../src/app/providerParserAdapter";
 import type { ProviderParser } from "../src/engine/types";
 

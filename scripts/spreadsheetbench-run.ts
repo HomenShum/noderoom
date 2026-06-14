@@ -40,7 +40,7 @@ if (mode === "model-edit-plan" && !modelId) {
   process.exit(2);
 }
 
-const agentModel = modelId ? (await import("../src/agent/model")).model(modelId) : undefined;
+const agentModel = modelId ? (await import("../src/nodeagent/models/adapter")).model(modelId) : undefined;
 
 const report = await runStagedSpreadsheetBench({
   stageRoot,

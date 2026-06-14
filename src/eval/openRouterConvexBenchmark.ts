@@ -199,7 +199,7 @@ function routePlan(route: OpenRouterConvexRoute, harnessReady: boolean): OpenRou
     eligibleForConvexHarness: harnessReady && supportsCollaboration,
     mustRunThroughAgentJobs: true,
     requiredContract: CONVEX_CONTRACT,
-    evidence: [route.evidence, "src/agent/convexModel.ts", "convex/agentJobs.ts"].filter(Boolean) as string[],
+    evidence: [route.evidence, "src/nodeagent/models/convexModel.ts", "convex/agentJobs.ts"].filter(Boolean) as string[],
     blockers,
   };
 }

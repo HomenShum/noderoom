@@ -4,7 +4,7 @@
  * in model.ts (which pulls the AI SDK and only runs in Node / the Convex action).
  */
 
-import type { AgentModel, AgentStep, AgentMessage, ToolCall } from "./types";
+import type { AgentModel, AgentStep, AgentMessage, ToolCall } from "../core/types";
 
 export type ScriptStep = { say?: string; toolCalls?: { tool: string; args: Record<string, unknown> }[]; done?: boolean };
 export type Planner = (ctx: { step: number; messages: AgentMessage[] }) => ScriptStep;

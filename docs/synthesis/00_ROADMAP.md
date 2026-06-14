@@ -23,8 +23,8 @@
 | # | Move | Tag | Why (one line) |
 |---|------|-----|----------------|
 | 1 | **Shell restructure**: make Work Surface the non-optional center; merge the two `Chat` instances into one right `Copilot.tsx` with a Room/Private lane switch | `[net-new]` | Single biggest architectural unlock (`TARGET_2026_06.md` L174-175/L194-195); every other UI ticket (status strip, binder sections, split mode) is cheaper once the 4-peer flex is gone. |
-| 2 | **Preflight planner** (`src/agent/preflight.ts`): run the *existing* `expandElementIdsWithSpreadsheetDependencies` at PLAN time; persist `intendedReadSet`/`writeSet`/`expandedAffectedSet` on `agentJobs` | `[net-new]` | Already designed-but-unbuilt in `AGENT_SCRATCHPAD_CELL_COLLAB.md §5`; reuses proven closure code; unblocks the classifier, scheduler, and planHash dedupe. |
-| 3 | **Intake classifier** (`src/agent/intake.ts`): cheap LLM emits ONE Zod-validated `IntakeDecision` union, never spawns/locks/writes; deterministic `scheduler.ts` acts | `[net-new]` | The genuinely missing router (queue vs parallel vs steer). Mirrors the proven "LLM proposes, harness executes" split (`MANAGED_LOCK_PERF.md`) — keeps it inside the architecture budget. |
+| 2 | **Preflight planner** (`src/nodeagent/core/intakePreflight.ts`): run the *existing* `expandElementIdsWithSpreadsheetDependencies` at PLAN time; persist `intendedReadSet`/`writeSet`/`expandedAffectedSet` on `agentJobs` | `[net-new]` | Already designed-but-unbuilt in `AGENT_SCRATCHPAD_CELL_COLLAB.md §5`; reuses proven closure code; unblocks the classifier, scheduler, and planHash dedupe. |
+| 3 | **Intake classifier** (`src/nodeagent/core/intakePreflight.ts`): cheap LLM emits ONE Zod-validated `IntakeDecision` union, never spawns/locks/writes; deterministic `scheduler.ts` acts | `[net-new]` | The genuinely missing router (queue vs parallel vs steer). Mirrors the proven "LLM proposes, harness executes" split (`MANAGED_LOCK_PERF.md`) — keeps it inside the architecture budget. |
 | 4 | **VERDICT: EXTEND the home-grown workbook engine — do NOT adopt Univer as runtime** | `[fix-conflict]` | The three "load-bearing lessons" Univer would teach (runtime state machine, COMMAND/MUTATION/OPERATION, mutation-layer collab) are *already* implemented. Univer's free wins are exactly what it Pro-locks or what NodeRoom already owns. Adopt only behind the existing adapter on a measured >100ms/20k-cell trigger. |
 | 5 | **Status Strip before Signal Tape** (`src/ui/StatusStrip.tsx`) | `[net-new]` | Smaller (M vs L), zero new backend — consolidates info that already exists (`store.listTraces` / `listProposals` / `lastRun()` telemetry); closes the L176 gap. Signal Tape is a larger ambient feed with a real privacy-leak risk. |
 | 6 | **Runtime-independent grid + eval wins**: range selection (Shift/Ctrl+Arrow/click-drag), Web Worker calc, headless numeric golden tie-out, per-cell presence (`cellPresence` table) | `[net-new]` | These remove most of the pro-Univer argument at a fraction of migration cost AND strengthen the eval suite — reusable whether Univer is ever adopted. |
@@ -49,7 +49,7 @@ Concrete, with file evidence. Re-proposing any of these is pure scope-gravity.
 - **Formula-dependency closure** — `expandElementIdsWithSpreadsheetDependencies` (`convex/locks.ts:22`) backed by the `spreadsheetDependencies` table. The work is *calling it at plan time*, not writing new closure code. **[partial — runs at lock-grant, not plan time]**
 - **Strong reservation level + TTL + janitor + host Yoink** — `convex/locks.ts` proposeLock/releaseLock, `sweepExpiredLocks`, `hostForceReleaseLock`. This IS the "Commit Lease"; only the soft Intent-Claim level is missing. **[solid]**
 - **Conflict-as-data + draft/proposal fallback** — `convex/artifacts.ts` four-gate write, `convex/drafts.ts` smart-merge, review-mode `pendingApproval`. The scheduler's *outcomes* all exist; only the plan-time *decision* is missing. **[solid]**
-- **Atomic idempotency dedupe** — `src/agent/idempotency.ts:25-41` (FNV-1a) + `convex/agentRuns.ts:claimOrReuse` (race-safe). Extend to planHash; don't rebuild. **[partial — exact-goal only]**
+- **Atomic idempotency dedupe** — `src/nodeagent/core/idempotency.ts:25-41` (FNV-1a) + `convex/agentRuns.ts:claimOrReuse` (race-safe). Extend to planHash; don't rebuild. **[partial — exact-goal only]**
 - **Durable job lifecycle + queue index + spend ceilings** — `convex/schema.ts:229-282` (`agentJobs` status union, `by_status_nextRunAt`), `runtime.ts:249-255` `checkSpendCeiling`. **[partial]**
 
 ### Workbook runtime (workstream C)
@@ -90,7 +90,7 @@ Cut these. Each is either already built or not worth the cost now. Cite the doc/
 **DROP — reuse the existing mechanism, don't build a parallel one:**
 10. A fresh formula-dependency closure for the affected set → reuse `expandElementIdsWithSpreadsheetDependencies`.
 11. A brand-new strong "Commit Lease" → the existing managed lock + TTL + release-in-finally already IS it. Build ONLY the soft, advisory Intent-Claim.
-12. A new idempotency/dedupe substrate → extend `src/agent/idempotency.ts` into planHash.
+12. A new idempotency/dedupe substrate → extend `src/nodeagent/core/idempotency.ts` into planHash.
 13. A new `formula_protected` conflict class/table → map onto the EXISTING dependency-closure lock + `approvalPolicy=host_review` (a new weakened/parallel gate is forbidden without human approval, `NODEAGENT_ARCHITECTURE.md:37`).
 14. A `NodeRoomConvexSyncPlugin` as net-new → the Convex side is fully built; only the Univer-side bridge is new, and only if Univer is adopted.
 15. Univer's formula engine to power the dirty-range planner → the planner already exists and is wired (`spreadsheetIndex.ts` + STACK.md L39).

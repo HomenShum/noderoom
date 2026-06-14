@@ -7,10 +7,10 @@
  * file implements the small AgentModel seam with direct provider HTTP calls.
  */
 
-import type { AgentMessage, AgentModel, AgentTool, ToolCall } from "./types";
+import type { AgentMessage, AgentModel, AgentTool, ToolCall } from "../core/types";
 import { getModelPricing, getProviderForModel, resolveModelAlias } from "./modelCatalog";
 import { isOpenRouterFreeAutoModel, selectOpenRouterFreeModels } from "./openRouterFreeModels";
-import { redactPII } from "./gateway";
+import { redactPII } from "../guardrails/gateway";
 
 type JsonObject = Record<string, unknown>;
 

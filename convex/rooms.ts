@@ -2,8 +2,10 @@
  * (mutations are deterministic — no Math.random/uuid inside). Anonymous join is a
  * stand-in for `@convex-dev/auth`'s Anonymous provider (see docs/STACK.md). */
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
-import { actorProofV, hashToken, requireActorProof } from "./lib";
+import { mutation, query, type MutationCtx } from "./_generated/server";
+import type { Id } from "./_generated/dataModel";
+import { actorProofV, getRequiredProductionIdentity, hashToken, requireActorProof, type ActorValue } from "./lib";
+import { syncSpreadsheetIndexFromSeed } from "./spreadsheetIndexLib";
 
 const palette = ["#d97757", "#5b9bf5", "#7bd089", "#a78bfa", "#e4c567", "#e8845f"];
 
@@ -17,11 +19,77 @@ const MAX_JOINS_PER_MINUTE = 10;
 const MAX_NAME_LEN = 40;
 const MAX_TITLE_LEN = 80;
 
+const STARTER_SHEET_ROWS = [
+  { id: "r_rev", label: "Revenue", q2: "$10,000", q3: "$12,400" },
+  { id: "r_cogs", label: "COGS", q2: "$4,000", q3: "$5,100" },
+  { id: "r_gp", label: "Gross profit", q2: "$6,000", q3: "$7,300" },
+  { id: "r_opex", label: "OpEx", q2: "$2,200", q3: "$2,650" },
+  { id: "r_ni", label: "Net income", q2: "$3,800", q3: "$4,650" },
+];
+
+function starterSheetSeed(): Array<{ id: string; value: unknown }> {
+  const seed: Array<{ id: string; value: unknown }> = [];
+  for (const r of STARTER_SHEET_ROWS) {
+    seed.push({ id: `${r.id}__label`, value: r.label });
+    seed.push({ id: `${r.id}__q2`, value: r.q2 });
+    seed.push({ id: `${r.id}__q3`, value: r.q3 });
+    seed.push({ id: `${r.id}__variance`, value: "" });
+    seed.push({ id: `${r.id}__note`, value: "" });
+  }
+  return seed;
+}
+
+const starterNoteSeed = () => [
+  {
+    id: "doc",
+    value: "<h1>Team notes</h1><p>Shared notes for the Q3 review. Type here, or ask your NodeAgent to draft and update this note.</p>",
+  },
+];
+
+const starterWallSeed = () => [
+  { id: "s_welcome", value: { text: "Drop ideas here - drag to rearrange.", x: 64, y: 64, color: "#FDE68A" } },
+  { id: "s_agent", value: { text: "Ask an agent to add post-its in the Room lane.", x: 280, y: 150, color: "#BBF7D0" } },
+];
+
+async function insertStarterArtifact(
+  ctx: MutationCtx,
+  args: {
+    roomId: Id<"rooms">;
+    kind: "sheet" | "note" | "wall";
+    title: string;
+    seed: Array<{ id: string; value: unknown }>;
+    actor: ActorValue;
+    now: number;
+  },
+) {
+  const artifactId = await ctx.db.insert("artifacts", {
+    roomId: args.roomId,
+    kind: args.kind,
+    title: args.title,
+    version: 1,
+    order: args.seed.map((s) => s.id),
+    updatedAt: args.now,
+  });
+  for (const s of args.seed) {
+    await ctx.db.insert("elements", { artifactId, elementId: s.id, value: s.value, version: 1, updatedAt: args.now, updatedBy: args.actor });
+  }
+  await syncSpreadsheetIndexFromSeed(ctx, { artifactId, title: args.title, kind: args.kind, seed: args.seed, now: args.now });
+  await ctx.db.insert("traces", {
+    roomId: args.roomId,
+    ts: args.now,
+    actor: args.actor,
+    type: "edit_applied",
+    summary: `${args.actor.name} added ${args.title}`,
+    detail: `create_artifact - ${args.kind} - ${String(artifactId)}`,
+  });
+  return artifactId;
+}
+
 export const create = mutation({
   args: { code: v.string(), title: v.string(), hostName: v.string(), authToken: v.string(), autoAllow: v.optional(v.boolean()) },
   handler: async (ctx, a) => {
     const now = Date.now();
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getRequiredProductionIdentity(ctx);
     const code = a.code.toUpperCase();
     if (!ROOM_CODE_RE.test(code)) throw new Error("weak_room_code"); // server-enforced entropy floor
     if (a.title.length > MAX_TITLE_LEN || a.hostName.length > MAX_NAME_LEN) throw new Error("field_too_long");
@@ -37,12 +105,45 @@ export const create = mutation({
   },
 });
 
+export const createStarterRoom = mutation({
+  args: { code: v.string(), title: v.string(), hostName: v.string(), authToken: v.string(), autoAllow: v.optional(v.boolean()) },
+  handler: async (ctx, a) => {
+    const now = Date.now();
+    const identity = await getRequiredProductionIdentity(ctx);
+    const code = a.code.toUpperCase();
+    if (!ROOM_CODE_RE.test(code)) throw new Error("weak_room_code");
+    if (a.title.length > MAX_TITLE_LEN || a.hostName.length > MAX_NAME_LEN) throw new Error("field_too_long");
+    const existing = await ctx.db.query("rooms").withIndex("by_code", (q) => q.eq("code", code)).first();
+    if (existing) throw new Error("room_code_taken");
+    const roomId = await ctx.db.insert("rooms", { code, title: a.title, hostId: "", autoAllow: a.autoAllow ?? false, status: "live", createdAt: now });
+    const memberId = await ctx.db.insert("members", {
+      roomId,
+      name: a.hostName,
+      role: "host",
+      anon: false,
+      color: palette[0],
+      authTokenHash: await hashToken(a.authToken),
+      authSubject: identity?.subject,
+      lastSeenAt: now,
+    });
+    await ctx.db.patch(roomId, { hostId: memberId });
+    await ctx.db.insert("agentSessions", { roomId, agentId: "agent_room", agentName: "Room NodeAgent", scope: "public", status: "idle", lastAction: "started", updatedAt: now });
+    await ctx.db.insert("agentSessions", { roomId, agentId: "agent_priv", agentName: "Your NodeAgent", scope: "private", ownerId: memberId, status: "idle", lastAction: "started", updatedAt: now });
+    const actor = { kind: "user" as const, id: String(memberId), name: a.hostName };
+    await ctx.db.insert("traces", { roomId, ts: now, actor, type: "room_created", summary: `${a.hostName} created the room` });
+    await insertStarterArtifact(ctx, { roomId, kind: "sheet", title: "Q3 variance", seed: starterSheetSeed(), actor, now });
+    await insertStarterArtifact(ctx, { roomId, kind: "note", title: "Team notes", seed: starterNoteSeed(), actor, now });
+    await insertStarterArtifact(ctx, { roomId, kind: "wall", title: "Ideas wall", seed: starterWallSeed(), actor, now });
+    return { roomId, memberId };
+  },
+});
+
 export const joinAnonymous = mutation({
   args: { code: v.string(), name: v.string(), authToken: v.string(), anon: v.optional(v.boolean()) },
   handler: async (ctx, a) => {
     const room = await ctx.db.query("rooms").withIndex("by_code", (q) => q.eq("code", a.code.toUpperCase())).first();
     if (!room) return null;
-    const identity = await ctx.auth.getUserIdentity();
+    const identity = await getRequiredProductionIdentity(ctx);
     const now = Date.now();
     const anon = a.anon ?? true;
     if (a.name.length > MAX_NAME_LEN) throw new Error("field_too_long");
@@ -55,6 +156,25 @@ export const joinAnonymous = mutation({
     const memberId = await ctx.db.insert("members", { roomId: room._id, name: a.name, role: "member", anon, color: palette[count % palette.length], authTokenHash: await hashToken(a.authToken), authSubject: identity?.subject, lastSeenAt: now });
     await ctx.db.insert("traces", { roomId: room._id, ts: now, actor: { kind: "user", id: memberId, name: a.name }, type: "member_joined", summary: `${a.name} joined${anon ? " (anon)" : ""}` });
     return { roomId: room._id, memberId };
+  },
+});
+
+export const leave = mutation({
+  args: { roomId: v.id("rooms"), requester: actorProofV },
+  handler: async (ctx, { roomId, requester }) => {
+    const actor = await requireActorProof(ctx, roomId, requester);
+    const member = await ctx.db.get(actor.id as Id<"members">);
+    if (!member || String(member.roomId) !== String(roomId)) throw new Error("actor_not_in_room");
+    const now = Date.now();
+    await ctx.db.patch(member._id, { revokedAt: now, lastSeenAt: now });
+    await ctx.db.insert("traces", {
+      roomId,
+      ts: now,
+      actor,
+      type: "member_left",
+      summary: `${actor.name} left the room`,
+    });
+    return { ok: true as const };
   },
 });
 

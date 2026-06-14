@@ -6,14 +6,14 @@
  * grounded wiki updates, and deterministic finance reconciliation.
  */
 import { describe, it, expect } from "vitest";
-import { runAgent } from "../src/agent/runtime";
-import { scriptedModel } from "../src/agent/scripted";
-import { companyResearchPlan, type CompanyResearchTarget } from "../src/agent/plans";
+import { runAgent } from "../src/nodeagent/core/runtime";
+import { scriptedModel } from "../src/nodeagent/models/scripted";
+import { companyResearchPlan, type CompanyResearchTarget } from "../src/nodeagent/core/plans";
 import { RoomEngine } from "../src/engine/roomEngine";
 import { buildDemoRoom, RESEARCH_PLAN, RESEARCH_COMPANIES } from "../src/engine/demoRoom";
-import { InMemoryRoomTools } from "../src/agent/roomTools";
-import { ROOM_TOOLS } from "../src/agent/tools";
-import { buildResearchContext } from "../src/agent/context";
+import { InMemoryRoomTools } from "../src/nodeagent/skills/integration/noderoomAdapter";
+import { ROOM_TOOLS } from "../src/nodeagent/skills/spreadsheet/cellMutator";
+import { buildResearchContext } from "../src/nodeagent/core/worldModel";
 import { parseSpreadsheetArtifacts } from "../src/app/spreadsheetParser";
 
 const scalarOf = (v: unknown): unknown =>

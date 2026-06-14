@@ -1,8 +1,8 @@
 import { makeFunctionReference } from "convex/server";
 import type { Id } from "./_generated/dataModel";
-import type { AgentStep } from "../src/agent/types";
-import type { StepJournal } from "../src/agent/journal";
-import { stableJournalHash } from "../src/agent/journal";
+import type { AgentStep } from "../src/nodeagent/core/types";
+import type { StepJournal } from "../src/nodeagent/core/journal";
+import { stableJournalHash } from "../src/nodeagent/core/journal";
 
 const agentStepJournalGetRef = makeFunctionReference<"query">("agentStepJournal:get") as any;
 const agentStepJournalRecordRef = makeFunctionReference<"mutation">("agentStepJournal:record") as any;

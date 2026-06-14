@@ -13,7 +13,7 @@
 import { makeFunctionReference } from "convex/server";
 import type { ActionCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
-import type { RoomTools, RoomSnapshot, AwarenessView, CellView, EditOutcome, MergeView, SourceResult, ArtifactRef, SpreadsheetContextHit } from "../src/agent/types";
+import type { RoomTools, RoomSnapshot, AwarenessView, CellView, EditOutcome, MergeView, SourceResult, ArtifactRef, SpreadsheetContextHit } from "../src/nodeagent/core/types";
 import type { Actor } from "../src/engine/types";
 
 const artifactsGetSheetRef = makeFunctionReference<"query">("artifacts:getSheet") as any;

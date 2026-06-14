@@ -13,8 +13,8 @@ import { generateObject } from "ai";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
 import { createOpenAI } from "@ai-sdk/openai";
 import { createAnthropic } from "@ai-sdk/anthropic";
-import { getProviderForModel } from "../../src/agent/modelCatalog";
-import { priceRun } from "../../src/agent/model";
+import { getProviderForModel } from "../../src/nodeagent/models/modelCatalog";
+import { priceRun } from "../../src/nodeagent/models/adapter";
 import { artifactsFromProviderExtraction, providerFileCacheMeta, type CanonicalFileRef, type ProviderExtraction, type ProviderUploadResult } from "../../src/app/providerParserAdapter";
 import type { CellPayload, ProviderParser } from "../../src/engine/types";
 

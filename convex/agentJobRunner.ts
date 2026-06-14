@@ -11,15 +11,16 @@ import { makeFunctionReference } from "convex/server";
 import { internalAction } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { ConvexRoomTools } from "./convexRoomTools";
-import { AgentRunError, runAgent } from "../src/agent/runtime";
-import { PRODUCTION_ROOM_TOOLS } from "../src/agent/tools";
-import { MANAGED_LOCK_SYSTEM_PROMPT } from "../src/agent/systemPrompt";
-import { convexModel as agentModel, convexPriceRun as priceRun } from "../src/agent/convexModel";
-import { buildResearchContext } from "../src/agent/context";
-import { compactMessages } from "../src/agent/compaction";
-import type { AgentMessage, AgentResult, AgentTraceEvent, ToolCall } from "../src/agent/types";
+import { AgentRunError, runAgent } from "../src/nodeagent/core/runtime";
+import { PRODUCTION_ROOM_TOOLS } from "../src/nodeagent/skills/spreadsheet/cellMutator";
+import { MANAGED_LOCK_SYSTEM_PROMPT } from "../src/nodeagent/models/prompts/systemPrompt";
+import { convexModel as agentModel, convexPriceRun as priceRun } from "../src/nodeagent/models/convexModel";
+import { buildResearchContext } from "../src/nodeagent/core/worldModel";
+import { compactMessages } from "../src/nodeagent/core/contextCompactor";
+import type { AgentMessage, AgentResult, AgentTraceEvent, ToolCall } from "../src/nodeagent/core/types";
 import type { Actor } from "../src/engine/types";
-import { journalSliceKey } from "../src/agent/journal";
+import { journalSliceKey } from "../src/nodeagent/core/journal";
+import { assertProviderEgressAllowed } from "../src/nodeagent/guardrails/egressPolicy";
 import { makeConvexStepJournal } from "./agentStepJournalClient";
 
 const CONVEX_ACTION_LIMIT_MS = 10 * 60_000;
@@ -46,6 +47,9 @@ type ClaimedJob = {
   handoff?: unknown;
   attempt: number;
   maxAttempts: number;
+  artifactTitle?: string;
+  artifactKind?: string;
+  artifactMeta?: unknown;
   sessionId: Id<"agentSessions">;
   agentId: string;
   agentName: string;
@@ -237,6 +241,12 @@ export const runFreeAutoJobSlice = internalAction({
     };
 
     try {
+      assertProviderEgressAllowed({
+        model: model.name,
+        entrypoint: "free",
+        artifacts: [{ title: claimed.artifactTitle, kind: claimed.artifactKind, meta: claimed.artifactMeta }],
+        env: process.env,
+      });
       const initialMessages = messagesFromCursor(claimed.cursor);
       const resumeToolCalls = remainingToolCallsFromCursor(claimed.cursor);
       const result = await runAgent({

@@ -2,16 +2,16 @@
  * Privacy/gateway primitives (review domain 3) + exactly-once journal (durable-workflow semantics).
  */
 import { describe, it, expect } from "vitest";
-import { checkSpendCeiling, redactPII } from "../src/agent/gateway";
-import { journalSliceKey, MapStepJournal } from "../src/agent/journal";
-import { runAgent } from "../src/agent/runtime";
-import { scriptedModel } from "../src/agent/scripted";
-import { recomputeVariancePlan } from "../src/agent/plans";
+import { checkSpendCeiling, redactPII } from "../src/nodeagent/guardrails/gateway";
+import { journalSliceKey, MapStepJournal } from "../src/nodeagent/core/journal";
+import { runAgent } from "../src/nodeagent/core/runtime";
+import { scriptedModel } from "../src/nodeagent/models/scripted";
+import { recomputeVariancePlan } from "../src/nodeagent/core/plans";
 import { RoomEngine } from "../src/engine/roomEngine";
 import { buildDemoRoom } from "../src/engine/demoRoom";
-import { InMemoryRoomTools } from "../src/agent/roomTools";
-import { ROOM_TOOLS } from "../src/agent/tools";
-import type { AgentHandoff, AgentModel } from "../src/agent/types";
+import { InMemoryRoomTools } from "../src/nodeagent/skills/integration/noderoomAdapter";
+import { ROOM_TOOLS } from "../src/nodeagent/skills/spreadsheet/cellMutator";
+import type { AgentHandoff, AgentModel } from "../src/nodeagent/core/types";
 
 const CELL = "r_ni__variance";
 const VAL = "+22.4%";
@@ -100,7 +100,7 @@ describe("P1-3: error-path handoff preserves unexecuted tool calls (resume-curso
     try {
       await runAgent({ rt, goal: "boom mid-turn", model, tools: [...ROOM_TOOLS, bomb], maxSteps: 4, onHandoff: (h) => handoffs.push(h) });
     } catch (e) { thrown = e; }
-    const err = thrown as import("../src/agent/runtime").AgentRunError;
+    const err = thrown as import("../src/nodeagent/core/runtime").AgentRunError;
     expect(err?.name).toBe("AgentRunError");
     const handoff = err.partial.handoff!;
     expect(handoff.reason).toBe("error");

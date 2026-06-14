@@ -2,7 +2,7 @@
  * gridOps.ts - pure helpers for Excel-grid range selection, fill-down, and copy/paste.
  * No DOM, no deps beyond the A1 helpers in formulaEngine. Unit-tested in tests/gridOps.test.ts.
  */
-import { colToIndex, indexToCol } from "./formulaEngine";
+import { colToIndex, indexToCol } from "../nodeagent/core/formulaEngine";
 
 export interface Box { c0: number; c1: number; r0: number; r1: number } // 1-based, inclusive
 

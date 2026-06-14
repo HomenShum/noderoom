@@ -14,7 +14,7 @@ import {
   type AgentModel,
   type AgentTraceEvent,
   type Planner,
-} from "../src/agent";
+} from "../src/nodeagent/index";
 import { RoomEngine } from "../src/engine/roomEngine";
 import type { Actor, CellEvidence, CellPayload, DataframeColumn } from "../src/engine/types";
 import { appendEvalRuns, computeCaseSetHash, DEFAULT_STORE, runKey, type EvalRunRecord } from "./evalStore";

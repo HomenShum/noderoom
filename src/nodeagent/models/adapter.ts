@@ -17,7 +17,7 @@ import { generateText, tool, type ModelMessage, type LanguageModel } from "ai";
 import { anthropic } from "@ai-sdk/anthropic";
 import { google } from "@ai-sdk/google";
 import { openai, createOpenAI } from "@ai-sdk/openai";
-import type { AgentModel, AgentMessage, ToolCall } from "./types";
+import type { AgentModel, AgentMessage, ToolCall } from "../core/types";
 import { getProviderForModel, getModelPricing, resolveModelAlias } from "./modelCatalog";
 import { isOpenRouterFreeAutoModel, selectOpenRouterFreeModels } from "./openRouterFreeModels";
 

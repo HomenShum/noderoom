@@ -26,7 +26,7 @@ Synthesized 2026-06-09 from four parallel audits (README/docs, audience-fit, fea
 
 - **Overstated:** README:47 \"real production app\" — backend is dev Convex (zealous-goshawk-766); GAPS_NOT_DONE's own P0 gate forbids the claim until a live smoke passes. WHY_NODEAGENT_AND_HALO.md:151-152 contradicts README:400-402's recorded L3 FAIL / L4 TIMEOUT (roadmap P0-6). Brief's \"responsive mobile overhaul\" contradicted by QA_UI_FIX_PLAN.
 - **Broken/stale:** 4 dangling `.claude/rules/*` links (README 477/497/506/516-517 — directory verified absent); `l5-large-range.gif` missing from the L1-L6 narrative (verified).
-- **Undersold (code ahead of docs):** host force-release takeover (`convex/locks.ts:142-172`), lock TTL janitor (`convex/crons.ts:12`), lease-fencing renewal + `lease_expired`-as-data (`convex/artifacts.ts:282`), privacy redaction (`convex/rooms.ts:89-102`), USD spend-ceiling primitives (`src/agent/gateway.ts`, partial) — all shipped/tested, absent from README.
+- **Undersold (code ahead of docs):** host force-release takeover (`convex/locks.ts:142-172`), lock TTL janitor (`convex/crons.ts:12`), lease-fencing renewal + `lease_expired`-as-data (`convex/artifacts.ts:282`), privacy redaction (`convex/rooms.ts:89-102`), USD spend-ceiling primitives (`src/nodeagent/gateway.ts`, partial) — all shipped/tested, absent from README.
 - **Stale in engineer's favor:** IMPROVEMENT_ROADMAP P0-3 (`--strict`) is now verified wired (`scripts/agent-improvement-loop.ts:90,147-149`).
 - **Verified accurate:** all 19 walkthrough/workflow/rung media files except L5, all SVG charts, 28+ npm scripts, 20+ doc links, corpus counts (70 files / 17 cases), code-walkthrough line refs, mermaid diagrams, undo implementation.
 

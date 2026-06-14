@@ -35,7 +35,7 @@ export type ArchitectureBudgetCheckResult = {
 export const DEFAULT_ARCHITECTURE_BUDGET: ArchitectureBudget = {
   allowedScope: "Only files or modules named by the failing trace, failing eval, or handoff evidence.",
   defaultAllowedAreas: [
-    "src/agent runtime, tools, context, and compaction",
+    "src/nodeagent runtime, tools, context, and compaction",
     "Convex job/tool adapters that already participate in the failing flow",
     "eval fixtures and deterministic assertions for the affected workflow",
   ],

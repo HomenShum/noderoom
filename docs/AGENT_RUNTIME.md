@@ -18,12 +18,12 @@ npm test                    # 17 scenarios incl. the agent runtime
 
 An agent is just a loop. You give a model some context, it asks to call a tool, you run the tool, you hand back the result, and you do it again until the model says it's done. That's it. If you can explain that loop, you can explain this system.
 
-NodeRoom's harness lives in `src/agent/` and is deliberately tiny. The only thing that makes it interesting is that it has **three swappable seams** — three places where you can yank out the implementation and plug in a different one without touching anything else. That's what makes it both testable (swap in fakes) and shippable (swap in the real thing).
+NodeRoom's harness lives in `src/nodeagent/` and is deliberately tiny. The only thing that makes it interesting is that it has **three swappable seams** — three places where you can yank out the implementation and plug in a different one without touching anything else. That's what makes it both testable (swap in fakes) and shippable (swap in the real thing).
 
 ```
-                 ┌──────────── runAgent (src/agent/runtime.ts) ───────────┐
+                 ┌──────────── runAgent (src/nodeagent/core/runtime.ts) ───────────┐
    buildContext  │   ① ask model → ② run tools → ③ feed results → loop    │
- (context.ts) ──▶│   bounded by a step budget; conflicts come back as     │
+ (worldModel.ts) ─▶│   bounded by a step budget; conflicts come back as     │
                  │   DATA so the model re-reads and retries, never throws  │
                  └───────┬───────────────┬───────────────────┬───────────┘
                          │               │                   │
@@ -31,21 +31,21 @@ NodeRoom's harness lives in `src/agent/` and is deliberately tiny. The only thin
                   ───────────────    ───────────────     ────────────────
                   scriptedModel      read_range          InMemoryRoomTools
                   model()/convexModel propose_lock       (over RoomEngine)
-                  (model.ts)         edit_cell  …        ConvexRoomTools
-                                     (tools.ts)          (over Convex)
+                  (adapter.ts)       edit_cell  …        ConvexRoomTools
+                                     (cellMutator.ts)    (over Convex)
 ```
 
-Here are the three seams, defined in the header of `src/agent/types.ts` (lines 4-10):
+Here are the three seams, defined in the header of `src/nodeagent/core/types.ts` (lines 4-10):
 
-- **Seam 1 — the model** (`AgentModel`, `src/agent/types.ts:43-46`). The brain. Current implementations include `scriptedModel` (deterministic, no network), `model(modelId)` for local/provider runs, and `convexModel(modelId)` for Convex actions. The loop doesn't care which it's holding.
-- **Seam 2 — the tool backend** (`RoomTools`, `src/agent/types.ts:75-92`). The thing the tools actually call. Two implementations: `InMemoryRoomTools` over the in-process engine (`src/agent/roomTools.ts`) and `ConvexRoomTools` over Convex (`convex/convexRoomTools.ts`). Same interface, so the agent code is identical between the spike and production.
-- **Seam 3 — the tools** (`AgentTool[]`, `src/agent/types.ts:49-54`). The concrete array the model is allowed to call: `ROOM_TOOLS` in `src/agent/tools.ts`.
+- **Seam 1 — the model** (`AgentModel`, `src/nodeagent/core/types.ts:43-46`). The brain. Current implementations include `scriptedModel` (deterministic, no network), `model(modelId)` for local/provider runs, and `convexModel(modelId)` for Convex actions. The loop doesn't care which it's holding.
+- **Seam 2 — the tool backend** (`RoomTools`, `src/nodeagent/core/types.ts:75-92`). The thing the tools actually call. Two implementations: `InMemoryRoomTools` over the in-process engine (`src/nodeagent/skills/integration/noderoomAdapter.ts`) and `ConvexRoomTools` over Convex (`convex/convexRoomTools.ts`). Same interface, so the agent code is identical between the spike and production.
+- **Seam 3 — the tools** (`AgentTool[]`, `src/nodeagent/core/types.ts:49-54`). The concrete array the model is allowed to call: `ROOM_TOOLS` in `src/nodeagent/skills/spreadsheet/cellMutator.ts`.
 
-The point to hammer: **the harness code — `context.ts`, `tools.ts`, `runtime.ts` — is identical across both backends.** Only the `RoomTools` implementation swaps. So when you say "we tested this end-to-end with no API keys," you mean the *real* runtime and the *real* tool layer ran; only the brain and the database were fakes.
+The point to hammer: **the harness code — `worldModel.ts`, `cellMutator.ts`, `runtime.ts` — is identical across both backends.** Only the `RoomTools` implementation swaps. So when you say "we tested this end-to-end with no API keys," you mean the *real* runtime and the *real* tool layer ran; only the brain and the database were fakes.
 
 ---
 
-## 2. The runtime loop (`src/agent/runtime.ts`)
+## 2. The runtime loop (`src/nodeagent/core/runtime.ts`)
 
 `runAgent` (`runtime.ts:25-75`) is about thirty lines. Walk it as five steps.
 
@@ -89,7 +89,7 @@ The model only knows what you put in front of it. So "context engineering" here 
 
 ### Half 1 — the system prompt is the protocol, not the data
 
-`SYSTEM_PROMPT` in `src/agent/systemPrompt.ts:8-23` is a static constant. It describes the concurrency protocol in order, and nothing else:
+`SYSTEM_PROMPT` in `src/nodeagent/models/prompts/systemPrompt.ts:8-23` is a static constant. It describes the concurrency protocol in order, and nothing else:
 
 1. **LOOK FIRST** — you're given a snapshot, never edit blind.
 2. **CLAIM before you commit** — call `propose_lock` on the exact cells you'll change.
@@ -103,7 +103,7 @@ Notice what's *not* in here: any spreadsheet data. The prompt is deliberately pu
 
 ### Half 2 — the live state is just-in-time, rendered as a table
 
-`buildContext` in `src/agent/context.ts:15-47` is the other half. Each run, before the model sees anything, it pulls a fresh snapshot and awareness **in parallel** (`context.ts:16`) and renders them into one compact, aligned text message — not a JSON blob:
+`buildContext` in `src/nodeagent/core/worldModel.ts:15-47` is the other half. Each run, before the model sees anything, it pulls a fresh snapshot and awareness **in parallel** (`worldModel.ts:16`) and renders them into one compact, aligned text message — not a JSON blob:
 
 ```
 YOUR TASK: Set r_rev=+24%, r_cogs=+27.5%
@@ -117,7 +117,7 @@ AGENTS IN THE ROOM:
   - Room NodeAgent [public] · working
 ```
 
-Two reasons we render it ourselves instead of dumping JSON. First, the model reasons better over a small aligned table than over a blob. Second, and more important, we choose exactly what it sees. The table carries a per-cell **version** (the `[v1]` tag, `context.ts:19`) and a `<LOCKED>` flag, plus the active locks held by others (`context.ts:22-24`) and who's in the room.
+Two reasons we render it ourselves instead of dumping JSON. First, the model reasons better over a small aligned table than over a blob. Second, and more important, we choose exactly what it sees. The table carries a per-cell **version** (the `[v1]` tag, `worldModel.ts:19`) and a `<LOCKED>` flag, plus the active locks held by others (`worldModel.ts:22-24`) and who's in the room.
 
 That version tag is load-bearing. **The versions in this table are what make CAS possible** — without them the model has no `baseVersion` to pass to `edit_cell`. The whole anti-clobber mechanism in section 5 is impossible if this table doesn't surface versions. The prompt tells the model to use the version it read; the context is where it reads it.
 
@@ -125,9 +125,9 @@ That version tag is load-bearing. **The versions in this table are what make CAS
 
 ---
 
-## 4. The tools (`src/agent/tools.ts`)
+## 4. The tools (`src/nodeagent/skills/spreadsheet/cellMutator.ts`)
 
-Each tool is `{ name, description, schema (zod), execute }` — the shape from `src/agent/types.ts:49-54`. `ROOM_TOOLS` now includes the core lock/CAS/draft/chat tools plus workflow helpers:
+Each tool is `{ name, description, schema (zod), execute }` — the shape from `src/nodeagent/core/types.ts:49-54`. `ROOM_TOOLS` now includes the core lock/CAS/draft/chat tools plus workflow helpers:
 
 `read_range`, `search_sheet_context`, `propose_lock`, `edit_cell`, `write_cell_result`,
 `list_artifacts`, `update_wiki`, `reconcile_cell`, `create_draft`, `release_lock`,
@@ -135,9 +135,9 @@ Each tool is `{ name, description, schema (zod), execute }` — the shape from `
 
 Three things matter about how these are built:
 
-- **The descriptions encode the protocol.** `edit_cell`'s description (`tools.ts:33`) literally tells the model the `baseVersion` MUST be the version it last read, and to re-read and retry on a conflict. The tool teaches the model how to use it correctly — the prompt and the description reinforce the same rule.
+- **The descriptions encode the protocol.** `edit_cell`'s description (`cellMutator.ts`) literally tells the model the `baseVersion` MUST be the version it last read, and to re-read and retry on a conflict. The tool teaches the model how to use it correctly — the prompt and the description reinforce the same rule.
 - **The zod schema is the validation boundary.** The runtime `safeParse`s the args before `execute` ever runs (`runtime.ts:62`). A malformed call becomes a tool error the model can recover from, not a thrown exception that kills the run.
-- **`execute` never touches a database.** Every tool just forwards to a `RoomTools` method. For example: `execute: (a, rt) => rt.editCell(a.elementId, a.value, a.baseVersion)` (`tools.ts:35`).
+- **`execute` never touches a database.** Every tool just forwards to a `RoomTools` method. For example: `execute: (a, rt) => rt.editCell(a.elementId, a.value, a.baseVersion)` (`cellMutator.ts`).
 
 That last point is why the tool layer is pure and portable. The tools don't know whether they're talking to the in-memory engine or Convex — they call a method on the `RoomTools` port and let the seam decide. Swap the backend, the tools don't change.
 
@@ -229,7 +229,7 @@ These are two different safety mechanisms, and conflating them is the common mis
 ── 7 steps · 6 tool calls · 1 CAS conflict(s) survived · exhausted=false
 ```
 
-The scripted planner `recomputeVariancePlan` (`src/agent/plans.ts:63-96`) drives both scenarios off a single `opts.lock` flag (`plans.ts:64, 72-95`).
+The scripted planner `recomputeVariancePlan` (`src/nodeagent/core/plans.ts:63-96`) drives both scenarios off a single `opts.lock` flag (`plans.ts:64, 72-95`).
 
 The key insight: the agent **saw Priya's value before overwriting it.** That's the whole point. CAS doesn't forbid all overwrites — it forbids *blind* ones. After an informed re-read, the agent is allowed to overwrite; that's a decision. What it can never do is clobber a value it never read. CAS catches the blind write and forces the read.
 
@@ -239,7 +239,7 @@ The key insight: the agent **saw Priya's value before overwriting it.** That's t
 
 ## 7. The injectable model: scripted vs real providers (seam 1)
 
-Both implementations live in `src/agent/model.ts`, behind the same `AgentModel` interface.
+Both implementations live in `src/nodeagent/models/adapter.ts`, behind the same `AgentModel` interface.
 
 Current production model wiring is provider-agnostic: `model(modelId)` routes through the catalog and
 AI SDK adapters for OpenAI, Gemini, Anthropic, and OpenRouter, while `convexModel(modelId)` provides
@@ -249,7 +249,7 @@ long-running `/free` lane and records the concrete resolved model for audit.
 
 **Provider adapters** are route-based, not Anthropic-only. `model(modelId)` uses the catalog-backed local/provider adapter path, while `convexModel(modelId)` is the Convex-safe action adapter. The critical detail is unchanged: provider tools are declared without local side effects. The provider returns tool calls; NodeRoom validates and executes them against `RoomTools`. The division of labor: the provider adapter owns model plumbing, while the harness owns the loop, context, tool validation, backend writes, conflict recovery, compaction, budgets, and traceability.
 
-**`scriptedModel`** (`model.ts:63-73`) is a deterministic model for demos and tests. It takes a `Planner` that reads the running message history — so it can see prior tool results, including versions and conflicts — and returns the next step. No network, no keys. The `lastVersions` helper (`model.ts:76-86`) lets planners pull versions out of prior `read_range` results.
+**`scriptedModel`** (`adapter.ts`) is a deterministic model for demos and tests. It takes a `Planner` that reads the running message history — so it can see prior tool results, including versions and conflicts — and returns the next step. No network, no keys. The `lastVersions` helper (`adapter.ts`) lets planners pull versions out of prior `read_range` results.
 
 Why this seam earns its keep: the demo and tests use the scripted model so they exercise the **real runtime, the real tool backend, and the real engine** — only the brain is fixed. When the tests pass, you've verified the loop, the gates, the conflict-as-data contract, and the smart-merge. You've just held the LLM constant so the test is deterministic.
 
@@ -286,11 +286,11 @@ await finishInteractiveOrCheckpoint(job, result);
 It first verifies the caller's member proof through `rooms.full`, derives the
 public room agent/session on the server, constructs `ConvexRoomTools`, picks the
 resolved model route, and calls the **identical `runAgent`** from
-`src/agent/runtime.ts` with `ROOM_TOOLS`. That's the seam paying off: the loop
+`src/nodeagent/core/runtime.ts` with `ROOM_TOOLS`. That's the seam paying off: the loop
 is shared between deterministic tests, local provider runs, and Convex actions;
 only the model and backend implementations differ.
 
-> **Step budgets, for precision.** Three different defaults in play: the runtime's own default is 8 (`src/agent/runtime.ts:35`), the production action uses 10 (`agent.ts:41`), and the demo uses 16 (`demo/runAgent.ts:48`). Same loop, different rails for different contexts.
+> **Step budgets, for precision.** Three different defaults in play: the runtime's own default is 8 (`src/nodeagent/core/runtime.ts:35`), the production action uses 10 (`agent.ts:41`), and the demo uses 16 (`demo/runAgent.ts:48`). Same loop, different rails for different contexts.
 
 The action returns a summary — `{ finalText, steps, exhausted, toolCalls, conflictsSurvived }` (`agent.ts:42-49`), where `conflictsSurvived` counts the `edit_cell` trace results that came back with `conflict: true`. The live effects — locks, edits, traces, chat — are written through the mutations and stream to every client via reactive `useQuery` subscriptions. That's how "multiple users and agents see updates while editing concurrently" actually becomes true on the screen.
 
@@ -304,14 +304,14 @@ The action returns a summary — `{ finalText, steps, exhausted, toolCalls, conf
 
 | Concern | File |
 |---|---|
-| The seams (types + the `RoomTools` port) | `src/agent/types.ts` |
-| The loop (harness) | `src/agent/runtime.ts` |
-| Context — the protocol (system prompt) | `src/agent/systemPrompt.ts` |
-| Context — the live JIT table | `src/agent/context.ts` |
-| Current tools | `src/agent/tools.ts` |
-| Seam 1 — model adapters (scripted + provider routes) | `src/agent/model.ts`, `src/agent/convexModel.ts` |
-| Scripted planners (drive the demo/tests) | `src/agent/plans.ts` |
-| Seam 2 — in-memory backend | `src/agent/roomTools.ts` (over `src/engine/roomEngine.ts`) |
+| The seams (types + the `RoomTools` port) | `src/nodeagent/core/types.ts` |
+| The loop (harness) | `src/nodeagent/core/runtime.ts` |
+| Context — the protocol (system prompt) | `src/nodeagent/models/prompts/systemPrompt.ts` |
+| Context — the live JIT table | `src/nodeagent/core/worldModel.ts` |
+| Current tools | `src/nodeagent/skills/spreadsheet/cellMutator.ts` |
+| Seam 1 — model adapters (scripted + provider routes) | `src/nodeagent/models/adapter.ts`, `src/nodeagent/models/convexModel.ts` |
+| Scripted planners (drive the demo/tests) | `src/nodeagent/core/plans.ts` |
+| Seam 2 — in-memory backend | `src/nodeagent/skills/integration/noderoomAdapter.ts` (over `src/engine/roomEngine.ts`) |
 | Seam 2 — Convex backend | `convex/convexRoomTools.ts` |
 | The CAS write — `applyCellEdit` | `convex/artifacts.ts` |
 | Lock gate backend | `convex/locks.ts` |

@@ -17,7 +17,7 @@
 import { isIP } from "node:net";
 import { lookup } from "node:dns/promises";
 import { Agent, fetch as undiciFetch } from "undici";
-import type { SourceResult } from "./types";
+import type { SourceResult } from "../../core/types";
 
 const META_NAMES = new Set(["localhost", "metadata.google.internal", "metadata", "metadata.goog", "instance-data"]);
 const TIMEOUT_MS = 5000, MAX_BYTES = 200_000, MAX_REDIRECTS = 4;

@@ -4,7 +4,7 @@ import {
   providerFileCacheId,
   providerParserModelCandidates,
   sanitizeProviderError,
-} from "../src/agent/providerParserLive";
+} from "../src/nodeagent/models/providerParserLive";
 import type { CanonicalFileRef } from "../src/app/providerParserAdapter";
 
 const file: CanonicalFileRef = {

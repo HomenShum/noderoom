@@ -14,9 +14,9 @@
 
 import { RoomEngine } from "../src/engine/roomEngine";
 import { buildDemoRoom } from "../src/engine/demoRoom";
-import { InMemoryRoomTools, ROOM_TOOLS, runAgent, scriptedModel, anthropicModel } from "../src/agent";
-import { recomputeVariancePlan } from "../src/agent/plans";
-import type { AgentModel } from "../src/agent";
+import { InMemoryRoomTools, ROOM_TOOLS, runAgent, scriptedModel, anthropicModel } from "../src/nodeagent/index";
+import { recomputeVariancePlan } from "../src/nodeagent/core/plans";
+import type { AgentModel } from "../src/nodeagent/index";
 
 const real = process.argv.includes("--real");
 const bar = "─".repeat(74);
@@ -62,7 +62,7 @@ async function main() {
     await scenario("A · WITH LOCK — the agent claims the range first; Priya's concurrent write is BLOCKED", { targets: { r_rev__variance: "+24%", r_cogs__variance: "+27.5%" }, lock: true });
     await scenario("B · NO LOCK (CAS) — Priya's write lands first; the agent's stale write is REJECTED → re-read → retry", { targets: { r_gp__variance: "+21.7%", r_ni__variance: "+22.4%" }, lock: false });
   }
-  console.log(`\n${bar}\nThe harness is src/agent/ · walkthrough in docs/AGENT_RUNTIME.md\n${bar}`);
+  console.log(`\n${bar}\nThe harness is src/nodeagent/ · walkthrough in docs/AGENT_RUNTIME.md\n${bar}`);
 }
 
 main().catch((e) => { console.error(e); process.exit(1); });

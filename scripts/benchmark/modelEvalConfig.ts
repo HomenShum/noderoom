@@ -1,4 +1,4 @@
-import { getProviderForModel, llmModelCatalog, resolveModelAlias, type LlmProvider } from "../../src/agent/modelCatalog";
+import { getProviderForModel, llmModelCatalog, resolveModelAlias, type LlmProvider } from "../../src/nodeagent/models/modelCatalog";
 
 export type ModelEvalSuite = "research" | "collaboration";
 export type ModelPromotion =

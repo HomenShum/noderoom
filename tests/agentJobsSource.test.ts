@@ -71,8 +71,8 @@ describe("long-running agent job source invariants", () => {
   });
 
   it("round-trips Gemini tool-call thought signatures for resumed jobs", () => {
-    const model = readFileSync("src/agent/convexModel.ts", "utf8");
-    const types = readFileSync("src/agent/types.ts", "utf8");
+    const model = readFileSync("src/nodeagent/models/convexModel.ts", "utf8");
+    const types = readFileSync("src/nodeagent/core/types.ts", "utf8");
 
     expect(types).toContain("providerMetadata?: Record<string, unknown>");
     expect(model).toContain("thoughtSignature?: string");
@@ -87,7 +87,7 @@ describe("long-running agent job source invariants", () => {
     const journalClient = readFileSync("convex/agentStepJournalClient.ts", "utf8");
     const agent = readFileSync("convex/agent.ts", "utf8");
     const runner = readFileSync("convex/agentJobRunner.ts", "utf8");
-    const journal = readFileSync("src/agent/journal.ts", "utf8");
+    const journal = readFileSync("src/nodeagent/core/journal.ts", "utf8");
 
     expect(schema).toContain("agentModelStepJournal");
     expect(schema).toContain('index("by_job_slice_step", ["jobId", "sliceKey", "step"])');

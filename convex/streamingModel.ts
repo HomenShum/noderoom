@@ -6,7 +6,7 @@
  * prompt leaves. No tools here on purpose: the private agent is a read-only consult, so this is
  * a single streamed completion — the exact shape the component is built for.
  */
-import { redactPII } from "../src/agent/gateway";
+import { redactPII } from "../src/nodeagent/guardrails/gateway";
 
 export type StreamAppend = (text: string) => Promise<void>;
 

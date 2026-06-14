@@ -293,7 +293,7 @@ Honesty corrections to absorb:
 The rule frames this as "the missing piece." **[CONTRADICTED on the "missing/net-new" framing]** —
 the core mechanic is **already implemented and tested** in the working tree.
 
-- **Authored artifact shape exists** — `AlgorithmArtifact` (`src/agent/algorithmArtifacts.ts:38-52`):
+- **Authored artifact shape exists** — `AlgorithmArtifact` (`src/nodeagent/skills/spreadsheet/algorithmArtifacts.ts:38-52`):
   `inputs[{id, elementId, label}]`, `outputs[{id, elementId, expression, format}]`, `constraints`,
   `evidencePolicy`, `tests[]` (`:23-28`). The rule's "inputs B2,C2; formula =C2-B2; output D2;
   evidence; tests" maps 1:1. **[CONTRADICTED — already built]**
@@ -315,7 +315,7 @@ the core mechanic is **already implemented and tested** in the working tree.
 
 Two honesty caveats:
 
-- **[REFINED]** It is **uncommitted working-tree** code (untracked `src/agent/algorithmArtifacts.ts`,
+- **[REFINED]** It is **uncommitted working-tree** code (untracked `src/nodeagent/skills/spreadsheet/algorithmArtifacts.ts`,
   `tests/algorithmArtifacts.test.ts`, `scripts/algorithm-artifact-smoke.ts`,
   `docs/eval/algorithm-artifact-smoke.json`; modified `tools.ts`/`README.md`/`package.json`; no git
   history). Against the last commit it reads as net-new even though it physically exists and passes
@@ -360,7 +360,7 @@ Sequenced by leverage and dependency. Size = S/M/L. Each tagged already-have vs 
 | Keystrokes local (uncontrolled input, commit on blur); undo/redo | **CONFIRMED** | `Artifact.tsx:929-955`; `store.tsx undoStack` |
 | Agent runtime = action; all agent writes are internalMutations | **CONFIRMED** | `agent.ts:65`; `locks/artifacts/drafts/messages` internalMutations |
 | `/ask` dollar caps + deterministic idempotency | **CONFIRMED** | `agent.ts:102-114,323-326`; `idempotency.ts:25-30` |
-| Algorithm artifacts (author / deterministic rerun / test-gated / evidence-bearing / harness commits) | **CONFIRMED (working tree, uncommitted)** | `src/agent/algorithmArtifacts.ts`, `tests/algorithmArtifacts.test.ts` |
+| Algorithm artifacts (author / deterministic rerun / test-gated / evidence-bearing / harness commits) | **CONFIRMED (working tree, uncommitted)** | `src/nodeagent/skills/spreadsheet/algorithmArtifacts.ts`, `tests/algorithmArtifacts.test.ts` |
 | "Extend home-grown engine, not adopt Univer" | **CONFIRMED** | `docs/synthesis/specs/C_UNIVER_RUNTIME.md` |
 | Reactive queries re-ship full results on read-set change | **CONFIRMED** | Convex docs + `rooms.full`, `lib.ts:166-171`, `locks.ts:104` |
 | `useStream` hook used | **CONTRADICTED** — hand-rolled for `{actor,token}` proof | `Chat.tsx:36-118` |

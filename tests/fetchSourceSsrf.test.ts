@@ -5,7 +5,7 @@
  * host/IP form without DNS), so the test is hermetic.
  */
 import { describe, it, expect } from "vitest";
-import { fetchSourceReal } from "../src/agent/fetchSource";
+import { fetchSourceReal } from "../src/nodeagent/skills/search/fetchSource";
 
 const BLOCKED_HOST = [
   "https://127.0.0.1/",

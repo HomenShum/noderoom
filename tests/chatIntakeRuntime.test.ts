@@ -13,8 +13,8 @@ import {
   naiveChatIntakePlan,
   runChatIntakeCapture,
 } from "../evals/chatIntakeRuntime";
-import { scriptedModel, lastVersions, type Planner } from "../src/agent/scripted";
-import type { AgentMessage } from "../src/agent/types";
+import { scriptedModel, lastVersions, type Planner } from "../src/nodeagent/models/scripted";
+import type { AgentMessage } from "../src/nodeagent/core/types";
 
 function lockIdFrom(messages: AgentMessage[]): string | undefined {
   for (let i = messages.length - 1; i >= 0; i--) {

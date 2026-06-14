@@ -10,6 +10,7 @@ export default defineConfig({
       "@engine": fileURLToPath(new URL("./src/engine", import.meta.url)),
       "@ui": fileURLToPath(new URL("./src/ui", import.meta.url)),
       "@agents": fileURLToPath(new URL("./src/agents", import.meta.url)),
+      "@nodeagent": fileURLToPath(new URL("./src/nodeagent", import.meta.url)),
     },
   },
   server: { port: 5260, open: false },

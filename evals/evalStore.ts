@@ -15,7 +15,7 @@
  */
 import { appendFileSync, readFileSync, existsSync, mkdirSync } from "node:fs";
 import { dirname } from "node:path";
-import { stableJournalHash } from "../src/agent/journal";
+import { stableJournalHash } from "../src/nodeagent/core/journal";
 
 export type EvalRunRecord = {
   ts: number;

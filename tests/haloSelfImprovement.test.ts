@@ -8,7 +8,7 @@ import {
   pathFingerprint,
   summarizeSelfImprovementCase,
 } from "../src/eval/haloSelfImprovement";
-import type { AgentResult } from "../src/agent/types";
+import type { AgentResult } from "../src/nodeagent/core/types";
 
 describe("HALO self-improvement metrics", () => {
   it("fingerprints the tool path without compaction noise", () => {

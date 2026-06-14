@@ -16,10 +16,11 @@ import {
 import { useStore, type RoomStore, type EditFeedback } from "../../app/store";
 import { formatExcelNumber } from "../../app/numberFormat";
 import { columnLetters } from "../../app/spreadsheetIndex";
-import { evaluateFormula, FormulaEvalError, type CellResolver, type CellValue, type FormulaResult } from "../../shared/formulaEngine";
+import { evaluateFormula, FormulaEvalError, type CellResolver, type CellValue, type FormulaResult } from "../../nodeagent/core/formulaEngine";
 import { rangeBox, boxSize, cellsInBox, rangeLabel, rewriteFormulaRefs, buildTSV, parseTSV, toA1, parseA1 } from "../../shared/gridOps";
 import { onStageFocus, type StageFocusTarget } from "../stageFocus";
 import type { Actor, Artifact as Art, CellPayload, DataframeColumn, DocumentParseMeta, Proposal, TraceEvent, ResearchRowInput } from "../../engine/types";
+import { prepareDownstreamDrafts, type PreparedDownstreamDraft } from "../../nodeagent/skills/integration/downstreamPublish";
 
 const WIKI_TITLE = "Agent wiki";
 const RESEARCH_TITLE = "Company research";
@@ -341,7 +342,7 @@ function Wiki({ roomId, art, onOpenArtifact }: { roomId: string; art: Art; onOpe
             <div className="r-wiki-list-row"><span>UI</span><code>src/ui</code><span>renders artifacts, chat, trace, and wiki</span></div>
             <div className="r-wiki-list-row"><span>Store</span><code>src/app/store.tsx</code><span>switches between memory and Convex</span></div>
             <div className="r-wiki-list-row"><span>Engine</span><code>src/engine</code><span>CAS, locks, drafts, smart-merge, traces</span></div>
-            <div className="r-wiki-list-row"><span>Agent</span><code>src/agent</code><span>runtime, tools, model seam, compaction</span></div>
+            <div className="r-wiki-list-row"><span>Agent</span><code>src/nodeagent</code><span>runtime, tools, model seam, compaction</span></div>
             <div className="r-wiki-list-row"><span>Live</span><code>convex</code><span>schema, mutations, optimistic queries, server agent action</span></div>
           </div>
           {run && <p className="r-wiki-run"><code>{run.model}</code> last run: {run.toolCalls} tool calls, {run.steps} steps, ${run.costUsd.toFixed(3)}, {run.ms}ms.</p>}
@@ -420,6 +421,25 @@ function Research({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) 
       ? <a key={u} className="r-srcchip" href={u} target="_blank" rel="noreferrer" title={src}>{host}</a>
       : <span key={src} className="r-srcchip" title={src}>{host}</span>;
   };
+  const saveDownstreamDraft = (draft: PreparedDownstreamDraft) => {
+    const blob = new Blob([`# ${draft.title}\n\n${draft.body}\n`], { type: "text/markdown;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `${draft.target}-${draft.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "draft"}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+  const activeDraftRowId = expanded ?? rowIds.find((rid) => cell(rid, "status") === "complete") ?? null;
+  const activeDraftCompany = activeDraftRowId ? cell(activeDraftRowId, "company") || activeDraftRowId : null;
+  const downstreamDrafts = activeDraftRowId
+    ? prepareDownstreamDrafts({
+      title: `${activeDraftCompany || activeDraftRowId} diligence`,
+      summary: cell(activeDraftRowId, "summary") || `${activeDraftCompany || activeDraftRowId} is ready for downstream follow-up.`,
+      bullets: [cell(activeDraftRowId, "funding"), cell(activeDraftRowId, "headcount"), cell(activeDraftRowId, "recent_signal")].filter(Boolean),
+      artifactUrl: typeof window !== "undefined" ? `${window.location.href.split("#")[0]}#artifact=${art.id}&row=${activeDraftRowId}` : undefined,
+    })
+    : [];
   return (
     <div className="r-art-body r-research-body">
       <div className="r-research-bar">
@@ -430,6 +450,17 @@ function Research({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) 
         <button className="r-btn ghost" onClick={() => downloadResearchCsv(art, rowIds, cell)}><Download size={13} /> CRM CSV</button>
         <button className="r-btn" data-testid="research-enrich" disabled={running || pending === 0} onClick={run}>{running ? "Researching..." : pending ? `Enrich ${pending} pending` : "All complete"}</button>
       </div>
+      {downstreamDrafts.length > 0 && (
+        <div className="r-research-import" style={{ alignItems: "center", gap: 8 }}>
+          <span className="tiny faint">Ready-to-export draft for {activeDraftCompany}</span>
+          <span className="grow" />
+          {downstreamDrafts.map((draft) => (
+            <button key={draft.target} className="r-btn ghost" onClick={() => saveDownstreamDraft(draft)}>
+              <Download size={13} /> {draft.ctaLabel}
+            </button>
+          ))}
+        </div>
+      )}
       {pasteOpen && (
         <div className="r-research-import">
           <textarea value={pasteText} onChange={(e) => setPasteText(e.target.value)} rows={3} placeholder="Company, website, tier, intent, owner, CRM status" />

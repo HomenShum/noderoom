@@ -9,8 +9,8 @@ import {
   runAgent,
   scriptedModel,
   type AgentMessage,
-} from "../src/agent";
-import { recomputeVariancePlan } from "../src/agent/plans";
+} from "../src/nodeagent/index";
+import { recomputeVariancePlan } from "../src/nodeagent/core/plans";
 import { buildDemoRoom } from "../src/engine/demoRoom";
 import { RoomEngine } from "../src/engine/roomEngine";
 import {

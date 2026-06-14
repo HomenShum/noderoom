@@ -91,7 +91,7 @@ LIVE mode is the **only** multi-user runtime (MEMORY is single-process - no WebS
 
 ## Multi-agent scaling
 
-**Coordination spine (LIVE):** (1) **Locks** - `proposeLock` inserts a row with range-expanded `elementIds` (capped `MAX_DEPENDENCY_EXPANSION=1,000`, `spreadsheetIndexLib.ts:13`) + a **5-min lease** (`LOCK_TTL_MS`, `lib.ts:153`); conflict check `.collect()`s ALL active locks for the artifact then `.find()`s in JS (`lib.ts:166-171`) - **not** an indexed point lookup. (2) **CAS/OCC** - `applyCellEditCore` (`artifacts.ts:220-318`) gates LOCK->CAS->apply, returning `{ok:false, reason:"conflict"}` **as data, not thrown** (line 250). (3) **Runtime-managed coordination** - `writeWithManagedLock` (`src/agent/tools.ts:55-189`) does propose->edit->release in a `finally`, and `createDraft` against the blocker instead of failing (draft-on-blocked). Janitor `sweepExpiredLocks` runs every 1 min (`crons.ts:12`).
+**Coordination spine (LIVE):** (1) **Locks** - `proposeLock` inserts a row with range-expanded `elementIds` (capped `MAX_DEPENDENCY_EXPANSION=1,000`, `spreadsheetIndexLib.ts:13`) + a **5-min lease** (`LOCK_TTL_MS`, `lib.ts:153`); conflict check `.collect()`s ALL active locks for the artifact then `.find()`s in JS (`lib.ts:166-171`) - **not** an indexed point lookup. (2) **CAS/OCC** - `applyCellEditCore` (`artifacts.ts:220-318`) gates LOCK->CAS->apply, returning `{ok:false, reason:"conflict"}` **as data, not thrown** (line 250). (3) **Runtime-managed coordination** - `writeWithManagedLock` (`src/nodeagent/skills/spreadsheet/cellMutator.ts:55-189`) does propose->edit->release in a `finally`, and `createDraft` against the blocker instead of failing (draft-on-blocked). Janitor `sweepExpiredLocks` runs every 1 min (`crons.ts:12`).
 
 | Factor | Growth | Why |
 |---|---|---|
@@ -113,7 +113,7 @@ LIVE mode is the **only** multi-user runtime (MEMORY is single-process - no WebS
 
 **Cost is entirely a LIVE concern.** MEMORY never bills - `scriptedModel`, no network; the ladder prints **$0.0000/rung** (`evals/ladder.ts:881`); bench/internal runs "use local in-memory tools and never touch the Convex ledger - excluded by construction" (`OPERATING_BUDGET.md`).
 
-**$ unit:** `priceRun(modelId, inTok, outTok) = (inTok*inputPer1M + outTok*outputPer1M)/1e6` (`src/agent/model.ts:77-80`), prices from `modelCatalog.ts:65-160`. The agent loop bills **1 model call per step**, re-sending system + full history + tool results each time -> input tokens grow with step depth.
+**$ unit:** `priceRun(modelId, inTok, outTok) = (inTok*inputPer1M + outTok*outputPer1M)/1e6` (`src/nodeagent/models/adapter.ts:77-80`), prices from `modelCatalog.ts:65-160`. The agent loop bills **1 model call per step**, re-sending system + full history + tool results each time -> input tokens grow with step depth.
 
 | Factor | Growth | Note |
 |---|---|---|

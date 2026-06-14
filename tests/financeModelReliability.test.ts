@@ -16,7 +16,7 @@ import {
   type LiveReport,
 } from "../evals/financeModelLive";
 import { financeModelSolvePlan, makeSyntheticFinanceModelGold } from "../evals/financeModelRuntime";
-import { scriptedModel } from "../src/agent/scripted";
+import { scriptedModel } from "../src/nodeagent/models/scripted";
 
 const PASS_CHECKS = { stoppedCleanly: true, allTargetsWritten: true };
 const FAIL_CHECKS = { stoppedCleanly: true, allTargetsWritten: false };

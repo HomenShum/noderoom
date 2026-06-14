@@ -15,8 +15,8 @@
  */
 
 import type { AgentMessage } from "./types";
-import type { Planner, ScriptStep } from "./scripted";
-import { lastVersions } from "./scripted";
+import type { Planner, ScriptStep } from "../models/scripted";
+import { lastVersions } from "../models/scripted";
 
 type AnyResult = Record<string, unknown> | null;
 const parse = (s: string): AnyResult => { try { return JSON.parse(s) as AnyResult; } catch { return null; } };

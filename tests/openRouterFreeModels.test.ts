@@ -1,13 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { priceRun } from "../src/agent/model";
-import { getProviderForModel, resolveModelAlias } from "../src/agent/modelCatalog";
+import { priceRun } from "../src/nodeagent/models/adapter";
+import { getProviderForModel, resolveModelAlias } from "../src/nodeagent/models/modelCatalog";
 import {
   OPENROUTER_FREE_AUTO_MODEL,
   discoverOpenRouterFreeModels,
   isFreeTextModel,
   rankOpenRouterFreeModels,
   type OpenRouterModelInfo,
-} from "../src/agent/openRouterFreeModels";
+} from "../src/nodeagent/models/openRouterFreeModels";
 
 const models: OpenRouterModelInfo[] = [
   {

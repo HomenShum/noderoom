@@ -17,14 +17,14 @@ import { fileURLToPath } from "node:url";
 import { z } from "zod";
 import { RoomEngine } from "../../src/engine/roomEngine";
 import { buildDemoRoom, RESEARCH_COMPANIES } from "../../src/engine/demoRoom";
-import { InMemoryRoomTools } from "../../src/agent/roomTools";
-import { runAgent } from "../../src/agent/runtime";
-import { model, priceRun, judge } from "../../src/agent/model";
-import { getModelPricing, resolveModelAlias, type ModelPricing } from "../../src/agent/modelCatalog";
-import { fetchSourceReal } from "../../src/agent/fetchSource";
-import type { AgentMessage, AgentModel, AgentTool, RoomTools, SourceResult } from "../../src/agent/types";
-import { isOpenRouterFreeAutoModel, selectOpenRouterFreeModels, type OpenRouterModelInfo } from "../../src/agent/openRouterFreeModels";
-import { fenceUntrusted } from "../../src/agent/context";
+import { InMemoryRoomTools } from "../../src/nodeagent/skills/integration/noderoomAdapter";
+import { runAgent } from "../../src/nodeagent/core/runtime";
+import { model, priceRun, judge } from "../../src/nodeagent/models/adapter";
+import { getModelPricing, resolveModelAlias, type ModelPricing } from "../../src/nodeagent/models/modelCatalog";
+import { fetchSourceReal } from "../../src/nodeagent/skills/search/fetchSource";
+import type { AgentMessage, AgentModel, AgentTool, RoomTools, SourceResult } from "../../src/nodeagent/core/types";
+import { isOpenRouterFreeAutoModel, selectOpenRouterFreeModels, type OpenRouterModelInfo } from "../../src/nodeagent/models/openRouterFreeModels";
+import { fenceUntrusted } from "../../src/nodeagent/core/worldModel";
 import {
   canonicalSourceKey,
   evidenceText,

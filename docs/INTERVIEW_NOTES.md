@@ -193,7 +193,7 @@ Code anchors:
 - `src/engine/types.ts` - uniform artifact element model.
 - `src/engine/roomEngine.ts` - deterministic in-memory engine.
 - `src/engine/merge.ts` - deterministic draft resolver.
-- `src/agent/tools.ts` - `read_range`, `propose_lock`, `edit_cell`, `write_cell_result`, `create_draft`.
+- `src/nodeagent/skills/spreadsheet/cellMutator.ts` - `read_range`, `propose_lock`, `edit_cell`, `write_cell_result`, `create_draft`.
 - `convex/artifacts.ts` - production CAS write path.
 - `convex/locks.ts` and `convex/drafts.ts` - lock/release/draft merge.
 
@@ -209,11 +209,11 @@ Say:
 
 Code anchors:
 
-- `src/agent/runtime.ts` - the loop.
-- `src/agent/types.ts` - three seams: model, tools, backend.
-- `src/agent/context.ts` - just-in-time state and awareness.
-- `src/agent/systemPrompt.ts` - protocol rules.
-- `src/agent/model.ts` - provider model seam.
+- `src/nodeagent/core/runtime.ts` - the loop.
+- `src/nodeagent/core/types.ts` - three seams: model, tools, backend.
+- `src/nodeagent/core/worldModel.ts` - just-in-time state and awareness.
+- `src/nodeagent/models/prompts/systemPrompt.ts` - protocol rules.
+- `src/nodeagent/models/adapter.ts` - provider model seam.
 - `convex/agent.ts` - live `"use node"` action running the same loop.
 - `convex/convexRoomTools.ts` - Convex implementation of `RoomTools`.
 
@@ -268,15 +268,15 @@ Use this exact order if they ask to see code.
    - Show `applyEdit`, `proposeLock`, `releaseLock`, `createDraft`.
    - Say: "The deterministic engine proves the collaboration model before live infra."
 
-4. `src/agent/types.ts`
+4. `src/nodeagent/core/types.ts`
    - Show `AgentModel`, `AgentTool`, `RoomTools`.
    - Say: "These are the three seams that make the agent testable."
 
-5. `src/agent/runtime.ts`
+5. `src/nodeagent/core/runtime.ts`
    - Show the bounded loop.
    - Say: "Conflicts come back as data, so the model can re-read and recover."
 
-6. `src/agent/tools.ts`
+6. `src/nodeagent/skills/spreadsheet/cellMutator.ts`
    - Show bounded tool definitions and `write_cell_result`.
    - Say: "The agent writes evidence-bearing `CellPayload`s instead of loose scalars."
 
@@ -296,7 +296,7 @@ Use this exact order if they ask to see code.
     - Show panels, upload, drag refs, artifact rendering.
     - Say: "This is where the agent becomes visible and inspectable."
 
-11. `src/app/spreadsheetParser.ts`, `src/app/providerParserAdapter.ts`, `src/agent/providerParserLive.ts`
+11. `src/app/spreadsheetParser.ts`, `src/app/providerParserAdapter.ts`, `src/nodeagent/models/providerParserLive.ts`
     - Show spreadsheet ingest, provider extraction, and evidence artifacts.
     - Say: "Files become durable artifacts, not ephemeral prompt text."
 
@@ -495,7 +495,7 @@ What to show:
 
 - `convex/agent.ts` - `AGENT_ACTION_BUDGET_MS`, `AGENT_ACTION_RESERVE_MS`, default compaction, and persisted `stopReason`.
 - `convex/agentJobs.ts` / `convex/agentWorkflows.ts` / `convex/agentJobRunner.ts` - async free-auto job, Workflow/Workpool wrapper, lease, checkpoint, and resume path.
-- `src/agent/runtime.ts` - deadline checks before model/tool work and `handoff` result.
+- `src/nodeagent/core/runtime.ts` - deadline checks before model/tool work and `handoff` result.
 - `convex/agentRuns.ts` / `convex/schema.ts` - durable `stopReason`, `remainingMs`, `deadlineAt`, `handoff`.
 - `src/ui/Chat.tsx` - `/free` command and latest job status chip.
 - `evals/ladder.ts` - `--rung-timeout-ms` for live model budget testing.

@@ -79,7 +79,7 @@ Note → Spreadsheet navigation, but not the grounding action itself.)*
 - **Evidence:** `docs/AGENT_WIKI.md`,
   `docs/skills/self-updating-wiki/SKILL.md`, `tests/wikiSkill.test.ts`.
 - **Gate:** `tests/workflowEvals.test.ts`, `tests/wikiSkill.test.ts`,
-  `src/agent/tools.ts`.
+  `src/nodeagent/skills/spreadsheet/cellMutator.ts`.
 
 ### Proposal Review And Wall Collaboration
 

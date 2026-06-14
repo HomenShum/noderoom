@@ -8,7 +8,7 @@ import {
   runAgent,
   scriptedModel,
   type AgentMessage,
-} from "../src/agent";
+} from "../src/nodeagent/index";
 import { buildDemoRoom } from "../src/engine/demoRoom";
 import { RoomEngine } from "../src/engine/roomEngine";
 import {

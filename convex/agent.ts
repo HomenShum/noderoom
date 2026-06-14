@@ -30,14 +30,15 @@ type RunResult = {
   costUsd: number; ms: number; exhausted: boolean; stopReason: string; remainingMs: number | null; deadlineAt: number;
   modelCalls: number; runId: Id<"agentRuns">; handoff: unknown | null;
 };
-import { AgentRunError, runAgent } from "../src/agent/runtime";
-import { PRODUCTION_ROOM_TOOLS } from "../src/agent/tools";
-import { MANAGED_LOCK_SYSTEM_PROMPT } from "../src/agent/systemPrompt";
-import { convexModel as agentModel, convexPriceRun as priceRun } from "../src/agent/convexModel";
-import { buildResearchContext, buildNoteContext, buildWallContext } from "../src/agent/context";
-import { runIdempotencyKey } from "../src/agent/idempotency";
-import { compactMessages } from "../src/agent/compaction";
-import { journalSliceKey } from "../src/agent/journal";
+import { AgentRunError, runAgent } from "../src/nodeagent/core/runtime";
+import { PRODUCTION_ROOM_TOOLS } from "../src/nodeagent/skills/spreadsheet/cellMutator";
+import { MANAGED_LOCK_SYSTEM_PROMPT } from "../src/nodeagent/models/prompts/systemPrompt";
+import { convexModel as agentModel, convexPriceRun as priceRun } from "../src/nodeagent/models/convexModel";
+import { buildResearchContext, buildNoteContext, buildWallContext } from "../src/nodeagent/core/worldModel";
+import { runIdempotencyKey } from "../src/nodeagent/core/idempotency";
+import { compactMessages } from "../src/nodeagent/core/contextCompactor";
+import { journalSliceKey } from "../src/nodeagent/core/journal";
+import { assertProviderEgressAllowed } from "../src/nodeagent/guardrails/egressPolicy";
 import { makeConvexStepJournal } from "./agentStepJournalClient";
 
 const CONVEX_ACTION_LIMIT_MS = 10 * 60_000;
@@ -78,17 +79,19 @@ export const runRoomAgent = action({
     if (a.goal.length > 2_000) throw new Error("goal_too_long");
     const roomState = await ctx.runQuery(roomsFullRef, { roomId: a.roomId, requester: a.requester });
     if (!roomState) throw new Error("room_not_found");
-    const requester = roomState.members.find((m: { id: unknown }) => String(m.id) === a.requester.actor.id);
+    const requester = roomState.members.find((m: { id: unknown; name?: string }) => String(m.id) === a.requester.actor.id);
     if (!requester) throw new Error("member_required");
-    const targetArtifact = roomState.artifacts.find((art: { id: unknown }) => String(art.id) === String(a.artifactId)) as { id: unknown; version?: number; kind?: string } | undefined;
+    const targetArtifact = roomState.artifacts.find((art: { id: unknown }) => String(art.id) === String(a.artifactId)) as { id: unknown; version?: number; kind?: string; title?: string; meta?: unknown } | undefined;
     if (!targetArtifact) throw new Error("artifact_room_mismatch");
     let actor: Actor;
     let sessionId: string;
     if (a.asOwner) {
       // Personal agent acting publicly for a member: edits the shared sheet + posts public chat, attributed
       // via ownerId. Reuses this whole runner (idempotency, jobs, CAS, proposals, traces) — no fork of the spine.
-      const sid = await ctx.runMutation(ensurePersonalPublicSessionRef, { roomId: a.roomId, ownerId: a.asOwner.id });
-      actor = { kind: "agent", id: "agent_priv", name: "Your NodeAgent", scope: "public", ownerId: a.asOwner.id };
+      if (a.asOwner.id !== a.requester.actor.id) throw new Error("owner_mismatch");
+      const ownerId = a.requester.actor.id;
+      const sid = await ctx.runMutation(ensurePersonalPublicSessionRef, { roomId: a.roomId, ownerId });
+      actor = { kind: "agent", id: "agent_priv", name: "Your NodeAgent", scope: "public", ownerId };
       sessionId = String(sid);
     } else {
       const session = roomState.sessions.find((s: { scope?: string; ownerId?: string; agentId: string; agentName: string; id: unknown }) => s.scope === "public" && !s.ownerId);
@@ -123,6 +126,12 @@ export const runRoomAgent = action({
         ? (process.env.AGENT_RESEARCH_MODEL ?? "deepseek/deepseek-v4-flash")
         : (process.env.AGENT_MODEL ?? "gemini-3.5-flash"),
     );
+    assertProviderEgressAllowed({
+      model: model.name,
+      entrypoint: "public_ask",
+      artifacts: [targetArtifact],
+      env: process.env,
+    });
     const requestedSteps = a.maxSteps ?? (a.mode === "research" ? 60 : 10);
     const maxSteps = Math.max(1, Math.min(requestedSteps, a.mode === "research" ? 80 : 24));
     const actionBudgetMs = envNumber("AGENT_ACTION_BUDGET_MS", CONVEX_ACTION_LIMIT_MS, 60_000, CONVEX_ACTION_LIMIT_MS);
@@ -376,12 +385,13 @@ export const runRoomAgent = action({
     // cannot double-post. (Memory mode already does this client-side; this is live-mode parity.)
     const saidSomething = result.trace.some((t) =>
       t.tool === "say" && !(t.result && typeof t.result === "object" && "error" in (t.result as Record<string, unknown>)));
-    if (!saidSomething && result.finalText.trim()) {
+    const visibleFallback = result.finalText.trim() || fallbackVisibleAgentSummary(result.trace);
+    if (!saidSomething && visibleFallback) {
       await ctx.runMutation(messagesSendAgentRef, {
         roomId: a.roomId,
         channel: actor.scope === "private" && actor.ownerId ? actor.ownerId : "public",
         author: actor,
-        text: result.finalText.slice(0, 4_000),
+        text: visibleFallback.slice(0, 4_000),
         clientMsgId: `final-${String(runId)}`,
         kind: "agent",
       });
@@ -397,6 +407,22 @@ export const runRoomAgent = action({
     };
   },
 });
+
+function fallbackVisibleAgentSummary(trace: Array<{ tool: string; args: unknown; result: unknown }>): string {
+  for (const step of [...trace].reverse()) {
+    if (!step.tool.startsWith("write_locked_cell") && step.tool !== "edit_cell") continue;
+    const result = step.result as { ok?: boolean; pendingApproval?: boolean; drafted?: boolean; error?: unknown } | null;
+    if (result?.error || result?.ok === false) continue;
+    const args = step.args as { elementId?: unknown; value?: unknown; ops?: Array<{ elementId?: unknown; value?: unknown }> } | null;
+    const op = Array.isArray(args?.ops) ? args?.ops[0] : args;
+    const elementId = typeof op?.elementId === "string" ? op.elementId : "the requested cell";
+    const value = op?.value === undefined ? "" : ` = ${String(op.value)}`;
+    if (result?.pendingApproval) return `Filed the requested proposal for ${elementId}${value}.`;
+    if (result?.drafted) return `Drafted the requested edit for ${elementId}${value}.`;
+    return `Completed the requested room edit: ${elementId}${value}.`;
+  }
+  return trace.length ? "Completed the requested room work." : "";
+}
 
 /** Summarize the room (artifacts + sheet state) as bounded, read-only context for a private consult. */
 /** Shared between runPrivateAgent (blocking fallback) and the streaming httpAction

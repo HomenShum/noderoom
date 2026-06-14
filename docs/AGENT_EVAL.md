@@ -266,7 +266,7 @@ A long-running agent's message history is dominated by **old `read_range` result
 - **Anthropic Claude Ã¢â‚¬â€ "context editing":** clear stale tool results from the window; keep the system prompt, the latest state, and recent turns. (Plus the *memory tool* and *compaction* = summarize old turns.)
 - **Nous Research Hermes:** structured tool-call turns Ã¢â‚¬â€ we preserve the turn shape so the model stays coherent.
 
-NodeRoom implements this in `src/agent/compaction.ts` (`compactMessages`), wired into `runtime.ts` (the model sees a compacted view each turn; the full history is kept for audit):
+NodeRoom implements this in `src/nodeagent/core/contextCompactor.ts` (`compactMessages`), wired into `runtime.ts` (the model sees a compacted view each turn; the full history is kept for audit):
 
 - **Trigger** Ã¢â‚¬â€ when the estimated context exceeds `maxChars` (~`chars/4` tokens).
 - **Preserve** Ã¢â‚¬â€ message 0 (the task + initial snapshot), the last `keepRecent` turns verbatim, and every message **envelope** (so the assistantÃ¢â€ â€tool pairing the API requires is never broken).
@@ -292,6 +292,6 @@ Never delete a failing golden to make the suite green Ã¢â‚¬â€ fix the
 |---|---|
 | Golden cases (the I/O pairs) | `evals/cases.ts` |
 | Eval runner + scoring | `evals/runEval.ts` |
-| Context compaction | `src/agent/compaction.ts` |
+| Context compaction | `src/nodeagent/core/contextCompactor.ts` |
 | Compaction + runtime tests | `tests/compaction.test.ts`, `tests/agentRuntime.test.ts` |
-| The harness being evaluated | `src/agent/` (see `docs/AGENT_RUNTIME.md`) |
+| The harness being evaluated | `src/nodeagent/` (see `docs/AGENT_RUNTIME.md`) |

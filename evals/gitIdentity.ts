@@ -5,7 +5,7 @@
  * there to avoid churning a hot file); this is the canonical copy new producers import.
  */
 import { execSync } from "node:child_process";
-import { stableJournalHash } from "../src/agent/journal";
+import { stableJournalHash } from "../src/nodeagent/core/journal";
 
 export type GitIdentity = { commitSha: string; gitDirty: boolean; worktreeHash?: string };
 

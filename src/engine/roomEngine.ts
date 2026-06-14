@@ -27,7 +27,7 @@ import {
   resolveSemanticConflictPacket,
   type SemanticConflictPacket,
   type SemanticResolution,
-} from "./semanticRebase";
+} from "../nodeagent/skills/spreadsheet/semanticRebase";
 import type {
   Actor, AgentScope, AgentSession, Artifact, ArtifactKind, Channel, ChangeOp,
   Draft, EditResult, Element, Lock, LockResult, Member, MergeResolution, Message,

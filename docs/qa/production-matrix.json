@@ -300,7 +300,7 @@
       "evidence": [
         { "type": "doc", "ref": "docs/TARGET_2026_06.md" },
         { "type": "doc", "ref": "docs/NODEAGENT_ARCHITECTURE.md" },
-        { "type": "code", "ref": "src/agent/intakePreflight.ts" },
+        { "type": "code", "ref": "src/nodeagent/core/intakePreflight.ts" },
         { "type": "code", "ref": "src/ui/IntakePlanPreview.tsx" },
         { "type": "test", "ref": "tests/intakePreflightScheduler.test.ts" },
         { "type": "e2e", "ref": "e2e/intake-plan-preview.spec.ts" },

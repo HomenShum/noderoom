@@ -267,7 +267,7 @@ A handoff must be self-contained so the coding agent needs nothing but the repo 
 - observed: <e.g. "L6 0/3 — compaction drops the read-before-edit invariant at step 14">
 
 ## Ranked change (the ONE thing to do)
-- harness target: <src/agent/systemPrompt.ts | tools.ts registry | compaction.ts | budget>
+- harness target: <src/nodeagent/models/prompts/systemPrompt.ts | tools.ts registry | compaction.ts | budget>
 - proposed diff intent: <specific, e.g. "add an explicit read-immediately-before-edit instruction
   to the long-horizon section; keep all other instructions byte-identical">
 - why it should work: <cites the failing step>

@@ -9,8 +9,8 @@ import { describe, it, expect } from "vitest";
 import { z } from "zod";
 import { RoomEngine } from "../src/engine/roomEngine";
 import { buildDemoRoom } from "../src/engine/demoRoom";
-import { AgentRunError, InMemoryRoomTools, ROOM_TOOLS, lastVersions, runAgent, scriptedModel, type AgentMessage, type AgentTool, type ToolCall } from "../src/agent";
-import { recomputeVariancePlan } from "../src/agent/plans";
+import { AgentRunError, InMemoryRoomTools, ROOM_TOOLS, lastVersions, runAgent, scriptedModel, type AgentMessage, type AgentTool, type ToolCall } from "../src/nodeagent/index";
+import { recomputeVariancePlan } from "../src/nodeagent/core/plans";
 
 const TARGETS = { r_rev__variance: "+24%", r_cogs__variance: "+27.5%" };
 const conflictsIn = (r: { trace: { tool: string; result: unknown }[] }) =>

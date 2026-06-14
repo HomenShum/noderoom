@@ -6,10 +6,10 @@
  * agent's actor + session, so the tool methods take only what the model chose.
  */
 
-import type { RoomEngine } from "../engine/roomEngine";
-import type { Actor, CellPayload, Channel, DataframeColumn } from "../engine/types";
-import type { RoomTools, RoomSnapshot, AwarenessView, CellView, CellMeta, EditOutcome, MergeView, SourceResult, ArtifactRef, SpreadsheetContextHit } from "./types";
-import { buildSpreadsheetSemanticIndex, columnLetters } from "../app/spreadsheetIndex";
+import type { RoomEngine } from "../../../engine/roomEngine";
+import type { Actor, CellPayload, Channel, DataframeColumn } from "../../../engine/types";
+import type { RoomTools, RoomSnapshot, AwarenessView, CellView, CellMeta, EditOutcome, MergeView, SourceResult, ArtifactRef, SpreadsheetContextHit } from "../../core/types";
+import { buildSpreadsheetSemanticIndex, columnLetters } from "../../../app/spreadsheetIndex";
 
 export class InMemoryRoomTools implements RoomTools {
   constructor(

@@ -1,4 +1,4 @@
-import type { Actor, Artifact, CellEvidence, ChangeOp, Draft, MergeResolution } from "./types";
+import type { Actor, Artifact, CellEvidence, ChangeOp, Draft, MergeResolution } from "../../../engine/types";
 
 export type SemanticTargetKind = "cell" | "memo_block" | "chart" | "task";
 export type SemanticConflictTrigger = "stale_patch_bundle" | "draft_conflict" | "proposal_cas_conflict" | "manual_review";

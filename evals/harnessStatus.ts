@@ -60,7 +60,7 @@ export const PROFESSIONAL_HARNESS_STATUS = {
   },
   privacy_redaction: {
     status: "implemented",
-    entryPoint: "src/agent/context.ts",
+    entryPoint: "src/nodeagent/core/worldModel.ts",
     evidence: "tests/agentRuntime.test.ts",
     notes: "Runtime tests cover private/public context boundaries and redaction-oriented contracts.",
   },
@@ -84,13 +84,13 @@ export const PROFESSIONAL_HARNESS_STATUS = {
   },
   workflow_checkpoint_resume: {
     status: "implemented",
-    entryPoint: "src/agent/runtime.ts",
+    entryPoint: "src/nodeagent/core/runtime.ts",
     evidence: "tests/agentRuntime.test.ts",
     notes: "Runtime preserves handoff state and unexecuted tool calls for resumed long jobs.",
   },
   resolved_model_audit: {
     status: "implemented",
-    entryPoint: "src/agent/model.ts",
+    entryPoint: "src/nodeagent/models/adapter.ts",
     evidence: "tests/modelEvalMatrix.test.ts",
     notes: "Resolved model names are tracked for free-auto and model-matrix reporting.",
   },

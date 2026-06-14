@@ -4,7 +4,7 @@ import { checkArchitectureBudget, type ArchitectureOwnershipManifest } from "../
 const manifest: ArchitectureOwnershipManifest = {
   version: 1,
   surfaces: [
-    { id: "agent-runtime", patterns: ["src/agent/**"] },
+    { id: "agent-runtime", patterns: ["src/nodeagent/**"] },
     { id: "nodeagent-jobs", patterns: ["convex/agentJobs.ts"] },
     { id: "graph-wiki-embedding-experimental", patterns: ["convex/schema.ts", "convex/notebookGraph.ts"] },
     { id: "qa-improvement-loop", patterns: ["tests/**", "docs/eval/**", "docs/qa/**"] },
@@ -14,7 +14,7 @@ const manifest: ArchitectureOwnershipManifest = {
 describe("architecture budget", () => {
   it("allows owned changes backed by behavior evidence", () => {
     const result = checkArchitectureBudget({
-      changedFiles: ["src/agent/tools.ts", "tests/workflowEvals.test.ts"],
+      changedFiles: ["src/nodeagent/skills/spreadsheet/cellMutator.ts", "tests/workflowEvals.test.ts"],
       evidenceFiles: ["tests/workflowEvals.test.ts"],
       ownershipManifest: manifest,
     });
@@ -26,7 +26,7 @@ describe("architecture budget", () => {
 
   it("infers changed tests as behavior evidence for automated HALO runs", () => {
     const result = checkArchitectureBudget({
-      changedFiles: ["src/agent/context.ts", "tests/promptInjection.test.ts"],
+      changedFiles: ["src/nodeagent/core/worldModel.ts", "tests/promptInjection.test.ts"],
       ownershipManifest: manifest,
     });
 

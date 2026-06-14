@@ -49,7 +49,7 @@ export const REQUIREMENT_PROOF_REGISTRY = {
   artifact_refs: {
     requirement: "artifact_refs",
     kind: "runtime_test",
-    evidence: ["tests/agentRuntime.test.ts", "tests/artifactRefs.test.ts", "src/agent/roomTools.ts"],
+    evidence: ["tests/agentRuntime.test.ts", "tests/artifactRefs.test.ts", "src/nodeagent/skills/integration/noderoomAdapter.ts"],
     method: "Artifact ids and selected-room references must be canonical, clickable, and carried into tool context.",
   },
   cell_payload_evidence: {
@@ -103,7 +103,7 @@ export const REQUIREMENT_PROOF_REGISTRY = {
   privacy_redaction: {
     requirement: "privacy_redaction",
     kind: "runtime_test",
-    evidence: ["tests/agentRuntime.test.ts", "tests/promptInjection.test.ts", "src/agent/context.ts"],
+    evidence: ["tests/agentRuntime.test.ts", "tests/promptInjection.test.ts", "src/nodeagent/core/worldModel.ts"],
     method: "Public/private boundaries and prompt-injection fencing are runtime tested; catalog cases must state masking rules.",
   },
   provider_parser_adapter: {
@@ -127,13 +127,13 @@ export const REQUIREMENT_PROOF_REGISTRY = {
   workflow_checkpoint_resume: {
     requirement: "workflow_checkpoint_resume",
     kind: "runtime_test",
-    evidence: ["tests/agentRuntime.test.ts", "tests/agentJobsRuntime.test.ts", "src/agent/runtime.ts"],
+    evidence: ["tests/agentRuntime.test.ts", "tests/agentJobsRuntime.test.ts", "src/nodeagent/core/runtime.ts"],
     method: "Workflow state must be resumable and preserve unexecuted tool calls and receipts.",
   },
   resolved_model_audit: {
     requirement: "resolved_model_audit",
     kind: "runtime_test",
-    evidence: ["tests/modelEvalMatrix.test.ts", "src/agent/modelCatalog.ts", "docs/eval/model-eval-matrix-plan.json"],
+    evidence: ["tests/modelEvalMatrix.test.ts", "src/nodeagent/models/modelCatalog.ts", "docs/eval/model-eval-matrix-plan.json"],
     method: "Every route proof records the resolved provider model instead of only the requested alias.",
   },
   private_gold_pack: {

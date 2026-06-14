@@ -198,7 +198,7 @@ each reading end-to-end and trying to break it. Triage + disposition:
   and `handoff`. If the action is about to hit its budget, `runAgent` emits a `tool: "handoff"` trace
   event instead of relying on Convex's hard action timeout.
 - **Convex deployment analyzer path is part of verification** - the live Convex agent modules use the
-  standard action runtime plus `src/agent/convexModel.ts` direct provider HTTP calls, avoiding the
+  standard action runtime plus `src/nodeagent/models/convexModel.ts` direct provider HTTP calls, avoiding the
   Node-action analyzer failure hit during codegen. `npx convex codegen --dry-run --typecheck disable`
   is now a required smoke for backend changes.
 - **Long-running free-auto continuation is atomic** - `finishSlice` records `agentJobAttempts`,

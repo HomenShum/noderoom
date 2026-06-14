@@ -47,7 +47,7 @@ sequenceDiagram
 
 ## Implemented Now
 
-`src/engine/semanticRebase.ts` defines:
+`src/nodeagent/skills/spreadsheet/semanticRebase.ts` defines:
 
 - `SemanticConflictPacket`
 - `SemanticResolution`

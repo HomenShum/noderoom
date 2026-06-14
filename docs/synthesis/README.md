@@ -8,7 +8,7 @@ Status note after the target implementation pass: this folder is the grounded de
 the June target work. Current built-vs-gap status lives in `docs/TARGET_2026_06.md` and
 `docs/qa/production-matrix.json`. In this commit, the MVP shell moved to Room Binder -> Work Surface ->
 Copilot with a shell-level Signal Tape/Status Strip, and the typed intake/preflight contract landed as
-`src/agent/intakePreflight.ts`; center-stage split mode, richer binder click-through, live provider
+`src/nodeagent/core/intakePreflight.ts`; center-stage split mode, richer binder click-through, live provider
 PlanPreview gating, and workbook-runtime adapter work remain tracked gaps.
 
 ## The one-line verdict
@@ -41,7 +41,7 @@ PlanPreview gating, and workbook-runtime adapter work remain tracked gaps.
 - The "artifacts wrongly in a bottom drawer" correction is a **no-op** — no such desktop drawer exists in the code.
   The genuinely-missing piece is center-stage **split mode**.
 - Locks / CAS / drafts / no-clobber / dependency-closure expansion / idempotency are **built** (`convex/locks.ts`,
-  `drafts.ts`, `src/agent/idempotency.ts`). The intake **router** (queue vs parallel vs steer) and the **preflight**
+  `drafts.ts`, `src/nodeagent/core/idempotency.ts`). The intake **router** (queue vs parallel vs steer) and the **preflight**
   call at plan time are the real gaps.
 - Eval Layers 1/2/4 and the harness-honesty standard are **already implemented**; only Layer 3
   (format + dynamic-correctness perturbation) is net-new.

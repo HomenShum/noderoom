@@ -115,7 +115,7 @@ number. I proved the no-clobber invariant with engine tests."*
    `applyEdit` → `applyCellEdit` mutation; `mergeDraft` → an action that calls the LLM resolver.
 2. **Wire the private /ask agent to `@assistant-ui/react`** via `ExternalStoreRuntime` (the
    `NodeAgent` repo already has the Thread + tool UIs).
-3. **Run the agents in a Convex `"use node"` action** with `pi-agent-core` + `pi-ai`; tools
+3. **Run the agents in a Convex `"use node"` action** with the custom `runAgent` loop (`src/nodeagent/core/runtime.ts`) on the AI SDK; tools
    = `read_range` / `propose_lock` / `edit` / `create_draft`; conflicts come back as tool errors.
 4. **Idempotency** is already modeled (`opId`, `clientMsgId`); add Convex `unique()`-then-insert.
 

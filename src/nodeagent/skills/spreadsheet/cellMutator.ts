@@ -11,8 +11,8 @@
  */
 
 import { z } from "zod";
-import type { AgentTool, EditOutcome, RoomTools } from "./types";
-import type { CellEvidence, CellPayload, CellStatus } from "../engine/types";
+import type { AgentTool, EditOutcome, RoomTools } from "../../core/types";
+import type { CellEvidence, CellPayload, CellStatus } from "../../../engine/types";
 import { runAlgorithmArtifactFromRoomTools, type AlgorithmArtifact } from "./algorithmArtifacts";
 
 const opSchema = z.object({ elementId: z.string(), value: z.any(), baseVersion: z.number().int() });

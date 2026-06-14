@@ -12,8 +12,8 @@
 
 import { describe, it, expect } from "vitest";
 import { RoomEngine } from "../src/engine/roomEngine";
-import { InMemoryRoomTools } from "../src/agent/roomTools";
-import { buildNoteContext, buildWallContext } from "../src/agent/context";
+import { InMemoryRoomTools } from "../src/nodeagent/skills/integration/noderoomAdapter";
+import { buildNoteContext, buildWallContext } from "../src/nodeagent/core/worldModel";
 import type { Actor } from "../src/engine/types";
 
 function setup() {

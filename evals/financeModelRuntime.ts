@@ -1,10 +1,10 @@
 import type { CellPayload } from "../src/engine/types";
-import type { AgentTraceEvent, AgentMessage } from "../src/agent/types";
-import type { Planner } from "../src/agent/scripted";
-import { scriptedModel, lastVersions } from "../src/agent/scripted";
-import { runAgent } from "../src/agent/runtime";
-import { ROOM_TOOLS } from "../src/agent/tools";
-import { InMemoryRoomTools } from "../src/agent/roomTools";
+import type { AgentTraceEvent, AgentMessage } from "../src/nodeagent/core/types";
+import type { Planner } from "../src/nodeagent/models/scripted";
+import { scriptedModel, lastVersions } from "../src/nodeagent/models/scripted";
+import { runAgent } from "../src/nodeagent/core/runtime";
+import { ROOM_TOOLS } from "../src/nodeagent/skills/spreadsheet/cellMutator";
+import { InMemoryRoomTools } from "../src/nodeagent/skills/integration/noderoomAdapter";
 import { RoomEngine } from "../src/engine/roomEngine";
 import {
   FINANCE_MODEL_CRITICAL_FORMULAS,

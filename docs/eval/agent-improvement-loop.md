@@ -130,7 +130,7 @@ Root-cause labels used for HALO diagnosis:
 Allowed scope: Only files or modules named by the failing trace, failing eval, or handoff evidence.
 
 Default allowed areas:
-- src/agent runtime, tools, context, and compaction
+- src/nodeagent runtime, tools, context, and compaction
 - Convex job/tool adapters that already participate in the failing flow
 - eval fixtures and deterministic assertions for the affected workflow
 

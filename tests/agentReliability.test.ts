@@ -3,15 +3,15 @@
  * deterministic idempotency dedup, and a real pause→resume→complete run that doesn't double-work.
  */
 import { describe, it, expect } from "vitest";
-import { isTransientError, retryBackoffMs } from "../src/agent/model";
-import { runIdempotencyKey, findReusableRun, type RunRecord } from "../src/agent/idempotency";
-import { runAgent } from "../src/agent/runtime";
-import { scriptedModel } from "../src/agent/scripted";
-import { recomputeVariancePlan } from "../src/agent/plans";
+import { isTransientError, retryBackoffMs } from "../src/nodeagent/models/adapter";
+import { runIdempotencyKey, findReusableRun, type RunRecord } from "../src/nodeagent/core/idempotency";
+import { runAgent } from "../src/nodeagent/core/runtime";
+import { scriptedModel } from "../src/nodeagent/models/scripted";
+import { recomputeVariancePlan } from "../src/nodeagent/core/plans";
 import { RoomEngine } from "../src/engine/roomEngine";
 import { buildDemoRoom } from "../src/engine/demoRoom";
-import { InMemoryRoomTools } from "../src/agent/roomTools";
-import { ROOM_TOOLS } from "../src/agent/tools";
+import { InMemoryRoomTools } from "../src/nodeagent/skills/integration/noderoomAdapter";
+import { ROOM_TOOLS } from "../src/nodeagent/skills/spreadsheet/cellMutator";
 
 const CELL = "r_ni__variance";
 const VAL = "+22.4%";

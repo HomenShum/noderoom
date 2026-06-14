@@ -6,10 +6,10 @@
 
 import type { AgentModel, AgentTool, RoomTools, AgentResult, AgentMessage, AgentTraceEvent, AgentStopReason, AgentHandoff, ToolCall, AgentStep } from "./types";
 import type { StepJournal } from "./journal";
-import { checkSpendCeiling, type SpendLimits } from "./gateway";
-import { SYSTEM_PROMPT } from "./systemPrompt";
-import { buildContext } from "./context";
-import { compactMessages, type CompactionOpts } from "./compaction";
+import { checkSpendCeiling, type SpendLimits } from "../guardrails/gateway";
+import { SYSTEM_PROMPT } from "../models/prompts/systemPrompt";
+import { buildContext } from "./worldModel";
+import { compactMessages, type CompactionOpts } from "./contextCompactor";
 
 function describeError(error: unknown): string {
   if (error instanceof Error) return `${error.name}: ${error.message}`;
@@ -52,7 +52,7 @@ export async function runAgent(opts: {
   spendLimits?: SpendLimits;
   /** P0-4: price a completed step in USD so maxCostUsd actually fires — without this the gate
    *  receives costUsd:0 and the dollar half of the ceiling is dead surface (HONEST_STATUS class).
-   *  Pass priceRun (src/agent/model.ts) or convexPriceRun (src/agent/convexModel.ts) from the caller. */
+   *  Pass priceRun (src/nodeagent/models/adapter.ts) or convexPriceRun (src/nodeagent/models/convexModel.ts) from the caller. */
   priceStep?: (modelName: string, inputTokens: number, outputTokens: number) => number;
   /** Keep the model's context bounded on long runs. */
   compaction?: CompactionOpts;

@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { buildPlanPreview, classifyIntakeMessage } from "../src/agent/intakePreflight";
+import { buildPlanPreview, classifyIntakeMessage } from "../src/nodeagent/core/intakePreflight";
 
 describe("intake preflight scheduler", () => {
   it("classifies user messages into deterministic intake decisions", () => {

@@ -11,8 +11,8 @@
 
 import { RoomEngine } from "../src/engine/roomEngine";
 import { buildDemoRoom } from "../src/engine/demoRoom";
-import { InMemoryRoomTools, ROOM_TOOLS, runAgent, scriptedModel, anthropicModel, type AgentResult } from "../src/agent";
-import { recomputeVariancePlan } from "../src/agent/plans";
+import { InMemoryRoomTools, ROOM_TOOLS, runAgent, scriptedModel, anthropicModel, type AgentResult } from "../src/nodeagent/index";
+import { recomputeVariancePlan } from "../src/nodeagent/core/plans";
 import { GOLDEN, type GoldenCase } from "./cases";
 
 const real = process.argv.includes("--real");

@@ -21,12 +21,12 @@ import { createHash } from "node:crypto";
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { join, relative } from "node:path";
 import ExcelJS from "exceljs";
-import type { AgentMessage, AgentModel, RoomTools } from "../src/agent/types";
-import { model as realModel, priceRun } from "../src/agent/model";
-import { AgentRunError, runAgent } from "../src/agent/runtime";
-import { ROOM_TOOLS } from "../src/agent/tools";
-import { scriptedModel } from "../src/agent/scripted";
-import { InMemoryRoomTools } from "../src/agent/roomTools";
+import type { AgentMessage, AgentModel, RoomTools } from "../src/nodeagent/core/types";
+import { model as realModel, priceRun } from "../src/nodeagent/models/adapter";
+import { AgentRunError, runAgent } from "../src/nodeagent/core/runtime";
+import { ROOM_TOOLS } from "../src/nodeagent/skills/spreadsheet/cellMutator";
+import { scriptedModel } from "../src/nodeagent/models/scripted";
+import { InMemoryRoomTools } from "../src/nodeagent/skills/integration/noderoomAdapter";
 import { RoomEngine } from "../src/engine/roomEngine";
 import type { CellPayload } from "../src/engine/types";
 import {

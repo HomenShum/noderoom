@@ -7,7 +7,7 @@
  * pattern, not just the parser.
  */
 import { describe, test, expect } from "vitest";
-import { evaluateFormula, FormulaEvalError, SUPPORTED_FORMULA_FUNCTIONS, colToIndex, indexToCol, type CellResolver, type CellValue, type FormulaResult } from "../src/shared/formulaEngine";
+import { evaluateFormula, FormulaEvalError, SUPPORTED_FORMULA_FUNCTIONS, colToIndex, indexToCol, type CellResolver, type CellValue, type FormulaResult } from "../src/nodeagent/core/formulaEngine";
 
 /** Build a sheet from A1-keyed raw values / formula strings, with a recursive cycle-guarded
  *  resolver that mirrors the live grid (computed values flow through; upstream errors propagate). */

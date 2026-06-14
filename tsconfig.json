@@ -21,7 +21,13 @@
       "@/*": ["./src/*"],
       "@engine/*": ["./src/engine/*"],
       "@ui/*": ["./src/ui/*"],
-      "@agents/*": ["./src/agents/*"]
+      "@agents/*": ["./src/agents/*"],
+      "@nodeagent/*": ["./src/nodeagent/*"],
+      "@nodeagent/core/*": ["./src/nodeagent/core/*"],
+      "@nodeagent/models/*": ["./src/nodeagent/models/*"],
+      "@nodeagent/skills/*": ["./src/nodeagent/skills/*"],
+      "@nodeagent/guardrails/*": ["./src/nodeagent/guardrails/*"],
+      "@nodeagent/components/*": ["./src/nodeagent/components/*"]
     }
   },
   "include": ["src", "demo", "tests", "vite.config.ts", "vitest.config.ts"]

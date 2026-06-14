@@ -21,6 +21,13 @@
  */
 
 import { deterministicResolver } from "./merge";
+import {
+  buildSemanticConflictPacket,
+  formulaOf,
+  resolveSemanticConflictPacket,
+  type SemanticConflictPacket,
+  type SemanticResolution,
+} from "./semanticRebase";
 import type {
   Actor, AgentScope, AgentSession, Artifact, ArtifactKind, Channel, ChangeOp,
   Draft, EditResult, Element, Lock, LockResult, Member, MergeResolution, Message,
@@ -40,6 +47,7 @@ export interface MergeOutcome {
   applied: string[];
   conflicts: MergeResolution["conflicts"];
   resolution: MergeResolution;
+  semantic?: { conflictId: string; resolution: SemanticResolution; proposalIds: string[] };
 }
 
 function stableValueKey(value: unknown): string {
@@ -66,6 +74,7 @@ export class RoomEngine {
   private readonly LOCK_TTL_MS = 5 * 60_000; // lease TTL — a crashed holder's lock auto-expires (no cell blocks forever)
   private locks = new Map<string, Lock>();
   private drafts = new Map<string, Draft>();
+  private semanticConflicts = new Map<string, SemanticConflictPacket>();
   private sessions = new Map<string, AgentSession>();
   private proposals = new Map<string, Proposal>();
   private appliedOps = new Set<string>();
@@ -349,6 +358,10 @@ export class RoomEngine {
     if (!el) return { ok: false, reason: "not_found" };
     // Optimistic concurrency: stale base → conflict (returned as data, never thrown).
     if (el.version !== op.baseVersion) return { ok: false, reason: "conflict", expected: op.baseVersion, actual: el.version };
+    if (op.kind === "set" && actor.kind === "agent" && formulaOf(el.value) && !formulaOf(op.value)) {
+      this.trace(art.roomId, actor, "semantic_conflict", `${actor.name}'s edit to ${op.elementId} was blocked because it would overwrite a formula with a scalar`, { artifactId: art.id, elementId: op.elementId });
+      return { ok: false, reason: "formula_protected" };
+    }
 
     const from = el.version;
     if (op.kind === "delete") {
@@ -378,21 +391,35 @@ export class RoomEngine {
   resolveProposal(proposalId: string, approve: boolean, by: Actor): EditResult | null {
     const p = this.proposals.get(proposalId);
     if (!p || p.status !== "pending") return null;
+    let res: EditResult | null = null;
+    if (approve) {
+      res = this.applyOpInternal(p.op, p.author);
+      if (!res.ok) {
+        this.trace(p.roomId, by, "proposal_resolved", `${by.name} tried to approve ${p.author.name}'s edit to ${p.op.elementId}, but final CAS/policy rejected it`, { proposalId, reason: res.reason });
+        this.emit();
+        return res;
+      }
+    }
     p.status = approve ? "approved" : "rejected";
     p.resolvedAt = this.now();
-    let res: EditResult | null = null;
-    if (approve) res = this.applyOpInternal(p.op, p.author);
     this.trace(p.roomId, by, "proposal_resolved", `${by.name} ${approve ? "approved" : "rejected"} ${p.author.name}'s edit to ${p.op.elementId}`, { proposalId });
     this.emit();
     return res;
   }
   listProposals(roomId: string): Proposal[] { return [...this.proposals.values()].filter((p) => p.roomId === roomId && p.status === "pending"); }
+  listSemanticConflicts(roomId: string): SemanticConflictPacket[] { return [...this.semanticConflicts.values()].filter((p) => p.roomId === roomId); }
 
   /* ───────── drafts + smart-merge (point 8) ───────── */
   createDraft(args: { roomId: string; artifactId: string; author: Actor; ops: ChangeOp[]; note: string; blockedByLockId?: string }): Draft {
+    const art = this.artifacts.get(args.artifactId);
+    const base: Draft["base"] = {};
+    for (const op of args.ops) {
+      const el = art?.elements[op.elementId];
+      base[op.elementId] = { value: el?.value, version: el?.version ?? 0, updatedBy: el?.updatedBy };
+    }
     const draft: Draft = {
       id: this.id("draft"), roomId: args.roomId, artifactId: args.artifactId, author: args.author,
-      ops: args.ops, note: args.note, blockedByLockId: args.blockedByLockId, status: "pending", createdAt: this.now(),
+      ops: args.ops, base, note: args.note, blockedByLockId: args.blockedByLockId, status: "pending", createdAt: this.now(),
     };
     this.drafts.set(draft.id, draft);
     if (args.author.kind === "agent") this.patchSessionByAgent(args.author, { status: "drafting", lastAction: `drafted ${args.ops.length} change(s) around the locked range` });
@@ -412,11 +439,60 @@ export class RoomEngine {
     draft.resolvedAt = this.now();
     const type: TraceType = draft.status === "conflict" ? "draft_conflict" : "draft_merged";
     this.trace(draft.roomId, draft.author, type, `Smart-merge: ${resolution.note}`, { draftId }, `smart_merge · ${resolution.applied.length} applied, ${resolution.conflicts.length} flagged → ${resolution.verdict}`);
+    const semantic = resolution.conflicts.length ? this.openSemanticConflict(draft, art, resolution.conflicts) : undefined;
     if (draft.author.kind === "agent") this.patchSessionByAgent(draft.author, { status: "done", lastAction: `draft ${draft.status}` });
     this.emit();
-    return { draftId, applied: resolution.applied, conflicts: resolution.conflicts, resolution };
+    return { draftId, applied: resolution.applied, conflicts: resolution.conflicts, resolution, semantic };
   }
   listDrafts(roomId: string): Draft[] { return [...this.drafts.values()].filter((d) => d.roomId === roomId); }
+
+  private openSemanticConflict(draft: Draft, artifact: Artifact, conflicts: MergeResolution["conflicts"]): MergeOutcome["semantic"] {
+    const conflictId = this.id("semconf");
+    const packet = buildSemanticConflictPacket({ conflictId, draft, artifact, conflicts, createdAt: this.now() });
+    const resolution = resolveSemanticConflictPacket(packet);
+    packet.status = resolution.decision === "reject" ? "rejected" : "needs_review";
+    this.semanticConflicts.set(conflictId, packet);
+
+    const proposalIds: string[] = [];
+    for (const resolved of resolution.resolvedOps) {
+      if (resolved.kind !== "create_proposal") continue;
+      const original = packet.proposed.ops.find((op) => op.elementId === resolved.targetRef);
+      if (!original) continue;
+      const proposal: Proposal = {
+        id: this.id("prop"),
+        roomId: draft.roomId,
+        artifactId: artifact.id,
+        op: {
+          ...original,
+          opId: this.id("semop"),
+          baseVersion: resolved.baseVersion ?? packet.current.versions[resolved.targetRef] ?? 0,
+          value: resolved.value,
+        },
+        author: draft.author,
+        status: "pending",
+        createdAt: this.now(),
+        review: {
+          kind: "semantic_rebase",
+          conflictId,
+          reviewerNote: resolution.reviewerNote,
+          reason: resolved.comment,
+          status: resolved.status === "rejected" ? "needs_review" : resolved.status,
+        },
+      };
+      this.proposals.set(proposal.id, proposal);
+      proposalIds.push(proposal.id);
+    }
+
+    this.trace(
+      draft.roomId,
+      draft.author,
+      "semantic_conflict",
+      `Semantic rebase opened ${conflicts.length} conflict(s); ${proposalIds.length} review proposal(s) created`,
+      { draftId: draft.id, conflictId },
+      `semantic_rebase - decision=${resolution.decision} - proposals=${proposalIds.length} - ${resolution.reason}`,
+    );
+    return { conflictId, resolution, proposalIds };
+  }
 
   /* ───────── agent sessions + awareness (point 8) ───────── */
   startSession(args: { roomId: string; agentId: string; agentName: string; scope: AgentScope; ownerId?: string }): AgentSession {

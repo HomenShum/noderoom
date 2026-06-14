@@ -47,6 +47,13 @@ generic mechanism over elements**, not three per-artifact implementations.
 `SmartResolver` ships in `merge.ts`; a real LLM resolver implements the same signature and can *merge*
 two diverged values instead of flagging them.
 
+Semantic Rebase / Compare-Reason-Swap sits above this lifecycle. CAS and
+`SmartResolver` protect physical writes and stale drafts; CRS classifies the
+business-meaning conflict before a risky resolution can become a proposal or a
+fresh final CAS write. The current policy scaffold lives in
+`src/engine/semanticRebase.ts`; the detailed runtime plan and open gaps are in
+[`architecture/SEMANTIC_REBASE_CRS.md`](architecture/SEMANTIC_REBASE_CRS.md).
+
 ## Engine ↔ Convex mapping (production)
 
 The in-memory `RoomEngine` is the deterministic implementation of `convex/schema.ts`. Porting is a

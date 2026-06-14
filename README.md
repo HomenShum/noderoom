@@ -12,7 +12,9 @@ through the same versioned concurrency control.**
 
 [Why Convex](#why-convex-and-why-not) · [Audience fluency](#audience-world-proof-artifacts) · [Lessons](#lessons-from-building-noderoom) · [Managed locks](#managed-locks-what-to-give-the-agent) · [Multi-user proof](docs/eval/MULTI_USER_COORDINATION_PROOF.md) · [June 2026 target](docs/TARGET_2026_06.md) · [Sequences](#live-collaboration-sequence) · [Why & HALO](docs/WHY_NODEAGENT_AND_HALO.md) · [Quickstart](#quickstart) · [Agent runtime](docs/AGENT_RUNTIME.md) · [Agent eval](docs/AGENT_EVAL.md) · [Model eval matrix](docs/eval/MODEL_EVAL_MATRIX.md) · [Feature eval backlog](docs/eval/FEATURE_EVAL_BACKLOG.md) · [Agent wiki](docs/AGENT_WIKI.md) · [Design](docs/DESIGN.md) · [Stack](docs/STACK.md) · [Walkthrough](docs/WALKTHROUGH.md) · [Architecture](docs/ARCHITECTURE.md) · [Open gaps](docs/GAPS_NOT_DONE.md)
 
-[Interview notes](docs/INTERVIEW_NOTES.md) · [Over-engineering audit](docs/OVERENGINEERING_AUDIT.md) · [Improvement roadmap](docs/IMPROVEMENT_ROADMAP.md) · [Operating budget](docs/OPERATING_BUDGET.md) · [Audience workloads](docs/AUDIENCE_WORKLOADS.md)
+[Interview notes](docs/INTERVIEW_NOTES.md) · [Over-engineering audit](docs/OVERENGINEERING_AUDIT.md) · [Improvement roadmap](docs/IMPROVEMENT_ROADMAP.md) · [Next priorities](docs/NEXT_STEPS_PRIORITY.md) · [Operating budget](docs/OPERATING_BUDGET.md) · [Audience workloads](docs/AUDIENCE_WORKLOADS.md)
+
+[Deal workplan](#deal-workplan-human-readable-ownership) | [Semantic rebase](#semantic-rebase-compare-reason-swap) | [Research map](#research-backed-design-map)
 
 </div>
 
@@ -179,6 +181,31 @@ and leaves visible room trace receipts.
 User adds or requeues accounts, then the agent enriches only pending/stale rows
 with source-backed `CellPayload` values, CRM fields, citations, and freshness.
 
+### Deal Workplan: Human-Readable Ownership
+
+Traces prove what happened. The deal workplan should explain what matters now.
+This is the target product layer above `agentJobs`, room traces, review rounds,
+and managed lock/CAS writes: a human-readable operating plan for the shared room,
+not a replacement for the ledger.
+
+The workplan contract:
+
+- Track deliverables as a tree: workbook tabs, memo blocks, decks, notes, wall
+  decisions, source packs, and benchmark/eval artifacts.
+- Attach an owner, status, review round, source evidence, privacy boundary, and
+  next action to each deliverable or section.
+- Separate verified source facts, manual claims, model proposals, open
+  questions, and client/senior feedback.
+- Produce email-style updates for seniors and collaborators: what changed, what
+  is blocked, what needs review, and what evidence supports the recommendation.
+- Keep the human accountable. Agents can propose work and explain traces; the
+  room still shows who approved client-facing meaning.
+
+This keeps the README honest: the current runtime already proves lock/CAS,
+drafts, proposals, traces, and algorithm patch bundles. The deal workplan is the
+next contract that makes those receipts legible to finance, GTM, and operator
+workflows.
+
 ### Grounded Wiki And Note Update
 
 User asks for a room summary; the NodeAgent discovers artifacts, reads the
@@ -331,6 +358,60 @@ the audience context, private-investment brief, rendered episode, and Gemini
 media judge are present, but content-fluency/trust-signal review and current
 media judge defects still need to be closed before it can be called
 production-proven.
+
+### Research-Backed Design Map
+
+Every source below maps to a specific product consideration. This table is a
+design contract, not a runtime-completeness claim: it states what NodeRoom should
+preserve and which failure mode the research warns against. The local citation
+audit is [`docs/synthesis/CITATION_LEDGER.md`](docs/synthesis/CITATION_LEDGER.md);
+the finance-spreadsheet row uses `MBABench` because the repo audit corrected the
+earlier `WorkstreamBench` shorthand.
+
+| Source | Exact consideration | NodeRoom feature or invariant | Without it | Expected with it |
+|---|---|---|---|---|
+| [BankerToolBench](https://arxiv.org/abs/2604.11304) | End-to-end investment-banking deliverables are multi-file, rubric-scored, and judged for client readiness. | Deal workplan, package-level deliverables, expert-review gates, no false "done". | A model can produce a plausible sheet or memo while the package is not client-ready. | Workbook, memo, deck, source pack, and review status are tracked together with explicit blockers. |
+| [MBABench](https://arxiv.org/abs/2605.22664) | Finance spreadsheets need Accuracy, Formula, and Format quality, not just final numbers. | Spreadsheet evals split numeric correctness, formula preservation, and layout/format checks. | A result can be numerically close but unmaintainable or visually unusable. | The review surface shows whether each artifact is accurate, formula-safe, and editable. |
+| [BlueFin](https://arxiv.org/abs/2605.30907) | Professional finance spreadsheets need granular rubrics, expert-aligned judging, and dynamic correctness. | Workbook-scoring rubrics, formula-result packaging, dynamic validation, expert-style failure reasons. | A package hash or one static oracle hides why the workbook fails. | Reviewers see which cells, formulas, assumptions, and deliverable criteria passed or failed. |
+| [Finch / FinWorkBench](https://arxiv.org/abs/2512.13168) | Enterprise finance work is messy, cross-file, multimodal, and long-horizon. | Cross-artifact workplan, source/evidence graph, PDF/XLSX/email-style context, checkpoints. | The product only works on clean demo sheets and loses real version-history context. | Agents work from bounded context capsules across files while preserving provenance and review state. |
+| [APEX-Agents](https://arxiv.org/abs/2601.14242) | Professional-service tasks span applications, files, rubrics, gold outputs, and realistic work environments. | Long-running `agentJobs`, workplan ownership, multi-artifact task packs, budgeted execution. | A chat demo looks good but cannot carry a real analyst task to completion. | Each task has files, allowed tools, status, deliverables, budget, and acceptance evidence. |
+| [SpreadsheetBench](https://arxiv.org/abs/2406.14991) | Real spreadsheet manipulation involves forum-like ambiguity, varied workbook structure, and robust test cases. | SpreadsheetBench staging, agent workspaces, formula-result packaging, official-readiness gates. | Synthetic tasks overstate ability and miss brittle range/layout behavior. | Benchmarks run against real workbook shapes with isolated input/gold boundaries. |
+| [SheetAgent / SheetRM](https://arxiv.org/abs/2403.03636) | Planning, retrieval, and iterative correction improve long-horizon spreadsheet manipulation. | `search_sheet_context`, planner-style room tools, retryable patches, reflection through trace evidence. | The model reads a huge sheet dump and guesses. | The agent narrows context, plans ops, retrieves related ranges, and repairs failed attempts. |
+| [SpreadsheetAgent](https://arxiv.org/abs/2604.12282) | Localized, multimodal structural sketches beat loading the whole workbook at once. | Spreadsheet semantic index, surrounding-cell capsules, visual/package chart checks. | Important layout semantics are flattened into plain text. | Conflict packets and tool calls carry nearby cells, layout, formulas, and visual context. |
+| [SheetBrain](https://arxiv.org/abs/2510.19247) | Neuro-symbolic execution plus validation is safer than prose-only spreadsheet reasoning. | Algorithm artifacts, deterministic runners, validation before managed writes. | The model writes confident calculations that are never rerun. | Formula work is executed, fixture-tested, and converted to auditable patch bundles. |
+| [SheetMind](https://arxiv.org/abs/2506.12339) | Manager/action/reflection decomposition and grammar-like commands make spreadsheet automation inspectable. | Structured ops, `PlanPreview`, schema-validated patch bundles, reviewable commands. | Freeform text patches are hard to validate or approve. | Users and validators inspect typed operations before commit. |
+| [Semantic Commit](https://arxiv.org/abs/2504.09283) | Semantic conflicts need impact analysis and local review before AI rewrites global state. | Semantic conflict packets, local resolution UI, review proposals. | The app offers only "yours or theirs" or lets AI rewrite too much. | Users inspect base/current/proposed state, evidence, and impact before accepting a merge. |
+| [Merge-Bench](https://arxiv.org/abs/2605.25890) | Even strong LLMs do not reliably solve all merge conflicts. | Human-review tiers, no unconditional LLM auto-commit, final CAS after resolution. | LLM merge suggestions silently overwrite professional work. | Risky resolutions become proposals; safe ones still pass validators and CAS. |
+| [Rover](https://arxiv.org/abs/2605.17279) | Conflict resolution improves when the model receives dependency-aware context. | Formula dependency graph, surrounding cells, comments, trace summaries, source refs in the conflict packet. | The resolver judges one cell in isolation. | The resolver sees the cells, formulas, sources, and downstream outputs affected by the change. |
+| [Harness-Bench](https://arxiv.org/abs/2605.27922) | Agent capability should be reported at the model-plus-harness configuration level with traces, artifacts, usage, and validators. | Model eval matrix, HALO traces, managed tool contracts, cost and validator reports. | A base-model leaderboard hides tool/runtime effects. | Reports name the route, harness, budget, artifacts, trace shape, validators, and cost. |
+| [Claw-SWE-Bench](https://arxiv.org/abs/2606.12344) | Adapter and harness design can swing scores dramatically under the same model. | Managed lock tools, adapter contracts, route promotion by workflow lane. | The team blames or praises the model for harness behavior. | NodeRoom promotes the cheapest model that is safe in this exact runtime. |
+| [WildClawBench](https://arxiv.org/abs/2605.10912) | Native-runtime, long-horizon tasks expose failures hidden by mock APIs. | Real Convex/live-app captures, Docker/native-runtime probes, long-running `/free` jobs. | Demos pass in toy sandboxes and fail in the deployed room. | Walkthroughs and evals run through real UI/runtime paths when the claim depends on them. |
+| [HAL](https://arxiv.org/abs/2510.11977) | Agent evals need standardized, cost-aware infrastructure and log inspection. | HALO loop, cost-quality matrix, trace ledgers, regression handoff evidence. | A single score masks cost, lucky behavior, and benchmark-search shortcuts. | Promotion requires cost, traces, validators, and failure attribution. |
+| [AgentLens](https://arxiv.org/abs/2605.12925) | Passing final tests can hide chaotic or lucky trajectories. | Trace-stage quality checks, workflow previews, process evidence, not just final cell state. | A lucky pass is counted the same as disciplined work. | The trace must show exploration, implementation, verification, and cleanup in the right order. |
+| [AI Agents That Matter](https://arxiv.org/abs/2407.01502) | Agent evaluation must jointly optimize accuracy, cost, standardization, and holdout integrity. | Cost gates, route ladders, contamination checks, reproducible scripts. | The most expensive route wins by default and benchmark shortcuts survive. | The cheapest safe route wins per workflow, with reproducible eval evidence. |
+| [Agentic Harness Engineering](https://arxiv.org/abs/2604.25850) | Harness evolution needs component, experience, and decision observability. | HALO improvement loop, falsifiable harness changes, trace-derived fixes. | Prompt tweaks accumulate without knowing what worked. | Every harness change names the component, expected effect, trace evidence, and outcome. |
+| [Search-Time Data Contamination](https://arxiv.org/abs/2508.13180) | Search agents can retrieve benchmark questions and answers during evaluation. | Benchmark source blocking, contamination scans, agent/evaluator workspace separation. | A research agent wins by finding the answer key online. | Agent-facing files exclude gold/rubric/canary data and leakage is scanned before claims. |
+| [SWE-Bench+](https://arxiv.org/abs/2410.06992) | Solution leakage and weak tests can inflate benchmark scores. | Hidden gold, stronger validators, candidate-before-evaluator trajectory checks. | Passing tests are treated as proof even when the issue leaks the solution. | Reports distinguish candidate generation, evaluator access, weak-test risk, and true pass evidence. |
+| [ImpossibleBench](https://arxiv.org/abs/2510.20270) | Agents may exploit tests or evaluator access instead of solving the task. | No evaluator-file access, answer-key isolation, Docker sandbox probes, exploit-aware policy. | The agent can delete or game tests and still look successful. | Impossible/negative controls expose cheating, and production paths block evaluator-only state. |
+| [Linear Agent Interaction Guidelines](https://linear.app/developers/aig) | Agent work should be visible, bounded, interruptible, and native to human workflows. | Deal workplan UX, status strip, owner/reviewer state, bounded questions. | Agents disappear into background work with unclear state. | Users see what the agent is doing, what it needs, and when human review is required. |
+| [Linear webhooks and agent sessions](https://linear.app/developers/agent-interaction) | External task systems need webhook-triggered sessions and visible lifecycle state. | Future task sync, workplan updates from issues/review rounds, session state mirroring. | Linear/Jira-style task state drifts away from the room. | Issue events can create/update workplan tasks while room traces remain the source of artifact truth. |
+
+Target workflow expectations:
+
+| Audience workflow | Without this map | Expected NodeRoom behavior |
+|---|---|---|
+| GTM / sales account research | CRM fields get overwritten, ambiguous matches become guesses, duplicate rows appear, or PII leaks into public summaries. | Sourced enrichment of pending/stale rows, `needs_review` for weak evidence, research upsert, cited `CellPayload`s, and clear eval gates. |
+| Chat-first founder or BD lead capture | "Just spoke with X" gets treated as verified fact, capture blocks on perfect identity, or person details become public. | Capture first as private/manual evidence, ask at most one clarifying question, enrich later from public sources, and prevent duplicate rows. |
+| Finance / ops spreadsheets | Formula cells become hardcoded, correct cells churn versions, totals lack source rows, or payroll/account data leaks. | Preserve formulas/layout, reconcile bounded cells only, skip already-correct cells, cite source rows, and redact sensitive public output. |
+| Banker / finance modeling | Best-run demos overclaim, answer-key leakage contaminates results, formulas and export/reopen fidelity are unproven. | Report solve/guide/collaborate as harnessed proof tiers, keep private gold private, and include model plus harness plus budget plus evaluator. |
+| Family office / private wealth IC rooms | Unsourced allocation numbers and private working notes become trust failures, especially if sent to third-party models. | Chain of custody, review-before-mutation, private-draft redaction, evidence-bearing cells, and bounded principal-ready summaries. |
+| Founder / advisor collaboration | Counsel, banker, accountant, and agent silently overwrite each other; stuck locks block deadline work. | Affected-range lock, per-element CAS, host-reviewed proposals, host takeover, and trace/status evidence for what changed. |
+| Boutique M&A / deal teams | Comps and QoE adjustments lose provenance, working layers leak, concurrent edits corrupt live deal workbooks. | Deal-binder framing, source/proof panes, full operation ledger, no-silent-clobber, and redacted summaries for readouts. |
+| Multi-file research and grounded wiki | Agent cites chat instead of artifacts, leaks private files into public traces, or writes unstable wiki sections. | Artifact refs, cited wiki/note updates, public/private boundaries, stable sections, and no private-source leakage. |
+| Large-sheet / long-running workflows | A 9,000-row sheet turns into one giant prompt, resumes duplicate writes, or spend is unbounded. | Semantic chunks, checkpoints, resolved-model audit, `/free` as budgeted/experimental, and idempotent resume behavior. |
+| Event-led conference / hackathon users | README mistakes bursty free distribution for revenue, or hides cost/bill-shock risks. | Position events as low-cost distribution with spend caps, free-route disclosure, and conversion path to founder/GTM/finance users. |
+| Analytics / optimization sheets | Scores become opaque, weights are hidden, units collapse, or personal logs are dumped. | Expose assumptions/weights, cite source columns, preserve unit semantics, and update only dependent outputs. |
+| Engineers / eval consumers | README reports raw model scores, cites bad research, or treats catalog proof as runtime proof. | Honest proof tiers, negative controls, route plus harness plus budget reporting, and corrected citations before external claims. |
 
 ## Why Convex (and why not)
 
@@ -629,6 +710,54 @@ flowchart LR
 - **Draft → smart-merge** — a blocked agent drafts around the lock; on release the draft applies on
   untouched elements, no-ops if already equal, and **flags-without-applying if diverged**. Committed work is never clobbered.
 - **Auto-allow** — when OFF, agent edits become proposals for host approve/reject; humans always apply directly.
+
+### Semantic Rebase: Compare-Reason-Swap
+
+CAS protects the cell. Semantic rebase protects the meaning.
+
+Detailed design and implementation status:
+[`docs/architecture/SEMANTIC_REBASE_CRS.md`](docs/architecture/SEMANTIC_REBASE_CRS.md).
+The current repo has the deterministic policy classifier and packet builder tests; durable
+Convex packet tables, LLM resolver action, validators, and semantic conflict UI
+are still explicitly open.
+
+Compare-and-swap remains the hard safety gate: "is the thing I read still the
+thing I am about to overwrite?" Compare-Reason-Swap (CRS) is the collaboration
+layer above it: "given what changed, why it changed, who intended what, what
+evidence exists, and what this task is trying to accomplish, what is the best
+safe next version?"
+
+Target loop:
+
+```text
+agent patch bundle built from base versions
+  -> managed write checks current versions
+  -> no conflict: commit through lock/CAS
+  -> conflict: build semantic conflict packet
+  -> deterministic resolver handles safe independent patches
+  -> LLM may propose a resolution for semantic cases
+  -> validators check formulas, evidence, privacy, policy, and review tier
+  -> safe ops commit only through a fresh final CAS
+  -> stale again: rebase again or create a human review proposal
+```
+
+The conflict packet should include base, current, and proposed state; task
+intent; actor and review-round context; comments; formula dependencies; source
+evidence; trace summaries; open questions; and policy flags such as
+`formulaOverwriteAllowed`, `humanWinsByDefault`, and
+`publicPrivateBoundary`.
+
+| Tier | Auto behavior | Examples |
+|---|---|---|
+| Deterministic auto-merge | Commit through managed lock/CAS after validation. | Different cells with no dependency overlap; appending a non-conflicting citation; safe derived-output refresh. |
+| LLM-assisted, validator-approved | May auto-commit only when validators pass and policy allows it. | Note cleanup, memo paragraph synthesis, chart annotation rewrite, task summary reconciliation. |
+| LLM-assisted, human review required | Create a proposal; do not auto-commit. | Revenue forecast, EBITDA adjustment, debt schedule input, formula replacement, private-to-public evidence boundary. |
+| Forbidden without explicit override | Reject or force manual review. | Formula-to-scalar overwrite, deleting human comments, marking manual claims verified, exposing private source evidence in public output, changing evaluator gold. |
+
+For users, the UI should say "Conflict found in Revenue Growth assumption" and
+show who changed the base case, what the agent proposed, what sources exist, and
+why the recommended merge is safe or needs review. It should not expose an
+internal packet id as the primary experience.
 
 ## Live collaboration sequence
 

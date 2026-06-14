@@ -160,6 +160,9 @@ describe("draft → smart-merge on unlock (point 8)", () => {
     const out = eng.releaseLock(lockId, pub);
     const m = out.merged.find((x) => x.draftId === draft.id)!;
     expect(m.conflicts.map((c) => c.elementId)).toContain("B1"); // B1 diverged → review
+    expect(m.semantic?.proposalIds).toHaveLength(1);
+    expect(eng.listSemanticConflicts(room.id)).toHaveLength(1);
+    expect(eng.listProposals(room.id)).toHaveLength(1);
     expect(eng.getArtifact(sheet.id)!.elements.B1.value).toBe(420); // committed work NOT clobbered
     expect(eng.getArtifact(sheet.id)!.elements.B4.value).toBe(100); // the safe op still merged
     expect(eng.listDrafts(room.id).find((d) => d.id === draft.id)!.status).toBe("conflict");

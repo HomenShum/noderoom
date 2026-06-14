@@ -247,7 +247,7 @@ export type EditResult =
   | { ok: false; reason: "locked"; by: Actor; lockId: string }
   | { ok: false; reason: "conflict"; expected: number; actual: number }
   | { ok: false; reason: "pending_approval"; proposalId: string }
-  | { ok: false; reason: "not_found" | "invalid" | "duplicate" };
+  | { ok: false; reason: "not_found" | "invalid" | "duplicate" | "formula_protected" };
 
 /* ───────────────────────── locks (affected range) ───────────────────────── */
 
@@ -288,6 +288,8 @@ export interface Draft {
   artifactId: string;
   author: Actor;
   ops: ChangeOp[];
+  /** Base values captured when the draft was authored; used for semantic rebase packets. */
+  base?: Record<string, { value: unknown; version: number; updatedBy?: Actor }>;
   note: string;
   /** The lock that blocked this draft (so we know when to try merging it). */
   blockedByLockId?: string;
@@ -344,7 +346,7 @@ export type TraceType =
   | "room_created" | "member_joined" | "auto_allow_toggled"
   | "lock_acquired" | "lock_released" | "lock_denied"
   | "edit_applied" | "edit_blocked" | "edit_proposed" | "proposal_resolved"
-  | "draft_created" | "draft_merged" | "draft_conflict"
+  | "draft_created" | "draft_merged" | "draft_conflict" | "semantic_conflict"
   | "agent_session_started" | "agent_status" | "message";
 
 export interface TraceEvent {
@@ -395,4 +397,11 @@ export interface Proposal {
   status: ProposalStatus;
   createdAt: number;
   resolvedAt?: number;
+  review?: {
+    kind: "agent_edit" | "semantic_rebase";
+    conflictId?: string;
+    reviewerNote?: string;
+    reason?: string;
+    status?: "verified" | "needs_review" | "manual_claim" | "draft" | "rejected";
+  };
 }

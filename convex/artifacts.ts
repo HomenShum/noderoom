@@ -304,9 +304,13 @@ async function applyCellEditCore(ctx: MutationCtx, a: ApplyCellEditArgs) {
           // for a single-element same-element conflict — classify routes those to review — so there
           // is nothing to commit inline here; the durable packet + proposal are the outcome.
           return { ok: false as const, reason: "conflict" as const, expected: a.baseVersion, actual, rebase };
-        } catch {
+        } catch (rebaseErr) {
           // Rebase is strictly additive: if it fails, fall back to the plain CAS conflict so the core
-          // no-clobber guarantee (a stale write is rejected as data) is never compromised by it.
+          // no-clobber guarantee (a stale write is rejected as data) is never compromised by it. Leave
+          // a breadcrumb so a persistent rebase failure is observable instead of silently swallowed.
+          try {
+            await ctx.db.insert("traces", { roomId: a.roomId, ts: Date.now(), actor: a.actor, type: "semantic_rebase_failed", summary: `Semantic rebase failed for ${a.elementId}; fell back to a plain CAS conflict`, detail: String(rebaseErr).slice(0, 480) });
+          } catch { /* never let the breadcrumb itself break the conflict return */ }
           return { ok: false as const, reason: "conflict" as const, expected: a.baseVersion, actual };
         }
       }

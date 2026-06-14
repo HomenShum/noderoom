@@ -39,7 +39,7 @@
         <mxCell id="32" value="2 · fetch_source ×2 — cited, SSRF-bounded" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="30">
           <mxGeometry x="20" y="110" width="410" height="52" as="geometry" />
         </mxCell>
-        <mxCell id="33" value="3 · source-backed CellPayload&#xa;evidence · confidence · freshness" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="30">
+        <mxCell id="33" value="3 · source-backed CellPayload&#xa;evidence · confidence · status" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="30">
           <mxGeometry x="20" y="174" width="410" height="58" as="geometry" />
         </mxCell>
         <mxCell id="34" value="4 · write via CAS → needs_review on weak sources&#xa;↺ next pending row" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="30">

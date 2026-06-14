@@ -52,7 +52,7 @@
           <mxGeometry x="10" y="30" width="380" height="56" as="geometry" />
         </mxCell>
 
-        <mxCell id="19" value="Per-room append-only TRACE log  —  edit_applied · conflict · lock_proposed/released · draft_merged · proposal_opened/resolved  —  the audit log and the live debugger in one" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fae3d0;strokeColor=#d79b00;fontSize=12;fontStyle=1;" vertex="1" parent="1">
+        <mxCell id="19" value="Per-room append-only TRACE log  —  edit_applied · lock_acquired/released · draft_created/merged · edit_proposed · proposal_resolved  —  the audit log and the live debugger in one" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#fae3d0;strokeColor=#d79b00;fontSize=12;fontStyle=1;" vertex="1" parent="1">
           <mxGeometry x="80" y="860" width="1100" height="60" as="geometry" />
         </mxCell>
 

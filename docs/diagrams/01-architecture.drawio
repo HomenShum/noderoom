@@ -13,13 +13,13 @@
           <mxGeometry x="40" y="50" width="1000" height="20" as="geometry" />
         </mxCell>
 
-        <mxCell id="10" value="①  Client — React 19 · Vite · Zustand · @dnd-kit · @assistant-ui" style="swimlane;startSize=30;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;verticalAlign=top;" vertex="1" parent="1">
+        <mxCell id="10" value="①  Client — React 19 · Vite · useSyncExternalStore/Context · @dnd-kit" style="swimlane;startSize=30;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;verticalAlign=top;" vertex="1" parent="1">
           <mxGeometry x="40" y="90" width="1280" height="110" as="geometry" />
         </mxCell>
         <mxCell id="11" value="RoomShell&#xa;(rail · center · right panels)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="10">
           <mxGeometry x="20" y="42" width="290" height="56" as="geometry" />
         </mxCell>
-        <mxCell id="12" value="Artifact panel&#xa;Sheet · Note · Wall (SmartGrid)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="10">
+        <mxCell id="12" value="Artifact panel&#xa;Sheet (CAS grid) · Note (TipTap) · Wall (dnd-kit)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="10">
           <mxGeometry x="330" y="42" width="300" height="56" as="geometry" />
         </mxCell>
         <mxCell id="13" value="Chat&#xa;public + private channels" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="10">
@@ -48,7 +48,7 @@
           <mxGeometry x="1020" y="48" width="240" height="80" as="geometry" />
         </mxCell>
 
-        <mxCell id="30" value="③  NodeAgent engine — src/nodeagent  (runs inside a Convex use-node action)" style="swimlane;startSize=30;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=13;verticalAlign=top;" vertex="1" parent="1">
+        <mxCell id="30" value="③  NodeAgent engine — src/nodeagent  (Convex action — default V8 runtime, Node-dep-free)" style="swimlane;startSize=30;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=13;verticalAlign=top;" vertex="1" parent="1">
           <mxGeometry x="40" y="450" width="1280" height="200" as="geometry" />
         </mxCell>
         <mxCell id="31" value="core&#xa;&#xa;orchestrator · adaptiveRouter&#xa;streamManager · worldModel&#xa;memory · contextCompactor" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3ecf8;strokeColor=#9673a6;fontSize=12;align=left;spacingLeft=10;verticalAlign=top;spacingTop=8;fontStyle=0;" vertex="1" parent="30">
@@ -70,7 +70,7 @@
         <mxCell id="41" value="LLM providers&#xa;Anthropic · Google · OpenAI (via OpenRouter)&#xa;AGENT_MODEL / AGENT_RESEARCH_MODEL · $ caps" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="40">
           <mxGeometry x="40" y="44" width="440" height="70" as="geometry" />
         </mxCell>
-        <mxCell id="42" value="fetch_source — SSRF-hardened&#xa;https-only · private-IP reject · DNS-rebind guard&#xa;5s timeout · 200KB body cap · egress allowlist" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="40">
+        <mxCell id="42" value="fetch_source — live Convex tool&#xa;https-only · 8s timeout · 50KB body cap&#xa;(hardened fetchSourceReal: private-IP reject · DNS-pin · 200KB — in nodeagent skills lib, not yet the live path)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="40">
           <mxGeometry x="520" y="44" width="430" height="70" as="geometry" />
         </mxCell>
         <mxCell id="43" value="Web sources&#xa;(cited, evidence-bearing)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=12;" vertex="1" parent="40">

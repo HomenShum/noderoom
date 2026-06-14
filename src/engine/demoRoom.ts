@@ -124,6 +124,30 @@ export async function playCollab(engine: RoomEngine, d: DemoRoom, opts: { reduce
   const ver = (id: string) => engine.getArtifact(d.sheetId)!.elements[id].version;
   const tp = (parts: ToolPart[]) => parts;
 
+  if (opts.conflict) {
+    const host: Actor = { kind: "user", id: d.members.homen.id, name: d.members.homen.name };
+    const elementId = "r_rev__variance";
+    const baseVersion = ver(elementId);
+    const lock = engine.proposeLock({ roomId: d.roomId, artifactId: d.sheetId, elementIds: [elementId], holder: host, sessionId: "host-conflict-drill", reason: "host reviewing the revenue variance" });
+    if (!lock.ok) return;
+    engine.postMessage({ roomId: d.roomId, channel: "public", author: d.agents.room, text: "I'll draft a revenue variance change while the host is reviewing that cell. If the host changes it first, semantic rebase will route my stale patch to review.", clientMsgId: `crs1-${Date.now()}`, kind: "agent", toolParts: tp([{ tool: "nodeagent.create_draft", status: "running", detail: "Revenue variance - stale baseline" }]) });
+    const draft = engine.createDraft({
+      roomId: d.roomId,
+      artifactId: d.sheetId,
+      author: d.agents.room,
+      blockedByLockId: lock.lock.id,
+      note: "Revenue variance stale-patch drill",
+      ops: [op(`crs_rev_${baseVersion}`, d.sheetId, elementId, "+19%", baseVersion)],
+    });
+    await wait(400, reduced);
+    engine.applyEdit({ roomId: d.roomId, op: op(`host_rev_${baseVersion}`, d.sheetId, elementId, "+24%", baseVersion), actor: host });
+    const released = engine.releaseLock(lock.lock.id, host);
+    const merged = released.merged.find((item) => item.draftId === draft.id);
+    engine.postMessage({ roomId: d.roomId, channel: "public", author: d.agents.room, text: merged?.semantic?.proposalIds.length ? "Semantic rebase opened a review proposal instead of overwriting the host's Revenue variance." : "Revenue variance was already reconciled; no review proposal was needed.", clientMsgId: `crs2-${Date.now()}`, kind: "agent", toolParts: tp([{ tool: "nodeagent.semantic_rebase", status: merged?.semantic?.proposalIds.length ? "error" : "done", detail: merged?.resolution.note ?? "merged" }]) });
+    log(`Semantic rebase drill: ${merged?.resolution.verdict}`);
+    return;
+  }
+
   const m1 = engine.postMessage({ roomId: d.roomId, channel: "public", author: d.agents.room, text: "On it. Gathering room context, then I'll propose a versioned delta to the variance column. I'll lock just the rows I touch.", clientMsgId: "ra1", kind: "agent", toolParts: tp([{ tool: "propose_lock", status: "running", detail: "Variance · r_rev, r_cogs" }]) })!;
   const lr = engine.proposeLock({ roomId: d.roomId, artifactId: d.sheetId, elementIds: ["r_rev__variance", "r_cogs__variance"], holder: d.agents.room, sessionId: d.sessions.room, reason: "recompute Q3 variance from the NetSuite export" });
   const lockId = lr.ok ? lr.lock.id : "";

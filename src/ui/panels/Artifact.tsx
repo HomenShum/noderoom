@@ -16,6 +16,7 @@ import {
 import { useStore, type RoomStore, type EditFeedback } from "../../app/store";
 import { formatExcelNumber } from "../../app/numberFormat";
 import { columnLetters } from "../../app/spreadsheetIndex";
+import { evaluateFormula, FormulaEvalError, type CellResolver, type CellValue, type FormulaResult } from "../../shared/formulaEngine";
 import { onStageFocus, type StageFocusTarget } from "../stageFocus";
 import type { Actor, Artifact as Art, CellPayload, DataframeColumn, DocumentParseMeta, Proposal, TraceEvent, ResearchRowInput } from "../../engine/types";
 
@@ -759,6 +760,41 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
     return { columns, visibleRows, pageSize };
   }, [grid?.columns, grid?.rows, pages]);
   const { mergeAnchor, mergeCovered } = useMemo(() => expandMerges(grid?.merges), [grid?.merges]);
+  // Live formula recalc: every visible formula cell is computed through the shared engine via a
+  // recursive, cycle-guarded resolver (chains resolve; cycles -> #CYCLE!; upstream errors propagate).
+  // Computed values are CLIENT-DERIVED only — never written to Convex — so there is zero collab fan-out.
+  const computedByElementId = useMemo(() => {
+    const cache = new Map<string, FormulaResult>();
+    const visiting = new Set<string>();
+    const cellAt = (ref: string): { formula?: string; value: CellValue } => {
+      const el = art.elements[ref];
+      if (!el) return { value: null };
+      const p = asCellPayload(el.value);
+      const raw = p ? p.value : el.value;
+      const formula = p?.formula ?? (typeof raw === "string" && raw.startsWith("=") ? raw : undefined);
+      const value: CellValue = typeof raw === "number" || typeof raw === "boolean" ? raw : typeof raw === "string" ? raw : raw == null ? null : String(raw);
+      return { formula, value };
+    };
+    const compute = (ref: string): FormulaResult => {
+      const key = ref.toUpperCase();
+      const hit = cache.get(key);
+      if (hit) return hit;
+      if (visiting.has(key)) return { error: "#CYCLE!" };
+      const { formula, value } = cellAt(key);
+      if (formula === undefined) { const r: FormulaResult = { value }; cache.set(key, r); return r; }
+      visiting.add(key);
+      const r = evaluateFormula(formula, resolver);
+      visiting.delete(key);
+      cache.set(key, r);
+      return r;
+    };
+    const resolver: CellResolver = { getCell: (ref) => { const r = compute(ref); if ("error" in r) throw new FormulaEvalError(r.error); return r.value; } };
+    for (const rowNumber of visibleRows) for (const col of columns) {
+      const id = `${col}${rowNumber}`;
+      if (cellAt(id).formula !== undefined) compute(id);
+    }
+    return cache;
+  }, [art.elements, art.version, visibleRows, columns]);
   // Keep the moved-to cell visible (Excel scrolls the viewport with the selection).
   useEffect(() => {
     if (!sel) return;
@@ -767,7 +803,16 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
   if (!grid) return null;
   const cellStyles = grid.styles ?? {};
   const numFmts = grid.numFmts ?? [];
-  const doCommit = (id: string, s: string) => { void commit(store, roomId, me, art.id, id, s).then((f) => { if (f && !f.ok) onError(f); }); };
+  const doCommit = (id: string, s: string) => {
+    // A typed formula persists as a CellPayload {value, formula} (durable + formula-bar after reload),
+    // preserving any prior payload fields (evidence/status). And the xl-grid only seeds non-empty
+    // cells, so CREATE the element when the cell is empty — otherwise typing into a blank cell is lost.
+    const value: unknown = s.startsWith("=") ? { ...(asCellPayload(art.elements[id]?.value) ?? {}), value: s, formula: s } : s;
+    const exists = !!art.elements[id];
+    const p = exists ? commit(store, roomId, me, art.id, id, value)
+      : s === "" ? Promise.resolve(null) : createElement(store, roomId, me, art.id, id, value);
+    void p.then((f) => { if (f && !f.ok) onError(f); });
+  };
   const selEl = sel ? art.elements[sel] : undefined;
   const selPayload = selEl ? asCellPayload(selEl.value) : null;
   const selRaw = selPayload ? selPayload.value : selEl?.value;
@@ -888,18 +933,25 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
                       const payload = el ? asCellPayload(el.value) : null;
                       const rawVal = payload ? payload.value : el?.value;
                       const st = cellStyles[elementId];
-                      const numCandidate = typeof rawVal === "number" ? rawVal
-                        : typeof rawVal === "string" && rawVal !== "" && !rawVal.startsWith("=") && Number.isFinite(Number(rawVal.replace(/,/g, ""))) ? Number(rawVal.replace(/,/g, ""))
+                      // Formula cells display their COMPUTED value (or an error token); the formula bar
+                      // (selFormula) still shows the formula. Non-formula cells are unchanged.
+                      const cellFormula = payload?.formula ?? (typeof rawVal === "string" && rawVal.startsWith("=") ? rawVal : undefined);
+                      const computed = cellFormula ? computedByElementId.get(elementId.toUpperCase()) : undefined;
+                      const compError = computed && "error" in computed ? computed.error : undefined;
+                      const effRaw = cellFormula ? (compError ? undefined : (computed && "value" in computed ? computed.value : undefined)) : rawVal;
+                      const numCandidate = typeof effRaw === "number" ? effRaw
+                        : typeof effRaw === "string" && effRaw !== "" && !effRaw.startsWith("=") && Number.isFinite(Number(effRaw.replace(/,/g, ""))) ? Number(effRaw.replace(/,/g, ""))
                         : undefined;
-                      const display = numCandidate !== undefined
-                        ? formatExcelNumber(numCandidate, st?.f !== undefined ? numFmts[st.f] : undefined)
+                      const display = compError ? compError
+                        : numCandidate !== undefined ? formatExcelNumber(numCandidate, st?.f !== undefined ? numFmts[st.f] : undefined)
+                        : cellFormula ? (effRaw == null ? "" : String(effRaw))
                         : displayCellValue(el?.value);
                       const lk = lockedByOther(store, art.id, elementId, me);
                       let lockFlag: string | null = null;
                       if (lk && !flaggedLocks.has(lk.id)) { flaggedLocks.add(lk.id); lockFlag = lk.holder.name; }
                       const alignRight = numCandidate !== undefined || st?.a === "r";
                       const isEditing = editing?.id === elementId;
-                      const cls = "xl-cell" + (alignRight ? " num" : "") + (st?.a === "c" ? " ctr" : "") + (lk ? " locked" : "") + (payload?.evidence?.length ? " evidence" : "") + (payload?.formula ? " formula" : "") + (sel === elementId ? " sel" : "") + (isEditing ? " editing" : "");
+                      const cls = "xl-cell" + (alignRight ? " num" : "") + (st?.a === "c" ? " ctr" : "") + (lk ? " locked" : "") + (payload?.evidence?.length ? " evidence" : "") + (cellFormula ? " formula" : "") + (compError ? " cell-error" : "") + (sel === elementId ? " sel" : "") + (isEditing ? " editing" : "");
                       const inline: Record<string, string | number> = {};
                       if (st?.bg) { inline.background = st.bg; if (!st?.fc && fillNeedsLightInk(st.bg)) inline.color = "#fff"; }
                       if (st?.fc) inline.color = st.fc; // the FILE's font color wins over the heuristic
@@ -909,7 +961,8 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
                       if (st?.ind) inline.paddingLeft = 6 + st.ind * 12;
                       if (st?.bt) inline.borderTop = "1px solid #5f6368";
                       if (st?.bb) inline.borderBottom = "1px solid #5f6368";
-                      const title = [elementId, payload?.formula ? `Formula: ${payload.formula}` : undefined, lk ? `locked by ${lk.holder.name}` : undefined].filter(Boolean).join(" | ");
+                      const editText = cellFormula ?? (typeof rawVal === "string" || typeof rawVal === "number" ? String(rawVal) : "");
+                      const title = [elementId, cellFormula ? `Formula: ${cellFormula}` : undefined, lk ? `locked by ${lk.holder.name}` : undefined].filter(Boolean).join(" | ");
                       return (
                         <td
                           key={col}
@@ -918,7 +971,7 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
                           title={title}
                           data-cell-key={elementId}
                           data-has-evidence={payload?.evidence?.length ? "true" : undefined}
-                          data-has-formula={payload?.formula ? "true" : undefined}
+                          data-has-formula={cellFormula ? "true" : undefined}
                           colSpan={colSpan}
                           rowSpan={rowSpan}
                           aria-selected={sel === elementId || undefined}
@@ -929,8 +982,8 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
                             <input
                               className="xl-input"
                               autoFocus
-                              defaultValue={editing.seed ?? (typeof rawVal === "string" || typeof rawVal === "number" ? String(rawVal) : "")}
-                              onBlur={(e) => finishEdit(elementId, e.target.value, String(rawVal ?? ""))}
+                              defaultValue={editing.seed ?? editText}
+                              onBlur={(e) => finishEdit(elementId, e.target.value, editText)}
                               onKeyDown={(e) => {
                                 const input = e.target as HTMLInputElement;
                                 // Enter mode (opened by typing): arrows COMMIT + move — the most-missed
@@ -938,7 +991,7 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
                                 const enterMode = editing.seed !== null;
                                 if (e.key === "Enter") { e.preventDefault(); pendingMove.current = { dCol: 0, dRow: e.shiftKey ? -1 : 1 }; input.blur(); }
                                 else if (e.key === "Tab") { e.preventDefault(); pendingMove.current = { dCol: e.shiftKey ? -1 : 1, dRow: 0 }; input.blur(); }
-                                else if (e.key === "Escape") { e.preventDefault(); input.value = String(rawVal ?? ""); setEditing(null); gridRef.current?.focus(); }
+                                else if (e.key === "Escape") { e.preventDefault(); input.value = editText; setEditing(null); gridRef.current?.focus(); }
                                 else if (enterMode && (e.key === "ArrowUp" || e.key === "ArrowDown" || e.key === "ArrowLeft" || e.key === "ArrowRight")) {
                                   e.preventDefault();
                                   pendingMove.current = e.key === "ArrowUp" ? { dCol: 0, dRow: -1 } : e.key === "ArrowDown" ? { dCol: 0, dRow: 1 } : e.key === "ArrowLeft" ? { dCol: -1, dRow: 0 } : { dCol: 1, dRow: 0 };

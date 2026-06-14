@@ -9,10 +9,10 @@
  */
 
 import { v } from "convex/values";
-import { internalMutation } from "./_generated/server";
+import { internalMutation, mutation } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
-import { actorV, activeLockOn, getElement, requireActorInRoom, requireArtifactInRoom, sameActor } from "./lib";
+import { actorProofV, actorV, activeLockOn, getElement, LOCK_TTL_MS, requireActorInRoom, requireActorProof, requireArtifactInRoom, sameActor } from "./lib";
 
 const opV = v.object({
   opId: v.string(),
@@ -36,6 +36,102 @@ export const createDraft = internalMutation({
   },
 });
 
+export const runSemanticConflictDrill = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    artifactId: v.id("artifacts"),
+    requester: actorProofV,
+    elementId: v.optional(v.string()),
+    currentValue: v.optional(v.any()),
+    proposedValue: v.optional(v.any()),
+  },
+  handler: async (ctx, a) => {
+    const actor = await requireActorProof(ctx, a.roomId, a.requester);
+    const member = await ctx.db.get(actor.id as Id<"members">);
+    if (member?.role !== "host") throw new Error("host_required");
+    const artifact = await requireArtifactInRoom(ctx, a.roomId, a.artifactId);
+    const elementId = a.elementId ?? "r_rev__variance";
+    const existingLock = await activeLockOn(ctx, a.artifactId, elementId);
+    if (existingLock) return { ok: false as const, reason: "locked" as const };
+
+    const now = Date.now();
+    const agent = { kind: "agent" as const, id: "agent_room", name: "Room NodeAgent", scope: "public" as const };
+    const sessions = await ctx.db.query("agentSessions").withIndex("by_room", (q) => q.eq("roomId", a.roomId)).collect();
+    if (!sessions.some((s) => s.agentId === agent.id && s.agentName === agent.name && s.scope === "public")) {
+      await ctx.db.insert("agentSessions", {
+        roomId: a.roomId,
+        agentId: agent.id,
+        agentName: agent.name,
+        scope: "public",
+        status: "drafting",
+        lastAction: "semantic rebase drill",
+        updatedAt: now,
+      });
+    }
+
+    const currentValue = a.currentValue ?? "+24%";
+    const proposedValue = a.proposedValue ?? "+19%";
+    const current = await getElement(ctx, a.artifactId, elementId);
+    const baseVersion = current?.version ?? 0;
+    const lockId = await ctx.db.insert("locks", {
+      roomId: a.roomId,
+      artifactId: a.artifactId,
+      elementIds: [elementId],
+      holder: actor,
+      sessionId: `host-crs-drill-${now}`,
+      reason: "host reviewing semantic rebase drill",
+      status: "active",
+      createdAt: now,
+      expiresAt: now + LOCK_TTL_MS,
+    });
+
+    await ctx.db.insert("drafts", {
+      roomId: a.roomId,
+      artifactId: a.artifactId,
+      author: agent,
+      ops: [{
+        opId: `semantic-drill-${now}`,
+        artifactId: String(a.artifactId),
+        elementId,
+        kind: "set" as const,
+        value: proposedValue,
+        baseVersion,
+      }],
+      note: "semantic rebase drill",
+      blockedByLockId: String(lockId),
+      status: "pending",
+      createdAt: now,
+    });
+
+    const nextOrder = artifact.order.includes(elementId) ? artifact.order : [...artifact.order, elementId];
+    if (current) {
+      await ctx.db.patch(current._id, { value: currentValue, version: current.version + 1, updatedAt: now, updatedBy: actor });
+    } else {
+      await ctx.db.insert("elements", { artifactId: a.artifactId, elementId, value: currentValue, version: 1, updatedAt: now, updatedBy: actor });
+    }
+    await ctx.db.patch(a.artifactId, {
+      version: artifact.version + 1,
+      updatedAt: now,
+      ...(nextOrder === artifact.order ? {} : { order: nextOrder }),
+    });
+    await ctx.db.patch(lockId, { status: "released", releasedAt: now });
+
+    const merged = await mergeBlockedDrafts(ctx, a.roomId, String(lockId));
+    const proposalIds = merged.flatMap((result) => result.proposalIds ?? []);
+    if (proposalIds.length) {
+      await ctx.db.insert("traces", {
+        roomId: a.roomId,
+        ts: now,
+        actor: agent,
+        type: "semantic_conflict",
+        summary: `Semantic rebase opened for ${elementId}`,
+        detail: `semantic_rebase - current ${JSON.stringify(currentValue)} - proposed ${JSON.stringify(proposedValue)}`,
+      });
+    }
+    return { ok: true as const, merged, proposalIds };
+  },
+});
+
 export async function mergeBlockedDrafts(ctx: MutationCtx, roomId: Id<"rooms">, lockId: string) {
   const drafts = await ctx.db.query("drafts").withIndex("by_room_status", (q) => q.eq("roomId", roomId).eq("status", "pending")).collect();
   const now = Date.now();
@@ -45,6 +141,8 @@ export async function mergeBlockedDrafts(ctx: MutationCtx, roomId: Id<"rooms">, 
     if (d.blockedByLockId !== lockId) continue;
     const applied: string[] = [];
     const conflicts: { opId: string; elementId: string }[] = [];
+    let pendingOrder: string[] | undefined;
+    let orderChanged = false;
 
     for (const op of d.ops) {
       const lock = await activeLockOn(ctx, d.artifactId, op.elementId);
@@ -55,8 +153,24 @@ export async function mergeBlockedDrafts(ctx: MutationCtx, roomId: Id<"rooms">, 
       const el = await getElement(ctx, d.artifactId, op.elementId);
       const cur = el?.version ?? 0;
       if (cur === op.baseVersion) {
-        if (el) await ctx.db.patch(el._id, { value: op.value, version: cur + 1, updatedAt: now, updatedBy: d.author });
-        else await ctx.db.insert("elements", { artifactId: d.artifactId, elementId: op.elementId, value: op.value, version: 1, updatedAt: now, updatedBy: d.author });
+        if (op.kind === "create" || op.kind === "delete") {
+          const art = await ctx.db.get(d.artifactId);
+          const currentOrder = pendingOrder ?? art?.order ?? [];
+          if (op.kind === "create" && !el && !currentOrder.includes(op.elementId)) {
+            pendingOrder = [...currentOrder, op.elementId];
+            orderChanged = true;
+          } else if (op.kind === "delete") {
+            pendingOrder = currentOrder.filter((id) => id !== op.elementId);
+            orderChanged = true;
+          }
+        }
+        if (op.kind === "delete") {
+          if (el) await ctx.db.delete(el._id);
+        } else if (el) {
+          await ctx.db.patch(el._id, { value: op.value, version: cur + 1, updatedAt: now, updatedBy: d.author });
+        } else {
+          await ctx.db.insert("elements", { artifactId: d.artifactId, elementId: op.elementId, value: op.value, version: 1, updatedAt: now, updatedBy: d.author });
+        }
         applied.push(op.opId);
       } else if (el && JSON.stringify(el.value) === JSON.stringify(op.value)) {
         applied.push(op.opId); // already there — no-op
@@ -94,7 +208,11 @@ export async function mergeBlockedDrafts(ctx: MutationCtx, roomId: Id<"rooms">, 
     await ctx.db.patch(d._id, { status: conflicts.length ? "conflict" : "merged", resolvedAt: now });
     if (applied.length) {
       const artifact = art ?? await ctx.db.get(d.artifactId);
-      if (artifact) await ctx.db.patch(d.artifactId, { version: artifact.version + 1, updatedAt: now });
+      if (artifact) {
+        const patch: { version: number; updatedAt: number; order?: string[] } = { version: artifact.version + 1, updatedAt: now };
+        if (orderChanged && pendingOrder) patch.order = pendingOrder;
+        await ctx.db.patch(d.artifactId, patch);
+      }
     }
     const note = d.author.scope === "private" ? "[private draft]" : d.note;
     await ctx.db.insert("traces", { roomId, ts: now, actor: d.author, type: conflicts.length ? "draft_conflict" : "draft_merged", summary: `Smart-merge (${verdict}): ${applied.length} applied, ${conflicts.length} flagged — ${note}`, detail: `smart_merge · ${applied.length} applied, ${conflicts.length} flagged → ${verdict}` });

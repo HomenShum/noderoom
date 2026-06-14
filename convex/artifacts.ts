@@ -225,11 +225,19 @@ async function applyApprovedProposal(ctx: MutationCtx, roomId: Id<"rooms">, arti
     return { ok: false as const, reason: "formula_protected" as const };
   }
   const now = Date.now();
-  if (el) await ctx.db.patch(el._id, { value: op.value, version: actual + 1, updatedAt: now, updatedBy: author });
-  else await ctx.db.insert("elements", { artifactId, elementId: op.elementId, value: op.value, version: 1, updatedAt: now, updatedBy: author });
-  await ctx.db.patch(artifactId, { version: art.version + 1, updatedAt: now });
-  await ctx.db.insert("traces", { roomId, ts: now, actor: author, type: "edit_applied", summary: `${author.name} set ${op.elementId} = ${String(op.value)}`, detail: `edit_cell · ${op.elementId} = ${String(op.value)} · v${actual} -> v${actual + 1}` });
-  return { ok: true as const, version: actual + 1 };
+  const nextOrder = op.kind === "create" && !el ? [...art.order, op.elementId] : op.kind === "delete" ? art.order.filter((id) => id !== op.elementId) : art.order;
+  if (op.kind === "delete") {
+    if (el) await ctx.db.delete(el._id);
+  } else if (el) {
+    await ctx.db.patch(el._id, { value: op.value, version: actual + 1, updatedAt: now, updatedBy: author });
+  } else {
+    await ctx.db.insert("elements", { artifactId, elementId: op.elementId, value: op.value, version: 1, updatedAt: now, updatedBy: author });
+  }
+  await ctx.db.patch(artifactId, { version: art.version + 1, updatedAt: now, order: nextOrder });
+  const nextVersion = op.kind === "delete" ? actual : actual + 1;
+  const summary = op.kind === "delete" ? `${author.name} deleted ${op.elementId}` : `${author.name} set ${op.elementId} = ${String(op.value)}`;
+  await ctx.db.insert("traces", { roomId, ts: now, actor: author, type: "edit_applied", summary, detail: `edit_cell - ${op.elementId} = ${String(op.value)} - v${actual} -> v${nextVersion}` });
+  return { ok: true as const, version: nextVersion };
 }
 
 async function applyCellEditCore(ctx: MutationCtx, a: ApplyCellEditArgs) {

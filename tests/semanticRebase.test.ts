@@ -228,8 +228,8 @@ describe("semantic rebase CRS runtime", () => {
     expect(eng.listSemanticConflicts(room.id)).toHaveLength(0);
   });
 
-  it("routes a stale agent patch over a human edit to a proposal, not an overwrite", () => {
-    const { eng, room, artifact, hostActor, privateAgent } = runtimeSetup();
+  it("routes a stale public-agent patch over a human edit to a proposal, not an overwrite", () => {
+    const { eng, room, artifact, hostActor, roomAgent } = runtimeSetup();
     const lock = eng.proposeLock({
       roomId: room.id,
       artifactId: artifact.id,
@@ -244,7 +244,7 @@ describe("semantic rebase CRS runtime", () => {
     const draft = eng.createDraft({
       roomId: room.id,
       artifactId: artifact.id,
-      author: privateAgent,
+      author: roomAgent,
       blockedByLockId: lock.lock.id,
       note: "agent B6 proposal",
       ops: [runtimeOp("agent-b6", artifact.id, "B6", "agent proposed", 1)],
@@ -271,10 +271,47 @@ describe("semantic rebase CRS runtime", () => {
     expect(proposal.op.baseVersion).toBe(2);
   });
 
+  it("does not expose private-agent draft conflicts as host-visible proposals", () => {
+    const { eng, room, artifact, hostActor, privateAgent } = runtimeSetup();
+    const lock = eng.proposeLock({
+      roomId: room.id,
+      artifactId: artifact.id,
+      elementIds: ["B6"],
+      holder: hostActor,
+      sessionId: "human-session",
+      reason: "human review",
+    });
+    expect(lock.ok).toBe(true);
+    if (!lock.ok) return;
+
+    const draft = eng.createDraft({
+      roomId: room.id,
+      artifactId: artifact.id,
+      author: privateAgent,
+      blockedByLockId: lock.lock.id,
+      note: "private agent B6 proposal",
+      ops: [runtimeOp("private-agent-b6", artifact.id, "B6", "private proposed", 1)],
+    });
+    const human = eng.applyEdit({
+      roomId: room.id,
+      actor: hostActor,
+      op: runtimeOp("human-b6-private", artifact.id, "B6", "human current", 1),
+    });
+    expect(human.ok).toBe(true);
+
+    const released = eng.releaseLock(lock.lock.id, hostActor);
+    const merged = released.merged.find((item) => item.draftId === draft.id)!;
+    expect(merged.resolution.verdict).toBe("needs_review");
+    expect(merged.semantic?.proposalIds).toHaveLength(0);
+    expect(eng.listSemanticConflicts(room.id)).toHaveLength(1);
+    expect(eng.listProposals(room.id)).toHaveLength(0);
+    expect(eng.getArtifact(artifact.id)!.elements.B6.value).toBe("human current");
+  });
+
   it("blocks formula-to-scalar overwrite and routes formula replacement to review", () => {
     const formulaValue: CellPayload = { value: 42, formula: "=SUM(D2:D4)", status: "complete" };
     const replacementFormula: CellPayload = { value: 44, formula: "=SUM(D2:D5)", status: "complete" };
-    const { eng, room, artifact, hostActor, privateAgent } = runtimeSetup({
+    const { eng, room, artifact, hostActor, privateAgent, roomAgent } = runtimeSetup({
       seed: [{ id: "F1", value: formulaValue }],
     });
 
@@ -300,7 +337,7 @@ describe("semantic rebase CRS runtime", () => {
     eng.createDraft({
       roomId: room.id,
       artifactId: artifact.id,
-      author: privateAgent,
+      author: roomAgent,
       blockedByLockId: lock.lock.id,
       note: "agent formula replacement",
       ops: [runtimeOp("replace-f1", artifact.id, "F1", replacementFormula, 1)],
@@ -320,7 +357,7 @@ describe("semantic rebase CRS runtime", () => {
   });
 
   it("creates a review proposal for memo paragraph conflict", () => {
-    const { eng, room, artifact, hostActor, privateAgent } = runtimeSetup({
+    const { eng, room, artifact, hostActor, roomAgent } = runtimeSetup({
       kind: "note",
       seed: [{ id: "doc", value: "Base memo paragraph." }],
     });
@@ -337,7 +374,7 @@ describe("semantic rebase CRS runtime", () => {
     eng.createDraft({
       roomId: room.id,
       artifactId: artifact.id,
-      author: privateAgent,
+      author: roomAgent,
       blockedByLockId: lock.lock.id,
       note: "agent memo rewrite",
       ops: [runtimeOp("agent-doc", artifact.id, "doc", "Agent rewrite with new Q3 framing.", 1)],
@@ -359,7 +396,7 @@ describe("semantic rebase CRS runtime", () => {
   });
 
   it("does not clobber when final CAS is stale after proposed resolution", () => {
-    const { eng, room, artifact, hostActor, privateAgent } = runtimeSetup();
+    const { eng, room, artifact, hostActor, roomAgent } = runtimeSetup();
     const lock = eng.proposeLock({
       roomId: room.id,
       artifactId: artifact.id,
@@ -373,7 +410,7 @@ describe("semantic rebase CRS runtime", () => {
     eng.createDraft({
       roomId: room.id,
       artifactId: artifact.id,
-      author: privateAgent,
+      author: roomAgent,
       blockedByLockId: lock.lock.id,
       note: "agent B6 proposal",
       ops: [runtimeOp("agent-b6-stale", artifact.id, "B6", "agent proposed", 1)],

@@ -19,12 +19,12 @@ export default defineConfig({
   expect: { timeout: 7_000 },
   reporter: process.env.CI ? "line" : "list",
   use: {
-    baseURL: "http://localhost:5173",
+    baseURL: process.env.PLAYWRIGHT_BASE_URL ?? "http://localhost:5173",
     trace: "on-first-retry",
   },
   webServer: {
-    command: "npm run dev -- --port 5173 --strictPort",
-    url: "http://localhost:5173",
+    command: `npm run dev -- --port ${process.env.PLAYWRIGHT_PORT ?? "5173"} --strictPort`,
+    url: process.env.PLAYWRIGHT_BASE_URL ?? `http://localhost:${process.env.PLAYWRIGHT_PORT ?? "5173"}`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
   },

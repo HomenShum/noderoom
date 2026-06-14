@@ -13,6 +13,7 @@ delete (modules as Record<string, unknown>)["../convex/embeddingRunner.ts"];
 
 const CELL = "r_ni__variance";
 const HOST_TOKEN = "host-token-semantic-rebase-0123456789";
+const MEMBER_TOKEN = "member-token-semantic-rebase-0123456789";
 const AGENT = { kind: "agent" as const, id: "agent_room", name: "Room NodeAgent", scope: "public" as const };
 
 describe("Convex semantic rebase write path", () => {
@@ -115,6 +116,141 @@ describe("Convex semantic rebase write path", () => {
     const el = await readElement(t, s.artifactId);
     expect(el?.value).toBe("+19.0%");
   });
+
+  it("runs the host-only live semantic conflict drill and approves the rebase proposal", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedRoom(t);
+
+    const drilled = await t.mutation(api.drafts.runSemanticConflictDrill, {
+      roomId: s.roomId,
+      artifactId: s.artifactId,
+      requester: s.hostProof,
+      elementId: CELL,
+      currentValue: "+24%",
+      proposedValue: "+19%",
+    });
+    expect(drilled.ok).toBe(true);
+    if (!drilled.ok) throw new Error("expected drill to create semantic review proposal");
+    expect(drilled.merged[0]).toMatchObject({ verdict: "needs_review", applied: 0, conflicts: 1 });
+    expect(drilled.proposalIds).toHaveLength(1);
+
+    const [proposal] = await t.query(api.artifacts.listProposals, { roomId: s.roomId, requester: s.hostProof });
+    expect(proposal.review).toMatchObject({ kind: "semantic_rebase", status: "needs_review", currentVersion: 2 });
+    expect(proposal.op).toMatchObject({ elementId: CELL, value: "+19%", baseVersion: 2 });
+    expect((await readElement(t, s.artifactId))?.value).toBe("+24%");
+
+    const approved = await t.mutation(api.artifacts.resolveProposal, {
+      proposalId: proposal.id as never,
+      approve: true,
+      requester: s.hostProof,
+    });
+    expect(approved).toMatchObject({ ok: true });
+    expect((await readElement(t, s.artifactId))?.value).toBe("+19%");
+    const pending = await t.query(api.artifacts.listProposals, { roomId: s.roomId, requester: s.hostProof });
+    expect(pending).toHaveLength(0);
+  });
+
+  it("rejects non-host callers for the live semantic conflict drill", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedRoom(t);
+    const memberProof = await addMember(t, s.roomId);
+
+    await expect(t.mutation(api.drafts.runSemanticConflictDrill, {
+      roomId: s.roomId,
+      artifactId: s.artifactId,
+      requester: memberProof,
+      elementId: CELL,
+      currentValue: "+24%",
+      proposedValue: "+19%",
+    })).rejects.toThrow("host_required");
+
+    expect((await t.query(api.artifacts.listProposals, { roomId: s.roomId, requester: s.hostProof }))).toHaveLength(0);
+    expect((await readElement(t, s.artifactId))?.value).toBe("base");
+  });
+
+  it("applies approved create and delete proposals with artifact order intact", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedRoom(t, { autoAllow: false });
+    const createdId = "r_new__variance";
+
+    const createProposal = await t.mutation(internal.artifacts.applyAgentCellEdit, {
+      roomId: s.roomId,
+      artifactId: s.artifactId,
+      elementId: createdId,
+      kind: "create",
+      value: "+5.0%",
+      baseVersion: 0,
+      actor: AGENT,
+    });
+    expect(createProposal).toMatchObject({ ok: false, reason: "pending_approval" });
+    if (createProposal.ok || createProposal.reason !== "pending_approval" || !createProposal.proposalId) throw new Error("expected create proposal");
+
+    const approvedCreate = await t.mutation(api.artifacts.resolveProposal, {
+      proposalId: createProposal.proposalId,
+      approve: true,
+      requester: s.hostProof,
+    });
+    expect(approvedCreate).toMatchObject({ ok: true, version: 1 });
+    expect((await readArtifact(t, s.artifactId))?.order).toContain(createdId);
+    expect((await readElement(t, s.artifactId, createdId))?.value).toBe("+5.0%");
+
+    const deleteProposal = await t.mutation(internal.artifacts.applyAgentCellEdit, {
+      roomId: s.roomId,
+      artifactId: s.artifactId,
+      elementId: CELL,
+      kind: "delete",
+      value: null,
+      baseVersion: 1,
+      actor: AGENT,
+    });
+    expect(deleteProposal).toMatchObject({ ok: false, reason: "pending_approval" });
+    if (deleteProposal.ok || deleteProposal.reason !== "pending_approval" || !deleteProposal.proposalId) throw new Error("expected delete proposal");
+
+    const approvedDelete = await t.mutation(api.artifacts.resolveProposal, {
+      proposalId: deleteProposal.proposalId,
+      approve: true,
+      requester: s.hostProof,
+    });
+    expect(approvedDelete).toMatchObject({ ok: true, version: 1 });
+    expect(await readElement(t, s.artifactId)).toBeNull();
+    expect((await readArtifact(t, s.artifactId))?.order).not.toContain(CELL);
+  });
+
+  it("clean-merges draft create and delete ops with artifact order intact", async () => {
+    const t = convexTest(schema, modules);
+    const s = await seedRoom(t);
+    const createdId = "r_new__variance";
+
+    const lock = await t.mutation(internal.locks.proposeLock, {
+      roomId: s.roomId,
+      artifactId: s.artifactId,
+      elementIds: [CELL, createdId],
+      holder: s.hostActor,
+      sessionId: "host-session",
+      reason: "draft clean merge",
+    });
+    expect(lock.ok).toBe(true);
+    if (!lock.ok) throw new Error("expected lock");
+
+    await t.mutation(internal.drafts.createDraft, {
+      roomId: s.roomId,
+      artifactId: s.artifactId,
+      author: AGENT,
+      blockedByLockId: String(lock.lockId),
+      note: "clean create/delete draft",
+      ops: [
+        { opId: "draft-create", artifactId: String(s.artifactId), elementId: createdId, kind: "create", value: "+5.0%", baseVersion: 0 },
+        { opId: "draft-delete", artifactId: String(s.artifactId), elementId: CELL, kind: "delete", value: null, baseVersion: 1 },
+      ],
+    });
+
+    const released = await t.mutation(internal.locks.releaseLock, { lockId: lock.lockId, actor: s.hostActor });
+    expect(released.ok).toBe(true);
+    expect(released.merged[0]).toMatchObject({ verdict: "clean", applied: 2, conflicts: 0 });
+    expect(await readElement(t, s.artifactId)).toBeNull();
+    expect((await readElement(t, s.artifactId, createdId))?.value).toBe("+5.0%");
+    expect((await readArtifact(t, s.artifactId))?.order).toEqual([createdId]);
+  });
 });
 
 async function seedRoom(
@@ -171,9 +307,31 @@ async function seedRoom(
   });
 }
 
-function readElement(t: ReturnType<typeof convexTest>, artifactId: Awaited<ReturnType<typeof seedRoom>>["artifactId"]) {
+function addMember(t: ReturnType<typeof convexTest>, roomId: Awaited<ReturnType<typeof seedRoom>>["roomId"]) {
+  return t.run(async (ctx) => {
+    const now = Date.now();
+    const memberId = await ctx.db.insert("members", {
+      roomId,
+      name: "Dev",
+      role: "member" as const,
+      anon: false,
+      color: "#666666",
+      authTokenHash: await hashToken(MEMBER_TOKEN),
+      lastSeenAt: now,
+    });
+    return { actor: { kind: "user" as const, id: String(memberId), name: "Dev" }, token: MEMBER_TOKEN };
+  });
+}
+
+function readElement(t: ReturnType<typeof convexTest>, artifactId: Awaited<ReturnType<typeof seedRoom>>["artifactId"], elementId = CELL) {
   return t.run(async (ctx) => {
     const elements = await ctx.db.query("elements").collect();
-    return elements.find((element) => String(element.artifactId) === String(artifactId) && element.elementId === CELL) ?? null;
+    return elements.find((element) => String(element.artifactId) === String(artifactId) && element.elementId === elementId) ?? null;
+  });
+}
+
+function readArtifact(t: ReturnType<typeof convexTest>, artifactId: Awaited<ReturnType<typeof seedRoom>>["artifactId"]) {
+  return t.run((ctx) => {
+    return ctx.db.get(artifactId);
   });
 }

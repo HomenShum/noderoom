@@ -598,7 +598,9 @@ export function Chat({ roomId, me, channel, variant, agentName, style, onOpenArt
             ))}
           </div>
         )}
-        {text.trim().length > 0 && <IntakePlanPreview roomId={roomId} text={text} targetArtifacts={refs.map((r) => r.id)} />}
+        <div className="r-intake-preview-slot">
+          {text.trim().length > 0 && <IntakePlanPreview roomId={roomId} text={text} targetArtifacts={refs.map((r) => r.id)} />}
+        </div>
         <div className="r-input-wrap">
           <textarea ref={taRef} rows={1} value={text} onChange={onChange} onKeyDown={onKeyDown}
             placeholder={isPrivate ? (roomLane ? "Tell your agent to act in the room…" : "Ask privately…") : "Message the room... type / for commands"}

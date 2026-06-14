@@ -1,0 +1,376 @@
+/**
+ * formulaEngine.ts - a small, pure, browser-safe spreadsheet formula engine for the live grid.
+ *
+ * No dependencies. `evaluateFormula(formula, resolver)` evaluates ONE formula, asking the
+ * `CellResolver` for cell values by A1 ref. Recursion across formula cells and cycle detection
+ * are the CALLER's responsibility (the resolver returns already-resolved values). Errors surface
+ * as `{ error }` tokens (#DIV/0!, #VALUE!, #NAME?, #REF!, #ERROR!) - the function never throws.
+ *
+ * Supports: numbers, "strings", TRUE/FALSE, trailing %, ( ); operators + - * / ^, unary +/-,
+ * comparisons = <> < > <= >=; A1 refs (A1, $A$1) and ranges (A1:B3); and the finance-core
+ * functions SUM AVERAGE MIN MAX COUNT COUNTA IF AND OR NOT ROUND ROUNDUP ROUNDDOWN ABS SQRT
+ * CONCAT CONCATENATE. (Reuses the look-and-feel of the bench evaluator in spreadsheetBenchRunner.ts
+ * but is independently implemented for the browser; extend the function set as needed.)
+ */
+
+export type CellValue = number | string | boolean | null;
+export interface CellResolver {
+  /** The (already-resolved) value at an A1 ref, or null/"" if the cell is empty. */
+  getCell(ref: string): CellValue;
+}
+export type FormulaResult = { value: CellValue } | { error: string };
+
+/** Thrown internally to abort a formula with a specific error code. Exported so a recursive
+ *  resolver can re-throw it to PROPAGATE an upstream cell's error (Excel semantics: =A1+1 is
+ *  #DIV/0! when A1 is #DIV/0!). The caller's resolver maps a referenced cell's error to
+ *  `throw new FormulaEvalError(code)`; evaluateFormula catches it and returns `{ error: code }`. */
+export class FormulaEvalError extends Error {
+  constructor(public code: string) {
+    super(code);
+    this.name = "FormulaEvalError";
+  }
+}
+
+/* A1 helpers */
+const A1_RE = /^\$?([A-Za-z]{1,3})\$?([1-9][0-9]*)$/;
+/** "A" -> 1, "Z" -> 26, "AA" -> 27. */
+export function colToIndex(letters: string): number {
+  let n = 0;
+  for (const c of letters.toUpperCase()) n = n * 26 + (c.charCodeAt(0) - 64);
+  return n;
+}
+/** 1 -> "A", 27 -> "AA". */
+export function indexToCol(index: number): string {
+  let s = "";
+  let n = index;
+  while (n > 0) {
+    const r = (n - 1) % 26;
+    s = String.fromCharCode(65 + r) + s;
+    n = Math.floor((n - 1) / 26);
+  }
+  return s;
+}
+function normalizeRef(ref: string): string {
+  return ref.replace(/\$/g, "").toUpperCase();
+}
+function parseRef(ref: string): { col: number; row: number } | null {
+  const m = normalizeRef(ref).match(A1_RE);
+  if (!m) return null;
+  return { col: colToIndex(m[1]), row: Number(m[2]) };
+}
+function expandRange(a: string, b: string): string[] {
+  const pa = parseRef(a);
+  const pb = parseRef(b);
+  if (!pa || !pb) throw new FormulaEvalError("#REF!");
+  const c0 = Math.min(pa.col, pb.col), c1 = Math.max(pa.col, pb.col);
+  const r0 = Math.min(pa.row, pb.row), r1 = Math.max(pa.row, pb.row);
+  const refs: string[] = [];
+  for (let r = r0; r <= r1; r++) for (let c = c0; c <= c1; c++) refs.push(indexToCol(c) + r);
+  return refs;
+}
+
+/* tokenizer */
+type Tok = { t: "num" | "str" | "id" | "op"; v: string };
+const TWO_CHAR_OPS = new Set(["<=", ">=", "<>"]);
+function tokenize(src: string): Tok[] {
+  const toks: Tok[] = [];
+  let i = 0;
+  while (i < src.length) {
+    const ch = src[i];
+    if (ch === " " || ch === "\t" || ch === "\n" || ch === "\r") { i++; continue; }
+    if (ch === '"') {
+      let j = i + 1, str = "";
+      while (j < src.length) {
+        if (src[j] === '"') { if (src[j + 1] === '"') { str += '"'; j += 2; continue; } break; }
+        str += src[j++];
+      }
+      if (j >= src.length) throw new FormulaEvalError("#ERROR!"); // unterminated string
+      toks.push({ t: "str", v: str });
+      i = j + 1;
+      continue;
+    }
+    if (/[0-9]/.test(ch) || (ch === "." && /[0-9]/.test(src[i + 1] ?? ""))) {
+      let j = i;
+      while (j < src.length && /[0-9.]/.test(src[j])) j++;
+      if ((src[j] === "e" || src[j] === "E") && /[0-9+\-]/.test(src[j + 1] ?? "")) {
+        j++;
+        if (src[j] === "+" || src[j] === "-") j++;
+        while (j < src.length && /[0-9]/.test(src[j])) j++;
+      }
+      toks.push({ t: "num", v: src.slice(i, j) });
+      i = j;
+      continue;
+    }
+    if (/[A-Za-z_$]/.test(ch)) {
+      let j = i;
+      while (j < src.length && /[A-Za-z0-9_$.]/.test(src[j])) j++;
+      toks.push({ t: "id", v: src.slice(i, j) });
+      i = j;
+      continue;
+    }
+    const two = src.slice(i, i + 2);
+    if (TWO_CHAR_OPS.has(two)) { toks.push({ t: "op", v: two }); i += 2; continue; }
+    if ("+-*/^(),:%<>=".includes(ch)) { toks.push({ t: "op", v: ch }); i++; continue; }
+    throw new FormulaEvalError("#ERROR!"); // unrecognized character
+  }
+  return toks;
+}
+
+/* parser -> AST */
+type Node =
+  | { k: "num"; v: number }
+  | { k: "str"; v: string }
+  | { k: "bool"; v: boolean }
+  | { k: "ref"; v: string }
+  | { k: "range"; a: string; b: string }
+  | { k: "bin"; op: string; l: Node; r: Node }
+  | { k: "un"; op: string; e: Node }
+  | { k: "pct"; e: Node }
+  | { k: "call"; name: string; args: Node[] };
+
+class Parser {
+  pos = 0;
+  constructor(private toks: Tok[]) {}
+  private peek(): Tok | undefined { return this.toks[this.pos]; }
+  private next(): Tok { const t = this.toks[this.pos]; if (!t) throw new FormulaEvalError("#ERROR!"); this.pos++; return t; }
+  private isOp(v: string): boolean { const t = this.peek(); return !!t && t.t === "op" && t.v === v; }
+  private eat(v: string): void { if (!this.isOp(v)) throw new FormulaEvalError("#ERROR!"); this.pos++; }
+
+  parse(): Node {
+    const n = this.compare();
+    if (this.pos !== this.toks.length) throw new FormulaEvalError("#ERROR!");
+    return n;
+  }
+  private compare(): Node {
+    let l = this.additive();
+    while (this.peek()?.t === "op" && ["=", "<>", "<", ">", "<=", ">="].includes(this.peek()!.v)) {
+      const op = this.next().v;
+      l = { k: "bin", op, l, r: this.additive() };
+    }
+    return l;
+  }
+  private additive(): Node {
+    let l = this.multiplicative();
+    while (this.isOp("+") || this.isOp("-")) { const op = this.next().v; l = { k: "bin", op, l, r: this.multiplicative() }; }
+    return l;
+  }
+  private multiplicative(): Node {
+    let l = this.power();
+    while (this.isOp("*") || this.isOp("/")) { const op = this.next().v; l = { k: "bin", op, l, r: this.power() }; }
+    return l;
+  }
+  private power(): Node {
+    const l = this.unary();
+    if (this.isOp("^")) { this.next(); return { k: "bin", op: "^", l, r: this.power() }; } // right-assoc
+    return l;
+  }
+  private unary(): Node {
+    if (this.isOp("-") || this.isOp("+")) { const op = this.next().v; return { k: "un", op, e: this.unary() }; }
+    return this.postfix();
+  }
+  private postfix(): Node {
+    let e = this.primary();
+    while (this.isOp("%")) { this.next(); e = { k: "pct", e }; }
+    return e;
+  }
+  private primary(): Node {
+    const t = this.next();
+    if (t.t === "num") { const v = Number(t.v); if (!Number.isFinite(v)) throw new FormulaEvalError("#ERROR!"); return { k: "num", v }; }
+    if (t.t === "str") return { k: "str", v: t.v };
+    if (t.t === "op" && t.v === "(") { const e = this.compare(); this.eat(")"); return e; }
+    if (t.t === "id") {
+      const up = t.v.toUpperCase();
+      if (up === "TRUE") return { k: "bool", v: true };
+      if (up === "FALSE") return { k: "bool", v: false };
+      if (this.isOp("(")) {
+        this.next();
+        const args: Node[] = [];
+        if (!this.isOp(")")) {
+          args.push(this.compare());
+          while (this.isOp(",")) { this.next(); args.push(this.compare()); }
+        }
+        this.eat(")");
+        return { k: "call", name: up, args };
+      }
+      // ref or range
+      if (!A1_RE.test(normalizeRef(t.v))) throw new FormulaEvalError("#NAME?");
+      if (this.isOp(":")) {
+        this.next();
+        const t2 = this.next();
+        if (t2.t !== "id" || !A1_RE.test(normalizeRef(t2.v))) throw new FormulaEvalError("#REF!");
+        return { k: "range", a: t.v, b: t2.v };
+      }
+      return { k: "ref", v: t.v };
+    }
+    throw new FormulaEvalError("#ERROR!");
+  }
+}
+
+/* evaluator */
+const SUPPORTED = new Set([
+  "SUM", "AVERAGE", "MIN", "MAX", "COUNT", "COUNTA", "IF", "AND", "OR", "NOT",
+  "ROUND", "ROUNDUP", "ROUNDDOWN", "ABS", "SQRT", "CONCAT", "CONCATENATE",
+]);
+
+/** Coerce a value to a number for ARITHMETIC (blank -> 0, numeric string -> number, else #VALUE!). */
+function toNumber(v: CellValue): number {
+  if (typeof v === "number") return v;
+  if (typeof v === "boolean") return v ? 1 : 0;
+  if (v === null || v === undefined) return 0;
+  const s = String(v).trim();
+  if (s === "") return 0;
+  const n = coerceNumeric(s);
+  if (n === null) throw new FormulaEvalError("#VALUE!");
+  return n;
+}
+/** Parse a numeric-looking string ("12,400", "$1,200", "24%", "(50)") to a number, else null. */
+function coerceNumeric(s: string): number | null {
+  let str = s.trim();
+  if (str === "") return null;
+  let mult = 1;
+  if (/%$/.test(str)) { mult = 0.01; str = str.slice(0, -1); }
+  let neg = false;
+  if (/^\(.*\)$/.test(str)) { neg = true; str = str.slice(1, -1); } // accounting negatives
+  str = str.replace(/[$,\s]/g, "");
+  if (str === "" || !/^[+-]?(\d+\.?\d*|\.\d+)([eE][+-]?\d+)?$/.test(str)) return null;
+  const n = Number(str) * mult * (neg ? -1 : 1);
+  return Number.isFinite(n) ? n : null;
+}
+/** Numbers from a value for AGGREGATES (numeric values/strings only; text/blank/bool ignored). */
+function aggNumber(v: CellValue): number | null {
+  if (typeof v === "number") return Number.isFinite(v) ? v : null;
+  if (typeof v === "string") return coerceNumeric(v);
+  return null; // booleans & blanks ignored by SUM/AVERAGE/etc.
+}
+
+function evalScalar(n: Node, R: CellResolver): CellValue {
+  switch (n.k) {
+    case "num": return n.v;
+    case "str": return n.v;
+    case "bool": return n.v;
+    case "ref": return R.getCell(normalizeRef(n.v));
+    case "range": throw new FormulaEvalError("#VALUE!"); // a bare range is not a scalar
+    case "pct": return toNumber(evalScalar(n.e, R)) / 100;
+    case "un": return n.op === "-" ? -toNumber(evalScalar(n.e, R)) : toNumber(evalScalar(n.e, R));
+    case "bin": return evalBin(n, R);
+    case "call": return evalCall(n, R);
+  }
+}
+
+function evalBin(n: { op: string; l: Node; r: Node }, R: CellResolver): CellValue {
+  const op = n.op;
+  if (["=", "<>", "<", ">", "<=", ">="].includes(op)) {
+    const a = evalScalar(n.l, R);
+    const b = evalScalar(n.r, R);
+    return compare(op, a, b);
+  }
+  const a = toNumber(evalScalar(n.l, R));
+  const b = toNumber(evalScalar(n.r, R));
+  switch (op) {
+    case "+": return round12(a + b);
+    case "-": return round12(a - b);
+    case "*": return round12(a * b);
+    case "/": if (b === 0) throw new FormulaEvalError("#DIV/0!"); return round12(a / b);
+    case "^": { const v = Math.pow(a, b); if (!Number.isFinite(v)) throw new FormulaEvalError("#NUM!"); return round12(v); }
+  }
+  throw new FormulaEvalError("#ERROR!");
+}
+
+function compare(op: string, a: CellValue, b: CellValue): boolean {
+  // numeric compare when both coerce to numbers, else string compare (Excel-ish)
+  const an = typeof a === "number" ? a : typeof a === "string" ? coerceNumeric(a) : a === true ? 1 : a === false ? 0 : null;
+  const bn = typeof b === "number" ? b : typeof b === "string" ? coerceNumeric(b) : b === true ? 1 : b === false ? 0 : null;
+  let cmp: number;
+  if (an !== null && bn !== null && typeof an === "number" && typeof bn === "number") {
+    cmp = an < bn ? -1 : an > bn ? 1 : 0;
+  } else {
+    const as = a === null ? "" : String(a);
+    const bs = b === null ? "" : String(b);
+    cmp = as < bs ? -1 : as > bs ? 1 : 0;
+  }
+  switch (op) {
+    case "=": return cmp === 0;
+    case "<>": return cmp !== 0;
+    case "<": return cmp < 0;
+    case ">": return cmp > 0;
+    case "<=": return cmp <= 0;
+    case ">=": return cmp >= 0;
+  }
+  return false;
+}
+
+function truthy(v: CellValue): boolean {
+  if (typeof v === "boolean") return v;
+  if (typeof v === "number") return v !== 0;
+  if (typeof v === "string") { const n = coerceNumeric(v); return n !== null ? n !== 0 : v.length > 0; }
+  return false;
+}
+
+/** Flatten a function arg into a list of values (a range expands; everything else is one value). */
+function argValues(n: Node, R: CellResolver): CellValue[] {
+  if (n.k === "range") return expandRange(n.a, n.b).map((ref) => R.getCell(ref));
+  return [evalScalar(n, R)];
+}
+function aggNumbers(args: Node[], R: CellResolver): number[] {
+  const out: number[] = [];
+  for (const a of args) for (const v of argValues(a, R)) { const num = aggNumber(v); if (num !== null) out.push(num); }
+  return out;
+}
+
+function evalCall(n: { name: string; args: Node[] }, R: CellResolver): CellValue {
+  const fn = n.name;
+  if (!SUPPORTED.has(fn)) throw new FormulaEvalError("#NAME?");
+  switch (fn) {
+    case "SUM": return round12(aggNumbers(n.args, R).reduce((s, x) => s + x, 0));
+    case "AVERAGE": { const xs = aggNumbers(n.args, R); if (xs.length === 0) throw new FormulaEvalError("#DIV/0!"); return round12(xs.reduce((s, x) => s + x, 0) / xs.length); }
+    case "MIN": { const xs = aggNumbers(n.args, R); return xs.length ? Math.min(...xs) : 0; }
+    case "MAX": { const xs = aggNumbers(n.args, R); return xs.length ? Math.max(...xs) : 0; }
+    case "COUNT": return aggNumbers(n.args, R).length;
+    case "COUNTA": { let c = 0; for (const a of n.args) for (const v of argValues(a, R)) if (!(v === null || v === "")) c++; return c; }
+    case "IF": { if (n.args.length < 2) throw new FormulaEvalError("#ERROR!"); return truthy(evalScalar(n.args[0], R)) ? evalScalar(n.args[1], R) : (n.args[2] ? evalScalar(n.args[2], R) : false); }
+    case "AND": { const xs = n.args.flatMap((a) => argValues(a, R)); return xs.length > 0 && xs.every(truthy); }
+    case "OR": { const xs = n.args.flatMap((a) => argValues(a, R)); return xs.some(truthy); }
+    case "NOT": return !truthy(evalScalar(n.args[0], R));
+    case "ABS": return Math.abs(toNumber(evalScalar(n.args[0], R)));
+    case "SQRT": { const x = toNumber(evalScalar(n.args[0], R)); if (x < 0) throw new FormulaEvalError("#NUM!"); return Math.sqrt(x); }
+    case "ROUND":
+    case "ROUNDUP":
+    case "ROUNDDOWN": {
+      const x = toNumber(evalScalar(n.args[0], R));
+      const d = n.args[1] ? Math.trunc(toNumber(evalScalar(n.args[1], R))) : 0;
+      const f = Math.pow(10, d);
+      if (fn === "ROUND") return Math.round(x * f) / f;
+      if (fn === "ROUNDUP") return (x < 0 ? -Math.ceil(-x * f) : Math.ceil(x * f)) / f;
+      return (x < 0 ? -Math.floor(-x * f) : Math.floor(x * f)) / f;
+    }
+    case "CONCAT":
+    case "CONCATENATE": { let s = ""; for (const a of n.args) for (const v of argValues(a, R)) s += v === null ? "" : String(v); return s; }
+  }
+  throw new FormulaEvalError("#NAME?");
+}
+
+/** Kill floating-point dust (0.1+0.2) without distorting real values. */
+function round12(x: number): number {
+  if (!Number.isFinite(x)) return x;
+  return Math.round((x + Number.EPSILON) * 1e9) / 1e9;
+}
+
+/**
+ * Evaluate a formula string (with or without a leading "=") against a resolver.
+ * Never throws: failures come back as `{ error: "#..." }`.
+ */
+export function evaluateFormula(formula: string, resolver: CellResolver): FormulaResult {
+  try {
+    const body = formula.trim().replace(/^=/, "").trim();
+    if (body === "") return { value: "" };
+    const ast = new Parser(tokenize(body)).parse();
+    const value = evalScalar(ast, resolver);
+    if (typeof value === "number" && !Number.isFinite(value)) return { error: "#NUM!" };
+    return { value };
+  } catch (e) {
+    if (e instanceof FormulaEvalError) return { error: e.code };
+    return { error: "#ERROR!" };
+  }
+}
+
+export const SUPPORTED_FORMULA_FUNCTIONS: readonly string[] = [...SUPPORTED];

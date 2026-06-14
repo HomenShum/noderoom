@@ -544,30 +544,15 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
       local.setQuery(api.messages.list, qargs, value.map((m) => (m._id === args.messageId ? { ...m, text: args.text } : m)));
     }
   });
-  // QA P1: a resolved proposal leaves the pending list instantly (approve that loses CAS still
-  // surfaces via the mutation's returned feedback — optimistic removal never hides the conflict).
-  // Zero-flicker deepening: an APPROVE also paints the cell value now — previously the chip vanished
-  // instantly but the cell landed a beat later (a visible two-phase flick). The op comes from the
-  // proposals query itself; the server applies with proposal.author, so attribution matches exactly.
+  // Reject is optimistic-safe: the authoritative state is just "chip gone".
+  // Approve is deliberately not optimistic. The backend can keep a proposal pending when final CAS
+  // or formula validation fails, so hiding the chip before the mutation result would lie about CRS.
   const resolveProposalMutation = useMutation(api.artifacts.resolveProposal).withOptimisticUpdate((local, args) => {
+    if (args.approve) return;
     const q = { roomId: rid, requester: args.requester };
     const cur = local.getQuery(api.artifacts.listProposals, q);
     if (!cur) return;
-    const prop = cur.find((p) => String(p.id) === String(args.proposalId));
     local.setQuery(api.artifacts.listProposals, q, cur.filter((p) => String(p.id) !== String(args.proposalId)));
-    if (!args.approve || !prop) return;
-    const op = prop.op as { elementId: string; kind: "set" | "create" | "delete"; value: unknown };
-    const artifactId = String(prop.artifactId);
-    const elementsQ = { roomId: rid, artifactId: artifactId as never, requester: args.requester };
-    const curEls = local.getQuery(api.artifacts.elements, elementsQ);
-    if (curEls === undefined) return;
-    const curMeta = local.getQuery(api.rooms.meta, q);
-    const rowMeta = curMeta?.artifacts.find((a) => String(a.id) === artifactId);
-    const { elements, order } = applyCellToElements(curEls as unknown as ElementsMap, (rowMeta?.order ?? []) as string[], op.elementId, op.kind, op.value, prop.author as Actor);
-    local.setQuery(api.artifacts.elements, elementsQ, elements as unknown as typeof curEls);
-    if (curMeta && rowMeta) {
-      local.setQuery(api.rooms.meta, q, { ...curMeta, artifacts: curMeta.artifacts.map((a) => String(a.id) === artifactId ? { ...a, order, version: a.version + 1, updatedAt: Date.now() } : a) } as typeof curMeta);
-    }
   });
   // "Add accounts" paints instantly: an EXACT client mirror of the server's deterministic row
   // builder (same slugs, same suffix-dedup against order, same default column values), recomputed
@@ -663,6 +648,7 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
     };
     local.setQuery(api.rooms.meta, metaQ, { ...curMeta, artifacts: [...arts, shell] } as unknown as typeof curMeta);
   });
+  const runSemanticConflictDrillMutation = useMutation(api.drafts.runSemanticConflictDrill);
   const runAgent = useAction(api.agent.runRoomAgent);
   const runPrivateAgent = useAction(api.agent.runPrivateAgent);
   const createPrivateReplyStream = useMutation(api.streaming.createPrivateReplyStream);
@@ -767,6 +753,19 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
         const sess = sessions.find((s) => s.scope === "public");
         if (!sheet || !sess) return;
         await runAgent({ roomId: rid, artifactId: sheet.id as never, requester: proof, goal: "Fill the remaining Q3 variance cells: Gross profit (r_gp__variance)=+21.7% and Net income (r_ni__variance)=+22.4%. Lock them, edit with CAS, then release." });
+      },
+      runSemanticConflictDrill: async () => {
+        if (!isHost) return;
+        const sheet = artifacts.find((a) => a.kind === "sheet" && a.title === "Q3 variance") ?? artifacts.find((a) => a.kind === "sheet");
+        if (!sheet) return;
+        await runSemanticConflictDrillMutation({
+          roomId: rid,
+          artifactId: sheet.id as never,
+          requester: proof,
+          elementId: "r_rev__variance",
+          currentValue: "+24%",
+          proposedValue: "+19%",
+        });
       },
       askAgent: async (input) => {
         const references = canonicalRefs(artifacts, input.references);
@@ -915,7 +914,7 @@ export function ConvexStoreProvider({ roomId, me, proof, children }: { roomId: s
         catch (e) { return { ok: false, reason: e instanceof Error ? e.message : "retry_failed" }; }
       },
     };
-  }, [data, metaArtifacts, elementsByArtifact, pub, priv, traces, runs, jobs, jobAttempts, jobDetail, proposals, applyCellEdit, sendMsg, toggle, editMsg, resolveProposalMutation, addResearchRowsMutation, createArtifactMutation, runAgent, runPrivateAgent, createPrivateReplyStream, startFreeAutoJob, cancelFreeAutoJob, retryFreeAutoJob, rid, roomId, proof, me.id, me.name]);
+  }, [data, metaArtifacts, elementsByArtifact, pub, priv, traces, runs, jobs, jobAttempts, jobDetail, proposals, applyCellEdit, sendMsg, toggle, editMsg, resolveProposalMutation, addResearchRowsMutation, createArtifactMutation, runSemanticConflictDrillMutation, runAgent, runPrivateAgent, createPrivateReplyStream, startFreeAutoJob, cancelFreeAutoJob, retryFreeAutoJob, rid, roomId, proof, me.id, me.name]);
 
   return (
     <Ctx.Provider value={store}>

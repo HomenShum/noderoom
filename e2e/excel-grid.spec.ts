@@ -27,6 +27,9 @@ async function styledWorkbookFile(): Promise<string> {
   ws.getCell("B5").value = "EBIT";
   ws.getCell("D5").value = 65.8;
   ws.getCell("D5").numFmt = "#,##0.0";
+  ws.getCell("B6").value = "Formula check";
+  ws.getCell("C6").value = 10;
+  ws.getCell("D6").value = { formula: "C6*2", result: 20 };
   const buffer = await workbook.xlsx.writeBuffer();
   const dir = mkdtempSync(join(tmpdir(), "noderoom-xl-"));
   const path = join(dir, "model.xlsx");
@@ -75,7 +78,7 @@ test("uploaded workbook renders as Excel paper with file formats, formula bar, a
   await expect(paper.locator("th.xl-col.hl")).toHaveText("D");
 
   // 5. An inline edit commits through CAS — the version visible in the bar is the receipt.
-  const target = paper.locator('[data-cell-key="C5"]'); // empty in-bounds cell of the 5x4 grid
+  const target = paper.locator('[data-cell-key="C5"]'); // empty in-bounds cell of the uploaded grid
   await target.dblclick();
   await target.locator("input.xl-input").fill("123");
   await target.locator("input.xl-input").press("Enter");
@@ -141,4 +144,37 @@ test("spreadsheet keyboard model — arrows, type-to-replace, Enter/Tab moves, E
   await page.keyboard.press("Enter");
   await expect(paper.locator('[data-cell-key="B4"] input.xl-input')).toHaveValue("Gross margin %");
   await page.keyboard.press("Escape");
+});
+
+test("uploaded workbook formulas display computed values, preserve formulas in edit mode, and recalc after driver edits", async ({ page }) => {
+  await enterDemoRoom(page);
+  const path = await styledWorkbookFile();
+  await page.locator(".r-file-input").setInputFiles(path);
+  await page.getByRole("button", { name: /model\.xlsx/ }).click();
+
+  const paper = page.getByTestId("excel-paper");
+  const driver = paper.locator('[data-cell-key="C6"]');
+  const formula = paper.locator('[data-cell-key="D6"]');
+
+  await expect(formula).toHaveText("20");
+  await expect(formula).toHaveAttribute("data-has-formula", "true");
+  await formula.click();
+  await expect(page.getByTestId("excel-formulabar")).toHaveText("=C6*2");
+
+  await formula.dblclick();
+  await expect(formula.locator("input.xl-input")).toHaveValue("=C6*2");
+  await page.keyboard.press("Escape");
+
+  await driver.dblclick();
+  await driver.locator("input.xl-input").fill("11");
+  await driver.locator("input.xl-input").press("Enter");
+  await expect(formula).toHaveText("22");
+
+  const blank = paper.locator('[data-cell-key="C5"]');
+  await blank.dblclick();
+  await blank.locator("input.xl-input").fill("=D5*2");
+  await blank.locator("input.xl-input").press("Enter");
+  await expect(blank).toHaveText("131.6");
+  await blank.click();
+  await expect(page.getByTestId("excel-formulabar")).toHaveText("=D5*2");
 });

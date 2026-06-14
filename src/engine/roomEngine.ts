@@ -454,33 +454,35 @@ export class RoomEngine {
     this.semanticConflicts.set(conflictId, packet);
 
     const proposalIds: string[] = [];
-    for (const resolved of resolution.resolvedOps) {
-      if (resolved.kind !== "create_proposal") continue;
-      const original = packet.proposed.ops.find((op) => op.elementId === resolved.targetRef);
-      if (!original) continue;
-      const proposal: Proposal = {
-        id: this.id("prop"),
-        roomId: draft.roomId,
-        artifactId: artifact.id,
-        op: {
-          ...original,
-          opId: this.id("semop"),
-          baseVersion: resolved.baseVersion ?? packet.current.versions[resolved.targetRef] ?? 0,
-          value: resolved.value,
-        },
-        author: draft.author,
-        status: "pending",
-        createdAt: this.now(),
-        review: {
-          kind: "semantic_rebase",
-          conflictId,
-          reviewerNote: resolution.reviewerNote,
-          reason: resolved.comment,
-          status: resolved.status === "rejected" ? "needs_review" : resolved.status,
-        },
-      };
-      this.proposals.set(proposal.id, proposal);
-      proposalIds.push(proposal.id);
+    if (draft.author.scope !== "private") {
+      for (const resolved of resolution.resolvedOps) {
+        if (resolved.kind !== "create_proposal") continue;
+        const original = packet.proposed.ops.find((op) => op.elementId === resolved.targetRef);
+        if (!original) continue;
+        const proposal: Proposal = {
+          id: this.id("prop"),
+          roomId: draft.roomId,
+          artifactId: artifact.id,
+          op: {
+            ...original,
+            opId: this.id("semop"),
+            baseVersion: resolved.baseVersion ?? packet.current.versions[resolved.targetRef] ?? 0,
+            value: resolved.value,
+          },
+          author: draft.author,
+          status: "pending",
+          createdAt: this.now(),
+          review: {
+            kind: "semantic_rebase",
+            conflictId,
+            reviewerNote: resolution.reviewerNote,
+            reason: resolved.comment,
+            status: resolved.status === "rejected" ? "needs_review" : resolved.status,
+          },
+        };
+        this.proposals.set(proposal.id, proposal);
+        proposalIds.push(proposal.id);
+      }
     }
 
     this.trace(

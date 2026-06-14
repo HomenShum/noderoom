@@ -313,8 +313,17 @@ function parsedCell(value: unknown): ParsedCell {
 }
 
 async function loadWorkbookCtor(): Promise<ExcelWorkbookCtor> {
-  const mod = await import("exceljs");
-  return mod.Workbook ?? mod.default.Workbook;
+  let lastError: unknown;
+  for (let attempt = 0; attempt < 2; attempt++) {
+    try {
+      const mod = await import("exceljs");
+      return mod.Workbook ?? mod.default.Workbook;
+    } catch (err) {
+      lastError = err;
+      await new Promise((resolve) => setTimeout(resolve, 120));
+    }
+  }
+  throw lastError;
 }
 
 function preflightXlsxZip(buffer: ArrayBuffer | ArrayBufferView) {

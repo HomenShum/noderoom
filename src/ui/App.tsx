@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 import { Landing } from "./Landing";
@@ -7,39 +7,12 @@ import { LandingStory } from "../landing/LandingStory";
 import { EngineStoreProvider, ConvexStoreProvider, HAS_CONVEX } from "../app/store";
 import type { Actor } from "../engine/types";
 
-const LIVE_DEMO_CODE = "Q3DEMO";
 const liveSessionKey = (code: string) => `noderoom:live:${code.toUpperCase()}`;
 
-const STARTER_SHEET_ROWS = [
-  { id: "r_rev", label: "Revenue", q2: "$10,000", q3: "$12,400" },
-  { id: "r_cogs", label: "COGS", q2: "$4,000", q3: "$5,100" },
-  { id: "r_gp", label: "Gross profit", q2: "$6,000", q3: "$7,300" },
-  { id: "r_opex", label: "OpEx", q2: "$2,200", q3: "$2,650" },
-  { id: "r_ni", label: "Net income", q2: "$3,800", q3: "$4,650" },
-];
-
-function starterSheetSeed(): Array<{ id: string; value: unknown }> {
-  const seed: Array<{ id: string; value: unknown }> = [];
-  for (const r of STARTER_SHEET_ROWS) {
-    seed.push({ id: `${r.id}__label`, value: r.label });
-    seed.push({ id: `${r.id}__q2`, value: r.q2 });
-    seed.push({ id: `${r.id}__q3`, value: r.q3 });
-    seed.push({ id: `${r.id}__variance`, value: "" });
-    seed.push({ id: `${r.id}__note`, value: "" });
-  }
-  return seed;
-}
-
-function starterNoteSeed(): Array<{ id: string; value: unknown }> {
-  return [{ id: "doc", value: "<h1>Team notes</h1><p>Shared notes for the Q3 review. Type here, or ask your NodeAgent to draft and update this note.</p>" }];
-}
-
-function starterWallSeed(): Array<{ id: string; value: unknown }> {
-  return [
-    { id: "s_welcome", value: { text: "Drop ideas here - drag to rearrange.", x: 64, y: 64, color: "#FDE68A" } },
-    { id: "s_agent", value: { text: "Ask an agent to add post-its in the Room lane.", x: 280, y: 150, color: "#BBF7D0" } },
-  ];
-}
+// NOTE: starter-room seed content (the four artifacts) lives server-side in convex/rooms.ts and is
+// written atomically by the `createStarterRoom` mutation. It used to be duplicated here and seeded
+// client-side via create + 4× createArtifact, which could leave a half-built room if any seed failed.
+// Keeping a single server-side source of truth is what makes create all-or-nothing.
 
 export interface Session {
   roomId: string;
@@ -73,7 +46,8 @@ export function App() {
         const url = new URL(window.location.href);
         url.hash = "";
         url.search = "";
-        url.searchParams.set("room", LIVE_DEMO_CODE);
+        url.searchParams.set("create", makeLiveRoomCode());
+        url.searchParams.set("name", cleanLiveName(session.me.name, "Host"));
         window.history.pushState(null, "", url);
         setHash("");
         return;
@@ -101,15 +75,19 @@ function ConvexApp() {
   const code = request.kind === "idle" ? "" : request.code;
   const byCode = useQuery(api.rooms.byCode, code ? { code } : "skip");
   const join = useMutation(api.rooms.joinAnonymous);
-  const createRoom = useMutation(api.rooms.create);
+  const createStarterRoom = useMutation(api.rooms.createStarterRoom);
   const leaveRoom = useMutation(api.rooms.leave);
-  const createArtifact = useMutation(api.artifacts.createArtifact);
   const [session, setSession] = useState<LiveSession | null>(() => {
     const initial = initialLiveRequest();
-    return initial.kind === "join" ? loadLiveSession(liveSessionKey(initial.code)) : null;
+    return initial.kind === "join" || initial.kind === "create" ? loadLiveSession(liveSessionKey(initial.code)) : null;
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Failure latch: each `start()` mints a NEW request object, so keying on object identity lets
+  // an explicit resubmit retry while a failed attempt can never re-fire itself. Without this the
+  // join effect re-satisfies its run guard on every failure (busy true→false) and loops forever —
+  // flashing the UI and re-hammering the join mutation. Mirrors RoomShell's tourAutoStarted ref.
+  const attemptedRef = useRef<LiveRequest | null>(null);
 
   const start = (kind: "join" | "create", rawCode: string, rawName: string) => {
     const normalizedCode = normalizeLiveRoomCode(rawCode);
@@ -126,49 +104,54 @@ function ConvexApp() {
 
   useEffect(() => {
     if (request.kind === "idle" || session || busy || byCode === undefined) return;
+    if (attemptedRef.current === request) return; // already tried this exact request — don't retry on failure
+    attemptedRef.current = request;
     setBusy(true);
     const token = randomToken();
     const name = request.name;
     void (async () => {
       let joined: { roomId: string; memberId: string } | null = null;
-      if (byCode && request.kind === "create") {
-        throw new Error(`Room ${request.code} already exists. Join it instead.`);
-      }
+      // Idempotent create: if the room already exists — a create whose success response was lost, or a
+      // reload of a `?create=` URL — don't dead-end with "already exists". Adopt it by joining. There is
+      // never a half-built room to recover from because createStarterRoom (below) seeds room + all four
+      // artifacts in ONE atomic transaction, so an existing room is always complete. `anon: false` keeps
+      // the re-entrant under the host name. (createStarterRoom = option 2; this fall-through = option 3.)
       if (byCode) {
         const result = await join({ code: request.code, name, authToken: token, anon: request.kind !== "create" });
         if (isJoinFailure(result)) throw new Error(joinFailureMessage(result.error));
         joined = result ? { roomId: String(result.roomId), memberId: String(result.memberId) } : null;
       } else if (request.kind === "create") {
-        const result = await createRoom({
+        // ONE mutation = ONE Convex transaction: room + host member + all four starter artifacts commit
+        // all-or-nothing. A mid-seed failure (e.g. an oversized/invalid seed) rolls the room back, so a
+        // rejected create can never leave a phantom room with partial artifacts — which the previous
+        // create + 4× createArtifact composition could, since createRoom committed before seeding.
+        const result = await createStarterRoom({
           code: request.code,
-          title: "Team Q3 Review",
+          title: "Startup Banking Diligence War Room",
           hostName: name,
           authToken: token,
           autoAllow: true,
         });
         joined = { roomId: String(result.roomId), memberId: String(result.memberId) };
-        const proof = { actor: { kind: "user" as const, id: joined.memberId, name }, token };
-        await createArtifact({ roomId: result.roomId, kind: "sheet", title: "Q3 variance", seed: starterSheetSeed(), proof });
-        await createArtifact({ roomId: result.roomId, kind: "note", title: "Team notes", seed: starterNoteSeed(), proof });
-        await createArtifact({ roomId: result.roomId, kind: "wall", title: "Ideas wall", seed: starterWallSeed(), proof });
       }
       if (!joined) throw new Error(`Room ${request.code} was not found. Create it or check the code.`);
       const next = { roomId: joined.roomId, memberId: joined.memberId, name, token };
       try { localStorage.setItem(liveSessionKey(request.code), JSON.stringify(next)); } catch { /* ignore */ }
+      if (request.kind === "create") writeLiveUrl("join", request.code, name);
       setSession(next);
     })()
       .catch((e) => { setError(friendlyLiveError(e)); })
       .finally(() => { setBusy(false); });
-  }, [byCode, busy, createArtifact, createRoom, join, request, session]);
+  }, [byCode, busy, createStarterRoom, join, request, session]);
 
   if (request.kind === "idle" || !session) {
     return (
       <Landing
         mode="live"
-        defaultCode={code || LIVE_DEMO_CODE}
+        defaultCode={code || ""}
         busy={busy}
         joinError={error}
-        onLiveDemo={(name) => start("join", LIVE_DEMO_CODE, name)}
+        onLiveDemo={(name) => start("create", makeLiveRoomCode(), name)}
         onLiveJoin={(roomCode, name) => start("join", roomCode, name)}
         onLiveCreate={(name) => start("create", makeLiveRoomCode(), name)}
       />
@@ -273,10 +256,29 @@ function loadLiveSession(key: string): LiveSession | null {
     const raw = localStorage.getItem(key);
     if (!raw) return null;
     const parsed = JSON.parse(raw) as Partial<LiveSession>;
-    return parsed.roomId && parsed.memberId && parsed.name && parsed.token
-      ? { roomId: parsed.roomId, memberId: parsed.memberId, name: parsed.name, token: parsed.token }
-      : null;
+    if (
+      isPersistedLiveId(parsed.roomId) &&
+      isPersistedLiveId(parsed.memberId) &&
+      isPersistedLiveName(parsed.name) &&
+      isPersistedLiveToken(parsed.token)
+    ) {
+      return { roomId: parsed.roomId, memberId: parsed.memberId, name: parsed.name, token: parsed.token };
+    }
+    localStorage.removeItem(key);
+    return null;
   } catch {
     return null;
   }
+}
+
+function isPersistedLiveId(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0 && !/^(undefined|null|\[object Object\])$/i.test(value.trim());
+}
+
+function isPersistedLiveName(value: unknown): value is string {
+  return typeof value === "string" && value.trim().length > 0;
+}
+
+function isPersistedLiveToken(value: unknown): value is string {
+  return typeof value === "string" && /^[a-f0-9]{32,}$/i.test(value);
 }

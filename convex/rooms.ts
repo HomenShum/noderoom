@@ -6,6 +6,7 @@ import { mutation, query, type MutationCtx } from "./_generated/server";
 import type { Id } from "./_generated/dataModel";
 import { actorProofV, getRequiredProductionIdentity, hashToken, requireActorProof, type ActorValue } from "./lib";
 import { syncSpreadsheetIndexFromSeed } from "./spreadsheetIndexLib";
+import { assertCreateArtifactLimits } from "./artifacts";
 
 const palette = ["#d97757", "#5b9bf5", "#7bd089", "#a78bfa", "#e4c567", "#e8845f"];
 
@@ -18,8 +19,9 @@ const MAX_MEMBERS_PER_ROOM = 32;
 const MAX_JOINS_PER_MINUTE = 10;
 const MAX_NAME_LEN = 40;
 const MAX_TITLE_LEN = 80;
+const MAX_SEED_ARTIFACTS_PER_ROOM = 8; // bound the atomic create payload (per-artifact size is capped by assertCreateArtifactLimits)
 
-const STARTER_SHEET_ROWS = [
+const STARTER_VARIANCE_ROWS = [
   { id: "r_rev", label: "Revenue", q2: "$10,000", q3: "$12,400" },
   { id: "r_cogs", label: "COGS", q2: "$4,000", q3: "$5,100" },
   { id: "r_gp", label: "Gross profit", q2: "$6,000", q3: "$7,300" },
@@ -27,9 +29,80 @@ const STARTER_SHEET_ROWS = [
   { id: "r_ni", label: "Net income", q2: "$3,800", q3: "$4,650" },
 ];
 
+const STARTUP_RESEARCH_COLS = [
+  "company", "website", "status", "tier", "intent", "owner", "crm_status", "summary",
+  "funding", "headcount", "recent_signal", "source", "source2", "last_researched",
+] as const;
+
+type StartupResearchRow = { rowId: string } & Record<(typeof STARTUP_RESEARCH_COLS)[number], string>;
+
+const STARTUP_RESEARCH_ROWS: StartupResearchRow[] = [
+  {
+    rowId: "rc_mercury",
+    company: "Mercury",
+    website: "https://mercury.com",
+    status: "complete",
+    tier: "A",
+    intent: "Startup banking diligence",
+    owner: "Maya",
+    crm_status: "Watch",
+    summary: "Banking platform for startups. Strong account relevance for founder-led operating accounts, treasury workflow, and startup banking due diligence.",
+    funding: "Series C+ profile; verify latest primary source before IC use",
+    headcount: "Mid-market fintech scale; refresh with provider/API data",
+    recent_signal: "Position as startup banking and treasury workflow lead",
+    source: "https://mercury.com",
+    source2: "https://www.linkedin.com/company/mercurybank/",
+    last_researched: "2026-06-14",
+  },
+  {
+    rowId: "rc_ramp",
+    company: "Ramp",
+    website: "https://ramp.com",
+    status: "pending",
+    tier: "A",
+    intent: "Middle market card + spend controls",
+    owner: "Sam",
+    crm_status: "Target",
+    summary: "Expense, card, and procurement platform. Agent should gather updated product, pricing, customer, and hiring signals.",
+    funding: "Refresh from provider data",
+    headcount: "Refresh from provider data",
+    recent_signal: "Spend-management competitor and partner adjacency",
+    source: "https://ramp.com",
+    source2: "https://www.linkedin.com/company/ramp/",
+    last_researched: "never",
+  },
+  {
+    rowId: "rc_brex",
+    company: "Brex",
+    website: "https://brex.com",
+    status: "pending",
+    tier: "B",
+    intent: "Startup finance workflow",
+    owner: "Priya",
+    crm_status: "Research",
+    summary: "Corporate card, banking-adjacent, and expense workflow vendor. Compare positioning, customer segment, and runway assumptions.",
+    funding: "Refresh from provider data",
+    headcount: "Refresh from provider data",
+    recent_signal: "Benchmark against Mercury/Ramp account motion",
+    source: "https://brex.com",
+    source2: "https://www.linkedin.com/company/brexhq/",
+    last_researched: "never",
+  },
+];
+
+function startupResearchSeed(): Array<{ id: string; value: unknown }> {
+  const seed: Array<{ id: string; value: unknown }> = [];
+  for (const row of STARTUP_RESEARCH_ROWS) {
+    for (const col of STARTUP_RESEARCH_COLS) {
+      seed.push({ id: `${row.rowId}__${col}`, value: row[col] });
+    }
+  }
+  return seed;
+}
+
 function starterSheetSeed(): Array<{ id: string; value: unknown }> {
   const seed: Array<{ id: string; value: unknown }> = [];
-  for (const r of STARTER_SHEET_ROWS) {
+  for (const r of STARTER_VARIANCE_ROWS) {
     seed.push({ id: `${r.id}__label`, value: r.label });
     seed.push({ id: `${r.id}__q2`, value: r.q2 });
     seed.push({ id: `${r.id}__q3`, value: r.q3 });
@@ -42,13 +115,18 @@ function starterSheetSeed(): Array<{ id: string; value: unknown }> {
 const starterNoteSeed = () => [
   {
     id: "doc",
-    value: "<h1>Team notes</h1><p>Shared notes for the Q3 review. Type here, or ask your NodeAgent to draft and update this note.</p>",
+    value: [
+      "<h1>Startup banking diligence memo</h1>",
+      "<p>Use this room to coordinate JPM Middle Market Banking / Startup Banking diligence: company profile, product, pricing, hiring signals, market headwinds, competitors, runway, milestones, and downstream stakeholder drafts.</p>",
+      "<p>Ask the room agent to enrich pending accounts, build sourced findings, and prepare approval-gated handoffs.</p>",
+    ].join(""),
   },
 ];
 
 const starterWallSeed = () => [
-  { id: "s_welcome", value: { text: "Drop ideas here - drag to rearrange.", x: 64, y: 64, color: "#FDE68A" } },
-  { id: "s_agent", value: { text: "Ask an agent to add post-its in the Room lane.", x: 280, y: 150, color: "#BBF7D0" } },
+  { id: "s_workflow", value: { text: "Traditional diligence: analyst gathers company facts, enriches CRM/spreadsheet rows, drafts memo, then manually posts updates.", x: 54, y: 56, color: "#FDE68A" } },
+  { id: "s_agent", value: { text: "NodeAgent can enrich accounts, cite sources, draft runway/milestone findings, and keep every edit traced in the room.", x: 324, y: 136, color: "#BBF7D0" } },
+  { id: "s_handoff", value: { text: "Export drafts: Gmail, Notion, Slack, Linear, LinkedIn, and CRM CSV after human approval.", x: 170, y: 292, color: "#BFDBFE" } },
 ];
 
 async function insertStarterArtifact(
@@ -58,6 +136,7 @@ async function insertStarterArtifact(
     kind: "sheet" | "note" | "wall";
     title: string;
     seed: Array<{ id: string; value: unknown }>;
+    meta?: unknown;
     actor: ActorValue;
     now: number;
   },
@@ -69,11 +148,12 @@ async function insertStarterArtifact(
     version: 1,
     order: args.seed.map((s) => s.id),
     updatedAt: args.now,
+    meta: args.meta,
   });
   for (const s of args.seed) {
     await ctx.db.insert("elements", { artifactId, elementId: s.id, value: s.value, version: 1, updatedAt: args.now, updatedBy: args.actor });
   }
-  await syncSpreadsheetIndexFromSeed(ctx, { artifactId, title: args.title, kind: args.kind, seed: args.seed, now: args.now });
+  await syncSpreadsheetIndexFromSeed(ctx, { artifactId, title: args.title, kind: args.kind, meta: args.meta, seed: args.seed, now: args.now });
   await ctx.db.insert("traces", {
     roomId: args.roomId,
     ts: args.now,
@@ -86,13 +166,30 @@ async function insertStarterArtifact(
 }
 
 export const create = mutation({
-  args: { code: v.string(), title: v.string(), hostName: v.string(), authToken: v.string(), autoAllow: v.optional(v.boolean()) },
+  args: {
+    code: v.string(), title: v.string(), hostName: v.string(), authToken: v.string(), autoAllow: v.optional(v.boolean()),
+    // Optional starter artifacts seeded IN THE SAME TRANSACTION as the room. Any caller that needs a
+    // room pre-populated with custom artifacts must pass them here rather than following create with
+    // separate createArtifact calls — that older composition committed the room first, so a failed seed
+    // left a phantom room with partial artifacts. Bundling makes it all-or-nothing.
+    seedArtifacts: v.optional(v.array(v.object({
+      kind: v.union(v.literal("sheet"), v.literal("note"), v.literal("wall")),
+      title: v.string(),
+      seed: v.array(v.object({ id: v.string(), value: v.any() })),
+      meta: v.optional(v.any()),
+    }))),
+  },
   handler: async (ctx, a) => {
     const now = Date.now();
     const identity = await getRequiredProductionIdentity(ctx);
     const code = a.code.toUpperCase();
     if (!ROOM_CODE_RE.test(code)) throw new Error("weak_room_code"); // server-enforced entropy floor
     if (a.title.length > MAX_TITLE_LEN || a.hostName.length > MAX_NAME_LEN) throw new Error("field_too_long");
+    // Validate the whole seed bundle BEFORE the first insert, so an invalid seed rejects the create
+    // without writing anything (per-artifact size caps + a bound on how many artifacts one call may seed).
+    const seedArtifacts = a.seedArtifacts ?? [];
+    if (seedArtifacts.length > MAX_SEED_ARTIFACTS_PER_ROOM) throw new Error("too_many_seed_artifacts");
+    for (const art of seedArtifacts) assertCreateArtifactLimits(art);
     const existing = await ctx.db.query("rooms").withIndex("by_code", (q) => q.eq("code", code)).first();
     if (existing) throw new Error("room_code_taken");
     const roomId = await ctx.db.insert("rooms", { code, title: a.title, hostId: "", autoAllow: a.autoAllow ?? false, status: "live", createdAt: now });
@@ -101,7 +198,12 @@ export const create = mutation({
     await ctx.db.insert("agentSessions", { roomId, agentId: "agent_room", agentName: "Room NodeAgent", scope: "public", status: "idle", lastAction: "started", updatedAt: now });
     await ctx.db.insert("agentSessions", { roomId, agentId: "agent_priv", agentName: "Your NodeAgent", scope: "private", ownerId: memberId, status: "idle", lastAction: "started", updatedAt: now });
     await ctx.db.insert("traces", { roomId, ts: now, actor: { kind: "user", id: memberId, name: a.hostName }, type: "room_created", summary: `${a.hostName} created the room` });
-    return { roomId, memberId };
+    const actor: ActorValue = { kind: "user", id: String(memberId), name: a.hostName };
+    const artifactIds: Id<"artifacts">[] = [];
+    for (const art of seedArtifacts) {
+      artifactIds.push(await insertStarterArtifact(ctx, { roomId, kind: art.kind, title: art.title, seed: art.seed, meta: art.meta, actor, now }));
+    }
+    return { roomId, memberId, artifactIds };
   },
 });
 
@@ -131,9 +233,10 @@ export const createStarterRoom = mutation({
     await ctx.db.insert("agentSessions", { roomId, agentId: "agent_priv", agentName: "Your NodeAgent", scope: "private", ownerId: memberId, status: "idle", lastAction: "started", updatedAt: now });
     const actor = { kind: "user" as const, id: String(memberId), name: a.hostName };
     await ctx.db.insert("traces", { roomId, ts: now, actor, type: "room_created", summary: `${a.hostName} created the room` });
+    await insertStarterArtifact(ctx, { roomId, kind: "sheet", title: "Company research", seed: startupResearchSeed(), actor, now });
+    await insertStarterArtifact(ctx, { roomId, kind: "note", title: "Diligence memo", seed: starterNoteSeed(), actor, now });
+    await insertStarterArtifact(ctx, { roomId, kind: "wall", title: "Risk / opportunity wall", seed: starterWallSeed(), actor, now });
     await insertStarterArtifact(ctx, { roomId, kind: "sheet", title: "Q3 variance", seed: starterSheetSeed(), actor, now });
-    await insertStarterArtifact(ctx, { roomId, kind: "note", title: "Team notes", seed: starterNoteSeed(), actor, now });
-    await insertStarterArtifact(ctx, { roomId, kind: "wall", title: "Ideas wall", seed: starterWallSeed(), actor, now });
     return { roomId, memberId };
   },
 });
@@ -166,7 +269,7 @@ export const leave = mutation({
     const member = await ctx.db.get(actor.id as Id<"members">);
     if (!member || String(member.roomId) !== String(roomId)) throw new Error("actor_not_in_room");
     const now = Date.now();
-    await ctx.db.patch(member._id, { revokedAt: now, lastSeenAt: now });
+    await ctx.db.patch(member._id, { lastSeenAt: now });
     await ctx.db.insert("traces", {
       roomId,
       ts: now,

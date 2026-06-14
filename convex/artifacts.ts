@@ -22,7 +22,7 @@ const MAX_ARTIFACT_SEED_ELEMENTS = 20_000;
 const MAX_ARTIFACT_SEED_BYTES = 5_000_000;
 const MAX_ELEMENT_ID_CHARS = 160;
 
-function assertCreateArtifactLimits(a: { title: string; seed: Array<{ id: string; value: unknown }>; meta?: unknown }) {
+export function assertCreateArtifactLimits(a: { title: string; seed: Array<{ id: string; value: unknown }>; meta?: unknown }) {
   if (a.title.length > MAX_ARTIFACT_TITLE_CHARS) throw new Error("Artifact title is too long.");
   if (a.seed.length > MAX_ARTIFACT_SEED_ELEMENTS) throw new Error("Artifact seed has too many elements for one mutation.");
   const ids = new Set<string>();

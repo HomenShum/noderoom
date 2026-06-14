@@ -125,17 +125,6 @@ async function resolveSmokeTarget(client: ConvexHttpClient): Promise<{
 async function createTemporarySmokeTarget(client: ConvexHttpClient, token?: string) {
   const authToken = token ?? crypto.randomUUID();
   const suffix = crypto.randomUUID().replace(/-/g, "").slice(0, 5).toUpperCase();
-  const created = await client.mutation(api.rooms.create, {
-    code: `F${suffix}`,
-    title: "Free job smoke",
-    hostName: "Free job smoke",
-    authToken,
-    autoAllow: true,
-  }) as { roomId: string; memberId: string };
-  const proof: ActorProof = {
-    actor: { kind: "user", id: String(created.memberId), name: "Free job smoke" },
-    token: authToken,
-  };
   const columns = [
     { id: "label", label: "Account", order: 0, mode: "manual", type: "text", agentWritable: false },
     { id: "q2", label: "Q2", order: 1, mode: "manual", type: "currency", agentWritable: false },
@@ -154,28 +143,39 @@ async function createTemporarySmokeTarget(client: ConvexHttpClient, token?: stri
     { id: `${row.id}__variance`, value: "" },
     { id: `${row.id}__note`, value: "" },
   ]);
-  const artifactId = await client.mutation(api.artifacts.createArtifact, {
-    roomId: created.roomId,
-    kind: "sheet",
-    title: "Q3 variance smoke",
-    seed,
-    meta: {
-      dataframe: {
-        columns,
-        rowCount: rows.length,
-        sourceFile: "free-job-smoke",
-        sheetName: "Q3 variance smoke",
-        sheetNames: ["Q3 variance smoke"],
-        parser: "smoke",
-        truncated: false,
-        warnings: [],
+  // Room + smoke sheet seeded in ONE atomic mutation — a failed seed can't leave an orphan room behind
+  // (the old create-then-createArtifact pair committed the room first, so a mid-seed failure orphaned it).
+  const created = await client.mutation(api.rooms.create, {
+    code: `F${suffix}`,
+    title: "Free job smoke",
+    hostName: "Free job smoke",
+    authToken,
+    autoAllow: true,
+    seedArtifacts: [{
+      kind: "sheet",
+      title: "Q3 variance smoke",
+      seed,
+      meta: {
+        dataframe: {
+          columns,
+          rowCount: rows.length,
+          sourceFile: "free-job-smoke",
+          sheetName: "Q3 variance smoke",
+          sheetNames: ["Q3 variance smoke"],
+          parser: "smoke",
+          truncated: false,
+          warnings: [],
+        },
       },
-    },
-    proof,
-  });
+    }],
+  }) as { roomId: string; memberId: string; artifactIds: string[] };
+  const proof: ActorProof = {
+    actor: { kind: "user", id: String(created.memberId), name: "Free job smoke" },
+    token: authToken,
+  };
   return {
     roomId: String(created.roomId),
-    artifactId: String(artifactId),
+    artifactId: String(created.artifactIds[0]),
     proof,
     defaultGoal: "Say free job smoke complete in the room chat, then stop.",
   };

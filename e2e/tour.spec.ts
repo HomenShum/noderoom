@@ -8,7 +8,7 @@ test.describe("guided tour (memory mode)", () => {
   test("auto-starts on first visit, spotlights real targets, skips + replays", async ({ page }) => {
     await page.goto("/?mode=memory");
     await page.evaluate(() => { try { localStorage.removeItem("noderoom:tour:v1"); } catch { /* ignore */ } });
-    await page.getByRole("button", { name: /Enter the Q3 diligence room/i }).click();
+    await page.getByTestId("start-demo-room").click();
 
     // Auto-starts on the centered welcome step.
     const tour = page.getByTestId("guided-tour");
@@ -46,7 +46,7 @@ test.describe("guided tour (memory mode)", () => {
   test("does NOT auto-start once the seen-flag is set", async ({ page }) => {
     await page.goto("/?mode=memory");
     await page.evaluate(() => { try { localStorage.setItem("noderoom:tour:v1", "done"); } catch { /* ignore */ } });
-    await page.getByRole("button", { name: /Enter the Q3 diligence room/i }).click();
+    await page.getByTestId("start-demo-room").click();
     await expect(page.getByTestId("public-chat-panel").getByTestId("chat-composer")).toBeVisible();
     await expect(page.getByTestId("guided-tour")).toHaveCount(0);
   });

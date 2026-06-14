@@ -2,7 +2,9 @@ import { test as base, expect, type Page } from "@playwright/test";
 
 /**
  * Shared E2E helpers. The default flow drives the app in MEMORY mode (no backend): the Landing's
- * "Enter the Q3 diligence room" button mounts the EngineStoreProvider over the seeded demo room.
+ * "enter demo room" button (data-testid="start-demo-room") mounts the EngineStoreProvider over the
+ * seeded demo room. We match the stable testid, not the button copy, so product wording can change
+ * without breaking the harness.
  */
 export async function enterDemoRoom(page: Page): Promise<void> {
   await page.goto("/?mode=memory", { waitUntil: "domcontentloaded" });
@@ -12,7 +14,7 @@ export async function enterDemoRoom(page: Page): Promise<void> {
   const artifactPanel = page.getByTestId("artifact-panel");
   const alreadyInsideRoom = await artifactPanel.waitFor({ state: "visible", timeout: 1_000 }).then(() => true, () => false);
   if (!alreadyInsideRoom) {
-    const enterButton = page.getByRole("button", { name: /Enter the Q3 diligence room/i });
+    const enterButton = page.getByTestId("start-demo-room");
     await expect(enterButton).toBeVisible({ timeout: 10_000 });
     await enterButton.click();
   }

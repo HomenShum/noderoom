@@ -210,6 +210,8 @@ class Parser {
 const SUPPORTED = new Set([
   "SUM", "AVERAGE", "MIN", "MAX", "COUNT", "COUNTA", "IF", "AND", "OR", "NOT",
   "ROUND", "ROUNDUP", "ROUNDDOWN", "ABS", "SQRT", "CONCAT", "CONCATENATE",
+  "SUMIF", "COUNTIF", "AVERAGEIF", "VLOOKUP", "INDEX", "MATCH", "IFERROR",
+  "MOD", "POWER", "LEN", "LEFT", "RIGHT", "MID", "TRIM", "UPPER", "LOWER",
 ]);
 
 /** Coerce a value to a number for ARITHMETIC (blank -> 0, numeric string -> number, else #VALUE!). */
@@ -317,6 +319,46 @@ function aggNumbers(args: Node[], R: CellResolver): number[] {
   return out;
 }
 
+/** Coerce a value to a number for comparison/lookup, or null. */
+function toNum(v: CellValue): number | null {
+  return typeof v === "number" ? v : typeof v === "string" ? coerceNumeric(v) : typeof v === "boolean" ? (v ? 1 : 0) : null;
+}
+/** Excel-ish loose equality for lookups: numeric when both coerce, else case-insensitive string. */
+function looseEqual(a: CellValue, b: CellValue): boolean {
+  const an = toNum(a), bn = toNum(b);
+  if (an !== null && bn !== null) return an === bn;
+  return String(a ?? "").toLowerCase() === String(b ?? "").toLowerCase();
+}
+/** Expand a range (or single ref) node into a 2D grid of values for INDEX/MATCH/VLOOKUP/*IF. */
+function rangeGrid(node: Node, R: CellResolver): CellValue[][] {
+  if (node.k === "ref") return [[R.getCell(normalizeRef(node.v))]];
+  if (node.k !== "range") throw new FormulaEvalError("#REF!");
+  const pa = parseRef(node.a), pb = parseRef(node.b);
+  if (!pa || !pb) throw new FormulaEvalError("#REF!");
+  const r0 = Math.min(pa.row, pb.row), r1 = Math.max(pa.row, pb.row);
+  const c0 = Math.min(pa.col, pb.col), c1 = Math.max(pa.col, pb.col);
+  const grid: CellValue[][] = [];
+  for (let r = r0; r <= r1; r++) { const row: CellValue[] = []; for (let c = c0; c <= c1; c++) row.push(R.getCell(indexToCol(c) + r)); grid.push(row); }
+  return grid;
+}
+/** Match a value against a SUMIF/COUNTIF criteria (">10", "<>x", "abc", or a literal). */
+function matchesCriteria(value: CellValue, criteria: CellValue): boolean {
+  if (typeof criteria === "string") {
+    const m = criteria.match(/^(<=|>=|<>|<|>|=)?\s*([\s\S]*)$/);
+    const op = m?.[1] || "=";
+    const rhs = (m?.[2] ?? "").trim();
+    const rhsNum = coerceNumeric(rhs);
+    if (rhsNum !== null) {
+      const vNum = toNum(value);
+      if (vNum === null) return op === "<>";
+      switch (op) { case "=": return vNum === rhsNum; case "<>": return vNum !== rhsNum; case "<": return vNum < rhsNum; case ">": return vNum > rhsNum; case "<=": return vNum <= rhsNum; case ">=": return vNum >= rhsNum; }
+    }
+    const vStr = (value === null ? "" : String(value)).toLowerCase();
+    return op === "<>" ? vStr !== rhs.toLowerCase() : vStr === rhs.toLowerCase();
+  }
+  return looseEqual(value, criteria);
+}
+
 function evalCall(n: { name: string; args: Node[] }, R: CellResolver): CellValue {
   const fn = n.name;
   if (!SUPPORTED.has(fn)) throw new FormulaEvalError("#NAME?");
@@ -345,6 +387,72 @@ function evalCall(n: { name: string; args: Node[] }, R: CellResolver): CellValue
     }
     case "CONCAT":
     case "CONCATENATE": { let s = ""; for (const a of n.args) for (const v of argValues(a, R)) s += v === null ? "" : String(v); return s; }
+    case "SUMIF": {
+      const range = rangeGrid(n.args[0], R).flat();
+      const crit = evalScalar(n.args[1], R);
+      const sumR = n.args[2] ? rangeGrid(n.args[2], R).flat() : range;
+      let s = 0;
+      for (let i = 0; i < range.length; i++) if (matchesCriteria(range[i], crit)) { const num = aggNumber(sumR[i] ?? null); if (num !== null) s += num; }
+      return round12(s);
+    }
+    case "COUNTIF": { const range = rangeGrid(n.args[0], R).flat(); const crit = evalScalar(n.args[1], R); return range.filter((v) => matchesCriteria(v, crit)).length; }
+    case "AVERAGEIF": {
+      const range = rangeGrid(n.args[0], R).flat();
+      const crit = evalScalar(n.args[1], R);
+      const avgR = n.args[2] ? rangeGrid(n.args[2], R).flat() : range;
+      const xs: number[] = [];
+      for (let i = 0; i < range.length; i++) if (matchesCriteria(range[i], crit)) { const num = aggNumber(avgR[i] ?? null); if (num !== null) xs.push(num); }
+      if (xs.length === 0) throw new FormulaEvalError("#DIV/0!");
+      return round12(xs.reduce((a, b) => a + b, 0) / xs.length);
+    }
+    case "VLOOKUP": {
+      const lookup = evalScalar(n.args[0], R);
+      const table = rangeGrid(n.args[1], R);
+      const colIdx = Math.trunc(toNumber(evalScalar(n.args[2], R)));
+      const approx = n.args[3] ? truthy(evalScalar(n.args[3], R)) : true;
+      if (table.length === 0 || colIdx < 1 || colIdx > table[0].length) throw new FormulaEvalError("#REF!");
+      if (!approx) { for (const row of table) if (looseEqual(row[0], lookup)) return row[colIdx - 1]; throw new FormulaEvalError("#N/A"); }
+      const ln = toNum(lookup);
+      let best = -1;
+      for (let i = 0; i < table.length; i++) { const cn = toNum(table[i][0]); if (cn !== null && ln !== null) { if (cn <= ln) best = i; else break; } }
+      if (best < 0) throw new FormulaEvalError("#N/A");
+      return table[best][colIdx - 1];
+    }
+    case "INDEX": {
+      const grid = rangeGrid(n.args[0], R);
+      const a1 = Math.trunc(toNumber(evalScalar(n.args[1], R)));
+      if (!n.args[2]) {
+        if (grid.length === 1) { const row = grid[0]; if (a1 < 1 || a1 > row.length) throw new FormulaEvalError("#REF!"); return row[a1 - 1]; }
+        if ((grid[0]?.length ?? 0) === 1) { if (a1 < 1 || a1 > grid.length) throw new FormulaEvalError("#REF!"); return grid[a1 - 1][0]; }
+      }
+      const colNum = n.args[2] ? Math.trunc(toNumber(evalScalar(n.args[2], R))) : 1;
+      if (a1 < 1 || a1 > grid.length || colNum < 1 || colNum > (grid[0]?.length ?? 0)) throw new FormulaEvalError("#REF!");
+      return grid[a1 - 1][colNum - 1];
+    }
+    case "MATCH": {
+      const lookup = evalScalar(n.args[0], R);
+      const arr = rangeGrid(n.args[1], R).flat();
+      const mt = n.args[2] ? Math.trunc(toNumber(evalScalar(n.args[2], R))) : 1;
+      if (mt === 0) { for (let i = 0; i < arr.length; i++) if (looseEqual(arr[i], lookup)) return i + 1; throw new FormulaEvalError("#N/A"); }
+      const ln = toNum(lookup);
+      let best = -1;
+      for (let i = 0; i < arr.length; i++) { const cn = toNum(arr[i]); if (cn === null || ln === null) continue; if (mt === 1 ? cn <= ln : cn >= ln) best = i; }
+      if (best < 0) throw new FormulaEvalError("#N/A");
+      return best + 1;
+    }
+    case "IFERROR": {
+      try { return evalScalar(n.args[0], R); }
+      catch (e) { if (e instanceof FormulaEvalError) return n.args[1] ? evalScalar(n.args[1], R) : ""; throw e; }
+    }
+    case "MOD": { const a = toNumber(evalScalar(n.args[0], R)); const b = toNumber(evalScalar(n.args[1], R)); if (b === 0) throw new FormulaEvalError("#DIV/0!"); return round12(a - b * Math.floor(a / b)); }
+    case "POWER": { const v = Math.pow(toNumber(evalScalar(n.args[0], R)), toNumber(evalScalar(n.args[1], R))); if (!Number.isFinite(v)) throw new FormulaEvalError("#NUM!"); return round12(v); }
+    case "LEN": return String(evalScalar(n.args[0], R) ?? "").length;
+    case "LEFT": { const s = String(evalScalar(n.args[0], R) ?? ""); const k = n.args[1] ? Math.trunc(toNumber(evalScalar(n.args[1], R))) : 1; return s.slice(0, Math.max(0, k)); }
+    case "RIGHT": { const s = String(evalScalar(n.args[0], R) ?? ""); const k = n.args[1] ? Math.trunc(toNumber(evalScalar(n.args[1], R))) : 1; return k <= 0 ? "" : s.slice(-k); }
+    case "MID": { const s = String(evalScalar(n.args[0], R) ?? ""); const start = Math.trunc(toNumber(evalScalar(n.args[1], R))); const len = Math.trunc(toNumber(evalScalar(n.args[2], R))); const from = Math.max(0, start - 1); return s.slice(from, from + Math.max(0, len)); }
+    case "TRIM": return String(evalScalar(n.args[0], R) ?? "").trim().replace(/\s+/g, " ");
+    case "UPPER": return String(evalScalar(n.args[0], R) ?? "").toUpperCase();
+    case "LOWER": return String(evalScalar(n.args[0], R) ?? "").toLowerCase();
   }
   throw new FormulaEvalError("#NAME?");
 }

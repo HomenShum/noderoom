@@ -372,6 +372,7 @@ input { font-family: inherit; }
 .xl-cell.sel:hover { background: #fff; }
 .xl-cell.num { text-align: right; font-variant-numeric: tabular-nums; }
 .xl-cell.ctr { text-align: center; }
+.xl-cell.range:not(.sel) { background: #eaf3ec; box-shadow: inset 0 0 0 1px rgba(16,124,65,.32); }
 .xl-cell.sel { outline: 2px solid #107c41; outline-offset: -2px; z-index: 1; }
 /* Fill-handle nub — 6x6 accent square with a white border at the selection's bottom-right
    (fortune-sheet ships exactly this; its absence reads as "not a spreadsheet"). Visual-only

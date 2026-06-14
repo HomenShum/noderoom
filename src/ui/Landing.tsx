@@ -1,15 +1,21 @@
 /** Landing (`.r-landing`) — design hero + create/join, recreated from room.css. */
 import { useState } from "react";
-import { Sparkles, Table2, Lock, History } from "lucide-react";
+import { Sparkles, Table2, Lock, History, PlayCircle } from "lucide-react";
 import { engine, demo, createFreshRoom, joinRoomByCode } from "../app/roomStore";
 import type { Session } from "./App";
+import { LandingStory } from "../landing/LandingStory";
 
 export function Landing({ onEnter }: { onEnter: (s: Session) => void }) {
   const code = engine.getRoom(demo.roomId)?.code ?? "";
   const [join, setJoin] = useState(code);
   const [name, setName] = useState("");
   const [joinErr, setJoinErr] = useState<string | null>(null);
+  const [story, setStory] = useState(false);
   const tryJoin = () => { const s = joinRoomByCode(join, name || "Guest"); if (s) onEnter(s); else setJoinErr(`No room found for "${join.toUpperCase()}".`); };
+
+  // The scroll-driven product story — a separate full-screen surface reachable
+  // from the hero. Static (no live Convex); see src/landing/LandingStory.tsx.
+  if (story) return <LandingStory onEnter={onEnter} onBack={() => setStory(false)} />;
 
   return (
     <div className="r-app">
@@ -21,6 +27,10 @@ export function Landing({ onEnter }: { onEnter: (s: Session) => void }) {
             Public chat, a private NodeAgent, and a shared spreadsheet / note / post-it wall — with a
             <b> lock → draft → smart-merge</b> model so a human and an agent never clobber each other.
           </p>
+          {/* The marquee path: a scroll-driven 7-layer walkthrough of the product story. */}
+          <button className="r-btn primary" style={{ marginBottom: 4 }} onClick={() => setStory(true)}>
+            <PlayCircle size={15} /> See how it works — the 7-layer walkthrough
+          </button>
           {/* Name field ABOVE the CTAs that consume it (form-layout: inputs precede their submit),
               with a real label + example-data placeholder (placeholder-is-not-a-label). */}
           <label className="r-field" style={{ maxWidth: 320 }}>

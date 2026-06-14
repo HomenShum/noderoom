@@ -64,8 +64,14 @@ async function shoot(pages: Record<string, Page>, label: string) {
 
 test("three users chat, edit the same sheet concurrently, and run the public agent", async ({ browser }) => {
   test.setTimeout(600_000);
-  const CODE = "EVAL-" + Date.now().toString(36).toUpperCase();
-  const mk = async () => (await browser.newContext({ viewport: { width: 1280, height: 900 } })).newPage();
+  const CODE = "EVAL" + Date.now().toString(36).toUpperCase();
+  const mk = async () => {
+    const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 } });
+    await ctx.addInitScript(() => {
+      try { localStorage.setItem("noderoom:tour:v1", "done"); } catch { /* ignore */ }
+    });
+    return ctx.newPage();
+  };
   const maya = await mk(), dev = await mk(), sam = await mk();
   const all = [maya, dev, sam];
   const pages = { maya, dev, sam };

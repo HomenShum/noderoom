@@ -17,6 +17,7 @@ import { useStore, type RoomStore, type EditFeedback } from "../../app/store";
 import { formatExcelNumber } from "../../app/numberFormat";
 import { columnLetters } from "../../app/spreadsheetIndex";
 import { evaluateFormula, FormulaEvalError, type CellResolver, type CellValue, type FormulaResult } from "../../shared/formulaEngine";
+import { rangeBox, boxSize, cellsInBox, rangeLabel, rewriteFormulaRefs, buildTSV, parseTSV, toA1, parseA1 } from "../../shared/gridOps";
 import { onStageFocus, type StageFocusTarget } from "../stageFocus";
 import type { Actor, Artifact as Art, CellPayload, DataframeColumn, DocumentParseMeta, Proposal, TraceEvent, ResearchRowInput } from "../../engine/types";
 
@@ -117,7 +118,10 @@ function ArtifactSurface({ roomId, me, artId, onArt, collab, style, surfaceKey =
     return () => { cancelAnimationFrame(raf); clear(); };
   }, [pendingFocus, artId, tab]);
   if (arts.length === 0) return <div className="r-panel artifact"><div className="r-art-body" /></div>;
-  const activeTab: TabId = artFor(tab) ? tab : fallbackTab;
+  // Fall back to the SELECTED artifact's tab (artId is the source of truth), never the generic
+  // 'sheet'/variance default — otherwise the array-identity churn on an edit can momentarily snap a
+  // non-default sheet (e.g. an uploaded .xlsx) back to the variance tab.
+  const activeTab: TabId = artFor(tab) ? tab : tabForArt(artId);
   const pick = (t: TabId) => { const a = artFor(t); if (a) { onArt(a.id); setTab(t); } };
   const openArtifact = (a: Art) => { onArt(a.id); setTab(tabForArt(a.id)); };
 
@@ -740,6 +744,7 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
   const store = useStore();
   const [pages, setPages] = useState(1);
   const [sel, setSel] = useState<string | null>(null);
+  const [selAnchor, setSelAnchor] = useState<string | null>(null); // other corner of a multi-cell range; null = single cell
   const [viewStyle, setViewStyle] = useState<WorkbookViewStyle>(() => {
     if (typeof window === "undefined") return "excel";
     const stored = window.localStorage.getItem(WORKBOOK_VIEW_STORAGE_KEY);
@@ -827,6 +832,15 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
     if (!selMatch) return;
     const colIdx = Math.min(Math.max(lettersToColIndex(selMatch[1]) - 1 + dCol, 0), columns.length - 1);
     const rowNum = Math.min(Math.max(Number(selMatch[2]) + dRow, 1), visibleRows.length);
+    setSelAnchor(null);
+    setSel(`${columns[colIdx]}${rowNum}`);
+  };
+  /** Shift+arrow: extend the selection from a fixed anchor (Excel range-select). */
+  const extendSel = (dCol: number, dRow: number) => {
+    if (!selMatch) return;
+    const colIdx = Math.min(Math.max(lettersToColIndex(selMatch[1]) - 1 + dCol, 0), columns.length - 1);
+    const rowNum = Math.min(Math.max(Number(selMatch[2]) + dRow, 1), visibleRows.length);
+    setSelAnchor((a) => a ?? sel);
     setSel(`${columns[colIdx]}${rowNum}`);
   };
   const cellLocked = (id: string) => !!lockedByOther(store, art.id, id, me);
@@ -842,10 +856,14 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
    *  Tab moves right, Delete clears — the spreadsheet muscle memory. */
   const onGridKeyDown = (e: ReactKeyboardEvent<HTMLDivElement>) => {
     if (editing || !sel) return;
-    if (e.key === "ArrowUp") { e.preventDefault(); move(0, -1); }
-    else if (e.key === "ArrowDown") { e.preventDefault(); move(0, 1); }
-    else if (e.key === "ArrowLeft") { e.preventDefault(); move(-1, 0); }
-    else if (e.key === "ArrowRight") { e.preventDefault(); move(1, 0); }
+    const mv = e.shiftKey ? extendSel : move; // shift+arrow extends the range
+    if ((e.ctrlKey || e.metaKey) && (e.key === "d" || e.key === "D")) { e.preventDefault(); handleFillDown(); }
+    else if ((e.ctrlKey || e.metaKey) && (e.key === "c" || e.key === "C")) { e.preventDefault(); void handleCopy(); }
+    else if ((e.ctrlKey || e.metaKey) && (e.key === "v" || e.key === "V")) { e.preventDefault(); void handlePaste(); }
+    else if (e.key === "ArrowUp") { e.preventDefault(); mv(0, -1); }
+    else if (e.key === "ArrowDown") { e.preventDefault(); mv(0, 1); }
+    else if (e.key === "ArrowLeft") { e.preventDefault(); mv(-1, 0); }
+    else if (e.key === "ArrowRight") { e.preventDefault(); mv(1, 0); }
     else if (e.key === "Tab") { e.preventDefault(); move(e.shiftKey ? -1 : 1, 0); }
     else if (e.key === "Enter" || e.key === "F2") { e.preventDefault(); startEdit(sel, null); }
     else if (e.key === "Delete" || e.key === "Backspace") {
@@ -865,6 +883,59 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
     if (mv) move(mv.dCol, mv.dRow);
     gridRef.current?.focus();
   };
+  /** Ctrl/Cmd+D: fill the top row of a vertical range DOWN, rewriting relative formula refs per row.
+   *  BOUND: never fills more than 500 cells; aborts before writing anything if over. */
+  const handleFillDown = () => {
+    if (editing || !sel || !selAnchor) { onError({ ok: false, reason: "fill_needs_range" }); return; }
+    const box = rangeBox(selAnchor, sel);
+    if (!box || box.r0 === box.r1) { onError({ ok: false, reason: "fill_needs_range" }); return; }
+    if (boxSize(box) > 500) { onError({ ok: false, reason: "too_large" }); return; }
+    for (let c = box.c0; c <= box.c1; c++) {
+      const srcEl = art.elements[toA1(c, box.r0)];
+      const srcP = srcEl ? asCellPayload(srcEl.value) : null;
+      const srcRaw = srcP ? srcP.value : srcEl?.value;
+      const srcFormula = srcP?.formula ?? (typeof srcRaw === "string" && srcRaw.startsWith("=") ? srcRaw : undefined);
+      for (let r = box.r0 + 1; r <= box.r1; r++) {
+        const id = toA1(c, r);
+        if (mergeCovered.has(id) || cellLocked(id)) continue;
+        doCommit(id, srcFormula ? rewriteFormulaRefs(srcFormula, r - box.r0, 0) : srcRaw == null ? "" : String(srcRaw));
+      }
+    }
+  };
+  /** Ctrl/Cmd+C: copy the selected range as TSV to the clipboard. */
+  const handleCopy = async () => {
+    if (editing || !sel) return;
+    const box = rangeBox(selAnchor ?? sel, sel);
+    if (!box) return;
+    const rows: string[][] = [];
+    for (let r = box.r0; r <= box.r1; r++) {
+      const row: string[] = [];
+      for (let c = box.c0; c <= box.c1; c++) { const el = art.elements[toA1(c, r)]; const p = el ? asCellPayload(el.value) : null; const raw = p ? p.value : el?.value; row.push(raw == null ? "" : String(raw)); }
+      rows.push(row);
+    }
+    try { await navigator.clipboard.writeText(buildTSV(rows)); } catch { onError({ ok: false, reason: "clipboard" }); }
+  };
+  /** Ctrl/Cmd+V: paste a TSV block anchored at the active cell, clamped to the grid. BOUND 500. */
+  const handlePaste = async () => {
+    if (editing || !sel) return;
+    const anchor = parseA1(sel);
+    if (!anchor) return;
+    let text = "";
+    try { text = await navigator.clipboard.readText(); } catch { onError({ ok: false, reason: "clipboard" }); return; }
+    const grid = parseTSV(text);
+    if (!grid.length) return;
+    if (grid.length * (grid[0]?.length ?? 0) > 500) { onError({ ok: false, reason: "too_large" }); return; }
+    for (let i = 0; i < grid.length; i++) for (let j = 0; j < grid[i].length; j++) {
+      const c = anchor.col + j, r = anchor.row + i;
+      if (c > columns.length || r > visibleRows.length) continue;
+      const id = toA1(c, r);
+      if (mergeCovered.has(id) || cellLocked(id)) continue;
+      doCommit(id, grid[i][j]);
+    }
+  };
+  const selRangeBox = selAnchor && sel ? rangeBox(selAnchor, sel) : null;
+  const rangeCells = selRangeBox ? new Set(cellsInBox(selRangeBox)) : null;
+  const selLabel = sel ? (selRangeBox ? rangeLabel(selRangeBox) : sel) : "";
   return (
     <>
       <div className="r-art-body">
@@ -893,7 +964,7 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
             </div>
           </div>
           <div className="xl-fbar">
-            <span className="xl-name" data-testid="excel-namebox">{sel ?? ""}</span>
+            <span className="xl-name" data-testid="excel-namebox">{selLabel}</span>
             <span className="xl-fx">fx</span>
             <span className="xl-ftext" data-testid="excel-formulabar">{sel ? (selFormula || String(selRaw ?? "")) : ""}</span>
             <span className="grow" />
@@ -951,7 +1022,8 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
                       if (lk && !flaggedLocks.has(lk.id)) { flaggedLocks.add(lk.id); lockFlag = lk.holder.name; }
                       const alignRight = numCandidate !== undefined || st?.a === "r";
                       const isEditing = editing?.id === elementId;
-                      const cls = "xl-cell" + (alignRight ? " num" : "") + (st?.a === "c" ? " ctr" : "") + (lk ? " locked" : "") + (payload?.evidence?.length ? " evidence" : "") + (cellFormula ? " formula" : "") + (compError ? " cell-error" : "") + (sel === elementId ? " sel" : "") + (isEditing ? " editing" : "");
+                      const inRange = rangeCells?.has(elementId) ?? false;
+                      const cls = "xl-cell" + (alignRight ? " num" : "") + (st?.a === "c" ? " ctr" : "") + (lk ? " locked" : "") + (payload?.evidence?.length ? " evidence" : "") + (cellFormula ? " formula" : "") + (compError ? " cell-error" : "") + (inRange ? " range" : "") + (sel === elementId ? " sel" : "") + (isEditing ? " editing" : "");
                       const inline: Record<string, string | number> = {};
                       if (st?.bg) { inline.background = st.bg; if (!st?.fc && fillNeedsLightInk(st.bg)) inline.color = "#fff"; }
                       if (st?.fc) inline.color = st.fc; // the FILE's font color wins over the heuristic
@@ -970,12 +1042,13 @@ function ExcelGridSheet({ roomId, me, art, onError }: { roomId: string; me: Acto
                           style={inline}
                           title={title}
                           data-cell-key={elementId}
+                          data-in-range={rangeCells?.has(elementId) ? "true" : undefined}
                           data-has-evidence={payload?.evidence?.length ? "true" : undefined}
                           data-has-formula={cellFormula ? "true" : undefined}
                           colSpan={colSpan}
                           rowSpan={rowSpan}
-                          aria-selected={sel === elementId || undefined}
-                          onClick={() => { setSel(elementId); gridRef.current?.focus(); }}
+                          aria-selected={(sel === elementId || inRange) || undefined}
+                          onClick={(e) => { if (e.shiftKey) setSelAnchor((a) => a ?? sel); else setSelAnchor(null); setSel(elementId); gridRef.current?.focus(); }}
                           onDoubleClick={() => startEdit(elementId, null)}
                         >
                           {isEditing ? (

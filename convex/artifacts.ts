@@ -54,6 +54,12 @@ function formulaOf(value: unknown): string | undefined {
   return typeof formula === "string" ? formula : undefined;
 }
 
+/** Trace-friendly rendering of a cell value: show the formula for a formula cell (so the ledger
+ *  reads "set D2 = =C2-B2" not "[object Object]"), else the plain display value. */
+function formatCellForTrace(value: unknown): string {
+  return formulaOf(value) ?? displayValue(value);
+}
+
 function blocksFormulaScalar(current: unknown, next: unknown, actor: ActorValue, kind: "set" | "create" | "delete"): boolean {
   return kind === "set" && actor.kind === "agent" && !!formulaOf(current) && !formulaOf(next);
 }
@@ -235,8 +241,8 @@ async function applyApprovedProposal(ctx: MutationCtx, roomId: Id<"rooms">, arti
   }
   await ctx.db.patch(artifactId, { version: art.version + 1, updatedAt: now, order: nextOrder });
   const nextVersion = op.kind === "delete" ? actual : actual + 1;
-  const summary = op.kind === "delete" ? `${author.name} deleted ${op.elementId}` : `${author.name} set ${op.elementId} = ${String(op.value)}`;
-  await ctx.db.insert("traces", { roomId, ts: now, actor: author, type: "edit_applied", summary, detail: `edit_cell - ${op.elementId} = ${String(op.value)} - v${actual} -> v${nextVersion}` });
+  const summary = op.kind === "delete" ? `${author.name} deleted ${op.elementId}` : `${author.name} set ${op.elementId} = ${formatCellForTrace(op.value)}`;
+  await ctx.db.insert("traces", { roomId, ts: now, actor: author, type: "edit_applied", summary, detail: `edit_cell - ${op.elementId} = ${formatCellForTrace(op.value)} - v${actual} -> v${nextVersion}` });
   return { ok: true as const, version: nextVersion };
 }
 
@@ -308,7 +314,7 @@ async function applyCellEditCore(ctx: MutationCtx, a: ApplyCellEditArgs) {
     }
     const nextVersion = kind === "delete" ? actual : actual + 1;
     // 4. TRACE — every applied edit is auditable.
-    await ctx.db.insert("traces", { roomId: art.roomId, ts: now, actor: a.actor, type: "edit_applied", summary: `${a.actor.name} set ${a.elementId} = ${String(a.value)}`, detail: `edit_cell · ${a.elementId} = ${String(a.value)} · v${actual} → v${actual + 1}` });
+    await ctx.db.insert("traces", { roomId: art.roomId, ts: now, actor: a.actor, type: "edit_applied", summary: `${a.actor.name} set ${a.elementId} = ${formatCellForTrace(a.value)}`, detail: `edit_cell · ${a.elementId} = ${formatCellForTrace(a.value)} · v${actual} → v${actual + 1}` });
     let mutationReceiptId: Id<"agentMutationReceipts"> | undefined;
     if (a.jobId && job) {
       mutationReceiptId = await ctx.db.insert("agentMutationReceipts", clean({

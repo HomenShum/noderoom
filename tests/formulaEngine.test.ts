@@ -7,7 +7,7 @@
  * pattern, not just the parser.
  */
 import { describe, test, expect } from "vitest";
-import { evaluateFormula, FormulaEvalError, colToIndex, indexToCol, type CellResolver, type CellValue, type FormulaResult } from "../src/shared/formulaEngine";
+import { evaluateFormula, FormulaEvalError, SUPPORTED_FORMULA_FUNCTIONS, colToIndex, indexToCol, type CellResolver, type CellValue, type FormulaResult } from "../src/shared/formulaEngine";
 
 /** Build a sheet from A1-keyed raw values / formula strings, with a recursive cycle-guarded
  *  resolver that mirrors the live grid (computed values flow through; upstream errors propagate). */
@@ -144,5 +144,45 @@ describe("Error handling never crashes, never silently lies", () => {
   test("upstream error PROPAGATES (Excel semantics): Y=X+1 where X=1/0 is #DIV/0!", () => {
     const s = makeSheet({ X1: "=1/0", Y1: "=X1+1" });
     expect(val(s.compute("Y1"))).toBe("ERR:#DIV/0!");
+  });
+});
+
+describe("Lookup + criteria functions (the finance power tools)", () => {
+  // A small accounts table: A=name, B=tier, C=ARR
+  const book = {
+    A1: "Acme", B1: "A", C1: 100,
+    A2: "Bolt", B2: "B", C2: 50,
+    A3: "Cive", B3: "A", C3: 200,
+    A4: "Dyno", B4: "C", C4: 25,
+  };
+  test("SUMIF — total ARR for tier A (separate sum range)", () => expect(val(makeSheet({ ...book, X: '=SUMIF(B1:B4,"A",C1:C4)' }).compute("X"))).toBe(300));
+  test("COUNTIF — count tier A", () => expect(val(makeSheet({ ...book, X: '=COUNTIF(B1:B4,"A")' }).compute("X"))).toBe(2));
+  test("COUNTIF — numeric criteria >60", () => expect(val(makeSheet({ ...book, X: '=COUNTIF(C1:C4,">60")' }).compute("X"))).toBe(2));
+  test("AVERAGEIF — avg ARR for tier A", () => expect(val(makeSheet({ ...book, X: '=AVERAGEIF(B1:B4,"A",C1:C4)' }).compute("X"))).toBe(150));
+  test("VLOOKUP exact — ARR for Cive", () => expect(val(makeSheet({ ...book, X: '=VLOOKUP("Cive",A1:C4,3,FALSE)' }).compute("X"))).toBe(200));
+  test("VLOOKUP miss -> #N/A", () => expect(val(makeSheet({ ...book, X: '=VLOOKUP("Zzz",A1:C4,3,FALSE)' }).compute("X"))).toBe("ERR:#N/A"));
+  test("INDEX/MATCH — ARR where name=Bolt", () => expect(val(makeSheet({ ...book, X: '=INDEX(C1:C4,MATCH("Bolt",A1:A4,0))' }).compute("X"))).toBe(50));
+  test("IFERROR wraps #DIV/0! with a fallback", () => expect(val(makeSheet({ X: '=IFERROR(1/0,"n/a")' }).compute("X"))).toBe("n/a"));
+  test("IFERROR passes a good value through", () => expect(val(makeSheet({ X: "=IFERROR(2+2,0)" }).compute("X"))).toBe(4));
+  test("MOD and POWER", () => {
+    expect(val(makeSheet({ X: "=MOD(17,5)" }).compute("X"))).toBe(2);
+    expect(val(makeSheet({ X: "=POWER(2,8)" }).compute("X"))).toBe(256);
+  });
+  test("text functions LEN/LEFT/RIGHT/MID/TRIM/UPPER/LOWER", () => {
+    expect(val(makeSheet({ A1: "Anthropic", X: "=LEN(A1)" }).compute("X"))).toBe(9);
+    expect(val(makeSheet({ A1: "Anthropic", X: "=LEFT(A1,4)" }).compute("X"))).toBe("Anth");
+    expect(val(makeSheet({ A1: "Anthropic", X: "=RIGHT(A1,2)" }).compute("X"))).toBe("ic");
+    expect(val(makeSheet({ A1: "Anthropic", X: "=MID(A1,2,3)" }).compute("X"))).toBe("nth");
+    expect(val(makeSheet({ A1: "  a   b  ", X: "=TRIM(A1)" }).compute("X"))).toBe("a b");
+    expect(val(makeSheet({ A1: "abc", X: "=UPPER(A1)" }).compute("X"))).toBe("ABC");
+    expect(val(makeSheet({ A1: "ABC", X: "=LOWER(A1)" }).compute("X"))).toBe("abc");
+  });
+  test("nested: bonus = ARR * IF(tier=A, 0.1, 0.05) via VLOOKUP", () => {
+    const s = makeSheet({ ...book, X: '=C3*IF(VLOOKUP("Cive",A1:C4,2,FALSE)="A",0.1,0.05)' });
+    expect(val(s.compute("X"))).toBe(20); // 200 * 0.1
+  });
+  test("unknown function still -> #NAME?", () => expect(val(makeSheet({ X: "=FOO(1)" }).compute("X"))).toBe("ERR:#NAME?"));
+  test("SUPPORTED set exposes the new functions", () => {
+    for (const fn of ["SUMIF", "COUNTIF", "AVERAGEIF", "VLOOKUP", "INDEX", "MATCH", "IFERROR", "MOD", "POWER", "LEN"]) expect(SUPPORTED_FORMULA_FUNCTIONS).toContain(fn);
   });
 });

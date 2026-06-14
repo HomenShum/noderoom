@@ -631,7 +631,17 @@ npm run dev             # now reads/writes live Convex (optimistic); the agent r
 
 # ── Verify ───────────────────────────────────────────────────────────────────
 npm run typecheck   &&   npm test   &&   npm run build      # tsc, full tests, vite build
+npm run test:product:live        # live Convex browser gate: chat, workbook formulas, reactivity, CRS
+npm run test:product:live:agent  # provider-backed 3-user agent/review-mode gate
 ```
+
+The product gates are intentionally broader than the benchmark harness. `test:product:live`
+starts the app against live Convex and proves chat, uploaded-workbook formulas,
+range fill-down, cross-browser reactivity, same-cell CAS convergence, and
+host-reviewed semantic rebase. `test:product:live:agent` adds the three-user
+strict gate: public/private agent lanes, personal room-lane actions, all-artifact
+visibility, and in-cell review proposals. Latest evidence:
+[`docs/eval/THREE_USER_COLLAB.md`](docs/eval/THREE_USER_COLLAB.md).
 
 ## Architecture
 

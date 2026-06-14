@@ -30,6 +30,19 @@ async function styledWorkbookFile(): Promise<string> {
   ws.getCell("B6").value = "Formula check";
   ws.getCell("C6").value = 10;
   ws.getCell("D6").value = { formula: "C6*2", result: 20 };
+  ws.getCell("B7").value = "Tier A ARR";
+  ws.getCell("D7").value = { formula: 'SUMIF(B10:B12,"A",C10:C12)', result: 300 };
+  ws.getCell("B8").value = "Cive ARR";
+  ws.getCell("D8").value = { formula: 'VLOOKUP("Cive",A10:C12,3,FALSE)', result: 200 };
+  ws.getCell("A10").value = "Acme";
+  ws.getCell("B10").value = "A";
+  ws.getCell("C10").value = 100;
+  ws.getCell("A11").value = "Bolt";
+  ws.getCell("B11").value = "B";
+  ws.getCell("C11").value = 50;
+  ws.getCell("A12").value = "Cive";
+  ws.getCell("B12").value = "A";
+  ws.getCell("C12").value = 200;
   const buffer = await workbook.xlsx.writeBuffer();
   const dir = mkdtempSync(join(tmpdir(), "noderoom-xl-"));
   const path = join(dir, "model.xlsx");
@@ -146,6 +159,31 @@ test("spreadsheet keyboard model — arrows, type-to-replace, Enter/Tab moves, E
   await page.keyboard.press("Escape");
 });
 
+test("spreadsheet range selection and fill-down rewrite values and formulas", async ({ page }) => {
+  await enterDemoRoom(page);
+  const path = await styledWorkbookFile();
+  await page.locator(".r-file-input").setInputFiles(path);
+  await page.getByRole("button", { name: /model\.xlsx/ }).click();
+  const paper = page.getByTestId("excel-paper");
+  const namebox = page.getByTestId("excel-namebox");
+
+  await paper.locator('[data-cell-key="C6"]').click();
+  await page.keyboard.press("Shift+ArrowDown");
+  await page.keyboard.press("Shift+ArrowDown");
+  await expect(namebox).toHaveText("C6:C8");
+  await expect(paper.locator('[data-cell-key="C7"]')).toHaveAttribute("data-in-range", "true");
+  await page.keyboard.press(process.platform === "darwin" ? "Meta+D" : "Control+D");
+  await expect(paper.locator('[data-cell-key="C7"]')).toHaveText("10");
+  await expect(paper.locator('[data-cell-key="C8"]')).toHaveText("10");
+
+  await paper.locator('[data-cell-key="D6"]').click();
+  await page.keyboard.press("Shift+ArrowDown");
+  await page.keyboard.press(process.platform === "darwin" ? "Meta+D" : "Control+D");
+  await expect(paper.locator('[data-cell-key="D7"]')).toHaveText("20");
+  await paper.locator('[data-cell-key="D7"]').click();
+  await expect(page.getByTestId("excel-formulabar")).toHaveText("=C7*2");
+});
+
 test("uploaded workbook formulas display computed values, preserve formulas in edit mode, and recalc after driver edits", async ({ page }) => {
   await enterDemoRoom(page);
   const path = await styledWorkbookFile();
@@ -157,9 +195,17 @@ test("uploaded workbook formulas display computed values, preserve formulas in e
   const formula = paper.locator('[data-cell-key="D6"]');
 
   await expect(formula).toHaveText("20");
+  await expect(paper.locator('[data-cell-key="D7"]')).toHaveText("300");
+  await expect(paper.locator('[data-cell-key="D8"]')).toHaveText("200");
   await expect(formula).toHaveAttribute("data-has-formula", "true");
+  await expect(paper.locator('[data-cell-key="D7"]')).toHaveAttribute("data-has-formula", "true");
+  await expect(paper.locator('[data-cell-key="D8"]')).toHaveAttribute("data-has-formula", "true");
   await formula.click();
   await expect(page.getByTestId("excel-formulabar")).toHaveText("=C6*2");
+  await paper.locator('[data-cell-key="D7"]').click();
+  await expect(page.getByTestId("excel-formulabar")).toHaveText('=SUMIF(B10:B12,"A",C10:C12)');
+  await paper.locator('[data-cell-key="D8"]').click();
+  await expect(page.getByTestId("excel-formulabar")).toHaveText('=VLOOKUP("Cive",A10:C12,3,FALSE)');
 
   await formula.dblclick();
   await expect(formula.locator("input.xl-input")).toHaveValue("=C6*2");

@@ -22,6 +22,8 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "test:e2e:ui": "playwright test --ui",
+    "test:product:live": "tsx scripts/live-product-gate.ts",
+    "test:product:live:agent": "tsx scripts/live-product-gate.ts --agent --strict-review",
     "typecheck": "tsc --noEmit",
     "convex:dev": "convex dev",
     "benchmark": "tsx scripts/benchmark/run.ts",

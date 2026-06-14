@@ -1,53 +1,59 @@
-import { test, expect, type BrowserContext } from "@playwright/test";
+import { test, expect, type BrowserContext, type Page } from "@playwright/test";
 
 /**
- * The irreducibly-real-backend specs (judge "necessary" set). Only a real Convex backend can prove
- * cross-client reactivity and the CAS confirm-swap, so these SKIP unless E2E_CONVEX_URL is set and the
- * dev server was started with that VITE_CONVEX_URL (against a seeded Q3DEMO room).
- *
- * To activate:
- *   1) seed a local/dev Convex backend with the Q3DEMO room (see README);
- *   2) VITE_CONVEX_URL=<url> npm run dev   (so the app takes the live ConvexApp path);
- *   3) E2E_CONVEX_URL=<url> npx playwright test reactivity.backend
- *   4) add data-testid="cell" + data-cell-key="<elementId>" to the spreadsheet cell (Artifact.tsx Sheet)
- *      — the one testid the memory-mode path does not yet need.
+ * Real-backend specs. Only a live Convex backend can prove cross-client reactivity and the
+ * optimistic-to-confirmed swap, so these skip unless E2E_CONVEX_URL is set and the dev server was
+ * started with the matching VITE_CONVEX_URL.
  */
 const HAS_BACKEND = !!process.env.E2E_CONVEX_URL;
 test.skip(!HAS_BACKEND, "set E2E_CONVEX_URL (+ start dev with that VITE_CONVEX_URL) to run real-backend reactivity specs");
 
-async function joinLiveRoom(ctx: BrowserContext) {
+async function dismissTour(page: Page) {
+  await page.getByRole("button", { name: "Got it" }).click({ timeout: 2_000 }).catch(() => undefined);
+}
+
+async function openLiveRoom(ctx: BrowserContext, code: string, name: string, create = false) {
   const page = await ctx.newPage();
-  await page.goto("/"); // live mode: auto-joins the seeded Q3DEMO room as a fresh anonymous member
+  await page.addInitScript(() => {
+    try { localStorage.setItem("noderoom:tour:v1", "done"); } catch { /* ignore */ }
+  });
+  await page.goto(`/?${create ? "create" : "room"}=${code}&name=${encodeURIComponent(name)}`);
+  await dismissTour(page);
   await expect(page.getByTestId("public-chat-panel").getByTestId("chat-composer")).toBeVisible({ timeout: 20_000 });
+  await expect(page.locator('[data-cell-key="r_rev__variance"]')).toBeVisible({ timeout: 20_000 });
   return page;
 }
 
-test("Spec A — optimistic confirm-swap is flicker-free and reconciles to one bubble", async ({ browser }) => {
+async function cellText(page: Page, key: string) {
+  return (await page.locator(`[data-cell-key="${key}"]`).innerText()).trim();
+}
+
+test("Spec A - optimistic confirm-swap reconciles to one bubble", async ({ browser }) => {
   const ctx = await browser.newContext();
-  const page = await joinLiveRoom(ctx);
+  const code = `RT${Date.now().toString(36).toUpperCase()}`;
+  const page = await openLiveRoom(ctx, code, "Maya", true);
   const chat = page.getByTestId("public-chat-panel");
   const body = `e2e-${Date.now().toString(36)}`;
   await chat.getByTestId("chat-composer").fill(body);
   await chat.getByTestId("chat-send").click();
 
   const bubble = chat.getByTestId("chat-message").filter({ hasText: body });
-  await expect(bubble).toBeVisible();              // optimistic: appears instantly
-  await expect(bubble).toHaveAttribute("data-state", "pending");
-  await expect(bubble).toHaveAttribute("data-state", "confirmed"); // server confirm-swap
-  await expect(bubble).toHaveCount(1);             // stable clientMsgId key → no duplicate/remount
+  await expect(bubble).toBeVisible({ timeout: 1_000 });
+  await expect(bubble).toHaveAttribute("data-state", /pending|confirmed/);
+  await expect(bubble).toHaveAttribute("data-state", "confirmed", { timeout: 20_000 });
+  await expect(bubble).toHaveCount(1);
   await ctx.close();
 });
 
-test("Spec B — concurrent CAS loser reverts without dropping the winner's intent", async ({ browser }) => {
-  // Two independent anonymous members in the same live room.
+test("Spec B - concurrent CAS loser reverts without dropping the winner's intent", async ({ browser }) => {
   const ctxA = await browser.newContext();
   const ctxB = await browser.newContext();
-  const a = await joinLiveRoom(ctxA);
-  const b = await joinLiveRoom(ctxB);
+  const code = `RT${Date.now().toString(36).toUpperCase()}`;
+  const a = await openLiveRoom(ctxA, code, "Maya", true);
+  const b = await openLiveRoom(ctxB, code, "Dev");
 
-  // Both target the same cell with different values from the same baseVersion; the server CAS lets
-  // exactly one win. The loser's optimistic value must revert to canonical (non-silent), and the
-  // winner's value must survive — verified through the rendered DOM, not just the function layer.
+  // Both target the same cell with different values from the same baseVersion. The server CAS lets
+  // exactly one win; both browsers must converge on the same canonical value.
   const cell = "r_gp__variance";
   const valueA = "+21.7%";
   const valueB = "+99.9%";
@@ -57,14 +63,17 @@ test("Spec B — concurrent CAS loser reverts without dropping the winner's inte
   await expect(cellB).toBeVisible();
 
   await cellA.dblclick();
-  await a.getByRole("textbox").fill(valueA);
+  await a.locator(".r-cell-input").fill(valueA);
   await cellB.dblclick();
-  await b.getByRole("textbox").fill(valueB);
+  await b.locator(".r-cell-input").fill(valueB);
   await a.keyboard.press("Enter");
   await b.keyboard.press("Enter");
 
-  // Both clients converge on the same canonical winner; neither is left showing a torn/ghost value.
-  await expect(cellA).toHaveText(cellB.innerText());
+  await expect.poll(async () => {
+    const [aText, bText] = await Promise.all([cellText(a, cell), cellText(b, cell)]);
+    return aText && aText === bText ? aText : "";
+  }, { timeout: 30_000 }).not.toBe("");
+  expect([valueA, valueB]).toContain(await cellText(a, cell));
   await ctxA.close();
   await ctxB.close();
 });

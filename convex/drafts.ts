@@ -39,7 +39,7 @@ export const createDraft = internalMutation({
 export async function mergeBlockedDrafts(ctx: MutationCtx, roomId: Id<"rooms">, lockId: string) {
   const drafts = await ctx.db.query("drafts").withIndex("by_room_status", (q) => q.eq("roomId", roomId).eq("status", "pending")).collect();
   const now = Date.now();
-  const results: { draftId: Id<"drafts">; verdict: string; applied: number; conflicts: number }[] = [];
+  const results: { draftId: Id<"drafts">; verdict: string; applied: number; conflicts: number; proposalIds?: Id<"proposals">[] }[] = [];
 
   for (const d of drafts) {
     if (d.blockedByLockId !== lockId) continue;
@@ -66,11 +66,39 @@ export async function mergeBlockedDrafts(ctx: MutationCtx, roomId: Id<"rooms">, 
     }
 
     const verdict = conflicts.length ? "needs_review" : "clean";
+    const proposalIds: Id<"proposals">[] = [];
+    const art = conflicts.length ? await ctx.db.get(d.artifactId) : null;
+    if (conflicts.length && d.author.scope !== "private") {
+      for (const conflict of conflicts) {
+        const op = d.ops.find((candidate) => candidate.opId === conflict.opId);
+        if (!op) continue;
+        const current = await getElement(ctx, d.artifactId, op.elementId);
+        const proposalId = await ctx.db.insert("proposals", {
+          roomId,
+          artifactId: d.artifactId,
+          op: { ...op, artifactId: String(d.artifactId), baseVersion: current?.version ?? 0 },
+          author: d.author,
+          review: {
+            kind: "semantic_rebase",
+            conflictId: `draft_${String(d._id)}_${op.elementId}`,
+            status: art?.kind === "note" ? "draft" : "needs_review",
+            reason: "Draft conflict routed to review after committed work changed.",
+            currentVersion: current?.version ?? 0,
+          },
+          status: "pending",
+          createdAt: now,
+        });
+        proposalIds.push(proposalId);
+      }
+    }
     await ctx.db.patch(d._id, { status: conflicts.length ? "conflict" : "merged", resolvedAt: now });
-    if (applied.length) { const art = await ctx.db.get(d.artifactId); if (art) await ctx.db.patch(d.artifactId, { version: art.version + 1, updatedAt: now }); }
+    if (applied.length) {
+      const artifact = art ?? await ctx.db.get(d.artifactId);
+      if (artifact) await ctx.db.patch(d.artifactId, { version: artifact.version + 1, updatedAt: now });
+    }
     const note = d.author.scope === "private" ? "[private draft]" : d.note;
     await ctx.db.insert("traces", { roomId, ts: now, actor: d.author, type: conflicts.length ? "draft_conflict" : "draft_merged", summary: `Smart-merge (${verdict}): ${applied.length} applied, ${conflicts.length} flagged — ${note}`, detail: `smart_merge · ${applied.length} applied, ${conflicts.length} flagged → ${verdict}` });
-    results.push({ draftId: d._id, verdict, applied: applied.length, conflicts: conflicts.length });
+    results.push({ draftId: d._id, verdict, applied: applied.length, conflicts: conflicts.length, proposalIds });
   }
   return results;
 }

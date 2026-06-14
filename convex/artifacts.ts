@@ -48,6 +48,16 @@ function stableValueKey(value: unknown): string {
   catch { return String(value); }
 }
 
+function formulaOf(value: unknown): string | undefined {
+  if (!value || typeof value !== "object") return undefined;
+  const formula = (value as { formula?: unknown }).formula;
+  return typeof formula === "string" ? formula : undefined;
+}
+
+function blocksFormulaScalar(current: unknown, next: unknown, actor: ActorValue, kind: "set" | "create" | "delete"): boolean {
+  return kind === "set" && actor.kind === "agent" && !!formulaOf(current) && !formulaOf(next);
+}
+
 function samePendingProposal(
   proposal: { roomId: Id<"rooms">; artifactId: Id<"artifacts">; op: unknown; author: ActorValue; status: string },
   a: ApplyCellEditArgs,
@@ -211,6 +221,9 @@ async function applyApprovedProposal(ctx: MutationCtx, roomId: Id<"rooms">, arti
   if (actual !== op.baseVersion) {
     return { ok: false as const, reason: "conflict" as const, expected: op.baseVersion, actual };
   }
+  if (blocksFormulaScalar(el?.value, op.value, author, op.kind)) {
+    return { ok: false as const, reason: "formula_protected" as const };
+  }
   const now = Date.now();
   if (el) await ctx.db.patch(el._id, { value: op.value, version: actual + 1, updatedAt: now, updatedBy: author });
   else await ctx.db.insert("elements", { artifactId, elementId: op.elementId, value: op.value, version: 1, updatedAt: now, updatedBy: author });
@@ -249,6 +262,9 @@ async function applyCellEditCore(ctx: MutationCtx, a: ApplyCellEditArgs) {
     const actual = el?.version ?? 0;
     if (actual !== a.baseVersion) {
       return { ok: false as const, reason: "conflict" as const, expected: a.baseVersion, actual };
+    }
+    if (blocksFormulaScalar(el?.value, a.value, a.actor, kind)) {
+      return { ok: false as const, reason: "formula_protected" as const };
     }
     const room = await ctx.db.get(a.roomId);
     if (a.actor.kind === "agent" && room && !room.autoAllow) {
@@ -351,6 +367,7 @@ export const listProposals = query({
       artifactId: String(p.artifactId),
       op: p.op,
       author: p.author,
+      review: p.review,
       status: p.status,
       createdAt: p.createdAt,
     }));
@@ -384,17 +401,40 @@ export const resolveProposal = mutation({
     if (proposal.status !== "pending") return { ok: false as const, reason: "not_pending" as const };
 
     const now = Date.now();
-    await ctx.db.patch(proposalId, { status: approve ? "approved" : "rejected", resolvedAt: now });
-    const result = approve ? await applyApprovedProposal(ctx, proposal.roomId, proposal.artifactId, parseProposalOp(proposal.op), proposal.author as ActorValue) : null;
+    if (approve) {
+      const result = await applyApprovedProposal(ctx, proposal.roomId, proposal.artifactId, parseProposalOp(proposal.op), proposal.author as ActorValue);
+      if (!result.ok) {
+        await ctx.db.insert("traces", {
+          roomId: proposal.roomId,
+          ts: now,
+          actor,
+          type: "proposal_resolve_failed",
+          summary: `${actor.name} tried to approve ${proposal.author.name}'s edit, but final validation rejected it`,
+          detail: `proposal ${String(proposalId)} - approval blocked - ${result.reason}`,
+        });
+        return result;
+      }
+      await ctx.db.patch(proposalId, { status: "approved", resolvedAt: now });
+      await ctx.db.insert("traces", {
+        roomId: proposal.roomId,
+        ts: now,
+        actor,
+        type: "proposal_resolved",
+        summary: `${actor.name} approved ${proposal.author.name}'s edit`,
+        detail: `proposal ${String(proposalId)} - approved`,
+      });
+      return result;
+    }
+    await ctx.db.patch(proposalId, { status: "rejected", resolvedAt: now });
     await ctx.db.insert("traces", {
       roomId: proposal.roomId,
       ts: now,
       actor,
       type: "proposal_resolved",
-      summary: `${actor.name} ${approve ? "approved" : "rejected"} ${proposal.author.name}'s edit`,
-      detail: `proposal ${String(proposalId)} · ${approve ? "approved" : "rejected"}${result && !result.ok ? ` · ${result.reason}` : ""}`,
+      summary: `${actor.name} rejected ${proposal.author.name}'s edit`,
+      detail: `proposal ${String(proposalId)} - rejected`,
     });
-    return result ?? { ok: true as const, rejected: true as const };
+    return { ok: true as const, rejected: true as const };
   },
 });
 

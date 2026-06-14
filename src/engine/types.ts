@@ -345,7 +345,7 @@ export interface AgentSession {
 export type TraceType =
   | "room_created" | "member_joined" | "auto_allow_toggled"
   | "lock_acquired" | "lock_released" | "lock_denied"
-  | "edit_applied" | "edit_blocked" | "edit_proposed" | "proposal_resolved"
+  | "edit_applied" | "edit_blocked" | "edit_proposed" | "proposal_resolved" | "proposal_resolve_failed"
   | "draft_created" | "draft_merged" | "draft_conflict" | "semantic_conflict"
   | "agent_session_started" | "agent_status" | "message";
 

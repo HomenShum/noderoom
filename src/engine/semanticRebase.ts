@@ -216,16 +216,12 @@ export function classifySemanticConflictPacket(packet: SemanticConflictPacket): 
     };
   }
 
-  if (isBusinessAssumption(packet) || packet.policy.humanWinsByDefault) {
+  if (isBusinessAssumption(packet)) {
     return {
       tier: "human_review_required",
       action: "create_review_proposal",
       canAutoCommit: false,
-      reasons: [
-        isBusinessAssumption(packet)
-          ? `business assumption impact requires human approval: ${packet.businessImpact}`
-          : "human-authored state wins by default",
-      ],
+      reasons: [`business assumption impact requires human approval: ${packet.businessImpact}`],
       requiredValidators: [...requiredValidators, "evidence_check", "review_tier"],
     };
   }
@@ -252,6 +248,16 @@ export function classifySemanticConflictPacket(packet: SemanticConflictPacket): 
       canAutoCommit: packet.policy.autoCommitAllowed,
       reasons: ["textual conflict can be synthesized, but model output must pass validators and final CAS"],
       requiredValidators: [...requiredValidators, "evidence_check", "diff_scope_check"],
+    };
+  }
+
+  if (packet.policy.humanWinsByDefault) {
+    return {
+      tier: "human_review_required",
+      action: "create_review_proposal",
+      canAutoCommit: false,
+      reasons: ["human-authored state wins by default"],
+      requiredValidators: [...requiredValidators, "evidence_check", "review_tier"],
     };
   }
 

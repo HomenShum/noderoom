@@ -142,6 +142,7 @@ export default defineSchema({
     artifactId: v.id("artifacts"),
     op: v.any(),
     author: actor,
+    review: v.optional(v.any()),
     status: v.union(v.literal("pending"), v.literal("approved"), v.literal("rejected")),
     createdAt: v.number(),
     resolvedAt: v.optional(v.number()),

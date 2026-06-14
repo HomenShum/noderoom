@@ -141,6 +141,13 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
     setCollab({ running: true, done: false });
     try { await store.runCollab(); } finally { setCollab({ running: false, done: true }); }
   };
+  const runSemanticConflictDrill = async () => {
+    if (collab.running || !store.runSemanticConflictDrill) return;
+    setShow({ left: true, stage: true, copilot: true });
+    setCopilotTab("public");
+    setCollab({ running: true, done: false });
+    try { await store.runSemanticConflictDrill(); } finally { setCollab({ running: false, done: true }); }
+  };
   const toggleAutoAccept = () => {
     if (!isHost) return;
     if (room.autoAllow) {
@@ -253,7 +260,7 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
       <div className="r-workspace" data-shell="june-2026">
         {show.left && <LeftRail roomId={roomId} me={me} artId={curArt?.id ?? artId} style={{ width: layout.left }} onPick={openArtifact} />}
         {show.left && <ResizeHandle label="Resize files panel" onPointerDown={(x) => startResize("left", x)} />}
-        {(!isCompact || show.stage) && <Artifact roomId={roomId} me={me} artId={curArt?.id ?? artId} onArt={setArtId} style={{ flex: layout.stage }} collab={store.canRunCollab ? { ...collab, onRun: runCollab } : undefined} />}
+        {(!isCompact || show.stage) && <Artifact roomId={roomId} me={me} artId={curArt?.id ?? artId} onArt={setArtId} style={{ flex: layout.stage }} collab={store.canRunCollab ? { ...collab, onRun: runCollab, onConflict: store.runSemanticConflictDrill ? runSemanticConflictDrill : undefined } : undefined} />}
         {show.copilot && <ResizeHandle label="Resize Copilot panel" onPointerDown={(x) => startResize("right", x)} />}
         {show.copilot && (
           <CopilotPanel

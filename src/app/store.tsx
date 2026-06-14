@@ -122,6 +122,8 @@ export interface RoomStore {
   uploadArtifact(args: { roomId: string; artifact: UploadedArtifactInput; actor: Actor }): Promise<string>;
   canRunCollab: boolean;
   runCollab(): Promise<void>;
+  /** Memory-mode product drill: creates a stale agent draft and routes it through CRS review. */
+  runSemanticConflictDrill?(): Promise<void>;
   /** Drive the public Room NodeAgent on a free-form goal — the `/ask` path. */
   askAgent(input: AgentAskInput): Promise<void>;
   /** Drive the per-user PRIVATE NodeAgent. Default: reads the room, replies in the user's own private
@@ -292,6 +294,7 @@ export function EngineStoreProvider({ roomId, children }: { roomId: string; me: 
     uploadArtifact: async ({ roomId, artifact, actor }) => engine.createArtifact({ roomId, kind: artifact.kind, title: artifact.title, seed: artifact.seed, meta: artifact.meta, by: actor }).id,
     canRunCollab: roomId === demo.roomId,
     runCollab: () => runDemo(false),
+    runSemanticConflictDrill: () => runDemo(true),
     askAgent: async (input) => {
       const artifacts = engine.listArtifacts(roomId);
       const references = canonicalRefs(artifacts, input.references);

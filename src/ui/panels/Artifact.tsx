@@ -31,6 +31,7 @@ const TABS: { id: TabId; label: string; Icon: LucideIcon }[] = [
   { id: "wall", label: "Wall", Icon: StickyNote },
 ];
 type WorkbookViewStyle = "excel" | "sheets" | "evidence";
+type CollabControls = { running: boolean; done: boolean; onRun: () => void; onConflict?: () => void };
 const WORKBOOK_VIEW_STYLES: { id: WorkbookViewStyle; label: string; hint: string }[] = [
   { id: "excel", label: "Excel", hint: "file" },
   { id: "sheets", label: "Sheets", hint: "collab" },
@@ -40,7 +41,7 @@ const WORKBOOK_VIEW_STORAGE_KEY = "noderoom:workbook-view-style";
 
 function ArtifactSurface({ roomId, me, artId, onArt, collab, style, surfaceKey = "primary", headerExtra }: {
   roomId: string; me: Actor; artId: string; onArt: (id: string) => void;
-  collab?: { running: boolean; done: boolean; onRun: () => void };
+  collab?: CollabControls;
   style?: CSSProperties;
   surfaceKey?: "primary" | "secondary";
   headerExtra?: ReactNode;
@@ -158,7 +159,7 @@ function ArtifactSurface({ roomId, me, artId, onArt, collab, style, surfaceKey =
  */
 export function Artifact(props: {
   roomId: string; me: Actor; artId: string; onArt: (id: string) => void;
-  collab?: { running: boolean; done: boolean; onRun: () => void };
+  collab?: CollabControls;
   style?: CSSProperties;
 }) {
   const { roomId, me, artId, onArt, collab, style } = props;
@@ -1055,18 +1056,30 @@ function proposalFor(proposals: Proposal[], artifactId: string, elementId: strin
   return proposals.find((p) => p.artifactId === artifactId && p.status === "pending" && p.op.elementId === elementId);
 }
 
+function isSemanticProposal(proposal: Proposal): boolean {
+  return proposal.review?.kind === "semantic_rebase";
+}
+
+function proposalValue(value: unknown): string {
+  return String(value ?? "");
+}
+
 function InlineProposal({ roomId, me, proposal, onResolved }: { roomId: string; me: Actor; proposal: Proposal; onResolved: (fb: EditFeedback) => void }) {
   const store = useStore();
   const [busy, setBusy] = useState(false);
   const host = store.listMembers(roomId).some((m) => m.id === me.id && m.role === "host");
+  const semantic = isSemanticProposal(proposal);
+  const value = proposalValue(proposal.op.value);
+  const reason = proposal.review?.reviewerNote ?? proposal.review?.reason;
   const decide = async (approve: boolean) => {
     setBusy(true);
     try { onResolved(await store.resolveProposal(proposal.id, approve, me)); }
     finally { setBusy(false); }
   };
   return (
-    <div className="r-inline-proposal" data-testid="proposal-inline">
-      <span className="r-inline-proposal-text" title={`${proposal.author.name} proposed ${String(proposal.op.value ?? "")}`}>{String(proposal.op.value ?? "")}</span>
+    <div className="r-inline-proposal" data-testid="proposal-inline" data-semantic={String(semantic)} title={reason}>
+      {semantic && <span className="r-inline-proposal-kind">Rebase</span>}
+      <span className="r-inline-proposal-text" title={`${proposal.author.name} proposed ${value}`}>{value}</span>
       {host ? (
         <span className="r-inline-proposal-actions">
           {/* ✓ accept / ✗ reject — never ban-circle (reads "forbidden", and Ban already means
@@ -1218,7 +1231,7 @@ function Sticky({ roomId, me, artId, id, v, locked, author, rot, onDelete }: { r
   );
 }
 
-function CollabBar({ collab }: { collab: { running: boolean; done: boolean; onRun: () => void } }) {
+function CollabBar({ collab }: { collab: CollabControls }) {
   const desc = collab.done
     ? "Both agents finished, aware of each other the whole time. The full run is preserved in the room trace."
     : collab.running ? "Agent is locking the variance, committing, and releasing — drafting around any lock and smart-merging."
@@ -1227,6 +1240,11 @@ function CollabBar({ collab }: { collab: { running: boolean; done: boolean; onRu
     <div className="r-collab-bar">
       <span className="r-tag" style={{ background: "var(--accent-tint)", color: "var(--accent-ink)" }}><GitMerge size={12} /> Live collab</span>
       <span className="r-beat-desc grow">{desc}</span>
+      {collab.onConflict && (
+        <button className="r-mini-btn" data-testid="collab-conflict" disabled={collab.running} title="Create a stale agent draft and require host review instead of overwriting the cell" onClick={collab.onConflict}>
+          <AlertTriangle size={12} /> Conflict drill
+        </button>
+      )}
       <button className={"r-btn " + (collab.done ? "ghost" : "primary")} data-testid="collab-run" disabled={collab.running} onClick={collab.onRun} style={{ padding: "6px 12px", fontSize: 12 }}>
         {collab.done ? <><RotateCcw size={14} /> Replay</> : collab.running ? "Running…" : <><Play size={14} /> Run collaboration</>}
       </button>
@@ -1286,10 +1304,14 @@ function TraceStrip({ roomId, me }: { roomId: string; me: Actor }) {
 
 /** A collapsible trace row (assistant-ui ToolFallback style): tool + status collapsed,
  *  the structured `tool · args → result` detail on expand. */
-function ProposalRow({ roomId, me, proposal, onResolved }: { roomId: string; me: Actor; proposal: { id: string; author: Actor; op: { elementId?: string; value?: unknown } }; onResolved: (fb: EditFeedback) => void }) {
+function ProposalRow({ roomId, me, proposal, onResolved }: { roomId: string; me: Actor; proposal: Proposal; onResolved: (fb: EditFeedback) => void }) {
   const store = useStore();
   const [busy, setBusy] = useState(false);
   const host = store.listMembers(roomId).some((m) => m.id === me.id && m.role === "host");
+  const semantic = isSemanticProposal(proposal);
+  const value = proposalValue(proposal.op.value);
+  const reason = proposal.review?.reason ?? (semantic ? "Current cell changed after the agent read it." : undefined);
+  const note = proposal.review?.reviewerNote;
   const decide = async (approve: boolean) => {
     setBusy(true);
     // Keep the card mounted (disabled) during the await; bubble the result up so a CAS conflict
@@ -1298,10 +1320,18 @@ function ProposalRow({ roomId, me, proposal, onResolved }: { roomId: string; me:
     finally { setBusy(false); }
   };
   return (
-    <div className="r-proposal" data-testid="proposal-card">
-      <span className="r-trace-ico commit"><Pencil size={12} /></span>
+    <div className="r-proposal" data-testid="proposal-card" data-semantic={String(semantic)}>
+      <span className={"r-trace-ico " + (semantic ? "read" : "commit")}>{semantic ? <GitMerge size={12} /> : <Pencil size={12} />}</span>
       <div className="r-proposal-main">
-        <div className="tt">{proposal.author.name} proposed {proposal.op.elementId ?? "an edit"} = {String(proposal.op.value ?? "")}</div>
+        <div className="tt">{proposal.author.name} proposed {proposal.op.elementId ?? "an edit"} = {value}</div>
+        {semantic && (
+          <div className="r-proposal-meta" data-testid="semantic-proposal-meta">
+            <span className="r-proposal-badge">Semantic rebase</span>
+            {proposal.review?.status && <span>{proposal.review.status.replace(/_/g, " ")}</span>}
+            {reason && <span className="r-proposal-reason">{reason}</span>}
+            {note && <span className="r-proposal-reason">{note}</span>}
+          </div>
+        )}
         {host ? (
           <div className="r-proposal-actions">
             <button className="r-mini-btn primary" data-testid="proposal-approve" disabled={busy} onClick={() => void decide(true)}><Check size={12} /> Approve</button>
@@ -1319,6 +1349,7 @@ const proposalErrMsg = (reason?: string) =>
     : reason === "not_pending" ? "That proposal was already resolved."
       : reason === "not_found" ? "That proposal no longer exists."
         : reason === "host_required" ? "Only the host can resolve proposals."
+          : reason === "formula_protected" ? "Formula cells cannot be overwritten by scalar agent edits."
           : "Couldn't apply this proposal — try again.";
 
 function TraceRow({ t }: { t: TraceEvent }) {
@@ -1350,12 +1381,13 @@ function toolFor(type: string): string {
     case "lock_released": return "release_lock";
     case "edit_applied": case "edit_blocked": case "edit_proposed": return "edit_cell";
     case "draft_created": return "create_draft";
-    case "draft_merged": case "draft_conflict": case "proposal_resolved": return "smart_merge";
+    case "draft_merged": case "draft_conflict": case "proposal_resolved": case "proposal_resolve_failed": return "smart_merge";
+    case "semantic_conflict": return "semantic_rebase";
     default: return type;
   }
 }
 function statusFor(type: string): "ok" | "error" | "info" {
-  if (type === "lock_denied" || type === "edit_blocked" || type === "draft_conflict") return "error";
+  if (type === "lock_denied" || type === "edit_blocked" || type === "draft_conflict" || type === "semantic_conflict" || type === "proposal_resolve_failed") return "error";
   if (type === "agent_session_started" || type === "agent_status" || type === "message") return "info";
   return "ok";
 }
@@ -1368,7 +1400,7 @@ function traceIcon(type: string): { cls: string; Icon: LucideIcon } {
     case "edit_applied": case "edit_proposed": return { cls: "commit", Icon: Pencil };
     case "draft_created": return { cls: "draft", Icon: FileText };
     case "draft_merged": case "proposal_resolved": return { cls: "merge", Icon: Check };
-    case "draft_conflict": return { cls: "read", Icon: AlertTriangle };
+    case "draft_conflict": case "semantic_conflict": case "proposal_resolve_failed": return { cls: "read", Icon: AlertTriangle };
     case "agent_session_started": case "agent_status": return { cls: "read", Icon: Eye };
     default: return { cls: "other", Icon: Circle };
   }

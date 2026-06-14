@@ -7,7 +7,7 @@
  */
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
-import { PanelLeft, Table2, PanelRight, Moon, Sun, LogOut, Link2, ShieldCheck, X, HelpCircle, Copy, Check, Activity, MessageCircle, Send, Mail, FileText, MessageSquare, ClipboardList, Database } from "lucide-react";
+import { PanelLeft, Table2, PanelRight, Moon, Sun, LogOut, Link2, ShieldCheck, X, HelpCircle, Copy, Check, Activity, MessageCircle, Send, Mail, FileText, MessageSquare, ClipboardList, Database, Linkedin } from "lucide-react";
 import { useStore } from "../app/store";
 import { Chat } from "./Chat";
 import { Artifact } from "./panels/Artifact";
@@ -27,7 +27,6 @@ function initials(name: string): string {
 export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; onLeave: () => void }) {
   const store = useStore();
   const room = store.getRoom(roomId);
-  const live = store.canRunCollab;
   // QA P0: below 981px the side panels render as fixed overlays over chat (styles.css), so they
   // start CLOSED — chat is the default single pane and the top-bar toggles are the panel switcher.
   const isCompact = typeof window !== "undefined" && typeof window.matchMedia === "function" && window.matchMedia("(max-width: 980px)").matches;
@@ -45,25 +44,26 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
   const [copilotTab, setCopilotTab] = useState<"public" | "private">("public");
   const arts = store.listArtifacts(roomId);
   const [artId, setArtId] = useState(() => arts.find((a) => a.kind === "sheet")?.id ?? arts[0]?.id ?? "");
-  const [collab, setCollab] = useState({ running: false, done: false });
+  const [collab, setCollab] = useState<{ running: boolean; done: boolean; error?: string }>({ running: false, done: false });
   const [autoAcceptModal, setAutoAcceptModal] = useState(false);
   const [rememberAutoAccept, setRememberAutoAccept] = useState(false);
   const [tourOpen, setTourOpen] = useState(false);
   const tourAutoStarted = useRef(false);
-  // First-run: auto-start the walkthrough once in the seeded demo room — in BOTH memory mode AND the
-  // live shared Q3DEMO room, so the stage / second-device live build greets every visitor, not just the
-  // host. Keyed on the seeded demo content (the "Q3 variance" sheet) so it never fires in a blank room.
-  // Persists a "seen" flag so a returning visitor is never nagged; the header "?" button replays it.
-  const isDemoRoom = live || arts.some((a) => a.title === "Q3 variance");
+  const collabAlive = useRef(true);
+  useEffect(() => () => { collabAlive.current = false; }, []);
+  // First-run: auto-start the walkthrough only in the deterministic in-memory demo. Live Convex
+  // rooms now include fresh room-create and teammate-join flows; an auto-modal there blocks the
+  // actual collaboration proof. The header "?" button still replays the tour everywhere.
+  const shouldAutoStartTour = store.mode === "memory" && arts.some((a) => a.title === "Q3 variance");
   useEffect(() => {
-    if (tourAutoStarted.current || !isDemoRoom) return;
+    if (tourAutoStarted.current || !shouldAutoStartTour) return;
     let seen = false;
     try { seen = localStorage.getItem(TOUR_KEY) === "done"; } catch { /* ignore */ }
     tourAutoStarted.current = true;
     // On compact screens panels are stacked fixed overlays — opening all three would bury the chat
     // the tour is pointing at, so the tour starts from the chat-only default there.
     if (!seen) { if (!isCompact) setShow({ left: true, stage: true, copilot: true }); setTourOpen(true); }
-  }, [isDemoRoom, isCompact]);
+  }, [shouldAutoStartTour, isCompact]);
   if (!room) return <div className="r-app"><div className="r-screen"><div style={{ margin: "auto" }} className="muted">Loading room…</div></div></div>;
 
   const members = store.listMembers(roomId);
@@ -134,19 +134,31 @@ export function RoomShell({ roomId, me, onLeave }: { roomId: string; me: Actor; 
     },
   ];
 
+  const collabErrText = (e: unknown) => (e instanceof Error && e.message ? `Couldn't run the collaboration — ${e.message}` : "Couldn't run the collaboration. Try again.");
   const runCollab = async () => {
     if (collab.running) return;
     setShow({ left: true, stage: true, copilot: true });
     setCopilotTab("public");
     setCollab({ running: true, done: false });
-    try { await store.runCollab(); } finally { setCollab({ running: false, done: true }); }
+    // C7/C2: a rejected runRoomAgent must surface honestly — not flip done:true as if it succeeded.
+    try {
+      await store.runCollab();
+      if (collabAlive.current) setCollab({ running: false, done: true });
+    } catch (e) {
+      if (collabAlive.current) setCollab({ running: false, done: false, error: collabErrText(e) });
+    }
   };
   const runSemanticConflictDrill = async () => {
     if (collab.running || !store.runSemanticConflictDrill) return;
     setShow({ left: true, stage: true, copilot: true });
     setCopilotTab("public");
     setCollab({ running: true, done: false });
-    try { await store.runSemanticConflictDrill(); } finally { setCollab({ running: false, done: true }); }
+    try {
+      await store.runSemanticConflictDrill();
+      if (collabAlive.current) setCollab({ running: false, done: true });
+    } catch (e) {
+      if (collabAlive.current) setCollab({ running: false, done: false, error: collabErrText(e) });
+    }
   };
   const toggleAutoAccept = () => {
     if (!isHost) return;
@@ -349,6 +361,7 @@ const HANDOFF_ACTIONS = [
   { key: "notion", label: "Notion", icon: FileText, title: "Create Notion page" },
   { key: "slack", label: "Slack", icon: MessageSquare, title: "Draft Slack recap" },
   { key: "linear", label: "Linear", icon: ClipboardList, title: "Create Linear follow-up" },
+  { key: "linkedin", label: "LinkedIn", icon: Linkedin, title: "Draft LinkedIn research note" },
   { key: "crm", label: "CRM CSV", icon: Database, title: "Export CRM CSV" },
 ] as const;
 

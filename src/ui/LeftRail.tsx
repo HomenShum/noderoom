@@ -1,5 +1,5 @@
 /** Room Binder (`.r-panel.left`): source files, room artifacts, people, and public agents. */
-import { useRef, useState, type CSSProperties, type DragEvent } from "react";
+import { useEffect, useRef, useState, type CSSProperties, type DragEvent } from "react";
 import { FolderOpen, Table2, FileText, StickyNote, Database, BookOpen, Upload, Loader2, ShieldCheck, Activity, type LucideIcon } from "lucide-react";
 import { useStore, type UploadedArtifactInput } from "../app/store";
 import type { Actor } from "../engine/types";
@@ -11,6 +11,21 @@ import { documentParsePlan, guessDocumentMimeType } from "../app/documentParserP
 const WIKI_TITLE = "Agent wiki";
 const MAX_INLINE_PREVIEW_BYTES = 750_000;
 const MAX_SPREADSHEET_BYTES = 5_000_000;
+const UPLOAD_TIMEOUT_MS = 30_000; // a stuck file read / hung mutation must not spin the binder forever
+
+// C4: reject a promise as soon as `signal` aborts (timeout or unmount) even if the underlying
+// promise never settles — so the upload spinner always clears instead of hanging.
+function abortable<T>(p: Promise<T>, signal: AbortSignal): Promise<T> {
+  if (signal.aborted) return Promise.reject(signal.reason ?? new Error("Aborted"));
+  return new Promise<T>((resolve, reject) => {
+    const onAbort = () => reject(signal.reason ?? new Error("Aborted"));
+    signal.addEventListener("abort", onAbort, { once: true });
+    p.then(
+      (v) => { signal.removeEventListener("abort", onAbort); resolve(v); },
+      (e) => { signal.removeEventListener("abort", onAbort); reject(e); },
+    );
+  });
+}
 
 function initials(name: string): string {
   return name.replace(/[^A-Za-z· ]/g, "").split(/[ ·]/).filter(Boolean).map((s) => s[0]).slice(0, 2).join("").toUpperCase() || "?";
@@ -36,6 +51,8 @@ export function LeftRail({ roomId, me, artId, onPick, style }: { roomId: string;
   const inputRef = useRef<HTMLInputElement>(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
+  const aliveRef = useRef(true); // A4: don't setState after unmount when an upload resolves late
+  useEffect(() => () => { aliveRef.current = false; }, []);
   const arts = store.listArtifacts(roomId);
   const members = store.listMembers(roomId);
   const sessions = store.listSessions(roomId);
@@ -48,17 +65,39 @@ export function LeftRail({ roomId, me, artId, onPick, style }: { roomId: string;
     if (!files?.length) return;
     setUploading(true);
     setUploadError(null);
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(new Error("Upload timed out — try fewer or smaller files.")), UPLOAD_TIMEOUT_MS);
     try {
-      let lastId = "";
+      // Phase 1 — parse EVERY file before committing anything (B3). A single bad file (e.g. over the
+      // 5MB cap) aborts the whole drop, so a failed upload can never leave a half-populated binder.
+      const parsed: UploadedArtifactInput[] = [];
       for (const file of Array.from(files)) {
-        const artifacts = await artifactsFromFile(file);
-        for (const artifact of artifacts) lastId = await store.uploadArtifact({ roomId, artifact, actor: me });
+        try {
+          parsed.push(...(await abortable(artifactsFromFile(file, controller.signal), controller.signal)));
+        } catch (e) {
+          if (controller.signal.aborted) throw controller.signal.reason ?? e;
+          throw new Error(`${file.name}: ${e instanceof Error ? e.message : "could not be read"}`);
+        }
       }
-      if (lastId) onPick(lastId);
+      // Phase 2 — commit. There is no server-side delete to roll back a partial batch, so if a commit
+      // rejects mid-way we report honestly how many landed (C2) rather than leaving a silent partial.
+      let lastId = "";
+      let committed = 0;
+      try {
+        for (const artifact of parsed) {
+          lastId = await abortable(store.uploadArtifact({ roomId, artifact, actor: me }), controller.signal);
+          committed += 1;
+        }
+      } catch (e) {
+        const reason = e instanceof Error ? e.message : "please try again";
+        throw new Error(committed > 0 ? `Uploaded ${committed} of ${parsed.length} item(s), then failed — ${reason}` : `Upload failed — ${reason}`);
+      }
+      if (aliveRef.current && lastId) onPick(lastId);
     } catch (err) {
-      setUploadError(err instanceof Error ? err.message : "Upload failed");
+      if (aliveRef.current) setUploadError(err instanceof Error ? err.message : "Upload failed");
     } finally {
-      setUploading(false);
+      clearTimeout(timer);
+      if (aliveRef.current) setUploading(false);
       if (inputRef.current) inputRef.current.value = "";
     }
   };
@@ -200,7 +239,7 @@ function isUploadDoc(value: unknown): value is UploadDoc {
   return !!value && typeof value === "object" && (value as { upload?: unknown }).upload === true;
 }
 
-async function artifactsFromFile(file: File): Promise<UploadedArtifactInput[]> {
+async function artifactsFromFile(file: File, signal?: AbortSignal): Promise<UploadedArtifactInput[]> {
   const lower = file.name.toLowerCase();
   const mimeType = file.type || guessMimeType(lower);
   if (isSpreadsheetFile(file.name, mimeType)) {
@@ -216,15 +255,19 @@ async function artifactsFromFile(file: File): Promise<UploadedArtifactInput[]> {
   const parse = documentParsePlan(file.name, mimeType);
   const doc: UploadDoc = { upload: true, fileName: file.name, mimeType, size: file.size, parse };
   if (textLike) doc.text = await file.text();
-  else doc.dataUrl = await readAsDataUrl(file);
+  else doc.dataUrl = await readAsDataUrl(file, signal);
   return [{ kind: "note", title: file.name, seed: [{ id: "doc", value: doc }], meta: { upload: { fileName: file.name, mimeType, size: file.size, parsedAt: Date.now() }, document: parse } }];
 }
 
-function readAsDataUrl(file: File): Promise<string> {
+function readAsDataUrl(file: File, signal?: AbortSignal): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => resolve(String(reader.result ?? ""));
     reader.onerror = () => reject(reader.error ?? new Error("File read failed"));
+    if (signal) {
+      if (signal.aborted) { reject(signal.reason ?? new Error("Aborted")); return; }
+      signal.addEventListener("abort", () => { try { reader.abort(); } catch { /* already settled */ } reject(signal.reason ?? new Error("Aborted")); }, { once: true });
+    }
     reader.readAsDataURL(file);
   });
 }

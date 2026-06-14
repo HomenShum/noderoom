@@ -112,7 +112,10 @@ export function GuidedTour({ steps, open, onClose, storageKey }: { steps: TourSt
   }, [open, i, isLast]);
 
   if (!open || steps.length === 0) return null;
-  const step = steps[i];
+  // B2: i can exceed a freshly-shrunk steps array (e.g. mobile-gated steps) before the open-effect
+  // resets it — clamp so the render never dereferences an undefined step (was a TypeError crash).
+  const safeI = Math.min(i, steps.length - 1);
+  const step = steps[safeI];
   const pad = 6;
   const { top, left, centered } = placeCard(rect, step.placement);
 
@@ -126,9 +129,9 @@ export function GuidedTour({ steps, open, onClose, storageKey }: { steps: TourSt
       ) : (
         <div className="r-tour-dim" />
       )}
-      <div ref={cardRef} tabIndex={-1} className="r-tour-card" role="dialog" aria-modal="false" aria-label={`Tour step ${i + 1} of ${steps.length}: ${step.title}`} style={{ top, left, width: CARD_W }}>
+      <div ref={cardRef} tabIndex={-1} className="r-tour-card" role="dialog" aria-modal="false" aria-label={`Tour step ${safeI + 1} of ${steps.length}: ${step.title}`} style={{ top, left, width: CARD_W }}>
         <button className="r-iconbtn r-tour-x" aria-label="End tour" onClick={() => finish()}><X size={14} /></button>
-        <div className="r-tour-step">{i + 1} / {steps.length}</div>
+        <div className="r-tour-step">{safeI + 1} / {steps.length}</div>
         <h3 className="r-tour-title">{step.title}</h3>
         <p className="r-tour-body">{step.body}</p>
         <div className="r-tour-dots" aria-hidden="true">

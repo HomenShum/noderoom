@@ -115,26 +115,22 @@ test("three users chat, edit the same sheet concurrently, and run the public age
   const winner = await cellText(maya, v("r_rev"));
   await shoot(pages, "act4-converged");
 
-  // ── Act 5: public agent (real LLM, best-effort) — Maya runs /ask; effect should reach every view.
-  let agent = "not-run";
-  try {
-    await setAutoAllow(maya, true);
-    // Genuine effect = a NEW agent-authored bubble, or a previously-EMPTY variance cell getting filled
-    // (verified in Sam's joiner view). Do NOT match incidental chat text like the word "variance".
-    const agentMsgsBefore = await chat(sam).locator('[data-testid="chat-message"].agent').count();
-    const emptyBefore: string[] = [];
-    for (const r of ["r_cogs", "r_ni"]) if (!(await cellText(sam, v(r))).length) emptyBefore.push(r);
-    await say(maya, "/ask reconcile Q3 revenue and fill the remaining variance cells");
-    await expect.poll(async () => {
-      const agentMsgsNow = await chat(sam).locator('[data-testid="chat-message"].agent').count();
-      let filled = false;
-      for (const r of emptyBefore) if ((await cellText(sam, v(r))).length) filled = true;
-      return agentMsgsNow > agentMsgsBefore || filled;
-    }, { timeout: 150_000, intervals: [3000] }).toBeTruthy();
-    agent = "visible-to-all-views";
-  } catch {
-    agent = "no-visible-effect-within-150s (real-LLM dependent)";
-  }
+  // ── Act 5: PUBLIC room agent (real LLM, hard gate) — Maya asks the shared Room NodeAgent to
+  //    make one exact write. Pass means the shared cell value fans out to all three browsers.
+  await setAutoAllow(maya, true);
+  const publicAgentKey = "r_cogs__note";
+  const publicAgentValue = `public-room proof ${CODE}`;
+  await say(
+    maya,
+    `/ask In the Q3 variance spreadsheet, call read_range for ${publicAgentKey}, then call write_locked_cell to set ${publicAgentKey} exactly to "${publicAgentValue}" using the baseVersion you read. Do not edit any other cells. Then say "public room proof complete".`,
+  );
+  await expect.poll(async () => {
+    const values = await Promise.all(all.map((p) => cellText(p, publicAgentKey)));
+    return values.every((value) => value.includes(publicAgentValue));
+  }, { timeout: 180_000, intervals: [3000] }).toBeTruthy();
+  await openPublic(sam);
+  await expect(chat(sam).locator('[data-testid="chat-message"].agent').filter({ hasText: /public room proof complete|public-room proof/i })).toBeVisible({ timeout: 30_000 });
+  const agent = `public-write-${publicAgentKey}-visible-to-all`;
   await shoot(pages, "act5-agent");
 
   // ── Act 6: private AGENT + isolation. Maya asks her private NodeAgent; it replies in HER private

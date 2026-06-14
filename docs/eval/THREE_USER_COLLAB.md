@@ -27,7 +27,7 @@
 2. **Public chat:** all three users post messages. Pass means every message fans out to every public chat feed.
 3. **Parallel non-conflicting edits:** Dev and Sam edit different variance cells. Pass means both values land in all three views.
 4. **Same-cell conflict:** Maya and Dev write the same cell near-simultaneously. Pass means CAS picks one winner and all three views converge to that value.
-5. **Public room agent:** Maya asks the public agent to reconcile the sheet. This is real-provider dependent; the run records whether a visible effect appears inside the timeout.
+5. **Public room agent:** Maya asks the public Room NodeAgent to make one exact shared-cell write. Pass means the exact value appears in Maya, Dev, and Sam, and a public agent message is visible.
 6. **Private agent isolation:** Maya asks her private agent. Pass means her private channel gets the response and Dev/Sam do not see the question or private reply.
 7. **Personal agent in room lane:** Maya uses her private panel's room lane. Pass means the shared sheet or public chat changes are visible to all users.
 8. **All-artifact visibility:** every view has Spreadsheet, Note, and Wall surfaces.
@@ -36,10 +36,10 @@
 ## Latest Strict Evidence
 
 - **2026-06-14 PT:** `npm run test:product:live:agent`
-- **Result:** 10/10 Playwright specs passed against live Convex + provider calls in 4.3 minutes.
-- **Room:** `EVALMQDI9ZP4`
+- **Result:** 10/10 Playwright specs passed against live Convex + provider calls in 2.2 minutes.
+- **Room:** `EVALMQDJ5MBE`
 - **Same-cell winner:** `+19pct-Dev`
-- **Public room agent:** no visible effect within 150s on this run; recorded as real-provider dependent, not promoted as a hard pass.
+- **Public room agent:** hard-gated. `r_cogs__note` received `public-room proof EVALMQDJ5MBE` in all three browsers and the public agent message was visible.
 - **Private agent:** replied privately.
 - **Personal room-lane agent:** acted in the room and was visible to all users.
 - **All artifacts:** Spreadsheet + Note + Wall visible in all views.
@@ -48,7 +48,7 @@
 ## Pass Criteria
 
 - The strict product gate passes only when chat, spreadsheet workbook behavior, live Convex reactivity, CAS conflict convergence, semantic rebase review, and three-user review-mode proposal fan-out all pass.
-- Real-provider effects that are intentionally best-effort are recorded in the JSON evidence printed by the test. They are not used to hide a failed deterministic collaboration contract.
+- Real-provider effects are still live-model calls, but the public room-agent, personal room-lane, and review-mode paths are strict assertions in the product gate rather than best-effort observations.
 
 ## How To Run
 

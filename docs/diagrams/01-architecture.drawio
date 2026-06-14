@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<mxfile host="drawio" version="26.0.0">
+  <diagram name="NodeRoom Architecture">
+    <mxGraphModel dx="1400" dy="900" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1400" pageHeight="950" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+
+        <mxCell id="2" value="NodeRoom — System Architecture" style="text;html=1;fontSize=22;fontStyle=1;align=left;verticalAlign=middle;fontColor=#1a1a1a;" vertex="1" parent="1">
+          <mxGeometry x="40" y="20" width="700" height="34" as="geometry" />
+        </mxCell>
+        <mxCell id="3" value="One reactive ledger (Convex) under the UI and the agent engine — humans and agents write the same versioned cells through one CAS contract." style="text;html=1;fontSize=12;align=left;verticalAlign=middle;fontColor=#666666;" vertex="1" parent="1">
+          <mxGeometry x="40" y="50" width="1000" height="20" as="geometry" />
+        </mxCell>
+
+        <mxCell id="10" value="①  Client — React 19 · Vite · Zustand · @dnd-kit · @assistant-ui" style="swimlane;startSize=30;html=1;whiteSpace=wrap;fillColor=#dae8fc;strokeColor=#6c8ebf;fontStyle=1;fontSize=13;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="40" y="90" width="1280" height="110" as="geometry" />
+        </mxCell>
+        <mxCell id="11" value="RoomShell&#xa;(rail · center · right panels)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="10">
+          <mxGeometry x="20" y="42" width="290" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="12" value="Artifact panel&#xa;Sheet · Note · Wall (SmartGrid)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="10">
+          <mxGeometry x="330" y="42" width="300" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="13" value="Chat&#xa;public + private channels" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="10">
+          <mxGeometry x="650" y="42" width="280" height="56" as="geometry" />
+        </mxCell>
+        <mxCell id="14" value="LeftRail&#xa;Files · People · agent sessions" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#6c8ebf;fontSize=12;" vertex="1" parent="10">
+          <mxGeometry x="950" y="42" width="310" height="56" as="geometry" />
+        </mxCell>
+
+        <mxCell id="20" value="②  Convex — the ledger · reactive queries · mutations · app-level OCC · per-element CAS" style="swimlane;startSize=30;html=1;whiteSpace=wrap;fillColor=#d5e8d4;strokeColor=#82b366;fontStyle=1;fontSize=13;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="40" y="250" width="1280" height="150" as="geometry" />
+        </mxCell>
+        <mxCell id="21" value="rooms · members&#xa;messages" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=12;" vertex="1" parent="20">
+          <mxGeometry x="20" y="48" width="230" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="22" value="artifacts + elements&#xa;(per-element version)&#xa;⟵ CAS spine ⟶" style="shape=cylinder3;whiteSpace=wrap;html=1;fillColor=#b9e0b0;strokeColor=#82b366;fontStyle=1;fontSize=12;" vertex="1" parent="20">
+          <mxGeometry x="280" y="42" width="240" height="92" as="geometry" />
+        </mxCell>
+        <mxCell id="23" value="locks · drafts&#xa;proposals" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=12;" vertex="1" parent="20">
+          <mxGeometry x="550" y="48" width="210" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="24" value="traces&#xa;(append-only audit)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=12;" vertex="1" parent="20">
+          <mxGeometry x="790" y="48" width="200" height="80" as="geometry" />
+        </mxCell>
+        <mxCell id="25" value="agentJobs · agentRuns&#xa;(Workflow + Workpool)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#82b366;fontSize=12;" vertex="1" parent="20">
+          <mxGeometry x="1020" y="48" width="240" height="80" as="geometry" />
+        </mxCell>
+
+        <mxCell id="30" value="③  NodeAgent engine — src/nodeagent  (runs inside a Convex use-node action)" style="swimlane;startSize=30;html=1;whiteSpace=wrap;fillColor=#e1d5e7;strokeColor=#9673a6;fontStyle=1;fontSize=13;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="40" y="450" width="1280" height="200" as="geometry" />
+        </mxCell>
+        <mxCell id="31" value="core&#xa;&#xa;orchestrator · adaptiveRouter&#xa;streamManager · worldModel&#xa;memory · contextCompactor" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3ecf8;strokeColor=#9673a6;fontSize=12;align=left;spacingLeft=10;verticalAlign=top;spacingTop=8;fontStyle=0;" vertex="1" parent="30">
+          <mxGeometry x="20" y="42" width="300" height="146" as="geometry" />
+        </mxCell>
+        <mxCell id="32" value="models&#xa;&#xa;adapter&#xa;openRouterClient&#xa;piAiAdapter" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3ecf8;strokeColor=#9673a6;fontSize=12;align=left;spacingLeft=10;verticalAlign=top;spacingTop=8;" vertex="1" parent="30">
+          <mxGeometry x="340" y="42" width="250" height="146" as="geometry" />
+        </mxCell>
+        <mxCell id="33" value="skills&#xa;&#xa;finance: runway · bulkIngest · milestone&#xa;search: linkup · fetch_source&#xa;spreadsheet: CAS · semanticRebase&#xa;integration: downstreamPublish · mcp" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3ecf8;strokeColor=#9673a6;fontSize=12;align=left;spacingLeft=10;verticalAlign=top;spacingTop=8;" vertex="1" parent="30">
+          <mxGeometry x="610" y="42" width="360" height="146" as="geometry" />
+        </mxCell>
+        <mxCell id="34" value="guardrails&#xa;&#xa;egressPolicy · providerEgress&#xa;circuitBreaker · dataSanitizer&#xa;approval · evaluator" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#f3ecf8;strokeColor=#9673a6;fontSize=12;align=left;spacingLeft=10;verticalAlign=top;spacingTop=8;" vertex="1" parent="30">
+          <mxGeometry x="990" y="42" width="270" height="146" as="geometry" />
+        </mxCell>
+
+        <mxCell id="40" value="④  External — providers &amp; bounded egress" style="swimlane;startSize=30;html=1;whiteSpace=wrap;fillColor=#f5f5f5;strokeColor=#666666;fontStyle=1;fontSize=13;verticalAlign=top;" vertex="1" parent="1">
+          <mxGeometry x="40" y="700" width="1280" height="130" as="geometry" />
+        </mxCell>
+        <mxCell id="41" value="LLM providers&#xa;Anthropic · Google · OpenAI (via OpenRouter)&#xa;AGENT_MODEL / AGENT_RESEARCH_MODEL · $ caps" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffe6cc;strokeColor=#d79b00;fontSize=12;" vertex="1" parent="40">
+          <mxGeometry x="40" y="44" width="440" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="42" value="fetch_source — SSRF-hardened&#xa;https-only · private-IP reject · DNS-rebind guard&#xa;5s timeout · 200KB body cap · egress allowlist" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#e1d5e7;strokeColor=#9673a6;fontSize=12;" vertex="1" parent="40">
+          <mxGeometry x="520" y="44" width="430" height="70" as="geometry" />
+        </mxCell>
+        <mxCell id="43" value="Web sources&#xa;(cited, evidence-bearing)" style="rounded=1;whiteSpace=wrap;html=1;fillColor=#ffffff;strokeColor=#666666;fontSize=12;" vertex="1" parent="40">
+          <mxGeometry x="990" y="44" width="250" height="70" as="geometry" />
+        </mxCell>
+
+        <mxCell id="50" value="mutation · CAS" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;exitX=0.4;exitY=1;exitDx=0;exitDy=0;entryX=0.4;entryY=0;entryDx=0;entryDy=0;strokeColor=#4d4d4d;" edge="1" parent="1" source="10" target="20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="51" value="reactive result (re-ships on read-set change)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;exitX=0.6;exitY=0;exitDx=0;exitDy=0;entryX=0.6;entryY=1;entryDx=0;entryDy=0;dashed=1;strokeColor=#82b366;" edge="1" parent="1" source="20" target="10">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="52" value="agent slice (internal action)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;exitX=0.4;exitY=1;exitDx=0;exitDy=0;entryX=0.4;entryY=0;entryDx=0;entryDy=0;strokeColor=#4d4d4d;" edge="1" parent="1" source="20" target="30">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="53" value="applyAgentCellEdit → CAS (conflict-as-data, never clobber)" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;exitX=0.65;exitY=0;exitDx=0;exitDy=0;entryX=0.65;entryY=1;entryDx=0;entryDy=0;dashed=1;strokeColor=#9673a6;" edge="1" parent="1" source="30" target="20">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="54" value="model calls (budget-capped) · fetch_source" style="edgeStyle=orthogonalEdgeStyle;rounded=1;orthogonalLoop=1;jettySize=auto;html=1;fontSize=11;exitX=0.5;exitY=1;exitDx=0;exitDy=0;entryX=0.5;entryY=0;entryDx=0;entryDy=0;strokeColor=#4d4d4d;" edge="1" parent="1" source="30" target="40">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

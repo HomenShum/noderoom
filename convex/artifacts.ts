@@ -283,26 +283,32 @@ async function applyCellEditCore(ctx: MutationCtx, a: ApplyCellEditArgs) {
       // through the CAS spine, route the rest to a review proposal (or record under auto-allow). A
       // human's own stale write stays a plain conflict (humans drive their own retries).
       if (a.actor.kind === "agent" && !a._rebased) {
-        const rebaseRoom = await ctx.db.get(a.roomId);
-        const rebase = await planAndRecordRebase(ctx, {
-          roomId: a.roomId,
-          artifactId: a.artifactId,
-          artifactKind: art.kind,
-          elementId: a.elementId,
-          kind,
-          proposedValue: a.value,
-          baseVersion: a.baseVersion,
-          currentValue: el?.value,
-          currentVersion: actual,
-          currentUpdatedBy: el?.updatedBy,
-          actor: a.actor,
-          autoAllow: !!rebaseRoom?.autoAllow,
-        });
-        // The full loop completes via review: an approved rebased proposal re-runs the CAS in
-        // resolveProposal (the "final CAS from resolution"). Deterministic auto-merge (autoMergeOp)
-        // never fires for a single-element same-element conflict — classify routes those to review —
-        // so there is nothing to commit inline here; the durable packet + proposal are the outcome.
-        return { ok: false as const, reason: "conflict" as const, expected: a.baseVersion, actual, rebase };
+        try {
+          const rebaseRoom = await ctx.db.get(a.roomId);
+          const rebase = await planAndRecordRebase(ctx, {
+            roomId: a.roomId,
+            artifactId: a.artifactId,
+            artifactKind: art.kind,
+            elementId: a.elementId,
+            kind,
+            proposedValue: a.value,
+            baseVersion: a.baseVersion,
+            currentValue: el?.value,
+            currentVersion: actual,
+            currentUpdatedBy: el?.updatedBy,
+            actor: a.actor,
+            autoAllow: !!rebaseRoom?.autoAllow,
+          });
+          // The full loop completes via review: an approved rebased proposal re-runs the CAS in
+          // resolveProposal (the "final CAS from resolution"). Deterministic auto-merge never fires
+          // for a single-element same-element conflict — classify routes those to review — so there
+          // is nothing to commit inline here; the durable packet + proposal are the outcome.
+          return { ok: false as const, reason: "conflict" as const, expected: a.baseVersion, actual, rebase };
+        } catch {
+          // Rebase is strictly additive: if it fails, fall back to the plain CAS conflict so the core
+          // no-clobber guarantee (a stale write is rejected as data) is never compromised by it.
+          return { ok: false as const, reason: "conflict" as const, expected: a.baseVersion, actual };
+        }
       }
       return { ok: false as const, reason: "conflict" as const, expected: a.baseVersion, actual };
     }

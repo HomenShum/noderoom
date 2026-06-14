@@ -34,7 +34,7 @@ const TABS: { id: TabId; label: string; Icon: LucideIcon }[] = [
   { id: "wall", label: "Wall", Icon: StickyNote },
 ];
 type WorkbookViewStyle = "excel" | "sheets" | "evidence";
-type CollabControls = { running: boolean; done: boolean; onRun: () => void; onConflict?: () => void };
+type CollabControls = { running: boolean; done: boolean; error?: string; onRun: () => void; onConflict?: () => void };
 const WORKBOOK_VIEW_STYLES: { id: WorkbookViewStyle; label: string; hint: string }[] = [
   { id: "excel", label: "Excel", hint: "file" },
   { id: "sheets", label: "Sheets", hint: "collab" },
@@ -380,6 +380,7 @@ function Research({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) 
   const [pasteText, setPasteText] = useState("");
   const [busy, setBusy] = useState(false);
   const [pasteError, setPasteError] = useState<string | null>(null);
+  const [requeueError, setRequeueError] = useState<string | null>(null); // C7/C2: honest surface for failed requeue commits
   const [expanded, setExpanded] = useState<string | null>(null);
   const [pages, setPages] = useState(1); // QA P1: page the grid like GenericSheet — no unbounded DOM
   const RESEARCH_PAGE_SIZE = 50;
@@ -402,12 +403,19 @@ function Research({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) 
     } finally { setBusy(false); }
   };
   const refreshComplete = async () => {
-    setBusy(true);
+    setBusy(true); setRequeueError(null);
+    let failed = 0; let lastReason: string | undefined;
     try {
       for (const rid of rowIds.filter((id) => cell(id, "status") === "complete")) {
-        await commit(store, roomId, me, art.id, `${rid}__status`, "pending");
+        const f = await commit(store, roomId, me, art.id, `${rid}__status`, "pending");
+        if (f && !f.ok) { failed += 1; lastReason = f.reason; }
       }
-    } finally { setBusy(false); }
+    } finally {
+      // C7/C2: commit() returns {ok:false} as DATA (locked/conflict), never throws — so a partial
+      // requeue must be surfaced, not silently dropped while the rows stay 'complete'.
+      if (failed) setRequeueError(`${failed} row(s) couldn't be requeued — ${editErrorMsg({ ok: false, reason: lastReason })}`);
+      setBusy(false);
+    }
   };
   const srcLink = (src: string) => {
     const u = src.match(/https?:\/\/[^\s]+/)?.[0];
@@ -449,6 +457,7 @@ function Research({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) 
         <button className="r-btn ghost" disabled={busy || complete === 0} onClick={() => void refreshComplete()}><RotateCcw size={13} /> Requeue complete</button>
         <button className="r-btn ghost" onClick={() => downloadResearchCsv(art, rowIds, cell)}><Download size={13} /> CRM CSV</button>
         <button className="r-btn" data-testid="research-enrich" disabled={running || pending === 0} onClick={run}>{running ? "Researching..." : pending ? `Enrich ${pending} pending` : "All complete"}</button>
+        {requeueError && <span className="r-wall-error" role="alert" data-testid="research-requeue-error">{requeueError}</span>}
       </div>
       {downstreamDrafts.length > 0 && (
         <div className="r-research-import" style={{ alignItems: "center", gap: 8 }}>
@@ -1358,7 +1367,7 @@ function Wall({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) {
           {art.order.map((id, i) => {
             const el = art.elements[id]; if (!el) return null;
             const v = el.value as { text: string; x: number; y: number; color: string };
-            return <Sticky key={id} roomId={roomId} me={me} artId={art.id} id={id} v={v} locked={!!lockedByOther(store, art.id, id, me)} author={el.updatedBy.name} rot={i % 2 ? 1.3 : -1.5} onDelete={removeSticky} />;
+            return <Sticky key={id} roomId={roomId} me={me} artId={art.id} id={id} v={v} locked={!!lockedByOther(store, art.id, id, me)} author={el.updatedBy.name} rot={i % 2 ? 1.3 : -1.5} onDelete={removeSticky} onError={setErr} />;
           })}
         </div>
       </DndContext>
@@ -1366,7 +1375,7 @@ function Wall({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) {
   );
 }
 
-function Sticky({ roomId, me, artId, id, v, locked, author, rot, onDelete }: { roomId: string; me: Actor; artId: string; id: string; v: { text: string; x: number; y: number; color: string }; locked: boolean; author: string; rot: number; onDelete: (id: string) => void }) {
+function Sticky({ roomId, me, artId, id, v, locked, author, rot, onDelete, onError }: { roomId: string; me: Actor; artId: string; id: string; v: { text: string; x: number; y: number; color: string }; locked: boolean; author: string; rot: number; onDelete: (id: string) => void; onError: (msg: string) => void }) {
   const store = useStore();
   const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id, disabled: locked });
   // QA P2 perf: the drag style is rebuilt only when its real inputs change, not on every wall render.
@@ -1382,7 +1391,7 @@ function Sticky({ roomId, me, artId, id, v, locked, author, rot, onDelete }: { r
       <div className="pt-text" contentEditable={!locked} suppressContentEditableWarning role="textbox" aria-label="Edit post-it text"
         onPointerDown={(e) => e.stopPropagation()}
         onKeyDown={(e) => { if (e.key === "Escape") (e.currentTarget as HTMLElement).blur(); }}
-        onBlur={(e) => { const t = e.currentTarget.textContent ?? ""; if (t && t !== v.text) commit(store, roomId, me, artId, id, { ...v, text: t }); }}>{v.text}</div>
+        onBlur={(e) => { const t = e.currentTarget.textContent ?? ""; if (t && t !== v.text) void commit(store, roomId, me, artId, id, { ...v, text: t }).then((f) => { if (f && !f.ok) onError(editErrorMsg(f)); }); }}>{v.text}</div>
       <div className="pby">— {author}</div>
     </div>
   );
@@ -1397,6 +1406,7 @@ function CollabBar({ collab }: { collab: CollabControls }) {
     <div className="r-collab-bar">
       <span className="r-tag" style={{ background: "var(--accent-tint)", color: "var(--accent-ink)" }}><GitMerge size={12} /> Live collab</span>
       <span className="r-beat-desc grow">{desc}</span>
+      {collab.error && <span className="r-tag" role="alert" data-testid="collab-error" style={{ color: "var(--danger-ink)" }}>{collab.error}</span>}
       {collab.onConflict && (
         <button className="r-mini-btn" data-testid="collab-conflict" disabled={collab.running} title="Create a stale agent draft and require host review instead of overwriting the cell" onClick={collab.onConflict}>
           <AlertTriangle size={12} /> Conflict drill
@@ -1442,7 +1452,7 @@ function TraceStrip({ roomId, me }: { roomId: string; me: Actor }) {
     <div className="r-trace" data-testid="room-trace">
       <div className="r-trace-head">
         <History size={14} style={{ color: "var(--text-muted)" }} />
-        <span className="h-title" style={{ fontSize: 11.5 }}>Room trace</span>
+        <span className="h-title" style={{ fontSize: 12.5 }}>Room trace</span>
         <span className="grow" />
         {run && <span className="r-trace-tele" title={`${run.steps} steps · ${run.inputTokens.toLocaleString()} in + ${run.outputTokens.toLocaleString()} out tokens · ${run.ms}ms`}>{run.model} · {run.toolCalls} tools · ${run.costUsd.toFixed(3)}</span>}
         {host && proposals.length > 1 && <button className="r-mini-btn primary" disabled={acceptingAll} onClick={() => void acceptAll()}><Check size={12} /> Accept all</button>}
@@ -1509,6 +1519,18 @@ const proposalErrMsg = (reason?: string) =>
           : reason === "formula_protected" ? "Formula cells cannot be overwritten by scalar agent edits."
           : "Couldn't apply this proposal — try again.";
 
+function compactTraceSummary(summary: string): string {
+  const payloadMatch = summary.match(/^(.*?=\s*)([{[]).*/);
+  if (payloadMatch) return `${payloadMatch[1]}evidence payload`;
+  const releaseMatch = summary.match(/^(.*?released lock on )(.+)$/i);
+  if (releaseMatch) {
+    const cells = releaseMatch[2].split(",").map((cell) => cell.trim()).filter(Boolean);
+    const cellCount = cells.length;
+    return `${releaseMatch[1]}${cellCount || "multiple"} cell${cellCount === 1 ? "" : "s"}`;
+  }
+  return summary.length > 72 ? `${summary.slice(0, 69)}...` : summary;
+}
+
 function TraceRow({ t }: { t: TraceEvent }) {
   const [open, setOpen] = useState(false);
   const { cls, Icon } = traceIcon(t.type);
@@ -1518,7 +1540,7 @@ function TraceRow({ t }: { t: TraceEvent }) {
     <div className="r-trace-item">
       <button className="r-trace-row" data-open={String(open)} aria-expanded={open} disabled={!expandable} onClick={() => setOpen((o) => !o)}>
         <span className={"r-trace-ico " + cls}><Icon size={12} /></span>
-        <span className="tt grow">{t.summary}</span>
+        <span className="tt grow">{compactTraceSummary(t.summary)}</span>
         {status === "error" && <span className="r-trace-status err">error</span>}
         {expandable && <ChevronRight size={12} className="r-trace-chev" />}
       </button>

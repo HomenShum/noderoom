@@ -1,0 +1,293 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-15T03:52:02.597Z",
+  "mode": "provider-produced-convex-contract",
+  "claim": "Startup diligence provider-produced proof for model-generated evidence cells and final copy flowing through the same Convex job/proposal/trace contract.",
+  "pass": true,
+  "summary": {
+    "checks": 8,
+    "passed": 8,
+    "failed": 0,
+    "providerProducedContent": true,
+    "convexContractProven": true
+  },
+  "room": {
+    "code": "SD2DB78277",
+    "roomId": "000000000000000000000010000rooms",
+    "researchArtifactId": "00000000000000000010005artifacts",
+    "runwayArtifactId": "00000000000000000010007artifacts",
+    "jobId": "00000000000000000010017agentJobs"
+  },
+  "checks": [
+    {
+      "id": "account_upsert",
+      "status": "pass",
+      "manifestStatus": "convex-contract-proven",
+      "summary": "CardioNova re-import updated the existing research row instead of creating a duplicate.",
+      "evidence": {
+        "cardioRows": [
+          "rc_cardionova"
+        ],
+        "ownerValue": "Alex",
+        "companyCellCount": 5
+      }
+    },
+    {
+      "id": "cited_cellpayloads",
+      "status": "pass",
+      "manifestStatus": "provider-produced-convex-contract-proven",
+      "summary": "A real provider generated an evidence-bearing CellPayload that committed through the host-reviewed proposal path.",
+      "evidence": {
+        "proposalResult": {
+          "ok": false,
+          "proposalId": "00000000000000000010092proposals",
+          "reason": "pending_approval"
+        },
+        "committedPayload": {
+          "confidence": 0.72,
+          "evidence": [
+            {
+              "artifactId": "00000000000000000010005artifacts",
+              "quote": "AI triage workflow for hospital intake",
+              "source": "CardioNova Intake Doc",
+              "sourceRef": "cardionova-intake.pdf#page=1"
+            },
+            {
+              "artifactId": "00000000000000000010005artifacts",
+              "quote": "$1.5M cash, $125k/month burn",
+              "source": "CardioNova Pitch Deck",
+              "sourceRef": "cardionova-deck.pdf#page=12"
+            }
+          ],
+          "kind": "CellPayload",
+          "status": "needs_review",
+          "value": "CardioNova, located at https://cardionova.example, specializes in an AI triage workflow for hospital intake. The company has $1.5M in cash and a monthly burn rate of $125k."
+        },
+        "providerProducedContent": true,
+        "providerRoute": {
+          "ok": true,
+          "policy": "provider_route_v1",
+          "requestedModel": "gemini-2.5-flash",
+          "resolvedModel": "gemini-2.5-flash",
+          "provider": "gemini",
+          "entrypoint": "public_ask",
+          "allowedProviders": [
+            "openai",
+            "anthropic",
+            "gemini",
+            "openrouter",
+            "local"
+          ],
+          "noTrainingRequired": false,
+          "basis": [
+            "entrypoint:public_ask",
+            "requested:gemini-2.5-flash",
+            "resolved:gemini-2.5-flash",
+            "external:true",
+            "allowlist:openai,anthropic,gemini,openrouter,local",
+            "no_training_required:false",
+            "health_policy:provider_health_v1",
+            "quarantined_models:none",
+            "quarantined_providers:none"
+          ]
+        }
+      }
+    },
+    {
+      "id": "human_edit_preserved",
+      "status": "pass",
+      "manifestStatus": "convex-contract-proven",
+      "summary": "A stale agent write became a durable semantic conflict/proposal while the human value stayed committed.",
+      "evidence": {
+        "humanEdit": {
+          "ok": true,
+          "version": 2
+        },
+        "staleAgent": {
+          "actual": 2,
+          "expected": 1,
+          "ok": false,
+          "reason": "conflict",
+          "rebase": {
+            "autoMergeOp": null,
+            "decision": "needs_human_review",
+            "outcome": "needs_review",
+            "proposalIds": [
+              "00000000000000000010096proposals"
+            ],
+            "semanticConflictId": "000000000010097semanticConflicts",
+            "tier": "human_review_required"
+          }
+        },
+        "preservedValue": "A+ / banker hold",
+        "pendingProposalCount": 1,
+        "semanticConflictCount": 1
+      }
+    },
+    {
+      "id": "private_boundary",
+      "status": "pass",
+      "manifestStatus": "convex-contract-proven",
+      "summary": "The private agent reply is readable by the owning host and rejected for a second room member.",
+      "evidence": {
+        "hostPrivateCount": 1,
+        "priyaBlocked": true
+      }
+    },
+    {
+      "id": "runway_milestone_chart",
+      "status": "pass",
+      "manifestStatus": "deterministic-helper-and-artifact-proven",
+      "summary": "Runway math produced a sourced 12.0 month result and persisted an SVG chart in a room note artifact.",
+      "evidence": {
+        "runway": {
+          "company": "CardioNova",
+          "runwayMonths": 12,
+          "status": "watch",
+          "headline": "CardioNova runway: 12 months at $125k/mo burn; milestone: Treasury diligence pack ready for IC.",
+          "milestones": [
+            {
+              "month": 1,
+              "label": "Treasury diligence pack ready for IC"
+            },
+            {
+              "month": 6,
+              "label": "Mid-runway checkpoint — default-alive review"
+            },
+            {
+              "month": 12,
+              "label": "Projected cash-zero — must close raise or reach breakeven"
+            }
+          ],
+          "assumptions": [
+            {
+              "label": "Cash on hand",
+              "value": "$1.5M",
+              "source": "CardioNova data room / deck p.12"
+            },
+            {
+              "label": "Net monthly burn",
+              "value": "$125k",
+              "source": "CardioNova data room / deck p.12"
+            }
+          ],
+          "needsInput": false
+        },
+        "chartArtifactId": "00000000000000000010100artifacts"
+      }
+    },
+    {
+      "id": "downstream_draft_only",
+      "status": "pass",
+      "manifestStatus": "helper-proven-no-side-effects",
+      "summary": "Downstream outputs are generated as approval-gated drafts or CRM export rows, with no external side-effect adapter invoked.",
+      "evidence": {
+        "destinations": [
+          {
+            "destination": "gmail",
+            "status": "needs_approval",
+            "approvalRequired": true
+          },
+          {
+            "destination": "notion",
+            "status": "needs_approval",
+            "approvalRequired": true
+          },
+          {
+            "destination": "slack",
+            "status": "needs_approval",
+            "approvalRequired": true
+          },
+          {
+            "destination": "linear",
+            "status": "needs_approval",
+            "approvalRequired": true
+          },
+          {
+            "destination": "linkedin",
+            "status": "needs_approval",
+            "approvalRequired": true
+          },
+          {
+            "destination": "crm_csv",
+            "status": "ready",
+            "approvalRequired": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "concurrent_lanes",
+      "status": "pass",
+      "manifestStatus": "convex-contract-proven",
+      "summary": "The job request records distinct diligence lanes and completes through the durable agentJobs root.",
+      "evidence": {
+        "lanes": [
+          "research",
+          "finance_runway",
+          "source_qa",
+          "review_handoff"
+        ],
+        "status": "completed"
+      }
+    },
+    {
+      "id": "route_trace_cost_runtime",
+      "status": "pass",
+      "manifestStatus": "provider-produced-route-trace-proven",
+      "summary": "The job detail records resolved model, model/tool operation events, token/cost counters, stop reason, and linked run metadata.",
+      "evidence": {
+        "attempts": [
+          {
+            "resolvedModel": "gemini-2.5-flash",
+            "stopReason": "done",
+            "costUsd": 0.000834,
+            "ms": 4606
+          }
+        ],
+        "operationKinds": [
+          "mutation",
+          "action",
+          "model_call",
+          "tool_call",
+          "checkpoint"
+        ],
+        "latestRun": {
+          "model": "gemini-2.5-flash",
+          "stopReason": "done",
+          "toolCalls": 8
+        },
+        "providerRouteJournal": {
+          "model": "gemini-2.5-flash",
+          "providerRoute": {
+            "allowedProviders": [
+              "openai",
+              "anthropic",
+              "gemini",
+              "openrouter",
+              "local"
+            ],
+            "basis": [
+              "entrypoint:public_ask",
+              "requested:gemini-2.5-flash",
+              "resolved:gemini-2.5-flash",
+              "external:true",
+              "allowlist:openai,anthropic,gemini,openrouter,local",
+              "no_training_required:false",
+              "health_policy:provider_health_v1",
+              "quarantined_models:none",
+              "quarantined_providers:none"
+            ],
+            "entrypoint": "public_ask",
+            "noTrainingRequired": false,
+            "ok": true,
+            "policy": "provider_route_v1",
+            "provider": "gemini",
+            "requestedModel": "gemini-2.5-flash",
+            "resolvedModel": "gemini-2.5-flash"
+          }
+        }
+      }
+    }
+  ]
+}

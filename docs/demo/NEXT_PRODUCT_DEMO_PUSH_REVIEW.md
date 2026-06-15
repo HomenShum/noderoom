@@ -73,7 +73,7 @@ The combined media judge rates the live-join clip publishable, and the script no
 
 ## Next Product Push
 
-1. Run the provider-produced version of the startup eval now that `npm run eval:startup-diligence:live` proves the Convex contract path.
+1. Repeat the provider-produced startup eval N=5 and promote only if p95 latency, route/path drift, and pass rate meet the live collaboration SLO.
 2. Add a visible user-perspective transition and public/private lane transition to the walkthrough renderer if we want to clear the remaining media P2 notes.
 3. Keep official benchmark claims yellow until official fixtures/runs are recorded.
 
@@ -82,5 +82,5 @@ The combined media judge rates the live-join clip publishable, and the script no
 - README now leads with the startup-diligence war-room and live-join GIFs instead of burying them behind generic clips.
 - `startup-diligence-war-room` now invokes a startup-specific `/demo multi-agent` scenario: CardioNova intake, five-company bulk diligence, runway/milestone chart work, no-clobber proof, private banker lane, and draft-only handoff.
 - `startup-diligence-live-join` now scripts Maya, Priya, and Alex in the same live room with CardioNova/bulk diligence and runway/milestone ownership.
-- `docs/eval/startup-diligence-war-room-live.json` now records the proof boundary so deterministic UI evidence and Convex contract evidence cannot be mistaken for live provider-produced content.
+- `docs/eval/startup-diligence-war-room-live.json` now records the proof boundary so deterministic UI evidence, Convex contract evidence, and one provider-produced proof are distinguishable from repeated N=5/p95 route-stability evidence.
 - Both startup clips were recaptured, rendered, and judged with Gemini run `20260614T233419Z`: live-join `publish 10.9/16`, war-room `publish 11.7/16`, with three P2 presentation-polish notes remaining: rapid user-perspective transition, dense trace text, and a subtle Public-to-Private switch.

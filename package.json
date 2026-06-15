@@ -96,6 +96,7 @@
     "eval:professional:live-catalog": "tsx evals/professionalLiveCatalog.ts --record",
     "eval:professional:live-runtime": "tsx evals/professionalRuntimeLive.ts --real deepseek/deepseek-v4-flash --record",
     "eval:startup-diligence:live": "tsx scripts/startup-diligence-live-eval.ts --strict",
+    "eval:startup-diligence:provider": "tsx scripts/startup-diligence-provider-eval.ts --strict",
     "eval:professional:proofs": "tsx evals/professionalProofLedger.ts",
     "eval:chat-intake:live": "tsx evals/chatIntakeRuntime.ts --real deepseek/deepseek-v4-flash --managed-locks --record",
     "eval:managed-lock": "tsx evals/managedLockPerf.ts --strict",

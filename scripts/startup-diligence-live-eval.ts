@@ -3,7 +3,7 @@ import "./benchmark/loadEnv";
 import { existsSync, mkdirSync, readdirSync, readFileSync, statSync, writeFileSync } from "node:fs";
 import { dirname, join, relative, resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { randomUUID } from "node:crypto";
+import { createHash, randomUUID } from "node:crypto";
 import { convexTest } from "convex-test";
 import schema from "../convex/schema";
 import { api, internal } from "../convex/_generated/api";
@@ -18,6 +18,32 @@ const PRIYA_TOKEN = "startup-live-eval-priya-token-0123456789";
 const AGENT = { kind: "agent" as const, id: "agent_room", name: "Room NodeAgent", scope: "public" as const };
 
 type CheckStatus = "pass" | "fail";
+type StartupLiveEvalMode = "convex-test-contract" | "provider-produced-convex-contract";
+
+export type StartupGeneratedCellPayload = {
+  kind: "CellPayload";
+  value: string;
+  confidence: number;
+  status: "needs_review" | "reviewed";
+  evidence: Array<{
+    source: string;
+    sourceRef: string;
+    quote: string;
+    artifactId?: string;
+  }>;
+};
+
+export type StartupProviderGeneratedContent = {
+  requestedModel: string;
+  resolvedModel: string;
+  providerRoute?: unknown;
+  responseText: string;
+  cellPayload: StartupGeneratedCellPayload;
+  finalText: string;
+  usage?: { inputTokens?: number; outputTokens?: number };
+  costUsd?: number;
+  ms: number;
+};
 
 export interface StartupLiveEvalCheck {
   id: string;
@@ -30,14 +56,14 @@ export interface StartupLiveEvalCheck {
 export interface StartupLiveEvalReport {
   schema: 1;
   generatedAt: string;
-  mode: "convex-test-contract";
+  mode: StartupLiveEvalMode;
   claim: string;
   pass: boolean;
   summary: {
     checks: number;
     passed: number;
     failed: number;
-    providerProducedContent: false;
+    providerProducedContent: boolean;
     convexContractProven: true;
   };
   room: {
@@ -50,10 +76,24 @@ export interface StartupLiveEvalReport {
   checks: StartupLiveEvalCheck[];
 }
 
+export type StartupLiveEvalOptions = {
+  convexModules?: Record<string, () => Promise<unknown>>;
+  providerGenerated?: StartupProviderGeneratedContent;
+};
+
 export async function runStartupDiligenceConvexContractEval(
-  convexModules?: Record<string, () => Promise<unknown>>,
+  optionsOrModules?: Record<string, () => Promise<unknown>> | StartupLiveEvalOptions,
 ): Promise<StartupLiveEvalReport> {
-  const modules = { ...(convexModules ?? convexModuleMap()) };
+  const options = normalizeEvalOptions(optionsOrModules);
+  const providerGenerated = options.providerGenerated;
+  const providerProduced = !!providerGenerated;
+  const runMode: StartupLiveEvalMode = providerProduced ? "provider-produced-convex-contract" : "convex-test-contract";
+  const modelForRun = providerGenerated?.resolvedModel ?? "startup-contract-eval";
+  const inputTokens = providerGenerated?.usage?.inputTokens ?? 1200;
+  const outputTokens = providerGenerated?.usage?.outputTokens ?? 360;
+  const costUsd = providerGenerated?.costUsd ?? 0.0042;
+  const runMs = providerGenerated?.ms ?? 1400;
+  const modules = { ...(options.convexModules ?? convexModuleMap()) };
   for (const file of ["../convex/agent.ts", "../convex/agentJobRunner.ts", "../convex/agentWorkflows.ts", "../convex/embeddingRunner.ts"]) {
     delete modules[file];
   }
@@ -113,7 +153,7 @@ export async function runStartupDiligenceConvexContractEval(
     goal: jobGoal,
     entrypoint: "public_ask" as const,
     scope: "public_room" as const,
-    modelPolicy: "startup-contract-eval",
+    modelPolicy: modelForRun,
     idempotencyKey: `startup-live-eval-${code}`,
     approvalPolicy: "host_review" as const,
     evidencePolicy: "public_only" as const,
@@ -159,20 +199,24 @@ export async function runStartupDiligenceConvexContractEval(
 
   const summaryKey = `${cardioRowId}__summary`;
   const summaryVersion = Number(afterUpsert[summaryKey]?.version ?? 0);
-  const cellPayload = {
-    kind: "CellPayload",
-    value: "CardioNova: AI triage workflow for hospital intake.",
-    confidence: 0.86,
-    status: "needs_review",
-    evidence: [
-      {
-        source: "CardioNova intake packet",
-        sourceRef: "cardionova-intake.pdf#page=1",
-        quote: "AI triage for hospitals",
-        artifactId: String(researchArtifactId),
+  const cellPayload = materializeCellPayload(providerGenerated?.cellPayload, String(researchArtifactId));
+  if (providerGenerated) {
+    await t.mutation(internal.agentStepJournal.record, {
+      jobId,
+      sliceKey: `provider-startup-${code}`,
+      step: 0,
+      model: modelForRun,
+      inputHash: stableHash(`startup-provider:${providerGenerated.requestedModel}:${providerGenerated.responseText.slice(0, 200)}`),
+      outputHash: stableHash(JSON.stringify(providerGenerated.cellPayload)),
+      result: {
+        text: providerGenerated.responseText,
+        toolCalls: [],
+        done: true,
+        usage: providerGenerated.usage ?? {},
+        providerRoute: providerGenerated.providerRoute,
       },
-    ],
-  };
+    });
+  }
   const proposedPayload = await t.mutation(internal.artifacts.applyAgentCellEdit, {
     roomId,
     artifactId: researchArtifactId,
@@ -187,10 +231,12 @@ export async function runStartupDiligenceConvexContractEval(
     await t.mutation(api.artifacts.resolveProposal, { proposalId: payloadProposalId, approve: true, requester: hostProof });
   }
   const afterPayload = await elements(t, roomId, researchArtifactId, hostProof);
-  const committedPayload = afterPayload[summaryKey]?.value as typeof cellPayload | undefined;
-  addCheck(checks, "cited_cellpayloads", isCellPayload(committedPayload), "convex-contract-proven-provider-pending", "A host-reviewed agent proposal committed an evidence-bearing CellPayload to the research sheet.", {
+  const committedPayload = afterPayload[summaryKey]?.value as StartupGeneratedCellPayload | undefined;
+  addCheck(checks, "cited_cellpayloads", isCellPayload(committedPayload) && (!providerProduced || committedPayload?.value === cellPayload.value), providerProduced ? "provider-produced-convex-contract-proven" : "convex-contract-proven-provider-pending", providerProduced ? "A real provider generated an evidence-bearing CellPayload that committed through the host-reviewed proposal path." : "A host-reviewed agent proposal committed an evidence-bearing CellPayload to the research sheet.", {
     proposalResult: proposedPayload,
     committedPayload,
+    providerProducedContent: providerProduced,
+    providerRoute: providerGenerated?.providerRoute,
   });
 
   const tierKey = `${cardioRowId}__tier`;
@@ -274,15 +320,15 @@ export async function runStartupDiligenceConvexContractEval(
     jobId,
     roomId,
     agentId: "agent_room",
-    model: "startup-contract-eval",
+    model: modelForRun,
     goal: jobGoal,
     steps: 6,
     toolCalls: 8,
     conflictsSurvived: 1,
-    inputTokens: 1200,
-    outputTokens: 360,
-    costUsd: 0.0042,
-    ms: 1400,
+    inputTokens,
+    outputTokens,
+    costUsd,
+    ms: runMs,
     exhausted: false,
     stopReason: "done",
     handoff: { sealed: true, lanes: ["research", "finance_runway", "source_qa", "review_handoff"] },
@@ -291,13 +337,13 @@ export async function runStartupDiligenceConvexContractEval(
     jobId,
     runId,
     status: "completed",
-    finalText: "Startup diligence contract eval complete.",
-    resolvedModel: "startup-contract-eval",
+    finalText: providerGenerated?.finalText ?? "Startup diligence contract eval complete.",
+    resolvedModel: modelForRun,
     stopReason: "done",
-    ms: 1400,
-    inputTokens: 1200,
-    outputTokens: 360,
-    costUsd: 0.0042,
+    ms: runMs,
+    inputTokens,
+    outputTokens,
+    costUsd,
     modelCalls: 1,
     toolCalls: 8,
     queryCount: 4,
@@ -307,19 +353,24 @@ export async function runStartupDiligenceConvexContractEval(
   const detail = await t.query(api.agentJobs.detail, { jobId, requester: hostProof }) as any;
   const opKinds = new Set((detail.operations ?? []).map((event: any) => event.kind));
   const attemptWithCost = (detail.attempts ?? []).find((attempt: any) =>
-    attempt.resolvedModel === "startup-contract-eval"
+    attempt.resolvedModel === modelForRun
     && attempt.stopReason === "done"
     && typeof attempt.costUsd === "number"
     && typeof attempt.ms === "number"
+  );
+  const providerRouteJournal = (detail.modelJournal ?? []).find((row: any) =>
+    row.result?.providerRoute?.policy === "provider_route_v1"
+    && row.result?.providerRoute?.resolvedModel === modelForRun
   );
   addCheck(checks, "concurrent_lanes", Array.isArray(detail.job.request?.lanes) && detail.job.request.lanes.length >= 4 && detail.job.status === "completed", "convex-contract-proven", "The job request records distinct diligence lanes and completes through the durable agentJobs root.", {
     lanes: detail.job.request?.lanes,
     status: detail.job.status,
   });
-  addCheck(checks, "route_trace_cost_runtime", !!attemptWithCost && opKinds.has("model_call") && opKinds.has("tool_call") && !!detail.latestRun, "convex-contract-proven-provider-route-pending", "The job detail records resolved model, model/tool operation events, token/cost counters, stop reason, and linked run metadata.", {
+  addCheck(checks, "route_trace_cost_runtime", !!attemptWithCost && opKinds.has("model_call") && opKinds.has("tool_call") && !!detail.latestRun && (!providerProduced || !!providerRouteJournal), providerProduced ? "provider-produced-route-trace-proven" : "convex-contract-proven-provider-route-pending", "The job detail records resolved model, model/tool operation events, token/cost counters, stop reason, and linked run metadata.", {
     attempts: detail.attempts.map((attempt: any) => ({ resolvedModel: attempt.resolvedModel, stopReason: attempt.stopReason, costUsd: attempt.costUsd, ms: attempt.ms })),
     operationKinds: [...opKinds],
     latestRun: detail.latestRun ? { model: detail.latestRun.model, stopReason: detail.latestRun.stopReason, toolCalls: detail.latestRun.toolCalls } : null,
+    providerRouteJournal: providerRouteJournal ? { model: providerRouteJournal.model, providerRoute: providerRouteJournal.result?.providerRoute } : null,
   });
 
   const passed = checks.filter((check) => check.status === "pass").length;
@@ -327,14 +378,16 @@ export async function runStartupDiligenceConvexContractEval(
   return {
     schema: 1,
     generatedAt: new Date().toISOString(),
-    mode: "convex-test-contract",
-    claim: "Startup diligence Convex contract proof for account intake, evidence cells, no-clobber, private lane, route trace, runway chart, and draft-only handoff.",
+    mode: runMode,
+    claim: providerProduced
+      ? "Startup diligence provider-produced proof for model-generated evidence cells and final copy flowing through the same Convex job/proposal/trace contract."
+      : "Startup diligence Convex contract proof for account intake, evidence cells, no-clobber, private lane, route trace, runway chart, and draft-only handoff.",
     pass: failed === 0,
     summary: {
       checks: checks.length,
       passed,
       failed,
-      providerProducedContent: false,
+      providerProducedContent: providerProduced,
       convexContractProven: true,
     },
     room: {
@@ -354,18 +407,25 @@ export function writeStartupDiligenceEvalArtifacts(report: StartupLiveEvalReport
   if (existsSync(options.manifestPath)) {
     const manifest = JSON.parse(readFileSync(options.manifestPath, "utf8"));
     const checkById = new Map(report.checks.map((check) => [check.id, check]));
-    manifest.currentEvidenceLevel = "convex-contract-proven-plus-deterministic-media-provider-pending";
-    manifest.latestLiveEval = {
+    const providerProduced = report.summary.providerProducedContent;
+    manifest.currentEvidenceLevel = providerProduced
+      ? "provider-produced-convex-contract-proven-plus-deterministic-media"
+      : "convex-contract-proven-plus-deterministic-media-provider-pending";
+    const latestEval = {
       generatedAt: report.generatedAt,
       mode: report.mode,
-      command: "npm run eval:startup-diligence:live",
+      command: providerProduced ? "npm run eval:startup-diligence:provider" : "npm run eval:startup-diligence:live",
       resultPath: options.jsonOut,
       pass: report.pass,
       checksPassed: report.summary.passed,
       checksFailed: report.summary.failed,
-      providerProducedContent: false,
-      note: "Convex contract proof is green; live provider-generated content remains the next production gate.",
+      providerProducedContent: providerProduced,
+      note: providerProduced
+        ? "Provider-generated CellPayload/final copy flowed through the same Convex job/proposal/trace contract."
+        : "Convex contract proof is green; live provider-generated content remains the next production gate.",
     };
+    manifest.latestLiveEval = latestEval;
+    if (providerProduced) manifest.latestProviderEval = latestEval;
     manifest.requiredChecks = (manifest.requiredChecks ?? []).map((required: any) => {
       const check = checkById.get(required.id);
       if (!check) return required;
@@ -376,9 +436,13 @@ export function writeStartupDiligenceEvalArtifacts(report: StartupLiveEvalReport
         lastEvidenceRef: `${options.jsonOut}#${check.id}`,
       };
     });
-    manifest.nextAcceptanceGate = [
-      "run the same startup diligence eval through a real provider route so CellPayloads, route telemetry, and final content are provider-produced rather than contract-seeded",
-    ];
+    manifest.nextAcceptanceGate = providerProduced
+      ? [
+        "repeat the provider-produced startup diligence eval N=5 and promote only if p95 latency, path fingerprint drift, and pass rate meet the live collaboration SLO",
+      ]
+      : [
+        "run the same startup diligence eval through a real provider route so CellPayloads, route telemetry, and final content are provider-produced rather than contract-seeded",
+      ];
     writeFileSync(options.manifestPath, `${JSON.stringify(manifest, null, 2)}\n`);
   }
 }
@@ -400,6 +464,44 @@ function isCellPayload(value: any): boolean {
     && Array.isArray(value.evidence)
     && value.evidence.length > 0
     && value.evidence.every((item: any) => typeof item.sourceRef === "string" && item.sourceRef.length > 0);
+}
+
+function normalizeEvalOptions(input?: Record<string, () => Promise<unknown>> | StartupLiveEvalOptions): StartupLiveEvalOptions {
+  if (!input) return {};
+  if ("convexModules" in input || "providerGenerated" in input) return input as StartupLiveEvalOptions;
+  return { convexModules: input as Record<string, () => Promise<unknown>> };
+}
+
+function materializeCellPayload(seed: StartupGeneratedCellPayload | undefined, artifactId: string): StartupGeneratedCellPayload {
+  const payload = seed ?? {
+    kind: "CellPayload" as const,
+    value: "CardioNova: AI triage workflow for hospital intake.",
+    confidence: 0.86,
+    status: "needs_review" as const,
+    evidence: [
+      {
+        source: "CardioNova intake packet",
+        sourceRef: "cardionova-intake.pdf#page=1",
+        quote: "AI triage for hospitals",
+      },
+    ],
+  };
+  return {
+    kind: "CellPayload",
+    value: String(payload.value).trim(),
+    confidence: Math.max(0, Math.min(1, Number(payload.confidence) || 0.5)),
+    status: payload.status === "reviewed" ? "reviewed" : "needs_review",
+    evidence: (payload.evidence ?? []).slice(0, 4).map((item) => ({
+      source: String(item.source || "Startup diligence source"),
+      sourceRef: String(item.sourceRef || "startup-provider-output#model"),
+      quote: String(item.quote || payload.value).slice(0, 240),
+      artifactId,
+    })),
+  };
+}
+
+function stableHash(value: string): string {
+  return createHash("sha256").update(value).digest("hex");
 }
 
 async function elements(t: any, roomId: Id<"rooms">, artifactId: Id<"artifacts">, requester: any) {

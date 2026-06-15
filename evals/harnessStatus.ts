@@ -55,8 +55,10 @@ export const PROFESSIONAL_HARNESS_STATUS = {
     notes: "The finance solve grades range locks on TARGET cells and formula linkage (financeModelLive.ts), but nothing locks or flags formula CHILDREN when a parent input cell is edited — which is what the reconciliation cases require. Declared, not built.",
   },
   cross_file_context: {
-    status: "contract",
-    notes: "Artifact references exist, but multi-file join/reconciliation grading is still catalog-only.",
+    status: "implemented",
+    entryPoint: "evals/crossFileJoinGrader.ts",
+    evidence: "tests/crossFileJoinGrader.test.ts",
+    notes: "Deterministic cross-file join/reconciliation grader: a value reconciled into artifact B must tie out to its source row in artifact A on a shared key; catches an invented-value saboteur and a join on a missing key. The full agent-runtime cross-file rung (driving runAgent across two artifacts, like chatIntakeRuntime) is a follow-up.",
   },
   privacy_redaction: {
     status: "implemented",

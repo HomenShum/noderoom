@@ -125,6 +125,7 @@ function ArtifactSurface({ roomId, me, artId, onArt, collab, style, surfaceKey =
   const activeTab: TabId = artFor(tab) ? tab : tabForArt(artId);
   const pick = (t: TabId) => { const a = artFor(t); if (a) { onArt(a.id); setTab(t); } };
   const openArtifact = (a: Art) => { onArt(a.id); setTab(tabForArt(a.id)); };
+  const visibility = selected?.visibility ?? "room";
 
   return (
     <div className="r-panel artifact" ref={surfaceRef} style={style} data-testid={surfaceKey === "secondary" ? "artifact-panel-secondary" : "artifact-panel"}>
@@ -138,7 +139,10 @@ function ArtifactSurface({ roomId, me, artId, onArt, collab, style, surfaceKey =
         </div>
         <span className="grow" />
         {headerExtra}
-        <span className="r-tag public"><Users size={11} /> Shared</span>
+        <span className={`r-tag ${visibility === "private" ? "private" : "public"}`}>
+          {visibility === "private" ? <Lock size={11} /> : <Users size={11} />}
+          {visibility === "private" ? "Private" : visibility === "public" ? "Public" : "Shared"}
+        </span>
       </div>
 
       {collab && activeTab === "sheet" && sheet?.title === "Q3 variance" && <CollabBar collab={collab} />}
@@ -163,6 +167,61 @@ function ArtifactSurface({ roomId, me, artId, onArt, collab, style, surfaceKey =
  * "split mode" gap from docs/synthesis/specs/A_UI_SHELL.md (TARGET_2026_06 L197).
  * RoomShell's prop contract is unchanged; split state is local and defaults off.
  */
+function makeBlankRoomCode(): string {
+  const bytes = new Uint8Array(8);
+  crypto.getRandomValues(bytes);
+  return Array.from(bytes, (b) => (b % 36).toString(36)).join("").toUpperCase();
+}
+
+/**
+ * BlankRoomState — what a brand-new (0-artifact) room shows instead of a black void.
+ * Per deep-review §0 ("A new room starts blank") the room is empty by design; this gives the
+ * first-time user exactly THREE obvious starts (chat / add a surface / load the sample) rather
+ * than an empty technical shell. Each CTA is a real one-click action.
+ */
+function BlankRoomState({ roomId, me, style }: { roomId: string; me: Actor; style?: CSSProperties }) {
+  const store = useStore();
+  const [busy, setBusy] = useState(false);
+  const focusChat = () => {
+    const ta = document.querySelector<HTMLTextAreaElement>('textarea[data-testid="chat-composer"]');
+    if (ta) { ta.focus(); ta.scrollIntoView({ block: "center", behavior: "smooth" }); }
+  };
+  const addSheet = async () => {
+    if (busy) return;
+    setBusy(true);
+    try {
+      const columns: DataframeColumn[] = ["A", "B", "C"].map((label, order) => ({ id: label, label, order, mode: "manual", type: "text", agentWritable: true }));
+      const seed: Array<{ id: string; value: unknown }> = [];
+      for (let r = 1; r <= 8; r++) for (const c of ["A", "B", "C"]) seed.push({ id: `r${r}__${c}`, value: "" });
+      await store.uploadArtifact({ roomId, actor: me, artifact: { kind: "sheet", title: "Sheet 1", seed, meta: { dataframe: { columns, rowCount: 8, sourceFile: "blank-room", parser: "blank_seed", truncated: false, warnings: [] } } } });
+    } catch { /* the store surfaces failures; keep the blank state usable */ }
+    finally { setBusy(false); }
+  };
+  const loadSample = () => {
+    const url = new URL(window.location.origin + "/");
+    url.searchParams.set("demo", makeBlankRoomCode());
+    url.searchParams.set("name", me.name || "Host");
+    window.location.href = url.toString();
+  };
+  return (
+    <div className="r-panel artifact" style={style} data-testid="blank-room-state">
+      <div style={{ display: "flex", flex: 1, alignItems: "center", justifyContent: "center", padding: 24, minHeight: 0 }}>
+        <div style={{ maxWidth: 440, width: "100%", textAlign: "center" }}>
+          <div style={{ fontSize: 16, fontWeight: 700, marginBottom: 6 }}>This room is blank.</div>
+          <div className="faint" style={{ fontSize: 13, marginBottom: 18, lineHeight: 1.5 }}>
+            Start it your way. Everything you and your NodeAgents add stays live and conflict-safe.
+          </div>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8, alignItems: "stretch" }}>
+            <button className="r-btn primary" data-testid="blank-cta-chat" onClick={focusChat}>Ask the agent to build something →</button>
+            <button className="r-btn" data-testid="blank-cta-sheet" disabled={busy} onClick={() => void addSheet()}><Plus size={13} /> {busy ? "Adding a sheet…" : "Add a blank sheet"}</button>
+            <button className="r-btn ghost" data-testid="blank-cta-demo" onClick={loadSample}>Load the sample diligence workspace →</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function Artifact(props: {
   roomId: string; me: Actor; artId: string; onArt: (id: string) => void;
   collab?: CollabControls;
@@ -186,7 +245,9 @@ export function Artifact(props: {
     mq.addEventListener?.("change", onChange);
     return () => mq.removeEventListener?.("change", onChange);
   }, []);
-  const canSplit = wideEnough && arts.length >= 2;
+  // A blank room (0 artifacts) is intentional (Loop 1) — show the onboarding starts, not a void.
+  if (arts.length === 0) return <BlankRoomState roomId={roomId} me={me} style={style} />;
+  const canSplit = wideEnough && arts.length >= 4;
   // Keep the split target valid: collapse if it vanished, folded back onto the primary, or the
   // viewport became too narrow.
   const splitting = canSplit && !!splitId && splitId !== artId && arts.some((a) => a.id === splitId);
@@ -236,7 +297,7 @@ export function Artifact(props: {
         onArt={onArt}
         collab={collab}
         surfaceKey="primary"
-        headerExtra={wideEnough ? splitToggle : undefined}
+        headerExtra={canSplit ? splitToggle : undefined}
         style={{ flex: 1, minWidth: 0 }}
       />
       {splitting && splitId && (

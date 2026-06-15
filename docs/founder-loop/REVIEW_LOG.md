@@ -68,3 +68,26 @@ now-dead `blankLiveRoomArtifacts()` helper + `LiveSeedArtifact` type.
 is now an empty black void with no guidance → that's exactly Loop 2.
 
 ---
+
+## Loop 2 — Blank-state onboarding ✅
+
+**Angle:** issues #1 + #4 — Loop 1's blank room was a black void. The deep-review spec
+(L5284-5300) prescribes a blank-state with exactly **three obvious starts**, not an empty technical shell.
+
+**Root cause:** [src/ui/panels/Artifact.tsx:121](../../src/ui/panels/Artifact.tsx:121) returned
+`<div className="r-art-body" />` (literally nothing) for a 0-artifact room — no guidance.
+
+**Fix:** added a `BlankRoomState` component rendered when `arts.length === 0`, with 3 real one-click CTAs:
+- **"Ask the agent to build something →"** — focuses the chat composer (`data-testid="chat-composer"`).
+- **"+ Add a blank sheet"** — `store.uploadArtifact(...)` creates a live sheet work surface.
+- **"Load the sample diligence workspace →"** — navigates to the seeded demo (`/?demo=…`), so the demo
+  is **opt-in**, not the default push (the root of issue #1).
+
+**Verified live:** blank room now shows the 3 CTAs (no void). Clicked "Add a blank sheet" → a real
+Spreadsheet rendered (r1–r8 × A/B/C), `SOURCES 1 artifacts`, trace "Founder added Sheet 1",
+`edit_applied`. Typecheck green.
+
+**Founder note:** this is the inversion the recording was missing — the user lands in calm, blank space
+and *chooses* to summon data (chat / sheet / sample), instead of being dropped into a pre-filled war room.
+
+---

@@ -47,6 +47,10 @@ button { font-family: inherit; cursor: pointer; }
 input { font-family: inherit; }
 ::selection { background: var(--accent-tint); }
 :focus-visible { outline: 2px solid var(--accent-primary); outline-offset: 2px; }
+/* Quality gate: respect prefers-reduced-motion -- kill entrance/decorative animation; keep UI functional. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: .001ms !important; animation-iteration-count: 1 !important; transition-duration: .001ms !important; scroll-behavior: auto !important; }
+}
 
 .r-app { height: 100%; display: flex; flex-direction: column; position: relative;
   background: radial-gradient(900px 500px at 12% -8%, rgba(217,119,87,.10), transparent 60%), radial-gradient(900px 600px at 100% 0%, rgba(94,106,210,.08), transparent 55%); }
@@ -71,12 +75,12 @@ input { font-family: inherit; }
 /* Hover must be PERCEPTIBLE — the old one-shade bg shift (rgb 23->32) was invisible to eye AND
    vision judge. Accent-tinted border + brighter ink is the two-cue, on-palette signal. */
 .r-roomcode:hover { background: var(--bg-hover); border-color: var(--accent-border); color: var(--text-primary); }
-.r-roomcode b { color: var(--accent-ink); }
+.r-roomcode b { color: var(--text-secondary); } /* accent discipline: room code is chrome, not agent state */
 .r-spacer { flex: 1; }
 .r-avatars { display: flex; align-items: center; }
 .r-av { width: 26px; height: 26px; border-radius: 50%; flex: none; display: grid; place-items: center; font-size: 10px; font-weight: 700; color: #fff; border: 2px solid var(--bg-primary); margin-left: -7px; position: relative; }
 .r-av:first-child { margin-left: 0; } .r-av.agent { border-radius: 8px; }
-.r-av .pulse { position: absolute; right: -1px; bottom: -1px; width: 8px; height: 8px; border-radius: 50%; background: #1F8A5B; border: 2px solid var(--bg-primary); }
+.r-av .pulse { position: absolute; right: -1px; bottom: -1px; width: 7px; height: 7px; border-radius: 50%; background: var(--success); opacity: .8; border: 2px solid var(--bg-primary); } /* quiet presence; reserve full green for complete/approved state */
 .r-iconbtn { display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 8px; background: transparent; border: 1px solid transparent; color: var(--text-muted); transition: background .15s, color .15s, border-color .15s; font-size: 14px; }
 /* Compact sibling that still participates in the coarse-pointer 44px escalation (an inline
    width/height style would silently defeat that media query). */
@@ -583,7 +587,9 @@ input { font-family: inherit; }
 .r-research { width: 100%; min-width: 800px; border-collapse: separate; border-spacing: 0; table-layout: fixed; font-size: 12.5px; }
 .r-research thead th { position: sticky; top: 0; z-index: 3; text-align: left; font-size: 10px; text-transform: uppercase; letter-spacing: .12em; color: var(--text-tertiary); padding: 7px 10px; border-bottom: 1px solid var(--line); font-weight: 600; background: var(--bg-secondary); }
 .r-research thead th.frozen { left: 0; z-index: 4; }
-.r-research td { padding: 5px 10px; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; border-bottom: 1px solid var(--line); color: var(--text-secondary); }
+.r-research td { padding: 7px 10px; vertical-align: middle; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.3; border-bottom: 1px solid var(--line); color: var(--text-secondary); font-variant-numeric: tabular-nums; }
+/* a status badge is a fixed pill -- never clip it to an ellipsis ("COMPLETE..." trailing dots). */
+.r-research td:has(> .r-status) { overflow: visible; text-overflow: clip; }
 .r-research td.frozen { position: sticky; left: 0; z-index: 2; background: var(--bg-primary); }
 .r-research-row { height: 32px; cursor: pointer; }
 .r-research-row:hover td { background: var(--bg-hover); }
@@ -609,15 +615,17 @@ input { font-family: inherit; }
 .r-fresh.stale { color: var(--warning-ink); background: var(--warning-tint); border-color: var(--warning-border); }
 [data-theme="dark"] .r-fresh.stale { color: var(--warning-ink); }
 .r-trace-list { overflow-y: auto; padding: 0 12px 14px; display: flex; flex-direction: column; gap: 10px; }
-.r-trace-item { display: flex; flex-direction: column; font-size: 16px; animation: msgIn .3s var(--ease-out-expo) both; }
-.r-trace-row { display: flex; gap: 11px; align-items: flex-start; width: 100%; text-align: left; background: transparent; border: none; padding: 5px 5px; margin: -1px -5px; color: inherit; cursor: pointer; border-radius: 6px; font: inherit; }
+/* Trace is chrome: it recedes behind the work surface (was 16px / inherited ink -- inverted hierarchy). */
+.r-trace-item { display: flex; flex-direction: column; font-size: 12.5px; animation: msgIn .3s var(--ease-out-expo) both; }
+.r-trace-row { display: flex; gap: 9px; align-items: flex-start; width: 100%; text-align: left; background: transparent; border: none; padding: 4px 5px; margin: -1px -5px; color: var(--text-muted); font-weight: 400; cursor: pointer; border-radius: 6px; font-size: 12.5px; }
+.r-trace-row svg { color: var(--text-tertiary); }
 .r-trace-row:hover:not(:disabled) { background: var(--bg-hover); }
 .r-trace-row:disabled { cursor: default; }
 .r-trace-chev { color: var(--text-tertiary); transition: transform var(--motion-fast); flex: none; margin-top: 3px; }
 .r-trace-row[data-open="true"] .r-trace-chev { transform: rotate(90deg); }
 .r-trace-status { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: .03em; padding: 1px 5px; border-radius: 5px; flex: none; margin-top: 1px; }
 .r-trace-status.err { background: rgba(220,38,38,.16); color: #f87171; }
-.r-trace-detail { margin: 5px 0 5px 35px; padding: 9px 11px; border-radius: 7px; background: var(--bg-secondary); border: 1px solid var(--line); font-family: var(--font-mono); font-size: 13.5px; line-height: 1.65; display: flex; flex-direction: column; gap: 4px; animation: msgIn .2s var(--ease-out-expo) both; }
+.r-trace-detail { margin: 5px 0 5px 35px; padding: 9px 11px; border-radius: 7px; background: var(--bg-secondary); border: 1px solid var(--line); font-family: var(--font-mono); font-size: 12px; line-height: 1.6; display: flex; flex-direction: column; gap: 4px; animation: msgIn .2s var(--ease-out-expo) both; }
 .r-trace-detail .k { display: inline-block; min-width: 32px; color: var(--text-tertiary); text-transform: uppercase; letter-spacing: .04em; margin-right: 6px; }
 .r-trace-detail .v { color: var(--text-secondary); word-break: break-word; }
 .r-trace-ico { width: 24px; height: 24px; border-radius: 7px; flex: none; display: grid; place-items: center; margin-top: 1px; font-size: 10px; }

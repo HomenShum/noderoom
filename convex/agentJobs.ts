@@ -4,6 +4,13 @@ import { internalMutation, mutation, query } from "./_generated/server";
 import { components, internal } from "./_generated/api";
 import { actorProofV, requireActorProof, requireArtifactInRoom } from "./lib";
 import { classifyIntakeMessage, buildPlanPreview } from "../src/nodeagent/core/intakePreflight";
+import { parseBulkCompanyIngest } from "../src/nodeagent/skills/finance/bulkIngest";
+
+// BOUND: cap a single bulk-diligence fan-out so one command can't enqueue unbounded jobs.
+const MAX_BULK_COMPANIES = 50;
+function companyKeyOf(name: string): string {
+  return name.trim().toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+}
 
 const attemptStatusV = v.union(v.literal("completed"), v.literal("handoff"), v.literal("retrying"), v.literal("failed"));
 const terminalStatuses = new Set(["completed", "failed", "blocked", "cancelled"]);
@@ -338,6 +345,102 @@ export const startFreeAuto = mutation({
     });
     await ctx.db.patch(jobId, { workflowId: String(workflowId), updatedAt: now });
     return jobId;
+  },
+});
+
+/**
+ * Bulk diligence fan-out (deep-review Workflow 1, "ParselyFi-style"): one command over a pasted
+ * company list enqueues ONE queued agentJobs row per company — each with a per-company-key
+ * idempotency key (so a company dedupes independently, not run-level) and its own freeAutoWorkflow,
+ * bounded by the workpool's maxParallelism. Each child carries the same server-side PlanPreview gate.
+ * Previously bulk was a single agent iterating companies sequentially inside one job.
+ */
+export const startBulkDiligence = mutation({
+  args: {
+    roomId: v.id("rooms"),
+    artifactId: v.id("artifacts"),
+    requester: actorProofV,
+    companies: v.string(),
+    mode: v.optional(v.union(v.literal("variance"), v.literal("research"))),
+    maxAttempts: v.optional(v.number()),
+  },
+  handler: async (ctx, a) => {
+    if (a.companies.length > 20_000) throw new Error("companies_too_long");
+    const actor = await requireActorProof(ctx, a.roomId, a.requester);
+    await requireArtifactInRoom(ctx, a.roomId, a.artifactId);
+    const rows = parseBulkCompanyIngest(a.companies);
+    if (!rows.length) throw new Error("no_companies_parsed");
+    if (rows.length > MAX_BULK_COMPANIES) throw new Error(`too_many_companies:${rows.length}>${MAX_BULK_COMPANIES}`);
+    const now = Date.now();
+    const maxAttempts = Math.max(1, Math.min(a.maxAttempts ?? 20, 100));
+
+    // Affected-set + pending-proposal conflict are artifact-wide; compute once for the whole fan-out.
+    const elementIds = (await ctx.db.query("elements").withIndex("by_artifact", (q) => q.eq("artifactId", a.artifactId)).collect()).map((e) => e.elementId);
+    const pendingProposalRefs = (await ctx.db.query("proposals").withIndex("by_room_status", (q) => q.eq("roomId", a.roomId).eq("status", "pending")).collect())
+      .filter((p) => String(p.artifactId) === String(a.artifactId))
+      .map((p) => (p.op as { elementId?: string } | null)?.elementId)
+      .filter((id): id is string => typeof id === "string");
+
+    const jobs: Array<{ company: string; companyKey: string; jobId: string; status: string; reused: boolean }> = [];
+    const seen = new Set<string>();
+    for (const row of rows) {
+      const companyKey = companyKeyOf(row.company);
+      if (!companyKey || seen.has(companyKey)) continue; // de-dup within this submission
+      seen.add(companyKey);
+      const goal = `Research and enrich the diligence row for ${row.company}${row.website ? ` (${row.website})` : ""} with source-backed evidence.`;
+      const idempotencyKey = `bulk:${String(a.roomId)}:${String(a.artifactId)}:${actor.id}:${companyKey}`;
+      // Per-company idempotency: reuse a live (non-terminal) job for this company instead of stacking.
+      const prior = await ctx.db.query("agentJobs").withIndex("by_idempotency", (q) => q.eq("idempotencyKey", idempotencyKey)).order("desc").take(3);
+      const reusable = prior.find((job) => String(job.roomId) === String(a.roomId) && !terminalStatuses.has(job.status));
+      if (reusable) { jobs.push({ company: row.company, companyKey, jobId: String(reusable._id), status: reusable.status, reused: true }); continue; }
+
+      const intake = classifyIntakeMessage(goal);
+      const planPreview = buildPlanPreview({ decision: intake, targetArtifacts: [String(a.artifactId)], intendedWriteSet: elementIds, pendingProposals: pendingProposalRefs });
+      const planBlocked = planPreview.scheduling !== "run_now";
+      const jobId = await ctx.db.insert("agentJobs", clean({
+        roomId: a.roomId,
+        artifactId: a.artifactId,
+        requester: actor,
+        goal,
+        entrypoint: "free",
+        scope: "public_room",
+        commandText: goal,
+        request: { roomId: String(a.roomId), targetArtifactId: String(a.artifactId), commandText: goal, entrypoint: "free", scope: "public_room", approvalPolicy: "draft_first", evidencePolicy: "public_only", traceLevel: "full_operation_ledger", companyKey },
+        priority: 0,
+        approvalPolicy: "draft_first",
+        evidencePolicy: "public_only",
+        autoAllow: false,
+        traceLevel: "full_operation_ledger",
+        idempotencyKey,
+        mode: a.mode,
+        planPreview,
+        status: planBlocked ? ("blocked" as const) : ("queued" as const),
+        error: planBlocked ? `plan_${planPreview.scheduling}: ${planPreview.conflicts[0]?.detail ?? intake.reason}` : undefined,
+        modelPolicy: "openrouter/free-auto",
+        runtime: "workflow",
+        attempts: 0,
+        maxAttempts,
+        actionSliceCount: 0,
+        queryCount: 0,
+        mutationCount: 1,
+        modelCallCount: 0,
+        toolCallCount: 0,
+        schedulerHandoffCount: planBlocked ? 0 : 1,
+        receiptCount: 0,
+        nextRunAt: now,
+        createdAt: now,
+        updatedAt: now,
+      }));
+      if (planBlocked) {
+        await ctx.db.insert("traces", { roomId: a.roomId, ts: now, actor, type: "plan_blocked", summary: `PlanPreview blocked bulk diligence for ${row.company} (${planPreview.scheduling})`, detail: `bulk · ${companyKey} · ${planPreview.scheduling}`.slice(0, 480) });
+        jobs.push({ company: row.company, companyKey, jobId: String(jobId), status: "blocked", reused: false });
+        continue;
+      }
+      const workflowId = await start(ctx, internal.agentWorkflows.freeAutoWorkflow, { jobId }, { onComplete: internal.agentWorkflows.freeAutoWorkflowComplete, context: { jobId } });
+      await ctx.db.patch(jobId, { workflowId: String(workflowId), updatedAt: now });
+      jobs.push({ company: row.company, companyKey, jobId: String(jobId), status: "queued", reused: false });
+    }
+    return { ok: true as const, count: jobs.length, jobs };
   },
 });
 

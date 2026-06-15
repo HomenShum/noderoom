@@ -1,0 +1,104 @@
+{
+  "generatedAt": "2026-06-15T03:58:14.988Z",
+  "model": "gemini-3.5-flash",
+  "mediaPath": ".tmp-qa/mp4-review/workflow-compressed.mp4",
+  "mediaType": "video/mp4",
+  "mediaBytes": 695239,
+  "review": {
+    "overall": "partial",
+    "workflowSummary": "The user enters a public room named 'SpreadsheetLedger'. They type a prompt in the chat asking the NodeAgent to calculate the percentage variance for Gross profit, Operating expenses, and Net income. The agent starts running but pauses after reaching a 10-step budget limit. The user types 'continue' to resume the agent. The user then browses the Spreadsheet, Notes, and Wall tabs while the agent completes the calculations and updates the spreadsheet cells.",
+    "workflowGoal": "Calculate percentage variance for Gross profit, Operating expenses, and Net income in a spreadsheet using an AI agent.",
+    "workflowCompleted": "yes",
+    "completionEvidence": "At 01:34, the chat logs show the agent successfully setting the variance formulas and values in the spreadsheet (e.g., 'Room NodeAgent set ..._variance = ...').",
+    "timeline": [
+      {
+        "ts": "00:00",
+        "event": "User navigates to noderoom.co and enters display name."
+      },
+      {
+        "ts": "00:11",
+        "event": "User enters the public room."
+      },
+      {
+        "ts": "00:18",
+        "event": "User types a prompt in the chat asking the agent to calculate variance percentages."
+      },
+      {
+        "ts": "00:26",
+        "event": "User submits the prompt to the agent."
+      },
+      {
+        "ts": "00:51",
+        "event": "Agent pauses execution due to reaching the 10-step budget limit."
+      },
+      {
+        "ts": "01:06",
+        "event": "User types 'continue' to resume the agent."
+      },
+      {
+        "ts": "01:20",
+        "event": "User switches tabs to view the Spreadsheet, Notes, and Wall."
+      },
+      {
+        "ts": "01:34",
+        "event": "Agent successfully updates the spreadsheet cells with the calculated variances."
+      }
+    ],
+    "issues": {
+      "freshRoomState": {
+        "observed": true,
+        "severity": "moderate",
+        "firstTimestamp": "00:12",
+        "detail": "Upon entering the newly created room, it is already pre-populated with multiple documents, tasks, and spreadsheets from a demo template rather than starting as a clean, blank workspace."
+      },
+      "agentStoppedAtBudget": {
+        "observed": true,
+        "severity": "moderate",
+        "firstTimestamp": "00:51",
+        "detail": "The agent stopped executing mid-task and outputted the message: 'Paused after reaching the 10 step budget.' The user had to manually type 'continue' in the chat to resume it."
+      },
+      "roomTooCrowded": {
+        "observed": true,
+        "severity": "minor",
+        "firstTimestamp": "00:12",
+        "detail": "The interface contains multiple active panels simultaneously (left sidebar, main workspace tabs, right chat panel, and bottom log panel), which increases visual complexity."
+      },
+      "tooManyButtons": {
+        "observed": true,
+        "severity": "minor",
+        "firstTimestamp": "00:12",
+        "detail": "There are numerous controls and tabs visible by default, which may require a learning curve for new users."
+      }
+    },
+    "visibleButtons": [
+      "Spreadsheet",
+      "Notes",
+      "Wall",
+      "Run",
+      "Import accounts",
+      "Request assistance",
+      "Publish chat",
+      "Invite",
+      "New document (+)",
+      "New task (+)",
+      "Send message (arrow icon)"
+    ],
+    "recommendations": [
+      {
+        "issue": "agent-completion-vs-budget",
+        "fix": "Provide a prominent 'Continue' button in the UI when the agent hits a step budget, rather than requiring the user to type 'continue' in the chat.",
+        "priority": "P1"
+      },
+      {
+        "issue": "fresh-room-state",
+        "fix": "Offer a choice between starting with a blank room or loading a template, instead of defaulting to a pre-populated demo room.",
+        "priority": "P1"
+      },
+      {
+        "issue": "room-density",
+        "fix": "Allow users to collapse the sidebars and log panels to focus on the main spreadsheet/document workspace.",
+        "priority": "P2"
+      }
+    ]
+  }
+}

@@ -9,7 +9,7 @@ import type { Actor } from "../engine/types";
 
 const liveSessionKey = (code: string) => `noderoom:live:${code.toUpperCase()}`;
 
-// NOTE: starter-room seed content (the four artifacts) lives server-side in convex/rooms.ts and is
+// NOTE: starter-room seed content lives server-side in convex/rooms.ts and is
 // written atomically by the `createStarterRoom` mutation. It used to be duplicated here and seeded
 // client-side via create + 4× createArtifact, which could leave a half-built room if any seed failed.
 // Keeping a single server-side source of truth is what makes create all-or-nothing.
@@ -28,7 +28,7 @@ interface LiveSession {
 
 type LiveRequest =
   | { kind: "idle" }
-  | { kind: "join" | "create"; code: string; name: string };
+  | { kind: "join" | "create" | "demo"; code: string; name: string };
 
 export function App() {
   const [hash, setHash] = useState(() => (typeof window !== "undefined" ? window.location.hash : ""));
@@ -46,7 +46,7 @@ export function App() {
         const url = new URL(window.location.href);
         url.hash = "";
         url.search = "";
-        url.searchParams.set("create", makeLiveRoomCode());
+        url.searchParams.set("demo", makeLiveRoomCode());
         url.searchParams.set("name", cleanLiveName(session.me.name, "Host"));
         window.history.pushState(null, "", url);
         setHash("");
@@ -75,11 +75,12 @@ function ConvexApp() {
   const code = request.kind === "idle" ? "" : request.code;
   const byCode = useQuery(api.rooms.byCode, code ? { code } : "skip");
   const join = useMutation(api.rooms.joinAnonymous);
+  const createRoom = useMutation(api.rooms.create);
   const createStarterRoom = useMutation(api.rooms.createStarterRoom);
   const leaveRoom = useMutation(api.rooms.leave);
   const [session, setSession] = useState<LiveSession | null>(() => {
     const initial = initialLiveRequest();
-    return initial.kind === "join" || initial.kind === "create" ? loadLiveSession(liveSessionKey(initial.code)) : null;
+    return initial.kind === "join" || initial.kind === "create" || initial.kind === "demo" ? loadLiveSession(liveSessionKey(initial.code)) : null;
   });
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,7 +90,7 @@ function ConvexApp() {
   // flashing the UI and re-hammering the join mutation. Mirrors RoomShell's tourAutoStarted ref.
   const attemptedRef = useRef<LiveRequest | null>(null);
 
-  const start = (kind: "join" | "create", rawCode: string, rawName: string) => {
+  const start = (kind: "join" | "create" | "demo", rawCode: string, rawName: string) => {
     const normalizedCode = normalizeLiveRoomCode(rawCode);
     if (!normalizedCode) {
       setError("Enter a 6-12 character room code.");
@@ -117,10 +118,10 @@ function ConvexApp() {
       // artifacts in ONE atomic transaction, so an existing room is always complete. `anon: false` keeps
       // the re-entrant under the host name. (createStarterRoom = option 2; this fall-through = option 3.)
       if (byCode) {
-        const result = await join({ code: request.code, name, authToken: token, anon: request.kind !== "create" });
+        const result = await join({ code: request.code, name, authToken: token, anon: request.kind === "join" });
         if (isJoinFailure(result)) throw new Error(joinFailureMessage(result.error));
         joined = result ? { roomId: String(result.roomId), memberId: String(result.memberId) } : null;
-      } else if (request.kind === "create") {
+      } else if (request.kind === "demo") {
         // ONE mutation = ONE Convex transaction: room + host member + all four starter artifacts commit
         // all-or-nothing. A mid-seed failure (e.g. an oversized/invalid seed) rolls the room back, so a
         // rejected create can never leave a phantom room with partial artifacts — which the previous
@@ -133,16 +134,29 @@ function ConvexApp() {
           autoAllow: true,
         });
         joined = { roomId: String(result.roomId), memberId: String(result.memberId) };
+      } else if (request.kind === "create") {
+        // A new room starts blank at the DATA layer by design (deep-review §0:
+        // "A new room starts blank. NodeAgent does not."). No seeded artifacts —
+        // the room fills from chat / upload / the in-room demo CTA. Passing no
+        // seedArtifacts also matches the deployed `rooms.create` validator exactly.
+        const result = await createRoom({
+          code: request.code,
+          title: "Blank NodeRoom",
+          hostName: name,
+          authToken: token,
+          autoAllow: true,
+        });
+        joined = { roomId: String(result.roomId), memberId: String(result.memberId) };
       }
       if (!joined) throw new Error(`Room ${request.code} was not found. Create it or check the code.`);
       const next = { roomId: joined.roomId, memberId: joined.memberId, name, token };
       try { localStorage.setItem(liveSessionKey(request.code), JSON.stringify(next)); } catch { /* ignore */ }
-      if (request.kind === "create") writeLiveUrl("join", request.code, name);
+      if (request.kind === "create" || request.kind === "demo") writeLiveUrl("join", request.code, name);
       setSession(next);
     })()
       .catch((e) => { setError(friendlyLiveError(e)); })
       .finally(() => { setBusy(false); });
-  }, [byCode, busy, createStarterRoom, join, request, session]);
+  }, [byCode, busy, createRoom, createStarterRoom, join, request, session]);
 
   if (request.kind === "idle" || !session) {
     return (
@@ -151,7 +165,7 @@ function ConvexApp() {
         defaultCode={code || ""}
         busy={busy}
         joinError={error}
-        onLiveDemo={(name) => start("create", makeLiveRoomCode(), name)}
+        onLiveDemo={(name) => start("demo", makeLiveRoomCode(), name)}
         onLiveJoin={(roomCode, name) => start("join", roomCode, name)}
         onLiveCreate={(name) => start("create", makeLiveRoomCode(), name)}
       />
@@ -180,8 +194,13 @@ function initialLiveRequest(): LiveRequest {
   if (typeof window === "undefined") return { kind: "idle" };
   const params = new URLSearchParams(window.location.search);
   const name = cleanLiveName(params.get("name") ?? "", "Guest");
+  const demoParam = params.get("demo");
   const createParam = params.get("create");
   const joinParam = params.get("room");
+  if (demoParam !== null) {
+    const code = normalizeLiveRoomCode(demoParam && demoParam !== "1" ? demoParam : makeLiveRoomCode());
+    return code ? { kind: "demo", code, name } : { kind: "idle" };
+  }
   if (createParam !== null) {
     const code = normalizeLiveRoomCode(createParam && createParam !== "1" ? createParam : makeLiveRoomCode());
     return code ? { kind: "create", code, name } : { kind: "idle" };
@@ -193,15 +212,16 @@ function initialLiveRequest(): LiveRequest {
   return { kind: "idle" };
 }
 
-function writeLiveUrl(kind: "join" | "create", code: string, name: string) {
+function writeLiveUrl(kind: "join" | "create" | "demo", code: string, name: string) {
   if (typeof window === "undefined") return;
   const url = new URL(window.location.href);
   url.hash = "";
   url.search = "";
-  url.searchParams.set(kind === "create" ? "create" : "room", code);
+  url.searchParams.set(kind === "demo" ? "demo" : kind === "create" ? "create" : "room", code);
   if (name) url.searchParams.set("name", name);
   window.history.pushState(null, "", url);
 }
+
 
 function clearLiveUrl() {
   if (typeof window === "undefined") return;

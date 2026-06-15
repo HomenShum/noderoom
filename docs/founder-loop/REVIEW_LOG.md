@@ -178,3 +178,27 @@ this branch). Loops 4–7 are in their active files → handed off as verified s
 rather than duplicated.
 
 ---
+
+## Loop 10 (capstone) — Gemini self-review of the post-fix build ✅
+
+Closed the meta-loop exactly as the founder did: drove the **current live build** through the fresh-room
+flow with Playwright ([scripts/founder-loop-capture.ts](../../scripts/founder-loop-capture.ts), read-only),
+recorded it (`verify-fresh-room.webm`), and judged it with the **same `gemini-3.5-flash` rubric** as the
+original recording. Verdict: [mp4-verify-fresh-room.json](../eval/agent-improvement-loop/mp4-verify-fresh-room.json).
+
+| Issue | Original recording | Post-fix recording | Δ |
+|---|---|---|---|
+| #1 fresh-room-state | observed `true` · **moderate** ("pre-populated demo template") | observed `false` · **none** ("completely blank… 'This room is blank'") | **fixed** |
+| #3 room-too-crowded | observed `true` · minor | observed `false` · **none** ("clean and well-structured") | **fixed** |
+| #4 too-many-buttons | observed `true` · minor | observed `true` · **minor (P2)** ("collapse status indicators") | **reduced** |
+| overall | **partial** | **pass** | ⬆ |
+
+Independent confirmation that Loops 1–2 resolved #1 and #3, and de-risked #4 (a blank room shows ~14
+controls vs the demo's ~28; the only residual is the bottom status strip, now P2 polish for the density lane).
+Issues #2 (budget) and #5 (streaming) aren't exercised by this fresh-room flow — #2 is verified in source
+(lane), #5 remains the open spec for the fleet.
+
+**QA-lane standing task:** re-run `founder-loop-capture.ts` + the Gemini judge after the fleet lands each
+change, to regression-check the 5 issues against the live build.
+
+---

@@ -1,0 +1,85 @@
+{
+  "generatedAt": "2026-06-15T07:27:28.701Z",
+  "model": "gemini-3.5-flash",
+  "mediaPath": ".tmp-qa/mp4-review/verify-fresh-room.webm",
+  "mediaType": "video/webm",
+  "mediaBytes": 753665,
+  "review": {
+    "overall": "pass",
+    "workflowSummary": "The user navigates to the NodeRoom landing page, enters the display name 'Founder', and clicks 'Create blank room'. Upon entering the blank room, the user clicks '+ Add a blank sheet' which successfully initializes a blank spreadsheet on the canvas.",
+    "workflowGoal": "Create a new blank room and initialize a blank spreadsheet.",
+    "workflowCompleted": "yes",
+    "completionEvidence": "A blank spreadsheet with rows r1-r8 and columns A-C is successfully created and displayed on the canvas at 00:09.",
+    "timeline": [
+      {
+        "ts": "00:03",
+        "event": "Landing page loads."
+      },
+      {
+        "ts": "00:05",
+        "event": "User enters display name 'Founder' and clicks 'Create blank room'."
+      },
+      {
+        "ts": "00:06",
+        "event": "Blank room successfully loads with initialization options."
+      },
+      {
+        "ts": "00:09",
+        "event": "User clicks '+ Add a blank sheet'."
+      },
+      {
+        "ts": "00:10",
+        "event": "Blank spreadsheet is added to the canvas."
+      }
+    ],
+    "issues": {
+      "freshRoomState": {
+        "observed": false,
+        "severity": "none",
+        "firstTimestamp": "n/a",
+        "detail": "The room was completely blank upon creation, showing the 'This room is blank' placeholder screen."
+      },
+      "agentStoppedAtBudget": {
+        "observed": false,
+        "severity": "none",
+        "firstTimestamp": "n/a",
+        "detail": "No agent workflow was executed, so no budget or token limits were reached."
+      },
+      "roomTooCrowded": {
+        "observed": false,
+        "severity": "none",
+        "firstTimestamp": "n/a",
+        "detail": "The interface is clean and well-structured, with a clear separation between the main canvas, sidebar, and status bar."
+      },
+      "tooManyButtons": {
+        "observed": true,
+        "severity": "minor",
+        "firstTimestamp": "00:06",
+        "detail": "There are quite a few controls and status indicators visible simultaneously (e.g., Auto-allow toggle, layout toggles, chat tabs, handoff controls, and bottom status indicators) which might feel slightly complex for a first-time user."
+      }
+    },
+    "visibleButtons": [
+      "Run startup diligence demo",
+      "Join",
+      "Create blank room",
+      "Invite",
+      "Toggle layout",
+      "Toggle sidebar",
+      "Auto-allow",
+      "Copilot",
+      "Public chat",
+      "Room / Private",
+      "Handoff",
+      "Ask the agent to build something",
+      "+ Add a blank sheet",
+      "Load the sample diligence workspace"
+    ],
+    "recommendations": [
+      {
+        "issue": "too-many-buttons",
+        "fix": "Consider hiding advanced status indicators (like Sourced, Review, Eval, Cost) or collapsing them into an expandable status bar until an agent is actively running.",
+        "priority": "P2"
+      }
+    ]
+  }
+}

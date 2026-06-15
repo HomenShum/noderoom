@@ -6,16 +6,30 @@
 > (header 8 · work tabs 5 · research toolbar 4 · downstream-handoff 5 · copilot tabs/box/chips · a 7-col research table with paragraph cells).
 > Sources web-verified 2026-06-15.
 
-## The 4 P0 moves (highest leverage against "too crowded / too many buttons")
+## Priority: cleanliness & usefulness by SUBTRACTION (not relocation)
 
-| # | Exemplar | Pattern | NodeRoom move | Surface |
-|---|---|---|---|---|
-| 1 | **Linear** (Mar 2026 refresh + Linear Agent) | Cmd-K command palette as the primary verb surface; humans & agents invoke the *same* verbs | Add **Cmd-K**; demote the research toolbar (4) + handoff grid (5) into palette entries → **one launcher replaces ~9 buttons** | top-bar/controls |
-| 2 | **Vercel Geist** | Color-as-signal: neutrals carry 95%; accent spent only on real state; status = tinted pill | Repaint Sources/Review/Eval/Cost chips **neutral by default**; Review→amber pill *only* when `proposals.length>0` | status-strip |
-| 3 | **Stripe Dashboard** | Progressive disclosure: resting view answers "is it okay?", detail one click away | Collapse the bottom strip to **one resting line** (`● Ready · N artifacts`); expand full tape on demand / on agent run → closes the Gemini P2 | status-strip |
-| 4 | **Notion 3.4** + **Cursor 3** | Decrowd-by-grouping (4-tab rail); "show, don't tell" grouped diff | Group the 8 header controls into **3 clusters** (Room / View / Account); render the agent's lock→merge delta as a **grouped accept/reject diff** on the sheet | room-shell + work-surface |
+> **Founder steer (2026-06-15):** a command palette (Cmd-K) is **NOT** the priority — relocating controls
+> behind a launcher just hides complexity behind another mechanism users must learn. The goal is **fewer
+> things on screen, each genuinely useful *right now***. Subtract and recede. Cmd-K is demoted to a P2
+> power-user accelerator, *after* the surface is already clean.
 
-If all four land, visible control count drops well under the ~28 baseline (**handoff 6→1, status tape 4 chips→1 line, top-bar long-tail→Cmd-K**) with a clear hierarchy — no capability removed.
+The test for every element: **"is this useful right now? if not — remove it, merge it, or reveal it only when relevant."**
+
+| P0 | Exemplar | Subtractive move | Removed from the resting view |
+|---|---|---|---|
+| 1 | **Vercel Geist / Linear** — recede the chrome | Visual-weight tiering: only the active work + a *real* pending action carry full contrast; tabs/toggles/tape go muted. Spend color ONLY on genuine state (Review→amber *only* when `proposals>0`). | nothing literally, but kills the "everything shouts equally" flatness that reads as crowded |
+| 2 | **Stripe** — answer "is it okay?" first | Collapse the 4-chip status strip → **one resting line** (`● Ready · N artifacts`); reveal Sources/Review/Eval/Cost only when an agent runs | **−3 chips** |
+| 3 | **Things 3 / contextual** — show on relevance | Render the 5-button downstream-handoff row **only when a draft is actually ready**; otherwise it's absent (one "Draft update" when present) | **−5 buttons at rest** |
+| 4 | **Airtable** — primary action only | Research toolbar keeps just **"Enrich N pending"**; Import / Requeue / CRM-CSV move to a per-row "⋯" / contextual reveal | **−3 buttons** |
+| 5 | **Notion / settings hygiene** | Demote theme + guided-tour out of the always-on top bar (→ first-run / a single settings affordance); keep invite, auto-allow, leave | **−2 top-bar icons** |
+
+Net at rest: the demo room's ~28 visible controls drop toward **~12–14**, and every remaining one is doing
+real work — **without adding a palette to discover**. Cleanliness comes from *deleting and deferring*, then
+hierarchy (weight + color-as-signal) does the rest.
+
+**Cmd-K / command palette = P2, later.** It's a speed accelerator for power users once the surface is calm —
+not a substitute for removing things. The Linear/Raycast/Superhuman references below are catalogued for that
+later stage, not as the headline fix.
 
 ## Per-surface reference map
 
@@ -46,10 +60,12 @@ If all four land, visible control count drops well under the ~28 baseline (**han
 - **Replit Agent — named, restorable checkpoints** (P1): each agent action is a labeled, reversible checkpoint referenced from every surface. → Promote the Signal Tape from append-only lines to **restorable checkpoints** ("reconciled Q3 revenue · 4 cells" → click-to-revert). *Loop 8 trust: auditable AND reversible.*
 
 ## How to use this
-The 4 P0 moves are the direct answer to the recording's "too crowded / too many buttons." They're all
-**progressive-disclosure / color-as-signal / command-palette** patterns — i.e. *hide what isn't active,
-spend color only on real state, route the long tail to Cmd-K*. None remove capability. The P1/P2 moves
-(follow-mode, restorable checkpoints, grouped diff, per-cell attribution) make the **no-clobber human+agent
-wedge legible on the surface where it happens** — the thing NodeRoom is uniquely about.
+The P0 moves are the direct answer to "too crowded / too many buttons," and the order is deliberate:
+**subtract first** (delete/defer/show-on-relevance), then **recede** (weight + color-as-signal so the eye
+lands on the one thing that matters). No command palette, no capability removed — the controls that survive
+are the ones useful *right now*; everything else appears only when it becomes relevant. The P1/P2 moves
+(follow-mode, restorable checkpoints, grouped diff, per-cell attribution) then make the **no-clobber
+human+agent wedge legible on the surface where it happens** — the thing NodeRoom is uniquely about. Cmd-K
+sits at the very end, as a power-user accelerator over an already-clean surface.
 
 Full structured data (all 17 refs, URLs, code-grounded adoption moves): the design workflow result.

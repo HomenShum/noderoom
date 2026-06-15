@@ -635,8 +635,9 @@ input { font-family: inherit; }
 .r-trace-ico.commit { background: rgba(217,119,87,.16); color: var(--accent-ink); }
 .r-trace-ico.merge { background: rgba(31,138,91,.16); color: #2E9E6B; }
 .r-trace-ico.trace, .r-trace-ico.other { background: var(--bg-hover); color: var(--text-muted); }
-.r-trace-item .tt { font-size: 16px; font-weight: 650; color: var(--text-primary); line-height: 1.38; }
-.r-trace-item .td { font-family: var(--font-mono); font-size: 12.8px; line-height: 1.35; color: var(--text-muted); margin-top: 1px; }
+/* Trace title recedes: it is a log, not the headline. Was 16px/650/primary -- louder than the work surface. */
+.r-trace-item .tt { font-size: 12.5px; font-weight: 500; color: var(--text-secondary); line-height: 1.4; }
+.r-trace-item .td { font-family: var(--font-mono); font-size: 11.5px; line-height: 1.35; color: var(--text-tertiary); margin-top: 1px; }
 .r-proposal { display: flex; gap: 9px; align-items: flex-start; padding: 7px 8px; border: 1px solid rgba(217,119,87,.26); background: rgba(217,119,87,.08); border-radius: 7px; font-size: 11.5px; }
 .r-proposal[data-semantic="true"] { border-color: rgba(94,106,210,.32); background: rgba(94,106,210,.09); }
 .r-proposal-main { min-width: 0; flex: 1; display: flex; flex-direction: column; gap: 6px; }

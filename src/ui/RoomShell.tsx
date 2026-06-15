@@ -350,7 +350,7 @@ function CopilotPanel({
             <Chat roomId={roomId} me={me} channel={privChannel} variant="private" agentName="Your NodeAgent" embedded testId="private-chat-panel" onOpenArtifact={onOpenArtifact} />
           )}
         </div>
-        <DownstreamHandoffPanel />
+        <DownstreamHandoffPanel roomId={roomId} />
       </div>
     </div>
   );
@@ -365,13 +365,26 @@ const HANDOFF_ACTIONS = [
   { key: "crm", label: "CRM CSV", icon: Database, title: "Export CRM CSV" },
 ] as const;
 
-function DownstreamHandoffPanel() {
+function DownstreamHandoffPanel({ roomId }: { roomId: string }) {
+  const store = useStore();
+  const artifacts = store.listArtifacts(roomId);
+  const proposals = store.listProposals(roomId);
+  const hasContent = artifacts.some((a) =>
+    Object.values(a.elements ?? {}).some((el) => {
+      const v = (el as { value?: unknown }).value;
+      return v != null && v !== "";
+    }),
+  );
+  // Contract: never surface downstream destinations before there is something to send AND it is
+  // review-clear. Hidden during intake / draft / pending-review; appears only once content exists and
+  // no proposal is awaiting review -- matching the spine's Export stage.
+  if (!(hasContent && proposals.length === 0)) return null;
   return (
     <section className="r-handoff" data-testid="downstream-handoff-card" aria-label="Approval-gated downstream handoff drafts">
       <div className="r-handoff-head">
         <Send size={13} />
-        <span>Handoff</span>
-        <em>approval-gated drafts</em>
+        <span>Hand off</span>
+        <em>review-clear &middot; draft only</em>
       </div>
       <div className="r-handoff-grid">
         {HANDOFF_ACTIONS.map(({ key, label, icon: Icon, title }) => (

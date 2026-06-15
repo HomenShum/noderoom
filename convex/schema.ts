@@ -31,6 +31,7 @@ const entrypointV = v.union(
   v.literal("free"),
   v.literal("system"),
   v.literal("automation"),
+  v.literal("provider_parser"),
 );
 const agentScopeV = v.union(v.literal("public_room"), v.literal("private_user"), v.literal("team"));
 const approvalPolicyV = v.union(v.literal("read_only"), v.literal("draft_first"), v.literal("auto_commit_safe"), v.literal("host_review"));
@@ -79,6 +80,7 @@ export default defineSchema({
     authTokenHash: v.optional(v.string()),
     authSubject: v.optional(v.string()),
     lastSeenAt: v.number(),
+    revokedAt: v.optional(v.number()),
   }).index("by_room", ["roomId"]),
 
   artifacts: defineTable({
@@ -266,6 +268,7 @@ export default defineSchema({
     traceLevel: v.optional(traceLevelV),
     idempotencyKey: v.optional(v.string()),
     mode: v.optional(v.union(v.literal("variance"), v.literal("research"))),
+    planPreview: v.optional(v.any()),
     status: v.union(
       v.literal("queued"),
       v.literal("running"),

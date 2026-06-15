@@ -3,10 +3,18 @@ import { cancel as cancelWorkflow, start } from "@convex-dev/workflow";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { components, internal } from "./_generated/api";
 import { actorProofV, requireActorProof, requireArtifactInRoom } from "./lib";
+import { classifyIntakeMessage, buildPlanPreview } from "../src/nodeagent/core/intakePreflight";
 
 const attemptStatusV = v.union(v.literal("completed"), v.literal("handoff"), v.literal("retrying"), v.literal("failed"));
 const terminalStatuses = new Set(["completed", "failed", "blocked", "cancelled"]);
-const entrypointV = v.union(v.literal("public_ask"), v.literal("private_agent"), v.literal("free"), v.literal("system"), v.literal("automation"));
+const entrypointV = v.union(
+  v.literal("public_ask"),
+  v.literal("private_agent"),
+  v.literal("free"),
+  v.literal("system"),
+  v.literal("automation"),
+  v.literal("provider_parser"),
+);
 const agentScopeV = v.union(v.literal("public_room"), v.literal("private_user"), v.literal("team"));
 const approvalPolicyV = v.union(v.literal("read_only"), v.literal("draft_first"), v.literal("auto_commit_safe"), v.literal("host_review"));
 const evidencePolicyV = v.union(v.literal("public_only"), v.literal("private_allowed"), v.literal("mixed_requires_redaction"));
@@ -233,6 +241,25 @@ export const startFreeAuto = mutation({
     const prior = await ctx.db.query("agentJobs").withIndex("by_idempotency", (q) => q.eq("idempotencyKey", idempotencyKey)).order("desc").take(5);
     const reusable = prior.find((job) => String(job.roomId) === String(a.roomId) && String(job.artifactId) === String(a.artifactId) && !terminalStatuses.has(job.status));
     if (reusable) return reusable._id;
+
+    // PlanPreview admission gate (server-side, fail-closed): the structured intake classification +
+    // affected-set/conflict computation that was client-advisory now runs in the BACKEND before any
+    // durable work is queued. cancel/wait/privacy/formula/budget intents, and work that overlaps an
+    // unresolved pending proposal, are refused (recorded as a blocked job, no tool loop started).
+    const intake = classifyIntakeMessage(a.goal);
+    const elementIds = (await ctx.db.query("elements").withIndex("by_artifact", (q) => q.eq("artifactId", a.artifactId)).collect()).map((e) => e.elementId);
+    const pendingProposalRefs = (await ctx.db.query("proposals").withIndex("by_room_status", (q) => q.eq("roomId", a.roomId).eq("status", "pending")).collect())
+      .filter((p) => String(p.artifactId) === String(a.artifactId))
+      .map((p) => (p.op as { elementId?: string } | null)?.elementId)
+      .filter((id): id is string => typeof id === "string");
+    const planPreview = buildPlanPreview({
+      decision: intake,
+      targetArtifacts: [String(a.artifactId)],
+      intendedWriteSet: elementIds, // a free-auto enrich may touch any row in the artifact
+      pendingProposals: pendingProposalRefs,
+    });
+    const planBlocked = planPreview.scheduling !== "run_now";
+
     const jobId = await ctx.db.insert("agentJobs", clean({
       roomId: a.roomId,
       artifactId: a.artifactId,
@@ -258,7 +285,9 @@ export const startFreeAuto = mutation({
       traceLevel: "full_operation_ledger",
       idempotencyKey,
       mode: a.mode,
-      status: "queued",
+      planPreview,
+      status: planBlocked ? ("blocked" as const) : ("queued" as const),
+      error: planBlocked ? `plan_${planPreview.scheduling}: ${planPreview.conflicts[0]?.detail ?? intake.reason}` : undefined,
       modelPolicy: "openrouter/free-auto",
       runtime: "workflow",
       attempts: 0,
@@ -274,6 +303,13 @@ export const startFreeAuto = mutation({
       createdAt: now,
       updatedAt: now,
     }));
+    if (planBlocked) {
+      // Fail-closed: record the blocked admission decision in the trace ledger and do NOT start the
+      // tool loop. The job is a terminal "blocked" record; resolving the conflict + re-running creates
+      // a fresh job that re-evaluates the plan.
+      await ctx.db.insert("traces", { roomId: a.roomId, ts: now, actor, type: "plan_blocked", summary: `PlanPreview blocked this run (${planPreview.scheduling}) on ${String(a.artifactId)}`, detail: `plan_preview · ${planPreview.scheduling} · conflicts=${planPreview.conflicts.map((c) => c.kind).join(",") || "none"} · ${planPreview.conflicts[0]?.detail ?? intake.reason}`.slice(0, 480) });
+      return jobId;
+    }
     await recordOperationEvent(ctx, {
       jobId,
       sequence: 1,

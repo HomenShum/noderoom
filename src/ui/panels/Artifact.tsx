@@ -515,10 +515,12 @@ function Research({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) 
       <div className="r-research-bar">
         <span className="tiny faint">{rowIds.length} accounts · {pending} pending · {complete} complete · multi-source research</span>
         <span className="grow" />
-        <button className="r-btn ghost" aria-label="More research actions" aria-expanded={moreOpen} title="Import, requeue, export" onClick={() => setMoreOpen((v) => !v)}><MoreHorizontal size={14} /></button>
+        {/* Room-level setup (add companies) stays visible -- it is how the bulk workflow starts. */}
+        <button className="r-btn ghost" disabled={busy} onClick={() => setPasteOpen((v) => !v)}><Plus size={13} /> Import accounts</button>
+        {/* Secondary room/batch actions behind one in-context overflow (not per-row). */}
+        <button className="r-btn ghost" aria-label="More research actions" aria-expanded={moreOpen} title="Requeue, export CSV" onClick={() => setMoreOpen((v) => !v)}><MoreHorizontal size={14} /></button>
         {moreOpen && (
           <>
-            <button className="r-btn ghost" disabled={busy} onClick={() => setPasteOpen((v) => !v)}><Plus size={13} /> Import accounts</button>
             <button className="r-btn ghost" disabled={busy || complete === 0} onClick={() => void refreshComplete()}><RotateCcw size={13} /> Requeue complete</button>
             <button className="r-btn ghost" onClick={() => downloadResearchCsv(art, rowIds, cell)}><Download size={13} /> CRM CSV</button>
           </>

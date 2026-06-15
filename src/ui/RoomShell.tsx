@@ -399,15 +399,21 @@ function SignalStatusStrip({ roomId, onOpenArtifact }: { roomId: string; onOpenA
   // is useful *right now* — the artifact count, plus Review when there is actually something to
   // review. Agents/Eval/Cost are run telemetry, so they appear only once a run exists or a job is
   // live, instead of four idle chips ("clear", "ready", "$0.000") that read as four equal alerts.
-  const hasRunActivity = !!run || !!job;
+  // Keep ACTIONABLE risk visible at rest (Needs review; run failed/paused). Hide only IDLE telemetry
+  // (Agents/Eval/Cost) -- those show solely while a job is live, not after every run. In diligence,
+  // trust state matters after the run too. (docs/design/DESIGN_BENCHMARK.md)
+  const jobStatus = job?.status ?? "";
+  const jobRisk = ["failed", "blocked", "cancelled", "paused"].includes(jobStatus);
+  const jobLive = !!job && !["completed", "failed", "cancelled", "blocked", "paused"].includes(jobStatus);
   const signals = [
     { k: "Sources", v: `${artifacts.length} artifacts` },
     ...(proposals.length ? [{ k: "Review", v: `${proposals.length} pending` }] : []),
-    ...(hasRunActivity
+    ...(jobRisk ? [{ k: "Run", v: jobStatus }] : []),
+    ...(jobLive
       ? [
           { k: "Agents", v: `${sessions.length} active` },
-          { k: "Eval", v: run ? `${run.model} · ${run.toolCalls} tools` : "running" },
-          { k: "Cost", v: run ? `$${run.costUsd.toFixed(3)}` : job ? job.modelPolicy : "—" },
+          { k: "Eval", v: run ? `${run.model} | ${run.toolCalls} tools` : "running" },
+          { k: "Cost", v: run ? `$${run.costUsd.toFixed(3)}` : job ? job.modelPolicy : "-" },
         ]
       : []),
   ];

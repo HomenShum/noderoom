@@ -385,6 +385,36 @@ function DownstreamHandoffPanel() {
   );
 }
 
+// Progression spine (Duolingo restraint, not gamification): one calm "where are we" line that REPLACES
+// scattered status, derived ONLY from real room state -- we never light a stage we cannot detect.
+// Export stays "next" until a real downstream-ready signal exists (not visible at room scope yet).
+function ProgressSpine({ roomId }: { roomId: string }) {
+  const store = useStore();
+  const artifacts = store.listArtifacts(roomId);
+  const proposals = store.listProposals(roomId);
+  const drafts = store.listDrafts(roomId);
+  const hasContent = artifacts.some((a) =>
+    Object.values(a.elements ?? {}).some((el) => {
+      const v = (el as { value?: unknown }).value;
+      return v != null && v !== "";
+    }),
+  );
+  let stage = 0;                                                 // Intake (blank room)
+  if (artifacts.length > 0) stage = 1;                           // Evidence: surfaces exist to gather into
+  if (hasContent) stage = 2;                                     // Draft: content written
+  if (proposals.length > 0 || drafts.length > 0) stage = 3;      // Review: pending review/approval
+  const SPINE = ["Intake", "Evidence", "Draft", "Review", "Export"];
+  return (
+    <div className="r-spine" data-testid="progress-spine" aria-label="Workflow progress">
+      {SPINE.map((label, i) => (
+        <span key={label} className="r-spine-step" data-state={i < stage ? "done" : i === stage ? "now" : "next"}>
+          {i < stage ? <Check size={11} /> : <span className="r-spine-dot" />}{label}
+        </span>
+      ))}
+    </div>
+  );
+}
+
 function SignalStatusStrip({ roomId, onOpenArtifact }: { roomId: string; onOpenArtifact: (id: string) => void }) {
   const store = useStore();
   const traces = selectPublicSignalTraces(store.listTraces(roomId));
@@ -434,6 +464,7 @@ function SignalStatusStrip({ roomId, onOpenArtifact }: { roomId: string; onOpenA
 
   return (
     <div className="r-shell-bottom" data-testid="shell-bottom">
+      <ProgressSpine roomId={roomId} />
       <div className="r-signal-tape" data-testid="signal-tape" aria-label="Signal Tape">
         <Activity size={13} />
         {signals.map((s) =>

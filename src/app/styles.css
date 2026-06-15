@@ -129,6 +129,14 @@ input { font-family: inherit; }
 
 /* shell-level Signal Tape + Status Strip */
 .r-shell-bottom { flex: none; display: grid; grid-template-columns: minmax(0, 1fr); gap: 0; padding: 0 10px 10px; }
+/* Progression spine: a calm "where are we" line above the tape. Only the current stage carries accent. */
+.r-spine { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; min-height: 26px; margin-bottom: 6px; padding: 4px 10px; border: 1px solid var(--line); border-radius: 10px; background: color-mix(in srgb, var(--bg-primary) 86%, transparent); backdrop-filter: blur(14px); font-size: 10.5px; color: var(--text-tertiary); }
+.r-spine-step { display: inline-flex; align-items: center; gap: 4px; white-space: nowrap; }
+.r-spine-step:not(:last-child)::after { content: ""; width: 14px; height: 1px; background: var(--line); margin: 0 4px; }
+.r-spine-step[data-state="done"] { color: var(--text-secondary); }
+.r-spine-step[data-state="now"] { color: var(--accent-ink); font-weight: 600; }
+.r-spine-step[data-state="next"] { color: var(--text-tertiary); opacity: .6; }
+.r-spine-dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .5; }
 .r-signal-tape, .r-status-strip { min-height: 28px; display: flex; align-items: center; gap: 8px; border: 1px solid var(--line); background: color-mix(in srgb, var(--bg-primary) 86%, transparent); backdrop-filter: blur(14px); overflow: hidden; }
 .r-signal-tape { border-radius: 10px 10px 0 0; padding: 4px 9px; color: var(--text-muted); }
 /* Color-as-signal recede (docs/design/DESIGN_BENCHMARK.md): at rest the chips are quiet muted

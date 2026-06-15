@@ -1,0 +1,229 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-14T23:57:33.741Z",
+  "mode": "convex-test-contract",
+  "claim": "Startup diligence Convex contract proof for account intake, evidence cells, no-clobber, private lane, route trace, runway chart, and draft-only handoff.",
+  "pass": true,
+  "summary": {
+    "checks": 8,
+    "passed": 8,
+    "failed": 0,
+    "providerProducedContent": false,
+    "convexContractProven": true
+  },
+  "room": {
+    "code": "SD629D3348",
+    "roomId": "000000000000000000000010000rooms",
+    "researchArtifactId": "00000000000000000010005artifacts",
+    "runwayArtifactId": "00000000000000000010007artifacts",
+    "jobId": "00000000000000000010017agentJobs"
+  },
+  "checks": [
+    {
+      "id": "account_upsert",
+      "status": "pass",
+      "manifestStatus": "convex-contract-proven",
+      "summary": "CardioNova re-import updated the existing research row instead of creating a duplicate.",
+      "evidence": {
+        "cardioRows": [
+          "rc_cardionova"
+        ],
+        "ownerValue": "Alex",
+        "companyCellCount": 5
+      }
+    },
+    {
+      "id": "cited_cellpayloads",
+      "status": "pass",
+      "manifestStatus": "convex-contract-proven-provider-pending",
+      "summary": "A host-reviewed agent proposal committed an evidence-bearing CellPayload to the research sheet.",
+      "evidence": {
+        "proposalResult": {
+          "ok": false,
+          "proposalId": "00000000000000000010091proposals",
+          "reason": "pending_approval"
+        },
+        "committedPayload": {
+          "confidence": 0.86,
+          "evidence": [
+            {
+              "artifactId": "00000000000000000010005artifacts",
+              "quote": "AI triage for hospitals",
+              "source": "CardioNova intake packet",
+              "sourceRef": "cardionova-intake.pdf#page=1"
+            }
+          ],
+          "kind": "CellPayload",
+          "status": "needs_review",
+          "value": "CardioNova: AI triage workflow for hospital intake."
+        }
+      }
+    },
+    {
+      "id": "human_edit_preserved",
+      "status": "pass",
+      "manifestStatus": "convex-contract-proven",
+      "summary": "A stale agent write became a durable semantic conflict/proposal while the human value stayed committed.",
+      "evidence": {
+        "humanEdit": {
+          "ok": true,
+          "version": 2
+        },
+        "staleAgent": {
+          "actual": 2,
+          "expected": 1,
+          "ok": false,
+          "reason": "conflict",
+          "rebase": {
+            "autoMergeOp": null,
+            "decision": "needs_human_review",
+            "outcome": "needs_review",
+            "proposalIds": [
+              "00000000000000000010095proposals"
+            ],
+            "semanticConflictId": "000000000010096semanticConflicts",
+            "tier": "human_review_required"
+          }
+        },
+        "preservedValue": "A+ / banker hold",
+        "pendingProposalCount": 1,
+        "semanticConflictCount": 1
+      }
+    },
+    {
+      "id": "private_boundary",
+      "status": "pass",
+      "manifestStatus": "convex-contract-proven",
+      "summary": "The private agent reply is readable by the owning host and rejected for a second room member.",
+      "evidence": {
+        "hostPrivateCount": 1,
+        "priyaBlocked": true
+      }
+    },
+    {
+      "id": "runway_milestone_chart",
+      "status": "pass",
+      "manifestStatus": "deterministic-helper-and-artifact-proven",
+      "summary": "Runway math produced a sourced 12.0 month result and persisted an SVG chart in a room note artifact.",
+      "evidence": {
+        "runway": {
+          "company": "CardioNova",
+          "runwayMonths": 12,
+          "status": "watch",
+          "headline": "CardioNova runway: 12 months at $125k/mo burn; milestone: Treasury diligence pack ready for IC.",
+          "milestones": [
+            {
+              "month": 1,
+              "label": "Treasury diligence pack ready for IC"
+            },
+            {
+              "month": 6,
+              "label": "Mid-runway checkpoint — default-alive review"
+            },
+            {
+              "month": 12,
+              "label": "Projected cash-zero — must close raise or reach breakeven"
+            }
+          ],
+          "assumptions": [
+            {
+              "label": "Cash on hand",
+              "value": "$1.5M",
+              "source": "CardioNova data room / deck p.12"
+            },
+            {
+              "label": "Net monthly burn",
+              "value": "$125k",
+              "source": "CardioNova data room / deck p.12"
+            }
+          ],
+          "needsInput": false
+        },
+        "chartArtifactId": "00000000000000000010099artifacts"
+      }
+    },
+    {
+      "id": "downstream_draft_only",
+      "status": "pass",
+      "manifestStatus": "helper-proven-no-side-effects",
+      "summary": "Downstream outputs are generated as approval-gated drafts or CRM export rows, with no external side-effect adapter invoked.",
+      "evidence": {
+        "destinations": [
+          {
+            "destination": "gmail",
+            "status": "needs_approval",
+            "approvalRequired": true
+          },
+          {
+            "destination": "notion",
+            "status": "needs_approval",
+            "approvalRequired": true
+          },
+          {
+            "destination": "slack",
+            "status": "needs_approval",
+            "approvalRequired": true
+          },
+          {
+            "destination": "linear",
+            "status": "needs_approval",
+            "approvalRequired": true
+          },
+          {
+            "destination": "linkedin",
+            "status": "needs_approval",
+            "approvalRequired": true
+          },
+          {
+            "destination": "crm_csv",
+            "status": "ready",
+            "approvalRequired": false
+          }
+        ]
+      }
+    },
+    {
+      "id": "concurrent_lanes",
+      "status": "pass",
+      "manifestStatus": "convex-contract-proven",
+      "summary": "The job request records distinct diligence lanes and completes through the durable agentJobs root.",
+      "evidence": {
+        "lanes": [
+          "research",
+          "finance_runway",
+          "source_qa",
+          "review_handoff"
+        ],
+        "status": "completed"
+      }
+    },
+    {
+      "id": "route_trace_cost_runtime",
+      "status": "pass",
+      "manifestStatus": "convex-contract-proven-provider-route-pending",
+      "summary": "The job detail records resolved model, model/tool operation events, token/cost counters, stop reason, and linked run metadata.",
+      "evidence": {
+        "attempts": [
+          {
+            "resolvedModel": "startup-contract-eval",
+            "stopReason": "done",
+            "costUsd": 0.0042,
+            "ms": 1400
+          }
+        ],
+        "operationKinds": [
+          "mutation",
+          "action",
+          "model_call",
+          "tool_call",
+          "checkpoint"
+        ],
+        "latestRun": {
+          "model": "startup-contract-eval",
+          "stopReason": "done",
+          "toolCalls": 8
+        }
+      }
+    }
+  ]
+}

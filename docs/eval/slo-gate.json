@@ -1,0 +1,101 @@
+{
+  "schema": 1,
+  "generatedAt": "2026-06-15T00:01:56.635Z",
+  "gate": "slo_gate_v1",
+  "scenario": "8 concurrent in-memory rooms run lock/CAS/release agent work with deterministic model replay surfaces enabled",
+  "thresholds": {
+    "minRuns": 8,
+    "completionRate": 1,
+    "maxErrorRate": 0,
+    "p95RunMs": 2500,
+    "maxConflictRate": 0
+  },
+  "metrics": {
+    "runs": 8,
+    "completed": 8,
+    "completionRate": 1,
+    "errors": 0,
+    "errorRate": 0,
+    "p50RunMs": 16,
+    "p95RunMs": 23,
+    "conflictRate": 0,
+    "totalToolCalls": 32,
+    "totalModelCalls": 40
+  },
+  "passed": true,
+  "failures": [],
+  "runs": [
+    {
+      "room": "slo-1:room_1",
+      "stopReason": "done",
+      "ms": 23,
+      "steps": 5,
+      "toolCalls": 4,
+      "conflictsSurvived": 0,
+      "modelCalls": 5
+    },
+    {
+      "room": "slo-2:room_1",
+      "stopReason": "done",
+      "ms": 18,
+      "steps": 5,
+      "toolCalls": 4,
+      "conflictsSurvived": 0,
+      "modelCalls": 5
+    },
+    {
+      "room": "slo-3:room_1",
+      "stopReason": "done",
+      "ms": 17,
+      "steps": 5,
+      "toolCalls": 4,
+      "conflictsSurvived": 0,
+      "modelCalls": 5
+    },
+    {
+      "room": "slo-4:room_1",
+      "stopReason": "done",
+      "ms": 16,
+      "steps": 5,
+      "toolCalls": 4,
+      "conflictsSurvived": 0,
+      "modelCalls": 5
+    },
+    {
+      "room": "slo-5:room_1",
+      "stopReason": "done",
+      "ms": 16,
+      "steps": 5,
+      "toolCalls": 4,
+      "conflictsSurvived": 0,
+      "modelCalls": 5
+    },
+    {
+      "room": "slo-6:room_1",
+      "stopReason": "done",
+      "ms": 15,
+      "steps": 5,
+      "toolCalls": 4,
+      "conflictsSurvived": 0,
+      "modelCalls": 5
+    },
+    {
+      "room": "slo-7:room_1",
+      "stopReason": "done",
+      "ms": 15,
+      "steps": 5,
+      "toolCalls": 4,
+      "conflictsSurvived": 0,
+      "modelCalls": 5
+    },
+    {
+      "room": "slo-8:room_1",
+      "stopReason": "done",
+      "ms": 14,
+      "steps": 5,
+      "toolCalls": 4,
+      "conflictsSurvived": 0,
+      "modelCalls": 5
+    }
+  ]
+}

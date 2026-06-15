@@ -9,7 +9,7 @@
       "area": "Startup diligence demo",
       "claim": "The flagship public demo shows the June 2026 startup-banking target: three users, CardioNova intake, five-company diligence, concurrent agent lanes, runway/milestone chart work, no-clobber review, private banker lane, and draft-only downstream handoff.",
       "status": "yellow",
-      "productionGate": "README links the startup media, the walkthrough scripts match the latest target, Gemini judges the recaptured clips, and a live provider/Convex eval records cited cells, preserved human edit, route trace, cost/runtime, private boundary, and downstream draft-only behavior.",
+      "productionGate": "README links the startup media, the walkthrough scripts match the latest target, Gemini judges the recaptured clips, and the Convex contract eval records cited cells, preserved human edit, route trace, cost/runtime, private boundary, runway chart, and downstream draft-only behavior. The remaining promotion gate is provider-produced startup content through the same contract.",
       "deterministicChecks": [
         "npm run typecheck -- --pretty false",
         "npx tsc --noEmit --project convex/tsconfig.json --pretty false"
@@ -20,19 +20,21 @@
         "npm run walkthroughs -- startup-diligence-war-room",
         "npm run walkthroughs:render -- startup-diligence-war-room",
         "npm run media:gemini-judge -- --only startup-diligence --include-ignored",
-        "missing: live provider/Convex startup eval writes docs/eval/startup-diligence-war-room-live.json evidence"
+        "npm run eval:startup-diligence:live",
+        "missing: provider-produced startup eval writes CellPayload content and route telemetry through a real model route"
       ],
       "evidence": [
         { "type": "doc", "ref": "docs/demo/STARTUP_DILIGENCE_DEMO_PLAN.md" },
         { "type": "doc", "ref": "docs/demo/STARTUP_DILIGENCE_PROOF_LEDGER.md" },
         { "type": "eval", "ref": "docs/eval/startup-diligence-war-room-live.json" },
+        { "type": "eval", "ref": "docs/eval/startup-diligence-war-room-live-results.json" },
         { "type": "media", "ref": "docs/walkthroughs/startup-diligence-war-room.gif" },
         { "type": "media", "ref": "docs/walkthroughs/startup-diligence-live-join.gif" },
         { "type": "code", "ref": "scripts/walkthroughs/specs.ts" },
         { "type": "code", "ref": "scripts/walkthroughs/capture.ts" },
         { "type": "code", "ref": "src/ui/Chat.tsx" }
       ],
-      "nextReview": "Build the live provider/Convex eval that fills the manifest checks; optional media polish can clear the remaining P2 transition, trace-density, and privacy-state notes."
+      "nextReview": "Run the provider-produced version of the startup diligence eval so CellPayload content, route telemetry, and final copy come from a real model route; optional media polish can clear the remaining P2 transition, trace-density, and privacy-state notes."
     },
     {
       "id": "files_and_spreadsheets",
@@ -168,7 +170,8 @@
         "tests/roomEngine.test.ts",
         "tests/agentReliability.test.ts",
         "tests/idempotencyRuntime.test.ts",
-        "tests/lockTtl.test.ts"
+        "tests/lockTtl.test.ts",
+        "npm run slo:gate"
       ],
       "liveChecks": [
         "npx convex codegen --typecheck disable",
@@ -177,9 +180,11 @@
       "evidence": [
         { "type": "test", "ref": "tests/idempotencyRuntime.test.ts" },
         { "type": "test", "ref": "tests/lockTtl.test.ts" },
+        { "type": "eval", "ref": "docs/eval/slo-gate.json" },
+        { "type": "script", "ref": "scripts/slo-gate.ts" },
         { "type": "doc", "ref": "docs/ARCHITECTURE.md" }
       ],
-      "nextReview": "Add concurrent browser/session load test and production SLO dashboard."
+      "nextReview": "Add deployed browser/session load test and production SLO dashboard; keep deterministic slo:gate in prod:gate as the local regression floor."
     },
     {
       "id": "long_running_free_auto",
@@ -190,6 +195,7 @@
       "deterministicChecks": [
         "tests/agentJobsSource.test.ts",
         "tests/agentJobsRuntime.test.ts",
+        "tests/providerEgressPolicy.test.ts",
         "tests/agentReliability.test.ts",
         "tests/gatewayAndJournal.test.ts"
       ],
@@ -201,16 +207,17 @@
       "evidence": [
         { "type": "test", "ref": "tests/agentJobsSource.test.ts" },
         { "type": "test", "ref": "tests/agentJobsRuntime.test.ts" },
+        { "type": "test", "ref": "tests/providerEgressPolicy.test.ts" },
         { "type": "test", "ref": "tests/gatewayAndJournal.test.ts" },
         { "type": "doc", "ref": "docs/LONG_RUNNING_AGENTS.md" },
         { "type": "doc", "ref": "docs/eval/free-auto-ladder.md" }
       ],
-      "nextReview": "Add stricter budget clamps, per-tool abort propagation, provider request idempotency keys where supported, model health/quarantine, and real forced multi-slice Convex job-runner tests."
+      "nextReview": "Add per-tool abort propagation, provider request idempotency keys where supported, model health/quarantine, and real forced multi-slice Convex job-runner tests."
     },
     {
       "id": "provider_parser",
       "area": "Provider parser",
-      "claim": "Provider file/cache ids stay separate from Convex raw file ids while extraction writes evidence-bearing CellPayloads.",
+      "claim": "Provider file/cache ids stay separate from Convex raw file ids while extraction writes page/bbox/source-storage evidence-bearing CellPayloads.",
       "status": "green",
       "productionGate": "Adapter separation tests, live provider smoke, redacted errors, and artifact evidence checks.",
       "deterministicChecks": [
@@ -226,7 +233,7 @@
         { "type": "test", "ref": "tests/providerParserLive.test.ts" },
         { "type": "doc", "ref": "docs/STACK.md" }
       ],
-      "nextReview": "Add production provider Files API binary upload actions for PDFs/images/decks."
+      "nextReview": "Add production provider Files API binary upload actions for PDFs/images/decks and local LiteParse/OCR worker fixtures."
     },
     {
       "id": "qa_matrix_continuity",

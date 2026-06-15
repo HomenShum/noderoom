@@ -64,10 +64,34 @@ describe("long-running agent job source invariants", () => {
 
   it("keeps /ask model policy during workflow handoff while allowing /free overrides", () => {
     const runner = readFileSync("convex/agentJobRunner.ts", "utf8");
+    const jobs = readFileSync("convex/agentJobs.ts", "utf8");
 
     expect(runner).toContain('modelPolicy === "openrouter/free-auto"');
     expect(runner).toContain("process.env.FREE_AUTO_JOB_MODEL ?? modelPolicy");
-    expect(runner).toContain("const model = agentModel(resolvedModelPolicy)");
+    expect(runner).toContain('const model = agentModel(resolvedModelPolicy, { entrypoint: "free" })');
+    expect(jobs).toContain("artifactMeta: art.meta");
+  });
+
+  it("enforces provider route receipts and private-stream egress gates", () => {
+    const model = readFileSync("src/nodeagent/models/convexModel.ts", "utf8");
+    const streaming = readFileSync("convex/streaming.ts", "utf8");
+    const streamingModel = readFileSync("convex/streamingModel.ts", "utf8");
+    const agent = readFileSync("convex/agent.ts", "utf8");
+
+    expect(model).toContain("assertProviderRouteAllowed");
+    expect(model).toContain("providerRoute");
+    expect(agent).toContain('{ entrypoint: "public_ask" }');
+    expect(agent).toContain('{ entrypoint: "private_agent" }');
+    expect(streaming).toContain("assertProviderEgressAllowed");
+    expect(streaming).toContain('entrypoint: "private_agent"');
+    expect(streamingModel).toContain("private_stream_provider_unsupported");
+  });
+
+  it("restricts long-running job controls to the requester or host", () => {
+    const jobs = readFileSync("convex/agentJobs.ts", "utf8");
+
+    expect(jobs).toContain("actor.id !== job.requester.id && actor.id !== room.hostId");
+    expect(jobs).toContain('reason: "forbidden"');
   });
 
   it("round-trips Gemini tool-call thought signatures for resumed jobs", () => {

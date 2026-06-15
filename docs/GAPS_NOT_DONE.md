@@ -1,6 +1,6 @@
 # Gaps Not Yet Done
 
-Last updated: 2026-06-13
+Last updated: 2026-06-14
 
 NodeRoom is production-shaped, but it is not yet fully production-proven. The
 core harness exists: versioned room artifacts, bounded agent tools, lock/CAS
@@ -28,8 +28,8 @@ Do not claim a feature is production-complete until it has:
 | Public GitHub readiness | Public repo, license, `.gitignore`, `package.json` non-private flag, README CTA, and CI now exist. | Run a clean-clone secret scan and verify ignored local artifacts remain untracked before each public release. | Public repo exists, no `.env.local`, logs, `node_modules`, `dist`, `.serena`, local-only artifacts, or generated scratch files are tracked. |
 | Convex deployment/codegen | Local Convex code is typechecked and `_generated/api.d.ts` is committed, but deployment/codegen has had analyzer fragility in past reviews. | Reproduce clean `npx convex codegen` and deployment smoke from a fresh checkout. | `npx convex codegen`, Convex typecheck, app typecheck, tests, and a live Convex smoke pass without manual edits. |
 | Environment docs | `.env.example` exists. | Document required provider keys, Convex env vars, safe demo defaults, and production-only secrets. | A fresh contributor can run demo mode and knows exactly what is needed for live mode. |
-| CI | `.github/workflows/ci.yml` now runs QA matrix check, app typecheck, Convex typecheck, unit tests, deterministic ladder eval, and build on push/PR. | Add secret scanning, dependency-audit triage, and optional live-smoke gates with protected secrets. | CI passes from a clean clone and blocks stale QA docs or broken deterministic gates. |
-| Dependency audit | `npm audit --omit=dev --json` currently reports 8 production findings: 6 low AI SDK provider-utils issues and 2 moderate ExcelJS/uuid issues; available fixes are semver-major or downgrade paths. | Triage whether each finding reaches shipped code, then upgrade, replace, isolate, or document accepted risk with compensating controls. | `npm audit` is clean or documented with accepted risk and compensating controls. |
+| CI | `.github/workflows/ci.yml` now runs `npm run prod:gate` plus deterministic ladder eval on push/PR. | Add secret scanning and optional live-smoke gates with protected secrets. | CI passes from a clean clone and blocks stale QA docs, moderate-or-higher audit failures, stale proofs, broken SLO gate, type/test/browser-memory regressions, or build failures. |
+| Dependency audit | `npm audit --omit=dev --audit-level=moderate` now passes. High/moderate Convex/esbuild and ExcelJS/uuid advisories are mitigated with npm overrides plus compatibility tests; 6 low AI SDK provider-utils advisories remain. | Decide whether low advisories should become blocking, or upgrade the AI SDK major line when app compatibility is proven. | Moderate-or-higher `npm audit` remains green in `prod:gate`; low advisories are either accepted with controls or removed. |
 
 ## P0: Long-Running `/free` Reliability
 
@@ -49,9 +49,9 @@ Do not claim a feature is production-complete until it has:
 |---|---|---|---|
 | Canonical file storage | UI and agent workflows support files conceptually. | Every upload lands in Convex File Storage first. Provider file ids remain cache metadata only. | Raw file id is the durable artifact id; provider file id can be dropped and rebuilt. |
 | File upload/view E2E | Spreadsheet and file references are part of the product story. | Browser E2E for upload, file list, click-to-view, drag file to chat, and agent reference selection. | User can upload, view, cite, and drag files into chat across public and private contexts. |
-| Provider file adapters | Gemini/OpenAI/Claude/OpenRouter parser adapters exist as design direction. | Live binary upload/cache adapters for PDFs, DOCX/PPTX, images, screenshots, and spreadsheets. | Adapter returns structured evidence with provider id, file id, page/sheet/row/box metadata, and provenance. |
+| Provider file adapters | Gemini/OpenAI/Claude/OpenRouter parser adapters exist as design direction, and provider extraction now preserves provider id, source storage/artifact id, page, and bbox metadata in `CellEvidence`. | Live binary upload/cache adapters for PDFs, DOCX/PPTX, images, screenshots, and spreadsheets. | Adapter returns structured evidence with provider id, file id, page/sheet/row/box metadata, and provenance from a live provider run. |
 | Local parser lane | LiteParse dependency is installed. | Production worker lane for PDF, DOCX/PPTX, images, OCR, screenshots, layout, and bounding boxes. | Redacted fixture tests prove local extraction writes evidence-bearing artifacts without provider egress. |
-| Evidence-bearing cells | `CellPayload` direction is established. | Ensure ENRICH/CLASSIFY/RESOLVE always writes value, status, confidence, source artifact, and citation/evidence. | Spreadsheet agent writes are never bare scalars in production workflows. |
+| Evidence-bearing cells | `CellPayload` writes and provider parser adapter tests exist; evidence now includes optional source storage/artifact id, provider file id, page, and bbox. | Ensure every ENRICH/CLASSIFY/RESOLVE live workflow writes value, status, confidence, source artifact, and citation/evidence. | Spreadsheet agent writes are never bare scalars in production workflows. |
 
 ## P0: Professional Workflow QA
 
@@ -200,9 +200,9 @@ checked artifacts are `docs/eval/halo-self-improvement-smoke.json`,
 | Gap | Current state | Needed proof | Acceptance gate |
 |---|---|---|---|
 | Trace size limits | Traces exist, and a bounded telemetry-retention cron now prunes old `traces`, `agentSteps`, and `agentOperationEvents` without touching product data or spend ledgers. | Add per-run trace size caps, summarization/compaction for oversized payloads, and export hooks. | Long jobs do not bloat Convex documents or UI payloads, and retained/exported traces remain explainable. |
-| Provider telemetry | Resolved model is recorded in key paths. | Track attempted models, final model, latency, token/cost, fallback count, error class, and retry reason. | Model routing decisions can be audited after the fact. |
+| Provider telemetry | Resolved model is recorded in key paths, direct provider calls emit/persist provider route receipts in the model-step journal, and `/free` claim slices carry artifact metadata into egress checks. | Add fallback count, provider error class, retry reason, and live provider-health quarantine reports. | Model routing decisions can be audited after the fact. |
 | Provenance fields | Evidence direction exists. | Add `valueBefore`, `contextSnapshotRef`, `promptHash`, `modelVersion`, and `harnessVersion` where appropriate. | A disputed cell can be traced back to source, prompt, model, and room state. |
-| SLO dashboard | QA matrix has visual docs. | Add operational dashboard for pass rate, p95 latency, job completion, provider health, and queue age. | Demo and production health are visible without opening logs. |
+| SLO dashboard | `npm run slo:gate` now enforces a deterministic concurrent room-agent SLO/load floor and writes `docs/eval/slo-gate.json` when requested. | Add deployed operational dashboard for pass rate, p95 latency, job completion, provider health, and queue age. | Demo and production health are visible without opening logs. |
 
 ## P1: Security And Privacy
 
@@ -210,7 +210,7 @@ checked artifacts are `docs/eval/halo-self-improvement-smoke.json`,
 |---|---|---|---|
 | Secret hygiene | `.gitignore` excludes local env and logs. | Run secret scan before every public push. | No provider keys or local tokens are committed. |
 | Public/private boundaries | Product has public room and private agent lanes. | E2E tests for no private chat/file leakage into room trace, wiki, wall, or public artifacts. | Privacy boundary failures block release. |
-| Provider egress policy | Provider parser adapters are planned. | Per-file/workflow routing policy: local-only, provider-allowed, redacted-provider, or blocked. | Sensitive files cannot be sent to external providers accidentally. |
+| Provider egress policy | Central provider route/artifact egress policy exists; public `/ask`, `/free`, blocking private agent, and private streaming all gate model egress. | Add live OpenRouter no-training audit and full public/private file visibility policy across exports and downstream handoffs. | Sensitive files cannot be sent to external providers accidentally. |
 | Upload abuse limits | Upload is part of product direction. | File type, size, count, scan, and rate limits. | Bad uploads fail safely and visibly. |
 
 ## P2: Agent-Generated Wiki And Documentation Loop

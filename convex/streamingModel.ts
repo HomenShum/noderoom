@@ -7,6 +7,7 @@
  * a single streamed completion — the exact shape the component is built for.
  */
 import { redactPII } from "../src/nodeagent/guardrails/gateway";
+import { assertProviderRouteAllowed } from "../src/nodeagent/guardrails/egressPolicy";
 
 export type StreamAppend = (text: string) => Promise<void>;
 
@@ -25,21 +26,23 @@ export async function streamPrivateReplyText(
   userMsg: string,
   append: StreamAppend,
 ): Promise<string> {
+  const route = assertProviderRouteAllowed({ model: modelId, entrypoint: "private_agent", env: process.env });
   const safeSystem = redactPII(system).text;
   const safeUser = redactPII(userMsg).text;
-  if (modelId.startsWith("gemini")) return geminiStream(modelId, safeSystem, safeUser, append);
-  if (/^(gpt|o\d)/.test(modelId)) {
+  if (route.provider === "gemini") return geminiStream(route.resolvedModel, safeSystem, safeUser, append);
+  if (route.provider === "openai") {
     return openAiCompatibleStream(
       "https://api.openai.com/v1/chat/completions",
-      requireEnv("OPENAI_API_KEY"), {}, modelId, safeSystem, safeUser, append,
+      requireEnv("OPENAI_API_KEY"), {}, route.resolvedModel, safeSystem, safeUser, append,
     );
   }
   // vendor/model ids (deepseek/…, anthropic/…, z-ai/…) ride OpenRouter's OpenAI-compatible SSE.
+  if (route.provider !== "openrouter") throw new Error(`private_stream_provider_unsupported:${route.provider}`);
   return openAiCompatibleStream(
-    "https://openrouter.ai/api/v1/chat/completions",
+    process.env.OPENROUTER_BASE_URL ? `${process.env.OPENROUTER_BASE_URL}/chat/completions` : "https://openrouter.ai/api/v1/chat/completions",
     requireEnv("OPENROUTER_API_KEY"),
     { "HTTP-Referer": "https://noderoom.live", "X-Title": "NodeRoom" },
-    modelId, safeSystem, safeUser, append,
+    route.resolvedModel, safeSystem, safeUser, append,
   );
 }
 

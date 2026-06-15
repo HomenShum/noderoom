@@ -15,6 +15,7 @@
  */
 
 import type { ZodTypeAny } from "zod";
+import type { ProviderRouteReceipt } from "../guardrails/egressPolicy";
 
 /* ── conversation ── */
 export type Role = "user" | "assistant" | "tool";
@@ -41,6 +42,8 @@ export interface AgentStep {
   toolCalls: ToolCall[];
   done: boolean;
   usage?: TokenUsage;
+  /** Auditable model route decision recorded by provider-backed model adapters. */
+  providerRoute?: ProviderRouteReceipt;
 }
 
 /* ── seam 1: the injectable model ── */

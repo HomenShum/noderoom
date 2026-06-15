@@ -125,6 +125,7 @@ export const runRoomAgent = action({
       a.mode === "research"
         ? (process.env.AGENT_RESEARCH_MODEL ?? "deepseek/deepseek-v4-flash")
         : (process.env.AGENT_MODEL ?? "gemini-3.5-flash"),
+      { entrypoint: "public_ask" },
     );
     assertProviderEgressAllowed({
       model: model.name,
@@ -467,7 +468,17 @@ export const runPrivateAgent = action({
     if (!roomState) throw new Error("room_not_found");
     const requester = roomState.members.find((m: { id: unknown }) => String(m.id) === a.requester.actor.id) as { id: unknown; name: string } | undefined;
     if (!requester) throw new Error("member_required");
-    const model = agentModel(process.env.AGENT_MODEL ?? "gemini-3.5-flash");
+    const model = agentModel(process.env.AGENT_MODEL ?? "gemini-3.5-flash", { entrypoint: "private_agent" });
+    assertProviderEgressAllowed({
+      model: model.name,
+      entrypoint: "private_agent",
+      artifacts: roomState.artifacts.map((art: { title: string; kind: string; meta?: unknown }) => ({
+        title: art.title,
+        kind: art.kind,
+        meta: art.meta,
+      })),
+      env: process.env,
+    });
     const system = privateAgentSystemPrompt(requester.name);
     const userMsg = `ROOM CONTEXT\n${summarizeRoomForPrivate(roomState)}\n\n${requester.name} asks: ${a.goal}`;
     let answer = "";

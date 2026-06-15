@@ -7,10 +7,11 @@
  * file implements the small AgentModel seam with direct provider HTTP calls.
  */
 
-import type { AgentMessage, AgentModel, AgentTool, ToolCall } from "../core/types";
+import type { AgentMessage, AgentModel, AgentStep, AgentTool, ToolCall } from "../core/types";
 import { getModelPricing, getProviderForModel, resolveModelAlias } from "./modelCatalog";
 import { isOpenRouterFreeAutoModel, selectOpenRouterFreeModels } from "./openRouterFreeModels";
 import { redactPII } from "../guardrails/gateway";
+import { assertProviderRouteAllowed, type ProviderRouteEntrypoint, type ProviderRouteReceipt } from "../guardrails/egressPolicy";
 
 type JsonObject = Record<string, unknown>;
 
@@ -75,8 +76,9 @@ const OPENROUTER_TITLE = "NodeRoom benchmark";
 const DEFAULT_MAX_TOKENS = 1024;
 const TRANSIENT_RE = /(\b429\b|\b5\d\d\b|rate.?limit|overloaded|temporar|timed?.?out|ECONNRESET|ETIMEDOUT|EAI_AGAIN|ENOTFOUND|fetch failed|socket hang up|service unavailable)/i;
 
-export function convexModel(modelId: string): AgentModel {
+export function convexModel(modelId: string, options: { entrypoint?: ProviderRouteEntrypoint } = {}): AgentModel {
   const aliasModelId = resolveModelAlias(modelId);
+  const entrypoint = options.entrypoint ?? "system";
   let resolvedModelId = aliasModelId;
   return {
     get name() {
@@ -86,7 +88,7 @@ export function convexModel(modelId: string): AgentModel {
       // Gateway PII firewall — redact PII/secrets from the system + user content before the prompt leaves.
       const safeSystem = redactPII(system).text;
       const safeMessages = messages.map((m) => (m.role === "user" && m.content ? { ...m, content: redactPII(m.content).text } : m));
-      const { step, resolvedModel } = await generateConvexAgentStep(aliasModelId, safeSystem, safeMessages, tools, signal);
+      const { step, resolvedModel } = await generateConvexAgentStep(aliasModelId, safeSystem, safeMessages, tools, entrypoint, signal);
       resolvedModelId = resolvedModel;
       return step;
     },
@@ -103,8 +105,10 @@ async function generateConvexAgentStep(
   system: string,
   messages: AgentMessage[],
   tools: AgentTool[],
+  entrypoint: ProviderRouteEntrypoint,
   signal?: AbortSignal,
 ) {
+  assertProviderRouteAllowed({ model: modelId, entrypoint, env: process.env });
   if (isOpenRouterFreeAutoModel(modelId)) {
     const candidates = await selectOpenRouterFreeModels({
       mode: tools.length ? "agent" : "chat",
@@ -116,8 +120,9 @@ async function generateConvexAgentStep(
     for (const candidate of candidates) {
       attempted.push(candidate.id);
       try {
+        const providerRoute = assertProviderRouteAllowed({ model: candidate.id, entrypoint, env: process.env });
         return {
-          step: await withRetry(() => openAiCompatibleStep({
+          step: withProviderRoute(await withRetry(() => openAiCompatibleStep({
             endpoint: `${openRouterBaseUrl()}/chat/completions`,
             apiKey: process.env.OPENROUTER_API_KEY,
             headers: openRouterHeaders(),
@@ -126,7 +131,7 @@ async function generateConvexAgentStep(
             messages,
             tools,
             signal,
-          }), signal),
+          }), signal), providerRoute),
           resolvedModel: candidate.id,
         };
       } catch (error) {
@@ -138,15 +143,17 @@ async function generateConvexAgentStep(
   }
 
   try {
+    const providerRoute = assertProviderRouteAllowed({ model: modelId, entrypoint, env: process.env });
     return {
-      step: await withRetry(() => providerStep(modelId, system, messages, tools, signal), signal),
+      step: withProviderRoute(await withRetry(() => providerStep(modelId, system, messages, tools, signal), signal), providerRoute),
       resolvedModel: modelId,
     };
   } catch (error) {
     const fb = fallbackModelFor(modelId);
     if (!fb || signal?.aborted) throw error;
+    const providerRoute = assertProviderRouteAllowed({ model: fb, entrypoint, env: process.env });
     return {
-      step: await withRetry(() => providerStep(fb, system, messages, tools, signal), signal),
+      step: withProviderRoute(await withRetry(() => providerStep(fb, system, messages, tools, signal), signal), providerRoute),
       resolvedModel: fb,
     };
   }
@@ -418,9 +425,23 @@ function toolParameters(toolName: string): JsonObject {
       kind: { type: "string", enum: ["upload", "source", "computed", "manual"] },
       label: string,
       source: string,
+      sourceStorageId: string,
+      sourceArtifactId: string,
+      providerFileId: string,
       sheetName: string,
       row: number,
       column: string,
+      page: number,
+      bbox: {
+        type: "object",
+        properties: {
+          x: number,
+          y: number,
+          width: number,
+          height: number,
+          unit: { type: "string", enum: ["px", "pt", "normalized"] },
+        },
+      },
       url: string,
       snippet: string,
       confidence: number,
@@ -517,6 +538,10 @@ function fallbackModelFor(modelId: string): string | undefined {
 function openRouterFreeAutoLimit(): number {
   const raw = Number(process.env.OPENROUTER_FREE_AUTO_LIMIT ?? 8);
   return Number.isFinite(raw) ? Math.max(1, Math.min(20, raw)) : 8;
+}
+
+function withProviderRoute<T extends AgentStep>(step: T, providerRoute: ProviderRouteReceipt): T & { providerRoute: ProviderRouteReceipt } {
+  return { ...step, providerRoute };
 }
 
 function isTransientError(error: unknown): boolean {

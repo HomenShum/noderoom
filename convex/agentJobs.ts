@@ -352,7 +352,11 @@ export const cancel = mutation({
   handler: async (ctx, { jobId, requester }) => {
     const job = await ctx.db.get(jobId);
     if (!job) return { ok: false as const, reason: "job_not_found" as const };
-    await requireActorProof(ctx, job.roomId, requester);
+    const actor = await requireActorProof(ctx, job.roomId, requester);
+    const room = await ctx.db.get(job.roomId);
+    if (!room || (actor.id !== job.requester.id && actor.id !== room.hostId)) {
+      return { ok: false as const, reason: "forbidden" as const };
+    }
     if (job.status === "completed" || job.status === "failed" || job.status === "cancelled") {
       return { ok: false as const, reason: "terminal" as const };
     }
@@ -378,7 +382,11 @@ export const retry = mutation({
   handler: async (ctx, { jobId, requester, additionalAttempts }) => {
     const job = await ctx.db.get(jobId);
     if (!job) return { ok: false as const, reason: "job_not_found" as const };
-    await requireActorProof(ctx, job.roomId, requester);
+    const actor = await requireActorProof(ctx, job.roomId, requester);
+    const room = await ctx.db.get(job.roomId);
+    if (!room || (actor.id !== job.requester.id && actor.id !== room.hostId)) {
+      return { ok: false as const, reason: "forbidden" as const };
+    }
     if (job.status === "completed" || job.status === "running") {
       return { ok: false as const, reason: "not_retryable" as const };
     }
@@ -536,6 +544,9 @@ export const claimSlice = internalMutation({
       jobId,
       roomId: job.roomId,
       artifactId: job.artifactId,
+      artifactTitle: art.title,
+      artifactKind: art.kind,
+      artifactMeta: art.meta,
       requester: job.requester,
       goal: job.goal,
       mode: job.mode,

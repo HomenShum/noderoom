@@ -23,9 +23,6 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Check QA matrix docs
-        run: npm run qa:matrix:check
-
       - name: Check commit message accuracy
         shell: bash
         run: |
@@ -37,17 +34,8 @@ jobs:
             npm run commit:check
           fi
 
-      - name: Typecheck app
-        run: npm run typecheck -- --pretty false
-
-      - name: Typecheck Convex
-        run: npx tsc --noEmit --project convex/tsconfig.json --pretty false
-
-      - name: Test
-        run: npm test
+      - name: Production gate
+        run: npm run prod:gate
 
       - name: Ladder eval
         run: npm run ladder
-
-      - name: Build
-        run: npm run build

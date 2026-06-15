@@ -22,27 +22,29 @@ and SLO dashboards remain tracked in [`GAPS_NOT_DONE.md`](GAPS_NOT_DONE.md).
 
 `npm run prod:gate` is wired as a strict local release gate. It runs the
 moderate-or-higher production dependency audit first, then QA matrix freshness,
-content fluency, proof staleness, app and Convex typechecks, unit/runtime tests,
-deterministic memory-mode browser product flows, and the production build.
+content fluency, proof staleness, the deterministic SLO/load gate, app and
+Convex typechecks, unit/runtime tests, deterministic memory-mode browser product
+flows, and the production build.
 `npm run prod:gate:live` adds the live Convex product gate, and
 `npm run prod:gate:live:agent` adds the live provider-agent gate.
 
-As of 2026-06-14, this gate is expected to fail at the dependency-audit step.
-`npm audit --omit=dev --audit-level=moderate` reports 14 production advisories:
-6 high, 2 moderate, and 6 low. The high/moderate set currently includes
-Convex/esbuild and ExcelJS/uuid transitive advisories, with some fixes requiring
-upstream releases or semver-major dependency work. Secret scanning also remains
-a pre-release manual requirement until a dedicated scanner is added to the gate.
+As of 2026-06-14, the moderate-or-higher production dependency audit passes.
+`npm audit --omit=dev --audit-level=moderate` reports only 6 low AI SDK provider
+advisories. Convex's transitive esbuild advisory is mitigated with an npm
+override to `esbuild@0.28.1`, and ExcelJS's transitive uuid advisory is
+mitigated with an override to `uuid@11.1.1`; both paths have targeted
+compatibility tests. Secret scanning remains a pre-release manual requirement
+until a dedicated scanner is added to the gate.
 
 ## Still open outside the core public-room gates
 
 | Area | Status |
 |---|---|
-| Files, parser, OCR, and provider file cache adapters | Designed and partially tested; not yet fully live-audited across PDF, DOCX/PPTX, images, screenshots, OCR, layout, and bounding boxes. |
+| Files, parser, OCR, and provider file cache adapters | Designed and partially tested; provider extraction now preserves page/bbox/source-storage evidence metadata, but the full live parser/OCR worker path is not yet audited across PDF, DOCX/PPTX, images, screenshots, and layout. |
 | Full browser E2E for every surface | Some browser specs exist; the red QA row stays until public/private chat, files, spreadsheet, wall, proposals, and job controls are covered together. |
-| Long-running job operations | Workflow/Workpool continuation exists; operator controls, live `/free` polling evals, model quarantine, and provider request-idempotency hardening still need expansion. |
+| Long-running job operations | Workflow/Workpool continuation exists; job cancel/retry is requester-or-host gated and `/free` carries artifact metadata into egress checks. Live `/free` polling evals, model quarantine, and provider request-idempotency hardening still need expansion. |
 | Professional GTM/finance scale | Fixture catalog exists; more row-level evals and one live provider smoke per critical workflow are still needed. |
-| Production observability | Retention exists; dashboards, trace export, trace-size caps, and SLO alerting are not yet complete. |
+| Production observability | Retention and deterministic `npm run slo:gate` now exist; dashboards, trace export, trace-size caps, live browser/load proof, and SLO alerting are not yet complete. |
 
 ## The no-clobber spine — PROVEN
 
@@ -65,6 +67,9 @@ a pre-release manual requirement until a dedicated scanner is added to the gate.
 | Per-run + per-slice token **and** USD spend ceilings | `src/nodeagent/core/runtime.ts` `priceStep` wired into `convex/agent.ts` + `agentJobRunner.ts`; `tests/gatewayAndJournal.test.ts` |
 | Error-path handoff preserves unexecuted tool calls (resume-cursor integrity) | `src/nodeagent/core/runtime.ts`; `tests/gatewayAndJournal.test.ts` |
 | PII/secret outbound redaction | `src/nodeagent/gateway.ts`; tested |
+| Provider route allowlist and free-route fail-closed policy | `src/nodeagent/guardrails/egressPolicy.ts`; `tests/providerEgressPolicy.test.ts` |
+| Private-agent provider egress gate | `convex/agent.ts`, `convex/streaming.ts`, `convex/streamingModel.ts`; `tests/agentJobsSource.test.ts` |
+| Deterministic SLO/load gate | `scripts/slo-gate.ts`; `docs/eval/slo-gate.json` |
 
 These are offline or deterministic proofs of the core mechanisms. They do not
 replace live provider/load evidence for OpenRouter data policy, high-concurrency
@@ -92,9 +97,9 @@ lease races, cron SLA, or public abuse behavior under real traffic.
 ## NEEDS A LIVE AUDIT — cannot be settled offline
 
 1. **OpenRouter's actual data policy** — confirm the `/free` lane's providers honor a no-training flag; until then the README privacy note (keep sensitive data out of `/free`) is the real control.
-2. **Rate-limiting under real concurrency** — Convex doesn't expose client IP, so the cap keys on actor/room; a load test on staging (many concurrent anon joins) must confirm buckets hold.
+2. **Rate-limiting under real concurrency** — Convex doesn't expose client IP, so the cap keys on actor/room; `npm run slo:gate` covers deterministic in-memory concurrency, but a staging load test (many concurrent anon joins) must confirm buckets hold.
 3. **Cost-injection under live models** — a hostile prompt ("emit 250k tokens") is bounded by the per-run cap, but the cumulative daily cap needs a live run to confirm it trips.
-4. **Lock fencing under high concurrency** — 100+ agents racing the same lock at the 5-min TTL boundary needs a load test, not just the isolated unit proofs.
+4. **Lock fencing under high concurrency** — deterministic SLO/load and isolated unit proofs exist; 100+ live agents racing the same lock at the 5-min TTL boundary still needs a staging load test.
 5. **Cron SLA** — the retention + janitor crons assume reliable execution; production must monitor success + alert on a missed run.
 
 ## Bottom line

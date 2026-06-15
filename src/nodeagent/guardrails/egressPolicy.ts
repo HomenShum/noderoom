@@ -1,3 +1,5 @@
+import { getProviderForModel, resolveModelAlias, type LlmProvider } from "../models/modelCatalog";
+
 type Env = Record<string, string | undefined>;
 
 export type ProviderEgressArtifact = {
@@ -11,6 +13,24 @@ export type ProviderEgressEntrypoint = "public_ask" | "private_agent" | "free" |
 export type ProviderEgressDecision =
   | { ok: true; policy: "provider_egress_v1" }
   | { ok: false; policy: "provider_egress_v1"; reason: string; artifactTitle?: string };
+
+export type ProviderRouteEntrypoint = ProviderEgressEntrypoint;
+export type ProviderRouteProvider = LlmProvider | "local";
+export type ProviderRouteReceipt = {
+  policy: "provider_route_v1";
+  requestedModel: string;
+  resolvedModel: string;
+  provider: ProviderRouteProvider;
+  entrypoint: ProviderRouteEntrypoint;
+  allowedProviders: ProviderRouteProvider[];
+  noTrainingRequired: boolean;
+  basis: string[];
+};
+export type ProviderRouteDecision =
+  | ({ ok: true } & ProviderRouteReceipt)
+  | ({ ok: false; reason: string; provider?: ProviderRouteProvider | null } & Omit<ProviderRouteReceipt, "provider">);
+
+const DEFAULT_ALLOWED_PROVIDERS: ProviderRouteProvider[] = ["openai", "anthropic", "gemini", "openrouter", "local"];
 
 export function isOpenRouterFreeRoute(model: string): boolean {
   const normalized = model.trim().toLowerCase();
@@ -65,6 +85,102 @@ export function assertProviderEgressAllowed(args: {
   return decision;
 }
 
+export function providerRouteDecision(args: {
+  model: string;
+  entrypoint: ProviderRouteEntrypoint;
+  env?: Env;
+}): ProviderRouteDecision {
+  const env = args.env ?? process.env;
+  const requestedModel = args.model.trim();
+  const resolvedModel = resolveModelAlias(requestedModel);
+  const allowedProviders = providerAllowlist(env);
+  const external = isExternalProviderRoute(resolvedModel);
+  const provider = external ? getProviderForModel(resolvedModel) : "local";
+  const noTrainingRequired = env.OPENROUTER_REQUIRE_NO_TRAINING === "1";
+  const basis = [
+    `entrypoint:${args.entrypoint}`,
+    `requested:${requestedModel}`,
+    `resolved:${resolvedModel}`,
+    `external:${String(external)}`,
+    `allowlist:${allowedProviders.join(",")}`,
+    `no_training_required:${String(noTrainingRequired)}`,
+  ];
+
+  if (!provider) {
+    return {
+      ok: false,
+      policy: "provider_route_v1",
+      reason: "unknown_provider",
+      requestedModel,
+      resolvedModel,
+      provider,
+      entrypoint: args.entrypoint,
+      allowedProviders,
+      noTrainingRequired,
+      basis,
+    };
+  }
+
+  if (!allowedProviders.includes(provider)) {
+    return {
+      ok: false,
+      policy: "provider_route_v1",
+      reason: "provider_not_allowed",
+      requestedModel,
+      resolvedModel,
+      provider,
+      entrypoint: args.entrypoint,
+      allowedProviders,
+      noTrainingRequired,
+      basis,
+    };
+  }
+
+  if (
+    args.entrypoint === "free" &&
+    external &&
+    !isOpenRouterFreeRoute(resolvedModel) &&
+    env.FREE_AUTO_ALLOW_PAID_MODEL !== "1"
+  ) {
+    return {
+      ok: false,
+      policy: "provider_route_v1",
+      reason: "free_entrypoint_requires_free_model_or_FREE_AUTO_ALLOW_PAID_MODEL",
+      requestedModel,
+      resolvedModel,
+      provider,
+      entrypoint: args.entrypoint,
+      allowedProviders,
+      noTrainingRequired,
+      basis,
+    };
+  }
+
+  return {
+    ok: true,
+    policy: "provider_route_v1",
+    requestedModel,
+    resolvedModel,
+    provider,
+    entrypoint: args.entrypoint,
+    allowedProviders,
+    noTrainingRequired,
+    basis,
+  };
+}
+
+export function assertProviderRouteAllowed(args: {
+  model: string;
+  entrypoint: ProviderRouteEntrypoint;
+  env?: Env;
+}): ProviderRouteReceipt {
+  const decision = providerRouteDecision(args);
+  if (!decision.ok) {
+    throw new Error(`provider_route_blocked:${decision.reason}`);
+  }
+  return decision;
+}
+
 function classifyArtifactEgress(artifact: ProviderEgressArtifact): {
   explicitBlock: boolean;
   sensitive: boolean;
@@ -92,6 +208,13 @@ function classifyArtifactEgress(artifact: ProviderEgressArtifact): {
 
 function blocked(reason: string, artifact: ProviderEgressArtifact): ProviderEgressDecision {
   return { ok: false, policy: "provider_egress_v1", reason, artifactTitle: artifact.title };
+}
+
+function providerAllowlist(env: Env): ProviderRouteProvider[] {
+  const raw = env.NODEAGENT_ALLOWED_PROVIDERS ?? env.PROVIDER_EGRESS_ALLOWED_PROVIDERS;
+  if (!raw) return DEFAULT_ALLOWED_PROVIDERS;
+  const values = raw.split(",").map((part) => part.trim().toLowerCase()).filter(Boolean) as ProviderRouteProvider[];
+  return values.length ? values : DEFAULT_ALLOWED_PROVIDERS;
 }
 
 function objectRecord(value: unknown): Record<string, unknown> | undefined {

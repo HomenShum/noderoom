@@ -62,9 +62,14 @@ export interface CellEvidence {
   kind: "upload" | "source" | "computed" | "manual";
   label: string;
   source?: string;
+  sourceStorageId?: string;
+  sourceArtifactId?: string;
+  providerFileId?: string;
   sheetName?: string;
   row?: number;
   column?: string;
+  page?: number;
+  bbox?: { x: number; y: number; width: number; height: number; unit?: "px" | "pt" | "normalized" };
   url?: string;
   snippet?: string;
   confidence?: number;

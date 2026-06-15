@@ -1,6 +1,6 @@
 # Startup Diligence War Room Live Eval
 
-Status: eval plan plus captured startup media. The live-join path and the richer war-room synthesis clip are both rendered; full live-provider/Convex proof remains separate from these walkthrough assets. The machine-readable proof boundary is tracked in `docs/eval/startup-diligence-war-room-live.json`.
+Status: captured startup media plus a passing Convex contract eval. The live-join path and the richer war-room synthesis clip are both rendered; the executable contract proof now validates the room/job/artifact invariants, while provider-produced startup content remains the next hard gate. The machine-readable proof boundary is tracked in `docs/eval/startup-diligence-war-room-live.json`.
 
 ## Goal
 
@@ -17,7 +17,7 @@ Verify that the public demo is not just a UI animation. The live eval must prove
 | Human edit during agent work is preserved | CAS conflict or draft/proposal evidence |
 | Multiple lanes run concurrently | Work queue has distinct lane ids, statuses, and receipts |
 | Private agent output stays private | Second user cannot read private channel |
-| Proposal approval is in-context | Cell-local proposal chip applies or reports conflict |
+| Proposal approval is in-context | Host-reviewed proposal commits an evidence-bearing cell payload |
 | Downstream handoff has no side effect | Draft card/export only, no OAuth call |
 | Trace includes model route | agent run or job row records model/resolved model |
 
@@ -37,6 +37,7 @@ Verify that the public demo is not just a UI animation. The live eval must prove
 - Final media judge: `npm run media:gemini-judge -- --only startup-diligence --include-ignored` produced run `20260614T233419Z`; live-join is `publish` at `10.9/16` with one P2 perspective-transition note, and war-room is `publish` at `11.7/16` with two P2 polish notes for trace density and the subtle Public-to-Private switch.
 - Live-root guard: bad persisted live sessions and unusable room ids are rejected/skipped before Convex room-scoped queries.
 - Browser/Playwright visual evidence: isolated two-client create/join verification renders the Startup Banking Diligence War Room with Mercury/Ramp/Brex research rows, all six handoff targets, Maya and Priya in room `NR2TY6MLO9T`, Priya's chat message, and no guided-tour overlay.
+- Convex contract eval: `npm run eval:startup-diligence:live` passed 8/8 on 2026-06-14 and wrote `docs/eval/startup-diligence-war-room-live-results.json`. It proves account upsert, host-reviewed evidence-bearing `CellPayload`, stale-agent no-clobber conflict/proposal, private boundary, runway chart artifact, downstream draft-only handoff, multi-lane job request, and route/cost/runtime trace metadata. `providerProducedContent` is intentionally `false`.
 
 ## Next Capture Command
 
@@ -50,4 +51,4 @@ npm run walkthroughs:render -- startup-diligence-war-room
 npm run media:gemini-judge -- --only startup-diligence --include-ignored
 ```
 
-The live-join spec proves fresh room creation and three-user startup-diligence coordination. The `startup-diligence-war-room` spec covers the scripted research/enrichment/private/downstream story. The next hard gate is a live provider/Convex eval that writes the JSON evidence for account upsert, cited CellPayloads, human edit preservation, private boundary, route trace, cost/runtime, and runway chart artifact generation.
+The live-join spec proves fresh room creation and three-user startup-diligence coordination. The `startup-diligence-war-room` spec covers the scripted research/enrichment/private/downstream story. The contract eval proves the Convex write/review/privacy/trace path. The next hard gate is running the same startup diligence eval through a real provider route so the `CellPayload` content, route telemetry, and final copy are provider-produced instead of seeded by the deterministic contract harness.

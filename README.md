@@ -970,7 +970,7 @@ This section is generated from `docs/qa/production-matrix.json`. When the system
 
 | Feature area | Status | Required production gate |
 |---|---|---|
-| Startup diligence demo | Yellow | README links the startup media, the walkthrough scripts match the latest target, Gemini judges the recaptured clips, and a live provider/Convex eval records cited cells, preserved human edit, route trace, cost/runtime, private boundary, and downstream draft-only behavior. |
+| Startup diligence demo | Yellow | README links the startup media, the walkthrough scripts match the latest target, Gemini judges the recaptured clips, and the Convex contract eval records cited cells, preserved human edit, route trace, cost/runtime, private boundary, runway chart, and downstream draft-only behavior. The remaining promotion gate is provider-produced startup content through the same contract. |
 | Files + spreadsheet | Yellow | Parser fixtures, provider parser adapter tests, live file preview smoke, and Convex raw-file canonicalization. |
 | Public/private chat + agent | Yellow | Scope separation tests, room member proof, and browser smoke for public/private panels. |
 | Trace + proposals | Green | Host-only controls, proposal resolution tests, UI consent modal, and no silent direct-write bypass. |

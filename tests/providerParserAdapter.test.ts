@@ -24,7 +24,13 @@ describe("provider parser adapter", () => {
       now: 1_717_000_100,
       extraction: {
         tables: [{ title: "Extracted KPIs", columns: ["Metric", "Value"], rows: [["ARR", "$12M"]], confidence: 0.91 }],
-        evidence: [{ label: "Page 4 KPI table", snippet: "ARR $12M", confidence: 0.9 }],
+        evidence: [{
+          label: "Page 4 KPI table",
+          snippet: "ARR $12M",
+          page: 4,
+          bbox: { x: 0.12, y: 0.2, width: 0.4, height: 0.08, unit: "normalized" },
+          confidence: 0.9,
+        }],
       },
     });
 
@@ -37,5 +43,12 @@ describe("provider parser adapter", () => {
     expect(cell.value).toBe("ARR");
     expect(cell.evidence?.[0]?.kind).toBe("source");
     expect(cell.evidence?.[0]?.id).toContain("gemini-file-abc");
+    expect(cell.evidence?.[0]).toMatchObject({
+      sourceStorageId: "convex-storage-123",
+      sourceArtifactId: "artifact-raw",
+      providerFileId: "gemini-file-abc",
+      page: 4,
+      bbox: { x: 0.12, y: 0.2, width: 0.4, height: 0.08, unit: "normalized" },
+    });
   });
 });

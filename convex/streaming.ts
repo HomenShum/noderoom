@@ -21,6 +21,7 @@ import { components } from "./_generated/api";
 import { internalMutation, internalQuery, mutation, query } from "./_generated/server";
 import { actorProofV, requireActorCanUseChannel, requireActorProof } from "./lib";
 import { summarizeRoomForPrivate } from "./agent";
+import { assertProviderEgressAllowed } from "../src/nodeagent/guardrails/egressPolicy";
 
 const roomsFullRef = makeFunctionReference<"query">("rooms:full");
 
@@ -33,6 +34,16 @@ export const createPrivateReplyStream = mutation({
     const actor = await requireActorProof(ctx, a.roomId, a.requester);
     const roomState = await ctx.runQuery(roomsFullRef, { roomId: a.roomId, requester: a.requester });
     if (!roomState) throw new Error("room_not_found");
+    assertProviderEgressAllowed({
+      model: process.env.AGENT_MODEL ?? "gemini-3.5-flash",
+      entrypoint: "private_agent",
+      artifacts: roomState.artifacts.map((art: { title: string; kind: string; meta?: unknown }) => ({
+        title: art.title,
+        kind: art.kind,
+        meta: art.meta,
+      })),
+      env: process.env,
+    });
     const ownerId = String(actor.id);
     const streamId = String(await streamingComponent.createStream(ctx));
     // Mirror messages.postPrivateAgentReply: joiners don't get a private session at join time.

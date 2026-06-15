@@ -152,9 +152,22 @@ describe("agentJobs runtime contract", () => {
     expect(detail?.receipts).toHaveLength(1);
     expect(detail?.job.receiptCount).toBe(1);
   });
+
+  it("restricts cancel and retry controls to the requester or room host", async () => {
+    const { t, proof, memberProof, roomId, artifactId } = await setupRoom({ extraMember: true });
+    const { jobId } = await t.mutation(api.agentJobs.createOrReuse, jobArgs({ roomId, artifactId, proof, idempotencyKey: "job-runtime-rbac" }));
+
+    const deniedCancel = await t.mutation(api.agentJobs.cancel, { jobId, requester: memberProof });
+    const deniedRetry = await t.mutation(api.agentJobs.retry, { jobId, requester: memberProof });
+    const allowedCancel = await t.mutation(api.agentJobs.cancel, { jobId, requester: proof });
+
+    expect(deniedCancel).toEqual({ ok: false, reason: "forbidden" });
+    expect(deniedRetry).toEqual({ ok: false, reason: "forbidden" });
+    expect(allowedCancel).toEqual({ ok: true });
+  });
 });
 
-async function setupRoom(options: { seedElement?: boolean } = {}) {
+async function setupRoom(options: { seedElement?: boolean; extraMember?: boolean } = {}) {
   const t = convexTest(schema, modules);
   const now = Date.now();
   const authTokenHash = await hashToken(token);
@@ -181,6 +194,23 @@ async function setupRoom(options: { seedElement?: boolean } = {}) {
   );
   const actor = { kind: "user" as const, id: String(memberId), name: "Host" };
   const proof = { actor, token };
+  const memberToken = "abcdefghijklmnopqrstuvwxyz0123456789MEMBER";
+  let memberProof = proof;
+  if (options.extraMember) {
+    const memberTokenHash = await hashToken(memberToken);
+    const memberId = await t.run((ctx) =>
+      ctx.db.insert("members", {
+        roomId,
+        name: "Member",
+        role: "member" as const,
+        anon: true,
+        color: "#222222",
+        authTokenHash: memberTokenHash,
+        lastSeenAt: now,
+      }),
+    );
+    memberProof = { actor: { kind: "user" as const, id: String(memberId), name: "Member" }, token: memberToken };
+  }
   const order = options.seedElement ? ["row1__variance"] : [];
   const artifactId = await t.run((ctx) =>
     ctx.db.insert("artifacts", {
@@ -204,7 +234,7 @@ async function setupRoom(options: { seedElement?: boolean } = {}) {
       }),
     );
   }
-  return { t, proof, actor, roomId, artifactId };
+  return { t, proof, memberProof, actor, roomId, artifactId };
 }
 
 function jobArgs(args: {

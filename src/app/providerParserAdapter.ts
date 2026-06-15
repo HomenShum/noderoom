@@ -49,6 +49,7 @@ export type ProviderExtraction = {
     label: string;
     snippet?: string;
     page?: number;
+    bbox?: { x: number; y: number; width: number; height: number; unit?: "px" | "pt" | "normalized" };
     url?: string;
     confidence?: number;
   }>;
@@ -179,8 +180,13 @@ function providerCellPayload(args: {
       kind: "source",
       label: e.label,
       source: args.file.fileName,
+      sourceStorageId: args.file.storageId,
+      sourceArtifactId: args.file.artifactId,
+      providerFileId: args.providerFile.providerFileId,
       row: args.row,
       column: args.column.label,
+      page: e.page,
+      bbox: e.bbox,
       snippet: e.snippet,
       url: e.url,
       confidence: e.confidence,
@@ -190,6 +196,9 @@ function providerCellPayload(args: {
       kind: "source",
       label: `${args.providerFile.provider} extraction from ${args.file.fileName}`,
       source: args.file.fileName,
+      sourceStorageId: args.file.storageId,
+      sourceArtifactId: args.file.artifactId,
+      providerFileId: args.providerFile.providerFileId,
       row: args.row,
       column: args.column.label,
       confidence: args.table.confidence,

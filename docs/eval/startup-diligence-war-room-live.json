@@ -3,7 +3,7 @@
   "updatedAt": "2026-06-14",
   "demoTarget": "Startup Diligence War Room",
   "sourceReview": "D:/VSCode Projects/noderoom/6-14-2026-deep-review.txt",
-  "currentEvidenceLevel": "mixed-live-shell-plus-deterministic-agent-package",
+  "currentEvidenceLevel": "convex-contract-proven-plus-deterministic-media-provider-pending",
   "claim": "NodeRoom can present a startup-banking diligence room where multiple users coordinate account intake, source-backed research, runway/milestone work, no-clobber review, private banker judgment, and draft-only downstream handoff.",
   "latestCapture": {
     "capturedAt": "2026-06-14T23:28:41.080Z",
@@ -73,46 +73,73 @@
   "requiredChecks": [
     {
       "id": "account_upsert",
-      "status": "planned-for-live-eval",
-      "evidenceRequired": "Browser state plus trace row showing CardioNova/five-company re-import updates existing rows instead of duplicating."
+      "status": "convex-contract-proven",
+      "evidenceRequired": "Browser state plus trace row showing CardioNova/five-company re-import updates existing rows instead of duplicating.",
+      "lastVerifiedAt": "2026-06-14T23:57:33.741Z",
+      "lastEvidenceRef": "docs/eval/startup-diligence-war-room-live-results.json#account_upsert"
     },
     {
       "id": "cited_cellpayloads",
-      "status": "planned-for-live-eval",
-      "evidenceRequired": "CellPayload objects include source refs, confidence/freshness, and reviewed/needs_review state."
+      "status": "convex-contract-proven-provider-pending",
+      "evidenceRequired": "CellPayload objects include source refs, confidence/freshness, and reviewed/needs_review state.",
+      "lastVerifiedAt": "2026-06-14T23:57:33.741Z",
+      "lastEvidenceRef": "docs/eval/startup-diligence-war-room-live-results.json#cited_cellpayloads"
     },
     {
       "id": "human_edit_preserved",
-      "status": "planned-for-live-eval",
-      "evidenceRequired": "A user edits an affected cell during agent work; stale write becomes proposal/draft instead of overwrite."
+      "status": "convex-contract-proven",
+      "evidenceRequired": "A user edits an affected cell during agent work; stale write becomes proposal/draft instead of overwrite.",
+      "lastVerifiedAt": "2026-06-14T23:57:33.741Z",
+      "lastEvidenceRef": "docs/eval/startup-diligence-war-room-live-results.json#human_edit_preserved"
     },
     {
       "id": "concurrent_lanes",
-      "status": "media-proven-deterministic-pending-live",
-      "evidenceRequired": "Distinct lane ids, statuses, receipts, and final sealed handoff in agentJobs/agentOperationEvents."
+      "status": "convex-contract-proven",
+      "evidenceRequired": "Distinct lane ids, statuses, receipts, and final sealed handoff in agentJobs/agentOperationEvents.",
+      "lastVerifiedAt": "2026-06-14T23:57:33.741Z",
+      "lastEvidenceRef": "docs/eval/startup-diligence-war-room-live-results.json#concurrent_lanes"
     },
     {
       "id": "private_boundary",
-      "status": "planned-for-live-eval",
-      "evidenceRequired": "Second user cannot read private banker concerns until explicit promotion."
+      "status": "convex-contract-proven",
+      "evidenceRequired": "Second user cannot read private banker concerns until explicit promotion.",
+      "lastVerifiedAt": "2026-06-14T23:57:33.741Z",
+      "lastEvidenceRef": "docs/eval/startup-diligence-war-room-live-results.json#private_boundary"
     },
     {
       "id": "runway_milestone_chart",
-      "status": "helper-built-pending-room-workflow",
-      "evidenceRequired": "Runway chart artifact generated from deterministic math with sourced assumptions."
+      "status": "deterministic-helper-and-artifact-proven",
+      "evidenceRequired": "Runway chart artifact generated from deterministic math with sourced assumptions.",
+      "lastVerifiedAt": "2026-06-14T23:57:33.741Z",
+      "lastEvidenceRef": "docs/eval/startup-diligence-war-room-live-results.json#runway_milestone_chart"
     },
     {
       "id": "downstream_draft_only",
-      "status": "ui-and-helper-built-pending-click-through",
-      "evidenceRequired": "Gmail/Notion/Slack/Linear/LinkedIn/CRM actions produce approval-gated drafts only; no OAuth side effects."
+      "status": "helper-proven-no-side-effects",
+      "evidenceRequired": "Gmail/Notion/Slack/Linear/LinkedIn/CRM actions produce approval-gated drafts only; no OAuth side effects.",
+      "lastVerifiedAt": "2026-06-14T23:57:33.741Z",
+      "lastEvidenceRef": "docs/eval/startup-diligence-war-room-live-results.json#downstream_draft_only"
     },
     {
       "id": "route_trace_cost_runtime",
-      "status": "planned-for-live-eval",
-      "evidenceRequired": "agent run/job rows record model/resolved model, route, latency, token/cost, and stop reason."
+      "status": "convex-contract-proven-provider-route-pending",
+      "evidenceRequired": "agent run/job rows record model/resolved model, route, latency, token/cost, and stop reason.",
+      "lastVerifiedAt": "2026-06-14T23:57:33.741Z",
+      "lastEvidenceRef": "docs/eval/startup-diligence-war-room-live-results.json#route_trace_cost_runtime"
     }
   ],
   "nextAcceptanceGate": [
-    "run a live Convex/provider eval that writes JSON evidence for each required check"
-  ]
+    "run the same startup diligence eval through a real provider route so CellPayloads, route telemetry, and final content are provider-produced rather than contract-seeded"
+  ],
+  "latestLiveEval": {
+    "generatedAt": "2026-06-14T23:57:33.741Z",
+    "mode": "convex-test-contract",
+    "command": "npm run eval:startup-diligence:live",
+    "resultPath": "docs/eval/startup-diligence-war-room-live-results.json",
+    "pass": true,
+    "checksPassed": 8,
+    "checksFailed": 0,
+    "providerProducedContent": false,
+    "note": "Convex contract proof is green; live provider-generated content remains the next production gate."
+  }
 }

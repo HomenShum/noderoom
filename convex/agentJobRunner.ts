@@ -170,7 +170,7 @@ export const runFreeAutoJobSlice = internalAction({
     const resolvedModelPolicy = modelPolicy === "openrouter/free-auto"
       ? process.env.FREE_AUTO_JOB_MODEL ?? modelPolicy
       : modelPolicy;
-    const model = agentModel(resolvedModelPolicy);
+    const model = agentModel(resolvedModelPolicy, { entrypoint: "free" });
     const contextMaxChars = envNumber("FREE_AUTO_JOB_CONTEXT_MAX_CHARS", DEFAULT_CONTEXT_MAX_CHARS, 4_000, 120_000);
     const contextKeepRecent = envNumber("FREE_AUTO_JOB_CONTEXT_KEEP_RECENT", DEFAULT_CONTEXT_KEEP_RECENT, 2, 40);
     const maxSteps = envNumber("FREE_AUTO_JOB_MAX_STEPS_PER_SLICE", 3, 1, 12);

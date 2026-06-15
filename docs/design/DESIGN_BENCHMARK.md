@@ -6,6 +6,84 @@
 > (header 8 · work tabs 5 · research toolbar 4 · downstream-handoff 5 · copilot tabs/box/chips · a 7-col research table with paragraph cells).
 > Sources web-verified 2026-06-15.
 
+## Organizing principle — stable room, learned emphasis (quiet UI learning)
+
+> Keep the room stable; let the intelligence change the **emphasis**, not the workflow. The diligence spine
+> is fixed and boring on purpose: **Intake → Evidence gathered → Draft artifact → Coach review → Human
+> approval → Export.** Learning improves judgment, defaults, ranking, and timing *inside* that spine — it
+> never adds a stage, a control, or a command palette.
+
+What the UI should **learn to do** (every one of these makes it *quieter*, never busier):
+- foreground the artifact that matters right now; recede the rest
+- surface the evidence relevant to the current claim; hide the irrelevant
+- flag which company is blocked, which proposal needs review, which handoff is ready
+- learn which warnings are noise and stop showing them
+- make the single most-likely-useful next action obvious
+
+What it must **never** do: add visible controls, add a launcher, or restyle the workflow to look "smarter."
+The visible result of learning is **fewer things, better timed** — the design face of the same event-log +
+evidence-ledger substrate the harness review calls out (persisted `CoachCue`/`EvidenceCard`/analytics
+events; see [HARNESS_REVIEW.md](../founder-loop/HARNESS_REVIEW.md)). **Learning and subtraction are the same
+project: the system learns *what to leave out*.**
+
+**The blend for NodeRoom:** Notion calm structure · Quadratic analytical transparency · Attio entity
+intelligence · Figma multiplayer presence · Cursor review/merge discipline · Duolingo progression restraint ·
+Perplexity inline citations · Granola ambient capture.
+
+### The progression spine (Duolingo *restraint*, not Duolingo gamification)
+Render the diligence spine as a quiet, completeable progression — one legible "where is this
+company/artifact?" indicator that **replaces** scattered per-signal status, not adds to it:
+
+`Intake → Evidence → Draft → Coach review → Approval → Export`
+
+- Each stage feels finishable (a calm check when its contract is satisfied), so complex diligence feels
+  bounded — Duolingo's *restraint*, none of its streaks / rewards / game energy.
+- The stages ARE the typed workflow contracts already in the harness (intake → PlanPreview → patch/draft →
+  proposal/coach → approval via CAS → downstream handoff). The UI just reads their persisted state.
+- This is itself a **subtraction**: one progression line carries what's currently spread across the status
+  tape, the room trace, and the coach panel.
+
+---
+
+## NodeRoom-native reference set (the better lens)
+
+These are the references that *embody* the principle above — AI-native, diligence-shaped — and every adoption
+move **re-emphasizes or removes**, reusing shipped surfaces (`EvidenceCarouselArtifact`, `BankerCoachPanel`,
+`stageFocus.ts`, `signalStatus.ts`, `LinkupSourceOverlay`, `downstreamHandoff.ts`). Web-verified June 2026.
+
+### ★ Perplexity — verified inline citations *(P0 — the highest-stakes one)*
+- **Borrow:** every claim carries an inline marker you hover to inspect the exact source — claim + locator co-located, "say nothing you didn't retrieve."
+- **Avoid:** the authoritative *look* without verified *support*. The Mar-2025 Tow Center study found **50–90% of AI-search statements unsupported by their own cited sources** (Perplexity was sued over fabricated attributions). A citation chip linking to a source that doesn't back the claim is **worse than none** — it manufactures false confidence in a reasoning chain.
+- **NodeRoom move:** collapse the flat `LinkupSourceOverlay` list **into** the artifact as an inline locator chip per drafted cell, and **gate the chip on verified support** (reuse the chart-data-vs-cells validator): unverifiable claims show a muted "unsourced" mark, never a confident number. Removes a standalone panel *and* makes every claim self-auditing. (Closes with the harness `EvidenceCard.supportLevel` gap.)
+
+### ★ Quadratic AI — method, not black box *(P0)*
+- **Borrow:** the AI emits an *inspectable, re-runnable method* adjacent to the result; "every change is yours to approve." Inspect-the-work is the default, not a buried debug mode.
+- **Avoid:** letting the analyst **edit the method** (provenance hole — "who changed this" is lost) and the live multi-connector data grid (SSRF/egress surface).
+- **NodeRoom move:** make the AI-filled **cell itself** the click-target that foregrounds its existing evidence/derivation inline and recedes the rest (reuse the color-as-signal recede + `EvidenceCarousel`). No new "inspect" button; method stays read-only — auditability without the edit-the-code risk. *(P1 sibling: the export handoff headlines "re-derivable from N approved evidence items" instead of a free-text summary.)*
+
+### ★ Attio — entity timeline as a focus state *(P0)*
+- **Borrow:** each company row is a first-class **entity** with an auto-captured **activity timeline** — "all related activity in one place," accruing passively.
+- **Avoid:** the 8-tab record page + CRM action toolbar (Compose email / Run workflow / Enroll in sequence). That's CRM complexity leaking in — the opposite of the subtraction pass.
+- **NodeRoom move:** render the timeline as a **focus state of the trace you already have** — focusing a company row (`stageFocus.ts`) filters the single activity stream to that entity and recedes the rest. No tabs, no per-row panel; the row stays a row. *(P1 sibling: Attio "Highlights" → the room auto-picks 2–3 stage-relevant attributes via `signalStatus.ts`, no "+ Add widget" config.)*
+
+### Duolingo — progression *restraint* (used only as a model) *(P1)*
+- **Borrow:** the single linear path with exactly **one lit "next" node**, everything else receding (the 2025 redesign killed crowns/skill-levels for a milestone feed) — a long journey feels finishable.
+- **Avoid:** streaks / XP / leagues / confetti. In banking diligence, gamified reward energy **corrodes trust** and pressures analysts to rush a liability surface.
+- **NodeRoom move:** render the fixed spine as a passive **1-line progress ribbon** (driven by ledger state in `signalStatus.ts`): light only the current stage, done stages a small tick, future stages faint; reuse `statusText()` to show the single next-best-action ("Evidence: 2 claims still need a source locator"). Subtracts the "what do I do now" ambiguity with zero new buttons.
+
+### Granola — the conversation *is* the draft *(P1)*
+- **Borrow:** sparse human capture that AI quietly structures *after the fact*, with provenance preserved (raw human notes visually distinct; hover-to-reveal source context; no bot, ambient).
+- **Avoid:** meeting-note disposability, and **never letting AI silently rewrite committed cells** — the no-clobber lock→draft→merge invariant must hold (Granola can overwrite a private note; a shared diligence artifact cannot).
+- **NodeRoom move:** treat the public chat as the "raw notes" layer that becomes the draft — keep human-authored vs AI-structured text visually distinct inside the cell (reuse the recede pass), and hover-to-reveal the originating chat line on a drafted cell (`stageFocus`). Folds "where did this come from" into the artifact; no separate synthesis panel.
+
+> **Two to do first (both P0, both subtractions):** Perplexity's *verified-or-muted* citation gating (false
+> confidence is the worst diligence failure) and the Quadratic/Attio *click-to-inspect / focus-to-filter* move
+> (the cell and the row become their own inspect affordance). Both remove a standalone panel, reuse shipped
+> plumbing, and depend on the harness's persisted `EvidenceCard` locator — closing the loop with the learning
+> substrate from [HARNESS_REVIEW.md](../founder-loop/HARNESS_REVIEW.md).
+
+---
+
 ## Priority: cleanliness & usefulness by SUBTRACTION (not relocation)
 
 > **Founder steer (2026-06-15):** a command palette (Cmd-K) is **NOT** the priority — relocating controls

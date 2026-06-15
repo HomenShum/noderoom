@@ -395,12 +395,21 @@ function SignalStatusStrip({ roomId, onOpenArtifact }: { roomId: string; onOpenA
   const job = store.lastLongFreeJob();
   const latest = traces.at(-1);
   const status = publicStatusText(latest, proposals.length, job?.status);
+  // Cleanliness-by-subtraction (docs/design/DESIGN_BENCHMARK.md): at rest the strip shows only what
+  // is useful *right now* — the artifact count, plus Review when there is actually something to
+  // review. Agents/Eval/Cost are run telemetry, so they appear only once a run exists or a job is
+  // live, instead of four idle chips ("clear", "ready", "$0.000") that read as four equal alerts.
+  const hasRunActivity = !!run || !!job;
   const signals = [
     { k: "Sources", v: `${artifacts.length} artifacts` },
-    { k: "Agents", v: `${sessions.length} active` },
-    { k: "Review", v: proposals.length ? `${proposals.length} pending` : "clear" },
-    { k: "Eval", v: run ? `${run.model} · ${run.toolCalls} tools` : "ready" },
-    { k: "Cost", v: run ? `$${run.costUsd.toFixed(3)}` : job ? job.modelPolicy : "$0.000" },
+    ...(proposals.length ? [{ k: "Review", v: `${proposals.length} pending` }] : []),
+    ...(hasRunActivity
+      ? [
+          { k: "Agents", v: `${sessions.length} active` },
+          { k: "Eval", v: run ? `${run.model} · ${run.toolCalls} tools` : "running" },
+          { k: "Cost", v: run ? `$${run.costUsd.toFixed(3)}` : job ? job.modelPolicy : "—" },
+        ]
+      : []),
   ];
   // Click-through (TARGET L87): a Signal Tape / Status item opens its referenced artifact on the
   // stage and pulses the cell. It never fabricates a target; only renders a button when one exists.

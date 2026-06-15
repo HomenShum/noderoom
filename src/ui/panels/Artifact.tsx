@@ -11,7 +11,7 @@ import { useEditor, EditorContent } from "@tiptap/react";
 import StarterKit from "@tiptap/starter-kit";
 import {
   Table2, FileText, StickyNote, Users, GitMerge, Play, RotateCcw, History, Search, BookOpen,
-  Lock, Unlock, Ban, Pencil, Plus, Check, AlertTriangle, Eye, Circle, ChevronRight, Download, Trash2, Undo2, X, Columns2, type LucideIcon,
+  Lock, Unlock, Ban, Pencil, Plus, Check, AlertTriangle, Eye, Circle, ChevronRight, Download, Trash2, Undo2, X, Columns2, MoreHorizontal, type LucideIcon,
 } from "lucide-react";
 import { useStore, type RoomStore, type EditFeedback } from "../../app/store";
 import { formatExcelNumber } from "../../app/numberFormat";
@@ -442,6 +442,7 @@ function Research({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) 
   const [busy, setBusy] = useState(false);
   const [pasteError, setPasteError] = useState<string | null>(null);
   const [requeueError, setRequeueError] = useState<string | null>(null); // C7/C2: honest surface for failed requeue commits
+  const [moreOpen, setMoreOpen] = useState(false); // cleanliness pass: secondary research actions live behind one "⋯" overflow
   const [expanded, setExpanded] = useState<string | null>(null);
   const [pages, setPages] = useState(1); // QA P1: page the grid like GenericSheet — no unbounded DOM
   const RESEARCH_PAGE_SIZE = 50;
@@ -514,9 +515,14 @@ function Research({ roomId, me, art }: { roomId: string; me: Actor; art: Art }) 
       <div className="r-research-bar">
         <span className="tiny faint">{rowIds.length} accounts · {pending} pending · {complete} complete · multi-source research</span>
         <span className="grow" />
-        <button className="r-btn ghost" disabled={busy} onClick={() => setPasteOpen((v) => !v)}><Plus size={13} /> Import accounts</button>
-        <button className="r-btn ghost" disabled={busy || complete === 0} onClick={() => void refreshComplete()}><RotateCcw size={13} /> Requeue complete</button>
-        <button className="r-btn ghost" onClick={() => downloadResearchCsv(art, rowIds, cell)}><Download size={13} /> CRM CSV</button>
+        <button className="r-btn ghost" aria-label="More research actions" aria-expanded={moreOpen} title="Import, requeue, export" onClick={() => setMoreOpen((v) => !v)}><MoreHorizontal size={14} /></button>
+        {moreOpen && (
+          <>
+            <button className="r-btn ghost" disabled={busy} onClick={() => setPasteOpen((v) => !v)}><Plus size={13} /> Import accounts</button>
+            <button className="r-btn ghost" disabled={busy || complete === 0} onClick={() => void refreshComplete()}><RotateCcw size={13} /> Requeue complete</button>
+            <button className="r-btn ghost" onClick={() => downloadResearchCsv(art, rowIds, cell)}><Download size={13} /> CRM CSV</button>
+          </>
+        )}
         <button className="r-btn" data-testid="research-enrich" disabled={running || pending === 0} onClick={run}>{running ? "Researching..." : pending ? `Enrich ${pending} pending` : "All complete"}</button>
         {requeueError && <span className="r-wall-error" role="alert" data-testid="research-requeue-error">{requeueError}</span>}
       </div>

@@ -220,6 +220,8 @@ export interface Artifact {
   /** Stable element order for rendering (sheet uses addresses, note/wall use this). */
   order: string[];
   updatedAt: number;
+  /** Private artifacts are visible only to their owner; undefined = shared/room (rendered "Shared"). */
+  visibility?: "public" | "private";
   meta?: ArtifactMeta;
 }
 
